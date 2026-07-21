@@ -54,16 +54,34 @@ run as a persistent background reasoner on the user's stack (GTX 1050 or
 CPU-only) with resource consumption low enough not to disrupt foreground
 work.
 
-**Prediction.** Under a realistic 24-hour background workload
-(event-stream ingestion + hourly summary + retrieval on demand), the
-process consumes < 3 GB resident RAM, < 10 % average CPU on a mid-range
-laptop, and does not measurably degrade battery life beyond ~10 % at
-idle.
+**Prediction (tightened 2026-07-22).** Under a realistic 24-hour
+background workload (event-stream ingestion + retrieval on demand +
+periodic composer/reflection bursts), CPU usage falls into one of two
+disjoint regimes and never outside them:
 
-**Falsification.** Sustained operation for 7 days at Gate 2 either meets
-these numbers or does not. If it does not, investigate quantisation,
-inference framework, and backbone in that order before concluding the
-architecture itself is wrong.
+- **Steady:** < 1 % CPU. Model resident (Ollama child, `keep_alive: -1`)
+  but idle; only event collectors and the scheduler run.
+- **Burst:** up to ~20 % CPU for episodes of *tens of seconds* at
+  roughly minute-scale periodicity. Every LLM job (composer,
+  incremental digest, reflection) is a burst; long-running jobs are
+  fragmented into burst chunks, never allowed to sustain.
+
+Alongside this: resident RAM stays < 3 GB (backbone + memory system +
+supervisor), and battery life at idle is not measurably degraded
+beyond ~10 %.
+
+**Falsification.** Sustained operation for 7 days at Gate 2 stays
+inside both regimes and inside the RAM and battery caps. If any LLM
+job exceeds tens of seconds in a burst, if steady CPU drifts above
+1 %, or if RAM crosses 3 GB, the prediction fails. Response order:
+scheduler/budget accounting, quantisation, inference framework,
+backbone.
+
+**Design note.** The two-regime rule replaces the earlier "< 10 %
+average CPU" line, which averaged over the interesting behaviour.
+Enforcement lives in the `noesis-scheduler` module (Rust runtime): a
+budget accountant caps burst duration and defers jobs that overrun
+into the next burst window.
 
 **Related.** Track C (C1, C2), Gate 2.
 
