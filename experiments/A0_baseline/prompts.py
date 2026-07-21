@@ -1,10 +1,14 @@
-"""Prompt bank for A0.1 baseline throughput.
+"""Prompt bank shared across A0 experiments.
 
 Prompts are shaped like real noesis workloads, not toy Q&A:
 
-- short  — interactive query the user might type into the CLI.
-- medium — background event-stream digest (last ~15 min of activity).
-- long   — retrieval-augmented question with concrete document context.
+- short     — interactive query the user might type into the CLI.
+- medium    — background event-stream digest (last ~15 min of activity).
+- long      — retrieval-augmented question with concrete document context.
+- narrative — descriptive prose of similar length to `medium`, with no
+              task, no question, no reasoning demand. Used by A0.4 as a
+              non-reasoning control against `medium` when measuring
+              state dynamics; not used by A0.1 throughput bench.
 
 Word counts are given for reference; RWKV-7-World tokenizer is roughly
 1.4-1.6 tok/word for English technical prose, so tokens are ~1.5× words.
@@ -121,7 +125,45 @@ LONG = (
 )
 
 
-ALL = {"short": SHORT, "medium": MEDIUM, "long": LONG}
+# ~280 words → ~420 tokens; matched length to MEDIUM for the A0.4 control.
+# Descriptive prose only. No question, no instruction, no explicit demand
+# on the model. Continuation of running text is a completion task; any
+# reasoning the model does is emergent, not requested — which is the
+# point of the control.
+NARRATIVE = (
+    "The village of Lower Ashcombe sits in the fold of the valley where "
+    "the river Ash bends west before dropping into the marshes. From the "
+    "ridge above, on a clear morning, the roofs form a broken line of "
+    "slate along the water, interrupted here and there by the pale square "
+    "of a chapel or the yellow brick of a mill. The oldest house in the "
+    "village is the one belonging to the Norrey family, though nobody by "
+    "that name has lived there for four generations; the deed passed to "
+    "an aunt in the 1890s, and from her to a series of tenants who never "
+    "stayed longer than a season. Its windows face east, so in winter "
+    "the low sun catches the frost on the panes and turns them the colour "
+    "of weak tea. Farther down the lane, past the smithy and the row of "
+    "almshouses, the road widens into a green where the market used to "
+    "be held on the second Thursday of every month. The green is now "
+    "little more than a triangle of grass with a war memorial at its "
+    "apex, but the low stone kerb around it still bears the marks where "
+    "the traders' carts rested. Beyond the green the lane climbs again, "
+    "past the churchyard where the yew hedge has grown tall enough to "
+    "screen the older graves from the road, and past the paddock where "
+    "the schoolmaster's daughter used to keep a Welsh cob called Sixpence. "
+    "The paddock is empty now, and the schoolhouse itself has been sold "
+    "and converted into a pair of cottages, but the bell above the porch "
+    "was left in place at the buyer's request, and every so often, when "
+    "the wind is from the west, a passing stranger will still hear it "
+    "ring faintly at odd hours of the afternoon."
+)
+
+
+ALL = {
+    "short": SHORT,
+    "medium": MEDIUM,
+    "long": LONG,
+    "narrative": NARRATIVE,
+}
 
 
 def word_count(text: str) -> int:

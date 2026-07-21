@@ -176,6 +176,11 @@ the backbone decision reopens under P8 (empirical over
 philosophical). Any single failure of H4a is insufficient to force a
 reopen; a *pattern* is.
 
+**Mechanism sub-questions tested separately.** H8 (state-as-
+computation) and H9 (G1 amplifies state utilisation) address *why*
+RWKV would or would not close the gap — the mechanism, not the score.
+See those entries.
+
 **Related.** All of Track A across the project lifetime.
 
 **Status.** Perpetually under provisional evaluation. Not a
@@ -258,3 +263,137 @@ justification for the Phase-1 corpus discipline.
 **Status.** Untested. Directly tied to H2 but distinct — H2 is *"is
 reasoning-first enough?"*, H7 is *"where should knowledge live once
 integration starts?"*.
+
+---
+
+## H8. State-as-computation in RWKV-7
+
+**Claim.** During autoregressive generation, RWKV-7's hidden WKV state
+does substantive *computational* work — not merely rolling-summary
+memory. On reasoning-flavoured prompts, the state trajectory shows
+qualitatively different dynamics than on non-reasoning prompts of
+matched length and vocabulary distribution, in a way that is not
+attributable to prompt-content confounds alone.
+
+**Motivation.** RWKV-7 paper §2 (Background, p. 4) frames the delta-
+rule update as "equivalent to a single step of stochastic gradient
+descent, training the state S_t at test time to output the desired
+values v_t for the keys k_t as inputs" (arXiv 2503.14456v2). That is a
+*per-step* framing. The cumulative-sequence version — "the state
+evolves as if learning during generation" — is stronger, is what
+noesis's backbone choice is philosophically staked on (see P4, H4b),
+and is empirically open.
+
+**Prediction (qualitative — quantitative thresholds TBD after first
+probe run, A0.4 step 5).** Across three disjoint metrics of state
+dynamics (delta-norm `‖s_t − s_{t-1}‖`, trajectory curvature `κ_t`,
+and stable rank `SR(s_t) = (‖s_t‖_F / ‖s_t‖_2)^2` — the latter
+matching the paper's Appendix J probe), the effect size between
+reasoning-prompt and non-reasoning-prompt trajectories on the same
+model exceeds the baseline noise floor (measured over 10 seeds) with
+a consistent sign across metrics.
+
+*Exact thresholds intentionally left as a placeholder.* Locking them
+now would risk formulating a criterion on the wrong mental model of
+what the metrics measure. Thresholds are formulated after: (a) the
+first pilot run on any of the three metrics establishes a plausible
+noise-floor and (b) the reading of RWKV-7 paper Appendix J calibrates
+what "meaningful" SR movement looks like. See
+`docs/state-and-reasoning.md` for the calibration reference. Threshold
+formulation is a session-opening step of the A0.4 execution session,
+not a lock made here.
+
+**Falsification (staged — placeholder thresholds).** Refutation of a
+claim this load-bearing cannot rest on a single run. Staged flow:
+
+1. *First failure.* If, across all three metrics, the
+   reasoning-vs-non-reasoning contrast lies within the noise floor
+   measured across seeds and prompt-content matched pairs, the
+   default response is **not** to declare H8 refuted. First: verify
+   the metric implementations against the paper (Appendix J for SR;
+   cross-check delta-norm and curvature against a synthetic sanity
+   trajectory with known dynamics), and verify the state-extraction
+   hooks are capturing the intended tensor at the intended point in
+   the forward pass.
+2. *Repeat under adjusted probe.* Re-run with instrumentation
+   corrections and, if needed, an alternative prompt pair to rule out
+   a prompt-content confound. Record the pilot noise floor
+   independently on each run.
+3. *Sustained failure ⇒ H8 refuted at this scale.* If, after (1) and
+   (2), all three metrics still show null contrast on independent
+   replications, H8 is refuted for this architecture at this
+   parameter count. This is the point at which state-as-computation
+   moves from "empirically open" to "metaphor rather than mechanism"
+   in the file's audit trail.
+4. *Consequence for P4 and backbone choice.* A sustained-refutation
+   H8 result weakens (does not by itself overturn) P4's
+   constant-cost-over-peak-capability wager — the throughput/RSS
+   half of P4's justification remains, supported by A0.1.
+   Reopening the backbone decision on the strength of H8 alone is
+   possible only *after* stage 3, and even then requires pairing
+   with the H4a/H4b evidence (see ROADMAP Gate 1).
+
+**What refutation does *not* imply.** H4a and H4b remain independently
+testable — RWKV could still win on end-task quality via other
+mechanisms (e.g. training-data quality, tokenizer choice) even if H8
+falls.
+
+**Related.** Track A (A0.4). Feeds into A1 loss-formulation decision
+(see ROADMAP Gate 1 exit criteria).
+
+**Status.** Untested; probe designed in `experiments/A0_state_probe/`;
+execution deferred to the next session.
+
+---
+
+## H9. G1-line training amplifies state utilisation
+
+**Claim.** RWKV-7-G1h — reasoning-tuned via the G1 curriculum on top
+of the World3 base — shows *measurably different* state dynamics from
+the World3 base on the same reasoning-flavoured prompts, in the
+direction of larger delta-norm, higher curvature, and/or greater
+stable-rank variance. That is, G1 training does not merely change the
+distribution of *output tokens* (which would be visible only at the
+logits level); it changes the way the model *uses its state* during
+generation.
+
+**Motivation.** From `docs/state-and-reasoning.md`: no G1 training
+documentation is present in RWKV-LM at commit `846b08c1`, so the
+mechanism of G1's contribution is not publicly specified. Two
+distinguishable hypotheses:
+
+- *Amplification:* G1 supervision teaches the model to route more
+  computation through state evolution during the `<think>` phase.
+- *Output-only:* G1 supervision changes token distributions without
+  altering the underlying state dynamics — the model just emits more
+  reasoning-tokens without doing more state-work per token.
+
+A0.4 discriminates these by running paired probes on World3 and G1h.
+
+**Prediction (qualitative — thresholds TBD).** On the same reasoning
+prompt with matched seeds, at least one of the three A0.4 metrics
+(delta-norm, curvature, stable rank) shows a statistically significant
+G1h-vs-World3 difference (Welch's t-test, α = 0.05, corrected for
+three metrics via Bonferroni or equivalent), with the direction
+consistent with "G1h uses state more actively".
+
+**Falsification (placeholder).** If G1h and World3 are
+statistically indistinguishable across all three state metrics on
+matched reasoning prompts and seeds, H9 is refuted. G1 would then be
+credited only with an output-distribution shift, not a mechanism
+change.
+
+**Consequence of refutation on A1 design.** If H9 fails, A1 training
+should not attempt to induce different state dynamics via a
+state-regularised loss (the paper's own §2 delta-rule framing gives
+no leverage without empirical support); standard SFT on reasoning
+traces remains the only defensible approach. This closes off the
+"train against state trajectory" branch of the A0.4→A1 decision gate
+(plan step 7, branch A).
+
+**Related.** Track A (A0.4 → A1). Interacts with H4a (specific quality
+match) and H2 (reasoning-first thesis). Independent of H4b (wager)
+but a positive H9 would strengthen H4b's mechanism story.
+
+**Status.** Untested; probe designed in `experiments/A0_state_probe/`;
+execution deferred to the next session.

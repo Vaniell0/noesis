@@ -15,6 +15,17 @@ serialize them.
 - Baseline eval: RWKV-7-G1 2.9B against Qwen-2.5-3B-Instruct and Phi-4-mini
   as reference points. Numbers only, no philosophy.
 
+### A0.4. State-utilisation probe (weeks 2–3)
+- Instrument RWKV-7 hidden WKV state during autoregressive generation
+  (HF `transformers` + torch hooks, native bf16 weights).
+- Metrics: delta-norm, trajectory curvature, stable rank (matching
+  paper Appendix J). See `docs/state-and-reasoning.md`.
+- Tests H8 (state-as-computation) and H9 (G1 amplifies state
+  utilisation). Result decides A1 loss formulation — SFT-only vs
+  state-regularised.
+- Blocks A1. Foundation + skeleton landed with the same commit as
+  A0.1; execution deferred to a dedicated session.
+
 ### A1. Logic-only fine-tune (weeks 3–8) — *current focus*
 - **Corpus**: reasoning traces only. **No RFCs, no CLI docs, no personal
   data, no *domain* knowledge in weights.** Domain knowledge is deferred
@@ -98,7 +109,12 @@ serialize them.
 
 - **Gate 1** (end of week ~4). A0 done, B0 drafted, C0 wired. If A0
   baseline numbers make the RWKV bet untenable, re-evaluate *before*
-  investing in A1 training compute.
+  investing in A1 training compute. Also decides A1 loss objective
+  via A0.4 (SFT-only vs state-regularised). H8 refutation triggers a
+  backbone re-open only after the staged flow in HYPOTHESES.md §H8
+  (first failure → verify metric implementation and hooks → repeat →
+  sustained failure across independent replications). A single null
+  A0.4 run is not sufficient.
 - **Gate 2** (end of week ~10). A1 fine-tune completed and evaluated;
   C2 daily-summary MVP running in background for 7 consecutive days.
   Assess whether constant-background operation is real or aspirational.
