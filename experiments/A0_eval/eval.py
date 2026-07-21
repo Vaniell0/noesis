@@ -219,8 +219,13 @@ def main() -> int:
                     help="Ollama host (ollama backend).")
     ap.add_argument("--model", required=True,
                     help="Ollama model name or path to .pth for rwkv backend.")
-    ap.add_argument("--num-predict", type=int, default=256,
-                    help="Max tokens per response.")
+    ap.add_argument("--num-predict", type=int, default=2048,
+                    help="Max tokens per response. Bumped from 256 after "
+                         "mollysama/rwkv-7-g1h:2.9b diagnostic (2026-07-21): "
+                         "at bf16 the model insists on full CoT even for "
+                         "short-answer tasks, and Ollama returns an empty "
+                         "response when done_reason=length. 2048 covers the "
+                         "observed 873-token CoT with headroom.")
     ap.add_argument("--timeout", type=int, default=120,
                     help="Per-request timeout (seconds).")
     ap.add_argument("--out", required=True, help="Path to output JSON.")

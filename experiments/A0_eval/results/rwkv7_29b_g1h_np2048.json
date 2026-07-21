@@ -1,0 +1,657 @@
+{
+  "model": "mollysama/rwkv-7-g1h:2.9b",
+  "backend": "ollama",
+  "n_tasks": 48,
+  "elapsed_s": 4864.679293870926,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 19,
+    "overall_accuracy": 0.3958333333333333,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 3,
+        "accuracy": 0.1875
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 2,
+        "accuracy": 0.25
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 7,
+        "accuracy": 0.875
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 1,
+        "accuracy": 0.16666666666666666
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 3,
+        "accuracy": 0.5
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 3,
+        "accuracy": 0.75
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "The decoded text is \"hello world\".",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "\u03b3\u03b1\u03b7\u03b5 = \"dog\"",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "To solve the equation \\(3x + 7 = 22\\) for \\(x\\):\n1. Start with the original equation:\n   \\[\n   3x + 7 = 22\n   \\]\n2. Subtract 7 from both sides to isolate the term with \\(x\\):\n   \\[\n   3x + 7 - 7 = 22 - 7\n   \\]\n3. Simplify both sides:\n   \\[\n   3x = 15\n   \\]\n4. Divide both sides by 3 to solve for \\(x\\):\n   \\[\n   \\frac{3x}{3} = \\frac{15}{3}\n   \\]\n5. Simplify the right side:\n   \\[\n   x = 5\n   \\]\n6. Verify the solution by substituting \\(x = 5\\) back into the original equation:\n   \\[\n   3(5) + 7 = 22 \\implies 15 + 7 = 22 \\implies 22 = 22\n   \\]\nThe value of \\(x\\) is \\(\\boxed{5}\\).",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": "",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": "",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": "2.5",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "The average speed is calculated by dividing the total distance traveled by the total time taken. \n1. **Calculate average speed in km/min**:  \n   \\[\n   \\frac{90 \\text{ km}}{45 \\text{ min}} = 2 \\text{ km/min}\n   \\]\n2. **Convert minutes to hours**:  \n   Since 1 hour = 60 minutes, multiply by \\(\\frac{60}{45}\\) to convert minutes to hours:  \n   \\[\n   2 \\text{ km/min} \\times \\frac{60}{45} = 2 \\times \\frac{4}{3} = \\frac{8}{3} \\text{ km/min}\n   \\]\n3. **Convert to km/h**:  \n   \\[\n   \\frac{8}{3} \\text{ km/min} \\times 60 = 160 \\text{ km/h}\n   \\]\n**Answer:**  \nThe average speed is \\(\\boxed{160}\\) km/h.",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "The unit of energy in SI is joule (J), which is equivalent to kg\u00b7m/s\u00b2. Among the given options, only option 2 matches this unit.\n**Answer:** 2",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": "kg/(m\u00b7s\u00b2)",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": "11",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": "{\n  \"name\": \"Alice\",\n  \"age\": 34,\n  \"occupation\": \"engineer\",\n  \"city\": \"Berlin\"\n}",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": "{\n  \"product\": \"Model-B widget\",\n  \"quantity\": 12,\n  \"unit_price\": 4.5\n}",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": "{\n  \"date\": \"2026-08-14\",\n  \"time\": \"15:30\",\n  \"timezone\": \"UTC\",\n  \"topic\": \"budget review\"\n}",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": "{\n  \"client_ip\": \"192.168.1.42\",\n  \"endpoint\": \"/api/v1/users\",\n  \"status\": 404,\n  \"latency_ms\": 123\n}",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": "{\n  \"bug_id\": \"4712\",\n  \"severity\": \"high\",\n  \"reporter\": \"rina@example.com\",\n  \"blocks_release\": \"2.3\"\n}",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'bug_id': '4712', 'severity': 'high', 'reporter': 'rina@example.com', 'blocks_release': '2.3'}"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": "{\n  \"ingredients\": [\n    {\"item\": \"flour\", \"quantity\": \"300g\", \"unit\": \"\"},\n    {\"item\": \"eggs\", \"quantity\": \"2\", \"unit\": \"\"},\n    {\"item\": \"milk\", \"quantity\": \"150ml\", \"unit\": \"\"}\n  ],\n  \"temperature_c\": 180,\n  \"duration_min\": 25\n}",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "{\n  \"full_name\": \"Yuki Tanaka\",\n  \"department\": \"Data Science\",\n  \"hire_date\": \"2024-01-15\",\n  \"annual_salary_usd\": 82000\n}",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "{\n  \"latitude\": 55.7558,\n  \"longitude\": 37.6173,\n  \"altitude_m\": 156,\n  \"accuracy_m\": 5\n}",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": "",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "{\"alice\": \"D2\", \"bob\": \"D3\", \"carol\": \"D1\"}",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": "",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": "",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "ylellort",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "<answer>\n\"AbCdEfG\"\n</answer>",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": "",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": "aabbccaabbcc/aabbccaabbcc/aabbccaabbcc",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": "To solve this problem, we need to count how many words in the given string have exactly 3 letters. \nFirst, we split the string into individual words using the `split()` method, which separates the string by whitespace. Then, we iterate through each word and check its length. If a word's length is exactly 3, we increment our count.\nHere's the step-by-step process:\n1. Split the string into words: `['the', 'quick', 'brown', 'fox']`\n2. Check each word's length:\n   - 'the' has 3 letters (count = 1)\n   - 'quick' has 5 letters (skip)\n   - 'brown' has 5 letters (skip)\n   - 'fox' has 3 letters (count = 2)\nThus, there are 2 words with exactly 3 letters.\n```python\n# Given string\ns = \"the quick brown fox\"\n# Split the string into words\nwords = s.split()\n# Count words with exactly 3 letters\ncount = sum(1 for word in words if len(word) == 3)\nprint(count)  # Output: 2\n```",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": "To determine how many positions have the same letter in both 'planet' and 'planed', we compare each character at the same index:\n- Position 0: 'p' (planet) vs 'p' (planed) \u2192 match  \n- Position 1: 'l' (planet) vs 'l' (planed) \u2192 match  \n- Position 2: 'a' (planet) vs 'a' (planed) \u2192 match  \n- Position 3: 'n' (planet) vs 'n' (planed) \u2192 match  \n- Position 4: 'e' (planet) vs 'e' (planed) \u2192 match  \n- Position 5: 't' (planet) vs 'd' (planed) \u2192 no match  \nTotal matching positions: 5.\nAnswer: 5",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "34",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "250",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "Let \\( C \\) be the total capacity of the container in liters. \nWhen the container is \\( \\frac{1}{4} \\) full, it contains \\( \\frac{1}{4}C \\) liters. After adding 6 liters, it becomes \\( \\frac{5}{8}C \\) liters. The difference between these two amounts is 6 liters:\n\\[\n\\frac{5}{8}C - \\frac{1}{4}C = 6\n\\]\nConvert \\( \\frac{1}{4} \\) to \\( \\frac{2}{8} \\):\n\\[\n\\frac{5}{8}C - \\frac{2}{8}C = 3\\left(\\frac{1}{8}\\right)C = 6\n\\]\nSolving for \\( C \\):\n\\[\n\\frac{3}{8}C = 6 \\implies C = 6 \\times \\frac{8}{3} = 16\n\\]\nThus, the total capacity of the container is \\(\\boxed{16}\\) liters.",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": "badc",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": "badcbc",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "raed",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": "The decoded letters are **a**d**y**s**e**",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": "abdc",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": true,
+      "detail": "substring match"
+    }
+  ]
+}
