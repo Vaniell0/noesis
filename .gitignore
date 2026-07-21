@@ -1,0 +1,74 @@
+# Inverted gitignore: ignore everything, whitelist what we need.
+# Directories must be un-ignored for git to traverse into them.
+*
+!*/
+
+# Top-level project files
+!.gitignore
+!README.md
+!ROADMAP.md
+!HYPOTHESES.md
+!CLAUDE.md
+!FAILED.md
+!LICENSE
+
+# Docs
+!docs/**/*.md
+
+# Experiments
+!experiments/**/*.py
+!experiments/**/*.md
+!experiments/**/*.sh
+!experiments/**/*.json
+!experiments/**/*.toml
+!experiments/**/*.yml
+!experiments/**/*.yaml
+
+# Training track
+!training/**/*.py
+!training/**/*.md
+!training/**/*.sh
+!training/**/*.toml
+!training/**/*.yml
+!training/**/*.yaml
+
+# Runtime track
+!runtime/**/*.py
+!runtime/**/*.md
+!runtime/**/*.sh
+!runtime/**/*.toml
+
+# Memory track
+!memory/**/*.py
+!memory/**/*.md
+!memory/**/*.sh
+!memory/**/*.sql
+
+# Heavy artifacts — re-block after path whitelist
+experiments/**/data/
+experiments/**/runs/
+experiments/**/wandb/
+training/**/data/
+training/**/checkpoints/
+training/**/runs/
+training/**/wandb/
+runtime/**/state/
+memory/**/store/
+models/
+*.gguf
+*.pth
+*.pt
+*.safetensors
+*.bin
+*.onnx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
