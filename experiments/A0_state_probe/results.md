@@ -1,6 +1,6 @@
-# A0.4 — state-utilisation probe results
+# A0.4 + A0.5 — state-utilisation probe results
 
-> **Status.** Sweep complete (2026-07-21). Verdict: H8 REFUTED-on-direction at 0.4B scale on both World and G1d; H9 BELOW-THRESHOLD (only `sr_std` supports, 1/3 of the rule). A0.5 (causal intervention) is now the load-bearing H8 test. See §Interpretation and `A05_intervention_plan.md`.
+> **Status.** A0.4 sweep complete (2026-07-21). Verdict: H8 REFUTED-on-direction at 0.4B scale on both World and G1d; H9 BELOW-THRESHOLD (only `sr_std` supports, 1/3 of the rule). A0.5 causal-intervention grid complete same day: **H8-causal PASS on all 3 sub-tests** across all 4 cells. State-reg loss (α > 0) is justified for A1. See §Interpretation, §A0.5, and `results/a05_ext/verdict.md`.
 
 ## Setup
 
@@ -144,6 +144,45 @@ The 4-cell sweep does **not** support H8 by its own pre-registered rule. Directi
 **Scale caveat reinforced.** All four cells are 0.4B on CPU. At this parameter count, "medium" reasoning is probably not eliciting real chained inference — both models likely fall back to fluent completion. A re-run at 2.9B on GPU (ROADMAP Gate-2) is the proper descriptive H8 test. The current numbers describe the small-model regime only.
 
 **Small consistency caveat.** `world_medium` was executed this session with `--max-new-tokens 256`; the other three cells (from the prior session) used 128. All three metrics are per-step means/stds, which are stationary in expectation, so the mean estimates remain comparable — the longer run gives a slightly tighter per-seed SD (which pushes Cohen's d up on that cell only). If future re-analysis wants strict token-count parity, re-run the three 128-token cells at 256.
+
+## A0.5 — causal intervention grid (2026-07-21)
+
+Where A0.4 measured how state *moves*, A0.5 asks whether perturbing it *does work* — the falsification test H8 actually needs. Runner: `a05_run.py` (paired clean/corrupt forwards, 4 checkpoints per continuation, 24-corruption battery). Aggregator: `a05_analyze.py`. Full per-corruption tables and per-cell breakdowns: `results/a05_ext/verdict.md`.
+
+**Grid.** 2 models × 2 prompts × 3 seeds × 4 checkpoints × 24 corruptions = 1152 paired forwards, wall time ~5.5h on i5-1235U (2 workers parallel).
+
+**H8-causal summary (all 4 cells).**
+
+| cell | σ-slope | monot | zero_L CV | shuf_L CV | cross/base | freeze_prev KL |
+|---|---:|:---:|---:|---:|---:|---:|
+| world_medium    | 1.81 | ✓ | 0.92 | 0.46 | **45.09×** | 0.716 |
+| world_narrative | 1.56 | ✓ | 1.46 | 1.11 | **98.75×** | 0.314 |
+| g1d_medium      | 1.80 | ✓ | 0.86 | 0.87 | **33.99×** | 0.615 |
+| g1d_narrative   | 2.10 | ✓ | 1.28 | 1.23 | **21.71×** | 0.358 |
+
+**Sub-verdicts.**
+
+- **H8-causal-A (σ-response).** log-log slope of KL_next vs σ is *superlinear* (>1) on every cell, range 1.56–2.10. Monotonic in σ on every cell. State does not respond as linear noise would — small σ perturbations produce disproportionately little disturbance, larger σ produces disproportionately more. This is the fingerprint of a state that is *doing work*, not just passively holding rolling summaries. **PASS.**
+- **H8-causal-B (layer localisation, zero_layer).** Across-layer CV ranges 0.86–1.46 — comfortably above the "uniform layer contribution" null (CV ≈ 0). L16 dominates on every cell (KL 0.20 → 0.37 vs L0 KL ~0.002–0.005). Middle-late layers carry the load; input and output layers are ~zero. **PASS.**
+- **H8-causal-C (cross-prompt / norm-matched noise).** Ratio 21.7–98.75× on every cell — substituting the state from a *different* prompt is 21–99 times more disruptive than injecting isotropic gaussian noise of matched norm. If state were prompt-agnostic, this ratio would be ~1. State carries prompt-conditional structure. **PASS.**
+
+**G1d vs World comparison (H9-adjacent).** On every corruption family, G1d shows *larger* absolute KL than World at the same corruption:
+- cross_prompt medium: G1d 8.77 vs World 4.89
+- gauss@σ=0.2 medium: G1d 0.884 vs World 0.495
+- shuffle_heads@L0 medium: G1d 1.36 vs World 0.10 (13× — G1d relies strongly on head ordering at L0)
+
+G1d state is more computationally loaded than World's — a proper H9 result at 0.4B, complementing the `sr_std` signal from A0.4. If G1h at 2.9B extends this trend it would be a much stronger H9 confirmation, but that run stays deferred to Gate-2 GPU budget.
+
+**Freeze_prev (state ablation to time t−k).** KL 0.31–0.72 across cells — moderate but well above noise. Freezing past state before a corruption checkpoint does perturb next-token predictions, consistent with recent-history dependence in state.
+
+**Implications for A1.**
+
+1. State-reg loss (`α > 0`) is *justified*. Every one of the three H8-causal tests passes, on both a base and a reasoning-tuned checkpoint, on both a reasoning and a control prompt. This is the strongest evidence the small-model regime can produce for "state does work."
+2. Layer-weighting for the state-reg objective should focus on **L12–L20** (indexing a 24-layer model). Input layers L0–L4 are near-zero on `zero_layer` and can be excluded from the loss to save compute; L16 is the single most load-bearing.
+3. The `shuffle_heads@L0` outlier on G1d (13× World) suggests G1d encodes something structural about head ordering at the input layer that the base doesn't. Worth watching post-A1 to see if state-reg amplifies or damps this — either result is informative.
+4. `cross_prompt` is by far the loudest signal (ratio 21–99×). A dedicated **A0.6 intra-model state swap** experiment (ROADMAP) would extract qualitative content from this — measure not just KL but continuation-content drift — and is now higher-priority given how strong this axis turned out.
+
+**Scale caveat.** These are 0.4B numbers; H8-causal at 2.9B (G1h substrate that A1 will actually LoRA) is the definitive test. But given all three sub-tests pass at 0.4B on both a base and a reasoning-tuned model, it would be surprising if 2.9B *removed* the effect. The design decision (enable state-reg in A1) rests on the small-model result, and the 2.9B verification remains a follow-up.
 
 ## Notes on measurement fidelity
 

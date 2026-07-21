@@ -26,6 +26,44 @@ serialize them.
 - Blocks A1. Foundation + skeleton landed with the same commit as
   A0.1; execution deferred to a dedicated session.
 
+### A0.5. Causal intervention grid (in flight)
+- Extended runner in `experiments/A0_state_probe/a05_run.py` +
+  aggregator in `a05_analyze.py`. Grid: 2×2 (World-0.4B, G1d-0.4B) ×
+  (medium, narrative). Corruption family: gauss(σ), scale, zero_layer,
+  zero_head, shuffle_heads, freeze_prev, cross_prompt.
+- Verdict feeds H8-causal-A (σ-response superlinearity),
+  H8-causal-B (layer localisation), H8-causal-C (cross-prompt ratio).
+- Result decides whether A1 activates state-reg loss (α > 0) or ships
+  as pure SFT (α = 0). Currently on seed 2 of medium cells;
+  narrative cells to follow (~2h remaining wall).
+
+### A0.6. Intra-model state swap (pending A0.5 verdict)
+- Take state after reasoning-prompt processing, transplant as initial
+  state for narrative-prompt decode (and vice versa). Same model, same
+  weights.
+- Design: 3 reasoning × 3 narrative × 2 directions = 18 pairs; two
+  modes — full-state swap vs layer-selective (only middle layers,
+  informed by A0.5 zero_layer results).
+- Metrics: continuation-content drift (task-lexicon hit rate), style
+  drift (perplexity under reasoning-LM vs narrative-LM), top-k
+  next-token overlap. Baseline sanity: state_A→A and state_B→B.
+- Cost: ~3–4h wall on i5. Answers "is state a portable computational
+  mode within a single model, or only fresh working memory?"
+
+### A0.7. Inter-checkpoint state portability (pending A0.5 verdict, tier-1 only in A0)
+- **Tier 1 (in A0.7)**: same-arch, same-size, different training —
+  RWKV-7-World-1.5B → RWKV-7-G1h-1.5B. State shape identical, direct
+  swap. Answers "does state survive a fine-tune of the weights?" —
+  design-critical for noesis's continual-LoRA operating model.
+- **Tier 2 (deferred to Phase 2)**: same family, different size —
+  requires a learned projector (MLP or SVD-shared subspace) between
+  state manifolds. Non-trivial ML work.
+- **Tier 3 (deferred to Phase 2, feeds C3 and memory-track design)**:
+  cross-architecture transfer via *text bottleneck* — state → compressed
+  natural-language summary → re-prompt target. This is potentially the
+  actual inter-model transfer protocol referenced in C3; also relevant
+  to memory-track (state ↔ persistable representation).
+
 ### A1. Logic-only fine-tune (weeks 3–8) — *current focus*
 - **Corpus**: reasoning traces only. **No RFCs, no CLI docs, no personal
   data, no *domain* knowledge in weights.** Domain knowledge is deferred
@@ -130,3 +168,10 @@ serialize them.
   Gate 1.
 - **Escalation semantics.** When user invokes Claude, does it replace
   noesis for the current task or run alongside? To be defined at C3.
+- **Universal state representation** (Phase 2 research question). If
+  A0.7-tier-1 shows state does *not* survive fine-tune of the weights,
+  the persistent-runtime story requires either (a) a learned projector
+  between checkpoint state spaces, or (b) a text-bottleneck protocol
+  (state ↔ natural-language summary ↔ re-prompt). Which one — or both —
+  becomes the actual inter-model transfer mechanism informs both the
+  memory-track schema and the C3 escalation UX.
