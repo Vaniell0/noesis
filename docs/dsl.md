@@ -225,18 +225,303 @@ Notes on the `tool_calls` event block:
 
 ---
 
-## Follow-up chunks (not in this draft)
+## Insight rendering
 
-- **Insight and vault_ref rendering.** Same block shape; insight
-  bodies are wrapped strings, vault refs are pointers with optional
-  content snippets under retrieval policy.
-- **Tool-call surface.** `tool_call <name> { … }` blocks the model
-  emits; parse rules and validation on the runtime side.
-- **Tool-result wrapping.** `tool_result <name> { … }` the runtime
-  writes back for the next turn.
-- **Composer normalisation.** Whitespace policy, ordering, truncation
-  rules, error blocks.
-- **Grammar in EBNF.** Formal spec once the shapes above stabilise.
+The composer renders `insights` rows as `insight <kind>` blocks. Body
+uses the same key=value shape as events; `text_form` carries the
+model-authored body verbatim.
+
+### Fields
+
+| SQL column       | DSL field     | Notes                                                    |
+| ---------------- | ------------- | -------------------------------------------------------- |
+| `id`             | `id`          | integer; needed for tool-call reference                  |
+| `kind`           | *qualifier*   | `reflection` / `fact` / `skill` / `preference`           |
+| `text_form`      | `text`        | required; model's own body                                |
+| `tags_json`      | `tags`        | array of strings; omitted if empty                       |
+| `importance`     | `imp`         | 0-10; omitted when 0                                     |
+| `confidence`     | `conf`        | 0.0-1.0                                                  |
+| `source`         | `src`         | `agent` / `tool_call` / `user`                           |
+| `ts_created`     | `ts`          | ms since epoch                                            |
+| `ts_last_seen`   | `ts_seen`     | omitted when equal to `ts_created`                       |
+| `ts_last_used`   | `ts_used`     | omitted if never used                                    |
+| `status`         | —             | never rendered; `superseded` / `deleted` rows are filtered by policy |
+
+Provenance is rendered inline only when the retrieval policy asked for
+it (default: hidden — the model does not need the audit graph on every
+turn). When shown, provenance is a nested array of tiny objects:
+
+```
+insight fact { id=8812 ts=1721606712340 conf=0.9 src="agent"
+               tags=["b0","memory","pivot"] imp=7
+               text="B0 rewrite dropped the working-in-SQLite layer; \
+                     session-scratch is RAM only."
+               provenance=[ { ref="ep_tool_calls" id=4402 },
+                            { ref="insights"      id=8790 },
+                            { ref="external"      uri="https://…" } ] }
+
+insight skill { id=1201 ts=1721600000000 conf=0.8 src="agent"
+                tags=["shell","git"] imp=6
+                text="Prefer `git switch` to `git checkout` for branch \
+                      moves; `checkout` is overloaded and less safe." }
+
+insight preference { id=15 ts=1721000000000 conf=1.0 src="user" imp=9
+                     tags=["style"]
+                     text="Russian for conversation, English for code, \
+                           commits, docs." }
+```
+
+### What the composer does not render
+
+- `status='superseded'` or `status='deleted'` rows. Retrieval filters
+  them out. If the model asks for the audit graph explicitly (via a
+  future introspection tool), those rows may surface with the status
+  visible.
+- Vector labels / embedding metadata.
+- `confidence` when the retrieval score already dominates the ranking
+  (composer's call; keeps prompts terser).
+
+## Vault-ref rendering
+
+Personal-vault content is external. What lives in the DSL is a
+pointer plus, under an active retrieval grant, a bounded snippet.
+
+```
+vault_ref { id=7712 path="/home/vaniello/Documents/notes/rwkv-notes.md"
+            mtime=1721600000000 size_bytes=8412
+            snippet="… The G1 line differs from World in that it \
+                     also trains on step-by-step reasoning traces \
+                     from R1-distill …"
+            snippet_range=[1240, 1408]  # byte offsets into the file
+            score=0.71 }
+```
+
+- `snippet` is present only when the retrieval policy granted
+  vault-read scope for this turn (see `docs/policies.md` §Zone
+  permissions). Without a grant, the composer emits `vault_ref` with
+  path/mtime/size/score and no body — the model knows the file
+  matched but not what it says.
+- Whole-file rendering is not supported at the DSL layer; snippets
+  are always bounded. If the model needs more, it issues another
+  `search` with a tighter query and higher `limit`.
+- `snippet_range` gives byte offsets so the model can ask for
+  adjacent context in a follow-up call. Off-by-one is on the
+  composer, not the model.
+
+## Tool-call surface (model → runtime)
+
+The model emits a `tool_call <name>` block per operation. One block
+per turn is the norm; multi-call turns are allowed and dispatched in
+emission order (the runtime does not reorder).
+
+### Shape
+
+```
+tool_call <name> { <arg_key> = <value>  ... }
+```
+
+The `<name>` matches one of the five ops in `memory/tool_calls.md`.
+Argument keys match that file's shape verbatim — same field names,
+same types. The runtime rejects unknown keys with a `tool_result`
+error block (see next section); it does not silently drop.
+
+### Examples
+
+```
+tool_call search { zone="insights" query="B0 pivot rationale"
+                   filters={ kind="reflection" tags_any=["b0","pivot"] }
+                   limit=8 min_conf=0.5 }
+
+tool_call add_insight { kind="reflection"
+                        text="The composer is the only NL translator; \
+                              write-path stays structured."
+                        tags=["b0","architecture","composer"]
+                        importance=7 confidence=0.85
+                        provenance=[ { ref_table="ep_tool_calls" ref_id=4402 } ] }
+
+tool_call update_insight { id=8790
+                           new_text="B0 rewrite dropped the working-in-SQLite \
+                                     layer; session-scratch is RAM only."
+                           rationale="clarified per structured-native pivot" }
+
+tool_call delete_insight { id=1099
+                           rationale="superseded by policy — vault snippets \
+                                      not stored in insights" }
+
+tool_call mark_important { id=15 importance=10
+                           rationale="user-authored preference; never decay" }
+```
+
+### Validation on the runtime side
+
+Rules the tool dispatcher applies before writing anything:
+
+- Unknown `<name>` → immediate `tool_result` error, no `ep_tool_calls`
+  row (the call never happened).
+- Known `<name>` but unknown argument key → error, no
+  `ep_tool_calls` row. Prevents typos silently landing wrong fields.
+- Missing required argument → error, no `ep_tool_calls` row. Required
+  set per op is authoritative in `memory/tool_calls.md`.
+- Type mismatch (e.g. `importance="high"` instead of int) → error.
+- Empty `rationale` on `update_insight` / `delete_insight` → error.
+  Rationale is P10 audit; empty is not acceptable.
+- `add_insight` with zero provenance edges → error.
+- `search` with `zone="personal-vault"` when the current turn has no
+  vault grant → *not* an error — the call is recorded to
+  `ep_tool_calls` with `ok=true`, `result_json` carrying an empty
+  rows array plus `refused="zone"`. This matches the graceful-refuse
+  policy in `memory/tool_calls.md`.
+
+A validated call is recorded to `ep_tool_calls` with `ok=NULL,
+result_json=NULL` before dispatch, and updated on return. See
+`memory/tool_calls.md` §Failure and safety.
+
+## Tool-result wrapping (runtime → model)
+
+Every dispatched `tool_call` produces a matching `tool_result <name>`
+block in the next turn's context. Shape mirrors the `.result` shapes
+in `memory/tool_calls.md`.
+
+### Success shape
+
+```
+tool_result search { call_id=4402 ok=true latency_ms=142
+                     rows=[
+                       insight reflection { id=8812 ts=… conf=0.9 src="agent"
+                                            tags=["b0","memory","pivot"] imp=7
+                                            text="…" score=0.87 },
+                       insight fact       { id=8790 ts=… conf=0.85 src="agent"
+                                            tags=["b0","pivot"] imp=6
+                                            text="…" score=0.71 } ] }
+
+tool_result add_insight    { call_id=4405 ok=true id=8820 embedded=false }
+tool_result update_insight { call_id=4406 ok=true old_id=8790 new_id=8821 }
+tool_result delete_insight { call_id=4407 ok=true id=1099 }
+tool_result mark_important { call_id=4408 ok=true id=15 old_importance=9 new_importance=10 }
+```
+
+- `call_id` is the `ep_tool_calls.id` of the originating call. Lets
+  the model correlate result to call across turns without positional
+  matching.
+- `search` results are rendered as inline `insight <kind>` blocks
+  (or, for non-insights zones, as inline `event <table>` /
+  `vault_ref` blocks). This is the round-trip guarantee — the model
+  reads results in the same shape as passively-rendered rows.
+- `score` inside a result-row block is the retrieval-merged rank;
+  the composer includes it only in tool_result contexts.
+
+### Error shape
+
+```
+tool_result <name> { call_id=<int> ok=false
+                     error="<short human message>"
+                     code="<stable machine code>" }
+```
+
+Stable error codes (small enumeration; the model can learn to react):
+
+| Code                    | Meaning                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| `unknown_tool`          | `<name>` did not match any op                              |
+| `unknown_arg`           | argument key not in the op's schema                        |
+| `missing_arg`           | required argument absent                                   |
+| `type_mismatch`         | value type wrong for the argument                          |
+| `empty_rationale`       | update/delete without rationale                            |
+| `no_provenance`         | `add_insight` with empty `provenance` array                |
+| `not_found`             | `id` referenced by update/delete/mark_important does not exist |
+| `already_superseded`    | target insight is not `status='active'`                    |
+| `internal`              | dispatcher / storage failure; details in `error`            |
+
+Errors with codes `unknown_tool`/`unknown_arg`/`missing_arg`/
+`type_mismatch`/`empty_rationale`/`no_provenance` are validation
+failures and never touch `ep_tool_calls`. Errors with
+`not_found`/`already_superseded`/`internal` reflect a call that
+reached dispatch — the `ep_tool_calls` row exists with `ok=false`
+and the error string.
+
+## Composer normalisation
+
+Rules the composer applies when emitting DSL, so the model sees
+predictable shapes and can learn faster:
+
+- **Field order.** Fixed per block kind. For events: `id ts [ts_end]
+  session <kind-specific fields> imp`. For insights: `id ts [ts_seen]
+  [ts_used] conf src [tags] [imp] text [provenance]`. Order is
+  documentation and helps the parser too (one-pass shape check).
+- **Omit-when-default.** `imp=0`, empty tag lists, `ts_seen ==
+  ts_created`, `ts_used = NULL`, provenance without a grant — all
+  omitted. Reduces token load; makes each visible field carry signal.
+- **String rendering.** Prefer `"..."` unescaped when the body has no
+  `\n`, `"`, `\`. Use `\n`-escaped multi-line for insight `text` when
+  the body exceeds ~80 chars. Never truncate insight `text` at the
+  composer; if it does not fit the turn budget, the row is dropped
+  from the result set entirely (better a missing row than a lying
+  one).
+- **Timestamps.** Always ms-since-epoch integers in the DSL. If a
+  human-readable version is worth the tokens for a specific block,
+  the composer adds a sibling `ts_human="2026-07-22T00:35"` string —
+  never replaces the integer.
+- **Nested objects.** Rendered on one line when small; broken across
+  lines with two-space indent when they exceed ~80 chars.
+- **Deterministic ordering.** Within a result set of multiple rows,
+  ordering is by retrieval score descending, ties broken by
+  `ts_last_seen` descending, ties broken by `id` ascending. Stable
+  ordering lets the model refer to "the first result" reliably across
+  a turn.
+
+## Grammar (EBNF, informal)
+
+```
+document       ::= { block } ;
+block          ::= kind [ qualifier ] "{" fields "}" ;
+kind           ::= identifier ;
+qualifier      ::= identifier ;
+fields         ::= { field [ separator ] } ;
+field          ::= identifier "=" value ;
+separator      ::= "," | whitespace ;
+value          ::= literal
+                 | array
+                 | object
+                 | block ;                # inline block-as-value in results
+literal        ::= integer | float | string | boolean | "null" ;
+array          ::= "[" [ value { "," value } [ "," ] ] "]" ;
+object         ::= "{" fields "}" ;
+identifier     ::= /[a-zA-Z_][a-zA-Z0-9_]*/ ;
+integer        ::= /-?[0-9]+/ ;
+float          ::= /-?[0-9]+\.[0-9]+([eE][-+]?[0-9]+)?/ ;
+string         ::= /"([^"\\]|\\["\\nt])*"/ ;
+boolean        ::= "true" | "false" ;
+comment        ::= /#[^\n]*/ ;
+```
+
+This is intentionally simple: one-pass parseable, no context
+sensitivity. Every ambiguity is resolved by "block if it has a header
+identifier before `{`, object otherwise."
+
+## Open questions (draft 1)
+
+- **Versioned envelope.** Cheap insurance (`noesis/v1 { … }`) vs one
+  more required line per prompt. Lean: skip in draft 1, add if we
+  ever ship a v2 that breaks parses.
+- **Positional shorthand** for very common blocks. Skipped in draft 1
+  (couples DSL to `schema.sql` column order). Revisit when the
+  input-tricks backlog acts.
+- **Array-of-events wrapping** vs one-block-per-row. Skipped in draft
+  1 (per-row is uniform and cheaper to parse). Revisit when we
+  measure token cost on real prompts.
+- **Escape strategy for embedded DSL in insight `text`.** If a model
+  writes an insight whose body is itself DSL (e.g. quoting an
+  earlier tool call), the current single-level backslash escape
+  works but is ugly. Backtick-delimited raw strings are one option;
+  deferred until we see the pattern.
+- **Streaming.** If the model emits multi-KB `text` for an insight,
+  should the runtime process incrementally? Ollama's SSE stream
+  could be parsed as it lands. Deferred; not on the critical path.
+
+---
+
+*Draft 1 complete 2026-07-22. Next revision when A1 pilot data tells
+us what shapes the model actually parses well vs badly.*
 
 ## Open questions (for later chunks / user)
 
