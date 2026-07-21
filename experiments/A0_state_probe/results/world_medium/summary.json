@@ -1,0 +1,33 @@
+{
+  "model": "BlinkDL/rwkv-7-world:RWKV-x070-World-0.4B-v2.9-20250107-ctx4096.pth",
+  "prompt": "medium",
+  "max_new_tokens": 256,
+  "device": "cpu",
+  "temperature": 1.0,
+  "top_p": 0.85,
+  "aggregate": {
+    "n_seeds": 3,
+    "wall_s_total": 2483.8259978294373,
+    "delta_pooled_seed_mean": {
+      "n": 3,
+      "mean": 37.00112218126299,
+      "std": 3.7044131450771416,
+      "min": 31.93168898095487,
+      "max": 40.6802383597291
+    },
+    "curvature_pooled_seed_mean": {
+      "n": 3,
+      "mean": 57.85320792036879,
+      "std": 5.951650309399126,
+      "min": 49.69484899995659,
+      "max": 63.72517763667126
+    },
+    "stable_rank_variance_seed_mean": {
+      "n": 3,
+      "mean": 0.5692981495493583,
+      "std": 0.14714164005264194,
+      "min": 0.36156474765053565,
+      "max": 0.6837061339940816
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "model": "BlinkDL/rwkv-7-world:RWKV-x070-World-0.4B-v2.9-20250107-ctx4096.pth",
+  "prompt": "medium",
+  "cross_prompt": null,
+  "seeds": 1,
+  "max_new_tokens": 64,
+  "k_checkpoints": 3,
+  "checkpoint_positions": [
+    16,
+    32,
+    48
+  ],
+  "sigmas": [
+    0.01,
+    0.05,
+    0.2
+  ],
+  "scales": [
+    0.5,
+    2.0
+  ],
+  "layer_indices": [
+    0,
+    8,
+    16
+  ],
+  "full_layer_profile": false,
+  "layer_profile_continuation": false,
+  "continuation_steps": 4,
+  "temperature": 1.0,
+  "top_p": 0.85,
+  "device": "cpu"
+}

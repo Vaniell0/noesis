@@ -1,0 +1,33 @@
+{
+  "model": "/home/vaniello/.libs/models/rwkv7/RWKV-x070-World-0.4B-v2.9-20250107-ctx4096.pth",
+  "prompt": "medium",
+  "max_new_tokens": 128,
+  "device": "cpu",
+  "temperature": 1.0,
+  "top_p": 0.85,
+  "aggregate": {
+    "n_seeds": 3,
+    "wall_s_total": 2061.2645144462585,
+    "delta_pooled_seed_mean": {
+      "n": 3,
+      "mean": 39.91378199219564,
+      "std": 2.96805753802627,
+      "min": 36.36170430987036,
+      "max": 43.626598163770026
+    },
+    "curvature_pooled_seed_mean": {
+      "n": 3,
+      "mean": 62.522391876158366,
+      "std": 4.495618359720907,
+      "min": 57.09536984769035,
+      "max": 68.10408185644064
+    },
+    "stable_rank_variance_seed_mean": {
+      "n": 3,
+      "mean": 0.5706936167422479,
+      "std": 0.16330347659746253,
+      "min": 0.34000298372137183,
+      "max": 0.6954417030864936
+    }
+  }
+}

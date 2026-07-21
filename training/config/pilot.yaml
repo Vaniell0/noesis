@@ -1,0 +1,51 @@
+# Pilot LoRA config — action-cloning on Claude Code corpus, α=0 baseline.
+#
+# Filled in with placeholder values that mirror the design decisions in
+# `plans/cosmic-purring-cocke.md` §Design. The training driver
+# (`training/lora_train.py`) is NOT yet written — waiting on A0.5 verdict
+# for the state-reg branch decision. This file exists so that when the
+# driver lands, "just point it at pilot.yaml and press run" is enough.
+
+model:
+  # Cached checkpoint at ~/.libs/models/rwkv7/rwkv7-g1d-0.4b — smallest
+  # pilot target. Middle target is 1.5B (Design §1).
+  checkpoint: "~/.libs/models/rwkv7/rwkv7-g1d-0.4b/rwkv7-g1d-0.4b.pth"
+  ctx_len: 4096
+  dtype: "bf16"
+
+lora:
+  rank: 32
+  alpha: 64
+  target_modules: ["receptance", "key", "value"]  # RWKV-PEFT default surface
+  dropout: 0.0
+
+optimizer:
+  name: "adamw"
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_steps: 200
+  grad_accum_steps: 8
+  batch_size: 1
+
+training:
+  epochs: 3
+  eval_every_steps: 1000
+  ckpt_every_steps: 500
+  early_stop_val_no_drop_by_steps: 500  # abort if no improvement by 500 steps
+
+corpus:
+  tokenised_dir: "training/tokenised/pilot_5pct"
+  val_fraction: 0.05
+  a02_eval_path: "experiments/A0_baseline/a02_eval.jsonl"
+
+# State-reg hook — STUB. Concrete branch chosen after A0.5 (§Step 8).
+# α=0 makes state_reg.compute_state_reg a no-op regardless of mode.
+state_reg:
+  mode: "off"
+  alpha: 0.0
+  delta_min: 0.0
+  layer_mask: []
+
+logging:
+  run_dir: "training/runs"
+  run_name: "pilot_g1d_a0"

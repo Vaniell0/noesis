@@ -1,0 +1,92 @@
+{
+  "model": "rwkv7-1.5b:latest",
+  "backend": "ollama",
+  "n_tasks": 6,
+  "elapsed_s": 65.42324447631836,
+  "aggregate": {
+    "n_total": 6,
+    "n_correct": 0,
+    "overall_accuracy": 0.0,
+    "per_category": {
+      "bit_decoding": {
+        "n": 6,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": " The bitstring \"01001110\" can be decoded as follows:\n1. Split the bitstring into 2-bit chunks from left to right:\n   a) 00\n   b) 11\n   c) 10\n   d) 01\n2. Map each chunk with the codebook:\n   a) Codebook: a=00, b=01, c=10, d=11\n   a) 00 -> A\n   b) 11 -> B\n   c) 10 -> C\n   d) 01 -> D\n3. Combine the decoded letters to form the output string \"ACBD\".",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": " The bitstring \"010011100110\" can be decoded as follows:\n1. Split the bitstring into 2-bit chunks from left to right:\n   - 00\n   - 11\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   - 01\n   - 10\n   ",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": " The bitstring \"000001010011\" can be decoded as follows:\n1. First 3-bit chunk: r=000, e=001, a=010\n   - Decoded letter: R (r)\n   - Second 3-bit chunk: e=001, o=010\n   - Decoded letter: O (o)\n   - Third 3-bit chunk: i=011, n=100\n   - Decoded letter: I (i)\n2. Fourth 3-bit chunk: a=010, d=011\n   - Decoded letter:",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": " The bitstring is \"000001010011101100\".\nThe codebook is \"r=000, e=001, a=010, d=011, y=100, s=101\".\nTo decode the bitstring, we can split it into 3-bit chunks from left to right and map each chunk with the codebook. Here's the code:\n```python\nbitstring = \"000001010011101100\"\ncodebook = \"r=000, e=001, a=010, d=011,",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": " The bitstring \"01011010\" can be decoded using a variable-length prefix code with e=0, t=10, a=110, and n=111. Here's how you can decode it:\n1. Start reading the bitstring from the leftmost position.\n2. For each bit, check if it is 0 or 1. If it's 0, consume the shortest matching code at the current position (e=0) and move to the next position. If it's 1, consume the shortest matching code at the current position (t=10) and move to the next position.",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": " c=d=a=b=",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}

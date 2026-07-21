@@ -293,15 +293,30 @@ reasoning-prompt and non-reasoning-prompt trajectories on the same
 model exceeds the baseline noise floor (measured over 10 seeds) with
 a consistent sign across metrics.
 
-*Exact thresholds intentionally left as a placeholder.* Locking them
-now would risk formulating a criterion on the wrong mental model of
-what the metrics measure. Thresholds are formulated after: (a) the
-first pilot run on any of the three metrics establishes a plausible
-noise-floor and (b) the reading of RWKV-7 paper Appendix J calibrates
-what "meaningful" SR movement looks like. See
-`docs/state-and-reasoning.md` for the calibration reference. Threshold
-formulation is a session-opening step of the A0.4 execution session,
-not a lock made here.
+**Thresholds (locked from A0.4 pilot, 2026-07-21).** Pilot: 3 seeds ×
+128 decode tokens on `World-0.4B × medium`, CPU bf16
+(`experiments/A0_state_probe/results/pilot/`).
+
+| metric                          | pilot mean | between-seed SD | `Δ_min = 3·SD` |
+|---------------------------------|------------|-----------------|----------------|
+| `delta_pooled`                  | 39.91      | 2.97            | **8.90**       |
+| `curvature_pooled`              | 62.52      | 4.50            | **13.49**      |
+| `stable_rank` (per-step std)    | 0.571      | 0.163           | **0.49**       |
+
+- **Effect-size lock:** `d = |mean_reasoning − mean_narrative| /
+  pooled_sd`; H8 support requires **`d ≥ 1.0` on ≥ 2 of the 3 metrics**
+  with Welch's t-test **`p < 0.05 / 3`** (Bonferroni).
+- **Scale caveat.** Pilot ran on 0.4B (World-0.4B / G1d-0.4B), not the
+  planned 2.9B pair. CPU-only throughput on i5-1235U made 2.9B bf16
+  infeasible (~54 h wall for full sweep). H8/H9 verdicts therefore
+  bind to the **small-model regime**; 2.9B re-run is a `ROADMAP`
+  follow-up conditional on GPU access.
+
+*Placeholder rationale (retained for history).* Thresholds were
+intentionally left as a placeholder in the pre-pilot version because
+locking them earlier would have risked formulating a criterion on the
+wrong mental model. See `docs/state-and-reasoning.md` for the
+calibration reference (RWKV-7 paper Appendix J).
 
 **Falsification (staged — placeholder thresholds).** Refutation of a
 claim this load-bearing cannot rest on a single run. Staged flow:

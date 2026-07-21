@@ -20,6 +20,7 @@
 !experiments/**/*.md
 !experiments/**/*.sh
 !experiments/**/*.json
+!experiments/**/*.jsonl
 !experiments/**/*.toml
 !experiments/**/*.yml
 !experiments/**/*.yaml
@@ -52,6 +53,10 @@ training/**/data/
 training/**/checkpoints/
 training/**/runs/
 training/**/wandb/
+training/corpus/
+training/sanitised/
+training/tokenised/
+training/rwkv-peft/
 runtime/**/state/
 memory/**/store/
 models/

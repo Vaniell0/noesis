@@ -1,118 +1,167 @@
-"""State-dynamics metrics for A0.4 — skeleton.
+"""State-dynamics metrics for A0.4.
 
-Three disjoint measures, one function each. Bodies raise
-NotImplementedError; docstrings pin the math so the execution session
-starts from the definition, not from a re-derivation.
+Three disjoint measures. All accept per-layer WKV state as either a
+single tensor of shape ``[n_head, head_size, head_size]`` or a list of
+such tensors (one per RWKV block). Inputs are expected in bf16 (or fp32
+already); accumulation happens in fp32 regardless.
 
-All functions accept per-layer WKV state tensors of shape
-``[n_head, head_size, head_size]``. Accumulation is expected in fp32
-regardless of the input dtype — inputs are bf16 in the current design
-to bound memory.
+The three metrics are intended to answer distinct questions:
+
+- ``delta_norm``      — "how far did the state move?"
+- ``curvature``       — "is the trajectory straight (memory) or bent (compute)?"
+- ``stable_rank``     — "how many effective directions does the state use?" (per head)
+
+Definitions are matched to the paper (Appendix J stable-rank) plus the
+plan's own delta / second-difference framing. See
+``../../docs/state-and-reasoning.md`` §1 (Appendix J) and
+``../../HYPOTHESES.md`` §H8 for the underlying rationale.
 """
 
 from __future__ import annotations
 
+from typing import Sequence
 
-def delta_norm(prev, curr) -> float:
+import torch
+
+
+# --------------------------------------------------------------------------- #
+# Helpers
+# --------------------------------------------------------------------------- #
+
+def _as_layer_list(state) -> "list[torch.Tensor]":
+    """Normalise to a list-of-per-layer-tensors."""
+    if isinstance(state, torch.Tensor):
+        return [state]
+    return list(state)
+
+
+def _flat_fp32(state) -> torch.Tensor:
+    """Concatenate all per-layer tensors into a single fp32 vector."""
+    layers = _as_layer_list(state)
+    return torch.cat([t.reshape(-1).to(torch.float32) for t in layers])
+
+
+# --------------------------------------------------------------------------- #
+# 1. delta norm
+# --------------------------------------------------------------------------- #
+
+def delta_norm(prev, curr) -> "tuple[float, list[float]]":
     """L2 norm of the state's change between consecutive tokens.
 
-    Computes ``||curr - prev||_2`` over the fully flattened state
-    tensor (concatenation of all layers' WKV states). Returns a
-    single scalar per (model, prompt, seed, step) — the pooled
-    magnitude of state movement.
+    Returns ``(pooled, per_layer)``:
 
-    A per-layer variant is trivial: apply the same formula per layer
-    tensor and return a ``[n_layer]`` vector. The execution session
-    should emit both — the pooled scalar for coarse comparison and
-    the per-layer vector for the layer-wise activity story.
+    - ``pooled``     — ``‖curr − prev‖_2`` over the concatenation of all
+                       per-layer tensors flattened; single scalar.
+    - ``per_layer``  — one non-negative float per layer.
 
-    Interpretation: high ``delta_norm`` = state changed a lot this
-    step. It is not on its own evidence of computation (memory
-    updates also cause large deltas); interpretation requires the
-    curvature companion (see below).
+    Interpretation: high ``pooled`` means the state moved a lot this
+    step. On its own, that is compatible with both memory-update and
+    compute readings; use in conjunction with ``curvature``.
 
-    Args:
-        prev: WKV state at token ``t-1``, either a single tensor or
-            a list of per-layer tensors.
-        curr: WKV state at token ``t``, same shape as ``prev``.
-
-    Returns:
-        Non-negative float in fp32.
-
-    Raises:
-        NotImplementedError: skeleton.
+    Inputs may be a single tensor or a list of per-layer tensors of
+    equal length. Accumulation is fp32.
     """
-    raise NotImplementedError("A0.4 skeleton — implement in execution session")
+    prev_list = _as_layer_list(prev)
+    curr_list = _as_layer_list(curr)
+    if len(prev_list) != len(curr_list):
+        raise ValueError(
+            f"delta_norm: layer count mismatch prev={len(prev_list)} "
+            f"curr={len(curr_list)}"
+        )
+    per_layer = [
+        torch.linalg.vector_norm(
+            (c.to(torch.float32) - p.to(torch.float32)).reshape(-1)
+        ).item()
+        for p, c in zip(prev_list, curr_list)
+    ]
+    pooled = float(torch.tensor(per_layer, dtype=torch.float64).pow(2).sum().sqrt())
+    return pooled, per_layer
 
 
-def curvature(prev_prev, prev, curr) -> float:
+# --------------------------------------------------------------------------- #
+# 2. curvature
+# --------------------------------------------------------------------------- #
+
+def curvature(prev_prev, prev, curr) -> "tuple[float, list[float]]":
     """L2 norm of the second difference of the state trajectory.
 
-    Computes ``||(curr - prev) - (prev - prev_prev)||_2`` over the
-    flattened state. Requires three consecutive states, so the metric
-    is defined for token ``t >= 2`` in the generation loop.
+    Returns ``(pooled, per_layer)`` where the underlying quantity is:
 
-    Interpretation: low curvature = the trajectory is (locally)
-    linear, which corresponds to a pure memory update — the state
-    moves in a consistent direction. High curvature = the trajectory
-    bends, which is what a computation-style update would look like
-    when the "answer" the state is being trained toward shifts across
-    tokens (see paper §2 SGD-step framing in
-    ../../docs/state-and-reasoning.md).
+        ``‖(curr − prev) − (prev − prev_prev)‖_2``
 
-    Reasoning-vs-narrative curvature contrast is the core evidence
-    for H8 — a memory-only reading of the state predicts they should
-    look alike after prompt-content controls; a compute-reading
-    predicts systematic curvature differences during a `<think>` or
-    reasoning-flavoured continuation.
+    over the flattened concatenation of per-layer tensors.
 
-    Args:
-        prev_prev: WKV state at token ``t-2``.
-        prev: WKV state at token ``t-1``.
-        curr: WKV state at token ``t``.
+    Interpretation: low curvature = trajectory is locally linear
+    (memory update — the state moves in a consistent direction). High
+    curvature = the trajectory bends, which is the compute-style
+    signature under the paper §2 SGD-step framing.
 
-    Returns:
-        Non-negative float in fp32.
-
-    Raises:
-        NotImplementedError: skeleton.
+    The metric is defined for token ``t >= 2`` in the generation loop.
+    Caller responsible for skipping the first two tokens.
     """
-    raise NotImplementedError("A0.4 skeleton — implement in execution session")
+    pp_list = _as_layer_list(prev_prev)
+    p_list = _as_layer_list(prev)
+    c_list = _as_layer_list(curr)
+    n = len(pp_list)
+    if not (len(p_list) == n == len(c_list)):
+        raise ValueError("curvature: layer count mismatch across three states")
+    per_layer = []
+    for pp, p, c in zip(pp_list, p_list, c_list):
+        pp_f = pp.to(torch.float32)
+        p_f = p.to(torch.float32)
+        c_f = c.to(torch.float32)
+        d1 = (c_f - p_f).reshape(-1)
+        d2 = (p_f - pp_f).reshape(-1)
+        per_layer.append(float(torch.linalg.vector_norm(d1 - d2)))
+    pooled = float(torch.tensor(per_layer, dtype=torch.float64).pow(2).sum().sqrt())
+    return pooled, per_layer
 
 
-def stable_rank(state) -> "list[float]":
-    """Effective rank of each WKV head, per RWKV-7 paper Appendix J.
+# --------------------------------------------------------------------------- #
+# 3. stable rank (paper Appendix J)
+# --------------------------------------------------------------------------- #
 
-    For each head's ``[head_size, head_size]`` matrix ``A``, computes:
+def stable_rank(state) -> "list[list[float]]":
+    """Effective rank of every WKV head, per RWKV-7 paper Appendix J.
 
-        ``SR(A) = (||A||_F / ||A||_2)^2``
+    For each per-layer tensor of shape ``[n_head, head_size, head_size]``
+    and each head-matrix ``A`` inside it, returns:
 
-    where ``||A||_F`` is the Frobenius norm and ``||A||_2`` is the
-    spectral norm (largest singular value). Returns a list of length
-    ``n_head * n_layer`` (or a nested list `[n_layer][n_head]` — pick
-    a consistent layout in the execution session and stick to it).
+        ``SR(A) = (‖A‖_F² / ‖A‖_2²)``
 
-    Interpretation: SR is a smoothed rank measure. SR near 1 = state
-    concentrated in a single dominant direction; SR approaching
-    ``head_size`` = state uses all directions roughly equally. Under
-    the SGD-at-test-time framing, more diverse state use during
-    reasoning would show as elevated SR variance over time.
+    where ``‖A‖_F`` is the Frobenius norm and ``‖A‖_2`` is the spectral
+    norm (largest singular value).
 
-    This metric is chosen specifically because the RWKV-7 paper
-    reports it (Appendix J, p. 50), giving A0.4 results direct
-    comparability to the authors' own probing.
+    Layout: returns a nested list ``sr[layer_idx][head_idx]``. Callers
+    that want a flat list can `sum(sr, [])`.
 
-    Args:
-        state: A single per-layer WKV tensor
-            (``[n_head, head_size, head_size]``) or a list of them.
-
-    Returns:
-        List of stable-rank values, one per head. fp32.
-
-    Raises:
-        NotImplementedError: skeleton.
+    Interpretation: SR near 1 = state concentrated in one dominant
+    direction; SR approaching ``head_size`` = state spread across all
+    directions. Reasoning-vs-narrative variance over the trajectory
+    is what H8 pre-registration checks.
     """
-    raise NotImplementedError("A0.4 skeleton — implement in execution session")
+    layers = _as_layer_list(state)
+    per_layer: "list[list[float]]" = []
+    for t in layers:
+        if t.dim() == 2:
+            t = t.unsqueeze(0)
+        if t.dim() != 3:
+            raise ValueError(
+                f"stable_rank: expected [n_head, h, h] or [h, h], got {tuple(t.shape)}"
+            )
+        t_f = t.to(torch.float32)
+        heads: "list[float]" = []
+        for h in range(t_f.shape[0]):
+            A = t_f[h]
+            frob_sq = float(torch.linalg.matrix_norm(A, ord="fro").pow(2))
+            svals = torch.linalg.svdvals(A)
+            top_sq = float(svals[0].pow(2))
+            if top_sq < 1e-30:
+                heads.append(0.0)
+            else:
+                heads.append(frob_sq / top_sq)
+        per_layer.append(heads)
+    return per_layer
 
 
 __all__ = ["delta_norm", "curvature", "stable_rank"]

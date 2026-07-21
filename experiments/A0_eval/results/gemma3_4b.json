@@ -1,0 +1,585 @@
+{
+  "model": "gemma3:4b",
+  "backend": "ollama",
+  "n_tasks": 42,
+  "elapsed_s": 1045.8577744960785,
+  "aggregate": {
+    "n_total": 42,
+    "n_correct": 16,
+    "overall_accuracy": 0.38095238095238093,
+    "per_category": {
+      "bit_decoding": {
+        "n": 10,
+        "correct": 1,
+        "accuracy": 0.1
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 3,
+        "accuracy": 0.375
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 6,
+        "accuracy": 0.75
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 2,
+        "accuracy": 0.3333333333333333
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 2,
+        "accuracy": 0.3333333333333333
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 2,
+        "accuracy": 0.5
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": "Here's the decoding of the provided 8-bit binary data, with MSB first:\n\n01001000 -> H\n01000101 -> e\n01001100 -> l\n01001100 -> l\n01001111 -> o\n",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": "Okay, let's decode this ASCII binary sequence. We'll break it down into 8-bit chunks and convert each chunk to its corresponding ASCII character:\n\n*   **01110010:**  Decimal 114 = **r**\n*   **01110101:**  Decimal 117 = **u**\n*   **01101110:**  Decimal 102 = **f**\n*   **00100000:**  Decimal 32 = **space**\n*   **01110100:**  Decimal 116 = **t**\n*   **01100101:**  Decimal 97 = **a**\n*   **01110011:**  Decimal 115 = **s**\n*   **01110100:**  Decimal 116 = **t**\n\nTherefore, the decoded ASCII sequence is:\n\n**ru f space ta st**",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "```python\nimport codecs\n\nhex_string = \"6e6f65736973\"\ndecoded_string = codecs.decode(hex_string, 'hex')\nprint(decoded_string)\n```\n\nThis code will output:\n\n```\nwrite\n```\n\n**Explanation:**\n\n* **`codecs.decode(hex_string, 'hex')`**: This function takes the hexadecimal string (`hex_string`) and decodes it using the 'hex' encoding.  The 'hex' encoding specifies that the input is a sequence of hexadecimal digits (0-9 and A-F).\n* **\"6e6f65736973\"**: This is the given hexadecimal representation.\n    * `6e` = w\n    * `6f` = r\n    * `65` = i\n    * `73` = t\n    * `69` = i\n    * `73` = t\n* The function then converts each pair of hexadecimal digits into its corresponding ASCII character, resulting in the string \"write\".\n",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "```\nThis is a secret message!\n```\n\n**Explanation:**\n\nThe hexadecimal string `74686520616e73776572206973203432` decodes to the ASCII characters:\n\n*   74 = T\n*   68 = h\n*   65 = e\n*   20 = (space)\n*   61 = a\n*   6e = n\n*   73 = s\n*   77 = w\n*   65 = e\n*   72 = r\n*   20 = (space)\n*   69 = i\n*   73 = s\n*   20 = (space)\n*   34 =  \"\n*   32 = 2",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "Tell me the world\n",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": "hello this\n",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": "The given ciphertext is \"olsw\". We are looking for a Caesar cipher with key $N$ such that it decodes to a real English word. The possible values of $N$ range from 1 to 25.\n\nWe can try different values of $N$ and see if we get a valid word.\n- If $N=1$, \"olsw\" becomes \"mnlq\", which is not a word.\n- If $N=2$, \"olsw\" becomes \"kprr\", which is not a word.\n- If $N=3$, \"olsw\" becomes \"jots\", which is not a word.\n- If $N=4$, \"olsw\" becomes \"iuns\", which is not a word.\n- If $N=5$, \"olsw\" becomes \"hrmt\", which is not a word.\n- If $N=6$, \"olsw\" becomes \"gsqo\", which is not a word.\n- If $N=7$, \"olsw\" becomes \"frpn\", which is not a word.\n- If $N=8$, \"olsw\" becomes \"eqmo\", which is not a word.\n- If",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "Okay, let's decode this XORed text.\n\n**1. The XOR Operation:**\n\nWe have the following bytes and their XOR with key `0x2A`:\n\n*   `47` XOR `0x2A` = `69` (Hex)\n*   `4f` XOR `0x2A` = `73` (Hex)\n*   `4f` XOR `0x2A` = `73` (Hex)\n*   `5e` XOR `0x2A` = `86` (Hex)\n*   `0a` XOR `0x2A` = `26` (Hex)\n*   `47` XOR `0x2A` = `69` (Hex)\n*   `4f` XOR `0x2A` = `73` (Hex)\n\n**2. Decoding the Resulting Bytes:**\n\nNow, let's convert these hexadecimal values back to ASCII characters:\n\n*   `69` -> i\n*   `73` -> s\n*   `73` -> s\n*   `86` -> V\n*   `2",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": "Okay, let's decode those ASCII values into text:\n\n*   **112:**  Lowercase 'p'\n*   **114:**  Lowercase 'r'\n*   **111:**  Lowercase 'o'\n*   **111:**  Lowercase 'o'\n*   **102:**  Lowercase 'f'\n\nTherefore, the decoded text is: **\"proof\"**",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "cafe\n",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "7\n",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": "-1\n",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": "To simplify the expression (2a + 3b) - (a - b), we distribute the negative sign to each term in the second parentheses and then combine like terms.\n\n(2a + 3b) - (a - b) = 2a + 3b - a + b\n\nNow, we combine the 'a' terms:\n2a - a = a\n\nAnd we combine the 'b' terms:\n3b + b = 4b\n\nSo, the simplified expression is:\na + 4b\n\nFinal Answer: The final answer is $\\boxed{a+4b}$",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": "2.  5 kg",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "20\n",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "kg*m^2/s^2\n",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": "Here's how to determine the base SI units of pressure:\n\n*   **Pressure Definition:** Pressure is defined as Force / Area.\n*   **Force (F):** The base SI unit of force is the Newton (N), which is kg\u22c5m/s\u00b2.\n*   **Area (A):** The base SI unit of area is the square meter (m\u00b2).\n\nTherefore, the base SI units of pressure are:\n\n**(kg\u22c5m/s\u00b2) / m\u00b2 = kg/(m\u00b2)**\n\nSo the answer is **kg/(m\u00b2)**.",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": "We are given the functions $f(x) = 2x+3$ and $g(x) = x^2$. We want to find $f(g(2))$.\n\nFirst, we evaluate $g(2)$.\n$$ g(2) = (2)^2 = 4 $$\nThen, we evaluate $f(g(2)) = f(4)$.\n$$ f(4) = 2(4) + 3 = 8+3 = 11 $$\n\nThus, $f(g(2)) = 11$.\n\nFinal Answer: The final answer is $\\boxed{11}$",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": "```json\n{\n  \"name\": \"Alice\",\n  \"age\": 34,\n  \"occupation\": \"engineer\",\n  \"city\": \"Berlin\"\n}\n```\n",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": "```json\n{\n  \"product\": \"Model-B widget\",\n  \"quantity\": 12,\n  \"unit_price\": 4.50\n}\n```\n",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": "```json\n{\n  \"date\": \"2026-08-14\",\n  \"time\": \"15:30\",\n  \"timezone\": \"UTC\",\n  \"topic\": \"budget review\"\n}\n```\n",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": "```json\n{\n  \"client_ip\": \"192.168.1.42\",\n  \"endpoint\": \"/api/v1/users\",\n  \"status\": \"404\",\n  \"latency_ms\": 123\n}\n```\n",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'client_ip': '192.168.1.42', 'endpoint': '/api/v1/users', 'status': '404', 'latency_ms': 123}"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": "```json\n{\n  \"bug_id\": \"4712\",\n  \"severity\": \"high\",\n  \"reporter\": \"rina@example.com\",\n  \"blocks_release\": \"2.3\"\n}\n```\n",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'bug_id': '4712', 'severity': 'high', 'reporter': 'rina@example.com', 'blocks_release': '2.3'}"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": "```json\n{\n  \"ingredients\": [\n    {\"item\": \"flour\", \"quantity\": 300, \"unit\": \"g\"},\n    {\"item\": \"eggs\", \"quantity\": 2, \"unit\": \"\"},\n    {\"item\": \"milk\", \"quantity\": 150, \"unit\": \"ml\"}\n  ],\n  \"temperature_c\": 180,\n  \"duration_min\": 25\n}\n```",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "```json\n{\n  \"full_name\": \"Yuki Tanaka\",\n  \"department\": \"Data Science\",\n  \"hire_date\": \"2024-01-15\",\n  \"annual_salary_usd\": 82000\n}\n```\n",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "```json\n{\n  \"latitude\": 55.7558,\n  \"longitude\": 37.6173,\n  \"altitude_m\": 156,\n  \"accuracy_m\": 5\n}\n```\n",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "Let's analyze the problem and find the minimum total time to complete all three tasks with two workers, considering the dependencies and individual task times.\n\nTasks:\n- A takes 20 min\n- B takes 30 min (depends on A)\n- C takes 15 min (no dependencies)\n\nWorkers: Two workers who can each do one task at a time.\n\nWe want to minimize the total time to complete all three tasks. Since B depends on A, we must complete A before starting B. Also, C has no dependencies and can be done concurrently with A or B.\n\nHere's a possible schedule that minimizes the overall time:\n\n1. Worker 1 starts Task A (20 min)\n2. Worker 2 starts Task C (15 min)\n3. When A is finished (at 20 min), Worker 1 starts Task B (30 min).  Worker 2 continues with Task C until it's done at 15 minutes.\n4. When B is finished (at 30 min), all tasks are complete.\n\nHowever, we can do better by having both workers work on the shortest task first. Since C takes only 15 minutes and has",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": "Let's analyze the constraints to determine the start time of meeting X.\n\n*   **Total Window:** 9:00 \u2013 12:00 (3 hours = 180 minutes)\n*   **Meeting Durations:**\n    *   X: 1 hour (60 minutes)\n    *   Y: 30 minutes\n    *   Z: 1.5 hours (90 minutes)\n\n*   **Constraints:**\n    1.  All three meetings must fit within the 9:00 \u2013 12:00 window.\n    2.  Meetings cannot overlap.\n    3.  Y must end before X starts.\n    4.  X must end before Z starts.\n\nLet's represent the meeting times as intervals. We want to find a starting time for X such that all constraints are satisfied.\n\nFirst, let's calculate the total duration of the meetings: 60 + 30 + 90 = 180 minutes. This exactly fills the window, so we need to schedule them sequentially.\n\nNow, let's consider the constraints:\n*   Y must end before X starts.\n*   X must end",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "```json\n{\n  \"alice\": \"D2\",\n  \"bob\": \"D3\",\n  \"carol\": \"D1\"\n}\n```\n\n**Explanation:**\n\n1. **Carol wants D1:** Carol *must* have D1.\n2. **Alice cannot use D3:** Alice is excluded from using D3.\n3. **Bob refuses D1:** Bob is excluded from using D1.\n\nThis leaves:\n   - D1 for Carol\n   - D2 for Alice\n   - D3 for Bob \n\nTherefore, the assignment is as shown in the JSON output.",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": "Let the time taken by one worker to make one widget be $t = 4$ hours.\nThere are 3 workers and 20 widgets to make.\nIf they can all work in parallel, we want to find the total number of hours needed to make 20 widgets with 3 workers working simultaneously.\n\nThe rate at which each worker makes widgets is $\\frac{1}{4}$ widget per hour.\nWith 3 workers, the combined rate is $3 \\times \\frac{1}{4} = \\frac{3}{4}$ widgets per hour.\nLet $h$ be the number of hours needed to make 20 widgets with 3 workers working in parallel. Then we have:\n$\\frac{3}{4} h = 20$\nMultiply both sides by $\\frac{4}{3}$:\n$h = 20 \\times \\frac{4}{3} = \\frac{80}{3}$ hours.\n\nNow, we need to round up the value of $h$.\n$\\frac{80}{3} = 26\\frac{2}{3} = 26.666...$\nSince we need to round up, we take",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "Let the weights of the five boxes be $w_1 = 3$, $w_2 = 5$, $w_3 = 7$, $w_4 = 8$, and $w_5 = 12$. We want to split these boxes into two groups such that the total weight difference between the two groups is minimized.\nLet $S$ be the sum of all weights: $S = 3 + 5 + 7 + 8 + 12 = 35$.\nWe want to divide the set $\\{3, 5, 7, 8, 12\\}$ into two subsets such that the absolute difference between their sums is minimized. Let the sum of one group be $A$ and the sum of the other group be $B$. Then $A + B = S = 35$, and we want to minimize $|A - B|$. Since $A+B=35$, we have $A = \\frac{35 + |A-B|}{2}$ and $B = \\frac{35 - |A-B|}{2}$.\nTo minimize the difference between the two groups, we should make the sums of the two groups as close to each other as",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": "Let the sizes of the items be $s = \\{3, 4, 5, 6\\}$. The capacity of each bin is $C = 8$. We want to find the minimum number of bins needed to pack these items into bins with a capacity of 8.\n\nWe can use the following approach:\n1. First, let's try to fill the bins as much as possible.\n2. We have the sizes $\\{3, 4, 5, 6\\}$. The sum of these sizes is $3+4+5+6 = 18$.\n3. Since each bin has a capacity of 8, we can find the number of bins needed by dividing the total size by the capacity: $\\frac{18}{8} = 2.25$. This means we need at least 3 bins to hold all items.\n\nLet's try to pack the items into bins as follows:\n- Bin 1: $6 + 4 + 3 + 1 = 8$ (We can use any combination of sizes that sum up to 8)\n- Bin 2: $5 + 3 = 8$\n- Bin 3: $6$\n\nHowever",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "yleetrot\n",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "```python\ndef swap_case(s):\n  \"\"\"Swaps the case of each character in a string.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The string with swapped cases.\n  \"\"\"\n  result = \"\"\n  for char in s:\n    if 'a' <= char <= 'z':\n      result += char.upper()\n    elif 'A' <= char <= 'Z':\n      result += char.lower()\n    else:\n      result += char  # Keep non-alphabetic characters as they are\n  return result\n\nstring = 'aBcDeFg'\ntransformed_string = swap_case(string)\nprint(transformed_string)\n```\n\nOutput:\n\n```\nAbCdEfG\n```",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": "```python\ndef remove_duplicate_letters(s):\n  \"\"\"Removes duplicate letters from a string, preserving original order.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    A new string with duplicate letters removed, maintaining the original order of remaining characters.\n  \"\"\"\n  seen = set()\n  result = \"\"\n  for char in s:\n    if char not in seen:\n      result += char\n      seen.add(char)\n  return result\n\n# Example usage:\ninput_string = \"engineering\"\noutput_string = remove_duplicate_letters(input_string)\nprint(output_string)\n```\n\n**Explanation:**\n\n1. **Initialization:**\n   - `seen`: A set to keep track of the letters we've already encountered in the string. Sets provide efficient (O(1)) lookups for checking if an element exists.\n   - `result`: An empty string that will store the characters from the input string, but only the first occurrence of each letter.\n\n2. **Iteration:**\n   - The code iterates through the input string `s` character by character.\n\n3. **Duplicate Check:**\n   - For",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": "aabbccddccbbbaa\n",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": "2\n",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": "2\n",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "61\n",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "10101101\n",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "250\n",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "Let the total capacity of the container be $C$ liters.\n\nInitially, the container is $\\frac{1}{4}$ full, so it contains $\\frac{1}{4} C$ liters.\nAfter adding 6 liters, the container becomes $\\frac{5}{8}$ full, so it contains $\\frac{5}{8} C$ liters.\nThe amount of liquid in the container after adding 6 liters is equal to the initial amount plus 6 liters. So we have:\n$$ \\frac{1}{4} C + 6 = \\frac{5}{8} C $$\n\nTo solve for $C$, we can first subtract $\\frac{1}{4} C$ from both sides of the equation:\n$$ 6 = \\frac{5}{8} C - \\frac{1}{4} C $$\nWe need to find a common denominator for $\\frac{5}{8}$ and $\\frac{1}{4}$. The least common multiple of 8 and 4 is 8, so we can rewrite $\\frac{1}{4}$ as $\\frac{2}{8}$:\n$$ 6 = \\frac{5}{8} C - \\frac{2}{8} C $$",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    }
+  ]
+}
