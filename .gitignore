@@ -11,9 +11,14 @@
 !CLAUDE.md
 !FAILED.md
 !LICENSE
+!flake.nix
+!flake.lock
 
 # Docs
 !docs/**/*.md
+
+# Nix modules (independent, importable)
+!nix/**/*.nix
 
 # Experiments
 !experiments/**/*.py
@@ -38,6 +43,12 @@
 !runtime/**/*.md
 !runtime/**/*.sh
 !runtime/**/*.toml
+!runtime/**/*.rs
+!runtime/**/Cargo.lock
+!runtime/**/*.nix
+
+# Runtime build artefacts (regex above would let these leak)
+runtime/**/target/
 
 # Memory track
 !memory/**/*.py
