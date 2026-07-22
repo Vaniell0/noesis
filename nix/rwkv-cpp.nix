@@ -32,8 +32,9 @@ stdenv.mkDerivation (finalAttrs: {
     owner = "RWKV";
     repo = "rwkv.cpp";
     # TODO(user): pin a rev that supports RWKV-7 and refresh the hash.
+    # On first build, `nix build` will report the actual SRI hash.
     rev = "HEAD";
-    hash = lib.fakeSha256;
+    hash = lib.fakeHash;
     fetchSubmodules = true;
   };
 
