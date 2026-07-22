@@ -15,6 +15,24 @@ serialize them.
 - Baseline eval: RWKV-7-G1 2.9B against Qwen-2.5-3B-Instruct and Phi-4-mini
   as reference points. Numbers only, no philosophy.
 
+### A0.3. Sustained-CPU idle measurement (deferred — bundled with runtime seedling)
+- 24 h idle CPU% + wake-latency measurement of the **full noesis stack**
+  (memory-store + noesis-runtime + Ollama child), not standalone Ollama.
+  This is the sustained-load half of H1; the RSS half was closed in A0.1
+  results. Deferred out of A0.1 because measuring Ollama alone answers
+  the wrong question.
+- Trigger: fires once Phase B/D of the runtime plan lands a working
+  seedling (memory-store online + noesis-runtime supervisor running).
+  Runs on the target host (i5-1235U laptop) under a realistic wake
+  pattern — idle mostly, periodic ingest ticks, one daily-digest style
+  burst.
+- Deliverables: `experiments/A0_idle/results.md` with `pidstat`/`perf`
+  per-process breakdown, wall-clock energy proxy (package-power via
+  `perf stat -e power/energy-pkg/` if available), wake-latency
+  histogram. Verdict on H1 sustained-CPU threshold locked from the
+  H1 acceptance criteria.
+- Cost: 24 h wall, ~zero attention. Blocks Gate 1 completion of H1.
+
 ### A0.4. State-utilisation probe (weeks 2–3)
 - Instrument RWKV-7 hidden WKV state during autoregressive generation
   (HF `transformers` + torch hooks, native bf16 weights).

@@ -430,3 +430,105 @@ but a positive H9 would strengthen H4b's mechanism story.
 
 **Status.** Untested; probe designed in `experiments/A0_state_probe/`;
 execution deferred to the next session.
+
+---
+
+## H10. Test-time compute frontier — state × tokens × readout
+
+**Claim.** The RWKV-7 backbone exposes three orthogonal knobs before
+final answer decode:
+
+- **N** — state-refinement passes over the prompt (each pass updates
+  WKV, no tokens emitted).
+- **K** — CoT-token budget: how many think-tokens are decoded before
+  the answer.
+- **readout_mode** — how those think-tokens are produced:
+  - `silent` — no think-tokens, K=0 (pure state refinement).
+  - `prompt_cot` — classic. Think-tokens decoded as continuation of
+    the prompt (each token re-ingested via state update).
+  - `state_readout` — after N refinement passes, K tokens decoded
+    directly from the refined state (no CoT-prompt scaffolding);
+    the tokens are a self-report on the state, then the answer
+    decodes from the state-after-readout.
+
+The `(N, K, mode)` matrix has a non-trivial Pareto frontier on the
+A0.2 rubric set — i.e. the current AI-industry default
+`(N=1, K=large, mode=prompt_cot)` is not necessarily optimal for this
+architecture. Mapping the frontier lets noesis define its own effort
+levels rather than copying Transformer conventions.
+
+**Prediction.** Sweep `N ∈ {0, 1, 2, 3, 5}` × `K ∈ {0, 32, 128, 512}`
+× `mode ∈ {silent, prompt_cot, state_readout}` at greedy decode on
+the A0.2 rubric set with G1d-0.4B. Two concrete claims on the
+resulting frontier:
+
+- **Non-degenerate frontier.** At least one non-default cell (N > 1
+  OR mode ≠ prompt_cot) achieves ≥ +0.05 rubric points at ≤ 1.0× the
+  compute cost of the default cell `(N=1, K_default, prompt_cot)`.
+- **Readout carries signal.** `state_readout` at K > 0 beats `silent`
+  at the same N by ≥ +0.02 rubric — the readout tokens carry
+  information back into the final decode, not just noise.
+
+Auxiliary signal: between-step state motion `‖state_N − state_{N-1}‖_2`
+is monotone non-increasing with N (refinement converges, not
+diverges).
+
+**Falsification (per-claim).**
+- If the default cell is Pareto-dominant (nothing beats it at ≤ 1.0×
+  compute), all knobs collapse to Transformer conventions → the
+  effort registry has no distinguishing content; drop the matrix
+  back to N-only refinement scope.
+- If `state_readout` ≈ `silent` at the same N (Δ < 0.02 rubric),
+  readout tokens are non-load-bearing → keep matrix, drop the readout
+  axis.
+- If rubric decreases with N (state destabilises on re-feed),
+  refinement itself is refuted — supersedes the matrix conclusion;
+  register in `FAILED.md`.
+
+**Related.** Track A (A0.8, extended 2026-07-22 from N-only sweep to
+3D matrix). Directly follows H8-causal PASS: if state does work per
+token, more state work should compound. Deliverable: a runtime
+`effort` registry with noesis-specific presets (fast / normal / deep)
+selected from the measured Pareto frontier, not copy-pasted from
+Transformer effort levels. Design draft: `docs/effort-frontier.md`.
+
+**Status.** Untested; runner and eval design in
+`experiments/A0.8_refine/` (pending). Scheduled after A0.6/A0.7 —
+their verdicts may narrow the design space (e.g. if state turns out
+not to survive re-feed at N > 1, the readout-mode axis collapses).
+
+---
+
+## H11. Zone-typed lenses beat monolithic text-bottleneck handoff
+
+**Claim.** Cross-model handoff via **per-zone lenses** (DSL blocks for
+`insights`/`vault`/`events` + DSL-rendered scratch-lens from the
+incumbent model, paraphrased to prose only at the foreign-model edge)
+preserves task success within 10 % of a full raw-log handoff while
+using under 10 % of the tokens. Refinement of H5 — H5's "compact
+structured summary" is generalised into a zone-typed DSL protocol that
+covers resident-model swaps, not only remote-Claude escalation. The
+runtime owns the wire format end-to-end; Ollama supplies token I/O.
+
+**Prediction.** On ≥ 30 multi-turn tasks from an extended A0.2 pool
+that require a mid-task model handoff:
+- Task success on M_B under the lens bundle ≥ 0.9 × success under raw
+  log
+- Input-token cost of the lens bundle ≤ 0.1 × raw log cost
+
+**Falsification.** If task success drops more than 10 % *or* token
+cost exceeds 10 % of raw, per-zone ablation identifies which lens is
+under-designed. If the *scratch* lens is the culprit specifically,
+the model cannot reliably describe its own reasoning state — a much
+stronger negative result that closes off runtime-owned memory as an
+architectural bet and pushes noesis toward a text-only handoff
+protocol (H5's original form).
+
+**Related.** Track B, Track C (C3). Depends on Phase B/D of runtime
+plan + A1 checkpoint + at least one alternative Ollama-servable
+model. Design frozen in `docs/memory-lenses.md`. Interacts with
+H5 (which becomes a special case: scratch-only lens, remote Claude
+as M_B).
+
+**Status.** Untested. Runs after A1 lands and Phase B/D seedling is
+online. Not in Phase 1 critical path.
