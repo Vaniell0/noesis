@@ -1,0 +1,657 @@
+{
+  "model": "qwen2.5:1.5b",
+  "backend": "ollama",
+  "n_tasks": 48,
+  "elapsed_s": 383.6815459728241,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 18,
+    "overall_accuracy": 0.375,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 6,
+        "accuracy": 0.75
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 4,
+        "accuracy": 0.5
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 3,
+        "accuracy": 0.5
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 3,
+        "accuracy": 0.5
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 2,
+        "accuracy": 0.5
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": "This sequence of bytes represents ASCII characters, which can be converted to their corresponding characters by decoding each byte into its decimal value and then mapping that value to a character from the ASCII table.\n\nHere's the process:\n\n- The first byte is `01001000`, which decodes to `80` in decimal.\n- The second byte is `01000101`, which decodes to `57` in decimal.\n- The third byte is `01001100`, which decodes to `96` in decimal.\n- The fourth byte is `01001100`, which decodes to `96` in decimal.\n- The fifth byte is `01001111`, which decodes to `153` in decimal.\n\nMapping these values to characters from the ASCII table:\n\n- 80 -> \" \"\n- 57 -> \"!\"\n- 96 -> \"?\"\n- 96 -> \"?\"\n- 153 -> \"\u2026\"\n\nSo, the decoded text is: \" ! ? !\"",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": "The ASCII-binary sequence you provided is: `01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100`\n\nTo decode this, we need to convert each group of 8 bits into its corresponding ASCII character. Here's the process:\n\n1. Convert each byte (8-bit sequence) into a decimal number.\n2. Use the decimal number to find the corresponding ASCII character.\n\nLet's do it step by step:\n\n### Step 1: Convert Each Byte to Decimal\n- `01110010` in binary is `66` in decimal.\n- `01110101` in binary is `73` in decimal.\n- `01101110` in binary is `114` in decimal.\n- `00100000` in binary is `8` in decimal.\n- `01110100` in binary is `90` in decimal.\n- `01100101` in binary is `121` in decimal.\n- `01110011` in binary is `153` in decimal.\n- `01110100` in binary is `154` in decimal.\n\n### Step 2: Find the Corresponding ASCII Character\nNow, we look up each decimal number in the ASCII table:\n\n- `66`: 'F'\n- `73`: 'W'\n- `114`: 'P'\n- `8`: ' '\n- `90`: 'M'\n- `121`: 'S'\n- `153`: 'T'\n- `154`: 'U'\n\n### Final Decoded ASCII-Binary Sequence\nThe decoded sequence is: `F W P M S T U`\n\nSo, the final answer is:\n\n**`F W P M S T U`**",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "The given sequence of bytes \"6e6f65736973\" when decoded from UTF-8 encoding represents the string \"encode\".",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "The decoded ASCII text from the given hexadecimal string is:\n\n\"this is 42\"\n\nThis appears to be a simple message that translates directly into English. The numbers \"42\" are likely meant as digits rather than letters, which explains why they appear in the output.",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "The decoded text is: \"Hello World\"",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": "The decoded text is \"hello world\".",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": "To solve this problem, we need to determine which shift \\(N\\) would make the string \"olsw\" decode into a real English word using a Caesar cipher.\n\nA Caesar cipher shifts each letter in the alphabet by a certain number of positions. For example:\n- 'a' becomes 'c'\n- 'b' becomes 'd'\n- 'z' becomes 'b'\n\nGiven the string \"olsw\", we need to find \\(N\\) such that shifting each character by \\(N\\) results in a real English word.\n\nLet's try different values of \\(N\\):\n\n1. **For \\(N = 1\\):**\n   - o -> l\n   - l -> k\n   - s -> r\n   - w -> x\n\n   This doesn't form a meaningful word.\n\n2. **For \\(N = 2\\):**\n   - o -> n\n   - l -> j\n   - s -> t\n   - w -> v\n\n   Again, this isn't a real English word.\n\n3. **For \\(N = 3\\):**\n   - o -> p\n   - l -> k\n   - s -> r\n   - w -> u\n\n   This still doesn't form a meaningful word.\n\n4. **For \\(N = 4\\):**\n   - o -> q\n   - l -> m\n   - s -> t\n   - w -> v\n\n   Again, this isn't a real English word.\n\n5. **For \\(N = 5\\):**\n   - o -> r\n   - l -> n\n   - s -> t\n   - w -> u\n\n   This still doesn't form a meaningful word.\n\n6. **For \\(N = 6\\):**\n   - o -> s\n   - l -> m\n   - s -> t\n   - w -> v\n\n   Again, this isn't a real English word.\n\n7. **For \\(N = 7\\):**\n   - o -> t\n   - l -> n\n   - s -> u\n   - w -> x\n\n   This still doesn't form a meaningful word.\n\n8. **For \\(N = 8\\):**\n   - o -> u\n   - l -> p\n   - s -> v\n   - w -> y\n\n   Again, this isn't a real English word.\n\n9. **For \\(N = 9\\):**\n   - o -> v\n   - l -> q\n   - s -> w\n   - w -> z\n\n   This still doesn't form a meaningful word.\n\n10. **For \\(N = 10\\):**\n    - o -> w\n    - l -> r\n    - s -> t\n    - w -> y\n\n    Again, this isn't a real English word.\n\n11. **For \\(N = 11\\):**\n    - o -> x\n    - l -> s\n    - s -> u\n    - w -> z\n\n    This still doesn't form a meaningful word.\n\n12. **For \\(N = 12\\):**\n    - o -> y\n    - l -> t\n    - s -> v\n    - w -> z\n\n    Again, this isn't a real English word.\n\n13. **For \\(N = 13\\):**\n    - o -> z\n    - l -> u\n    - s -> w\n    - w -> x\n\n    This still doesn't form a meaningful word.\n\n14. **For \\(N = 14\\):**\n    - o -> a\n    - l -> b\n    - s -> c\n    - w -> d\n\n    This is the beginning of \"about\", which is a real English word.\n\nTherefore, the value of \\(N\\) that makes \"olsw\" decode into a meaningful word (in this case, \"about\") is:\n\n\\[\n\\boxed{14}\n\\]",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "To decode the given hexadecimal string, we need to XOR each pair of bytes (which represent ASCII characters) with a single-byte key `0x2A` and then convert the resulting byte sequence back into text. Here's how you can do it step by step:\n\n1. **Identify the Key**: The key is `0x2A`, which in decimal is 42.\n\n2. **XOR Each Pair of Bytes**:\n   - First pair: `47` XOR `4f` (ASCII 'G')\n     \\[\n     47 \\oplus 4f = 63\n     \\]\n     This corresponds to the ASCII character 'F'.\n   \n   - Second pair: `4f` XOR `5e` (ASCII 'L')\n     \\[\n     4f \\oplus 5e = 91\n     \\]\n     This corresponds to the ASCII character 'H'.\n\n3. **Third Pair**: `0a` XOR `47` (ASCII 'G')\n   \\[\n   0a \\oplus 47 = 4d\n   \\]\n   This corresponds to the ASCII character 'M'.\n   \n4. **Fourth Pair**: `47` XOR `4f` (ASCII 'G')\n     \\[\n     47 \\oplus 4f = 63\n     \\]\n     This again corresponds to the ASCII character 'F'.\n\n5. **Combine the Decoded Characters**:\n   - The decoded text is: \"FLMH\"\n\nSo, the decoded text from the given hexadecimal string `47 4f 4f 5e 0a 47 4f` XORed with key `0x2A` is:\n\n\\[\n\\boxed{FLMH}\n\\]",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": "The given sequence of ASCII codes is \"112 114 111 111 102\". To decode these into text, we need to convert each byte (sequence of two hexadecimal digits) into its corresponding character.\n\nHere's the step-by-step process:\n\n1. Convert each pair of bytes into a single integer.\n2. Find the corresponding ASCII character for that integer.\n\nLet's do this conversion one by one:\n\n- The first four bytes are \"112 114 111 111\". Converting these to integers:\n  - 0x7A = 'z'\n  - 0x7E = '!'\n  - 0x6C = 'l'\n  - 0x63 = 'c'\n\nSo, \"112 114 111 111\" decodes to \"zlcl\".\n\n- The last byte is \"102\". Converting this to an integer:\n  - 0x6A = 'z'\n\nSo, \"102\" decodes to \"z\".\n\nCombining these results, the decoded text is \"zlclz\".\n\nTherefore, the final answer is: **\"zlclz\"**.",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "The decoded word for \"\u03b3\u03b1\u03b7\u03b5\" using the substitution table provided is \"cbe\".",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "Let's solve this equation step by step:\n\n1) Start with the original equation:\n   3x + 7 = 22\n\n2) Subtract 7 from both sides to isolate the term with x:\n   3x + 7 - 7 = 22 - 7\n   3x = 15\n\n3) Divide both sides by 3 to solve for x:\n   3x / 3 = 15 / 3\n   x = 5\n\nSo the solution is: x = 5.",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": "Let's solve this equation step by step:\n\n1) Start with the given equation:\n   \\(2(x - 3) = 4x + 6\\)\n\n2) Distribute the 2 on the left side:\n   \\(2x - 6 = 4x + 6\\)\n\n3) Subtract \\(2x\\) from both sides to get all terms with \\(x\\) on one side:\n   \\(-6 = 2x + 6\\)\n\n4) Subtract 6 from both sides to isolate the term with \\(x\\):\n   \\(-12 = 2x\\)\n\n5) Divide both sides by 2 to solve for \\(x\\):\n   \\(-6 = x\\)\n\nSo, the solution is:\n\\(x = -6\\)",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": "To simplify the expression \\((2a + 3b) - (a - b)\\), we need to distribute the negative sign through the second set of parentheses and then combine like terms.\n\nFirst, distribute the negative sign:\n\\[\n(2a + 3b) - (a - b) = 2a + 3b - a + b\n\\]\n\nNext, combine the like terms. The \\(a\\) terms are \\(2a\\) and \\(-a\\), which simplify to \\(a\\). The \\(b\\) terms are \\(3b\\) and \\(b\\), which simplify to \\(4b\\).\n\nSo, we have:\n\\[\n2a - a + 3b + b = a + 4b\n\\]\n\nTherefore, the simplified expression is \\(\\boxed{a + 4b}\\).",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": "2.5 kilograms",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "To find the average speed of the car, you can use the formula:\n\n\\[ \\text{Average Speed} = \\frac{\\text{Distance}}{\\text{Time}} \\]\n\nGiven:\n- Distance = 90 km\n- Time = 45 minutes\n\nFirst, convert the time from minutes to hours since the distance is in kilometers and speed needs to be in km/h. There are 60 minutes in an hour.\n\n\\[ \\text{Time in hours} = \\frac{45}{60} = 0.75 \\text{ hours} \\]\n\nNow, calculate the average speed:\n\n\\[ \\text{Average Speed} = \\frac{90 \\text{ km}}{0.75 \\text{ hours}} = 120 \\text{ km/h} \\]\n\nSo, the car's average speed is 120 km/h.",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "kg*m^2/s^2",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": "The base SI unit of pressure is Pascal (Pa). To express this in terms of kilograms (kg), meters (m), and seconds (s), we need to understand that pressure is defined as force per area.\n\n1. The base SI unit for force is the newton (N).\n2. The base SI unit for area is the square meter (m\u00b2).\n\nGiven these, we can express Pascal in terms of kilograms, meters, and seconds by considering the following:\n\n- 1 kg = 1000 grams\n- 1 m\u00b3 = 1000 liters\n\nHowever, since pressure is defined as force per unit area, it's more straightforward to use fundamental units directly without converting between different units.\n\nThe base SI unit of pressure (Pascal) can be expressed in terms of kilograms, meters, and seconds by considering the following:\n\n- Pressure (P) = Force (F) / Area (A)\n- F = kg * m/s\u00b2\n- A = m\u00b2\n\nTherefore, P = (kg * m/s\u00b2) / (m\u00b2)\n\nSimplifying this expression gives us:\n\n\\[ \\text{Pressure in Pascal} = \\frac{\\text{Force}}{\\text{Area}} = \\frac{\\text{kg} \\cdot \\text{m}/\\text{s}^2}{\\text{m}^2} = \\frac{\\text{kg} \\cdot \\text{m}}{\\text{s}^2 \\cdot \\text{m}^2} = \\frac{\\text{kg} \\cdot \\text{m}}{\\text{s}^2 \\cdot \\text{m}^2} = \\frac{\\text{kg} \\cdot \\text{m}}{\\text{s}^2 \\cdot \\text{m}^2} = 1000 \\, \\text{Pa} \\]\n\nSo the base SI units of pressure in terms of kg, m, and s are:\n\n\\[ \\boxed{1000 \\, \\frac{\\text{kg} \\cdot \\text{m}}{\\text{s}^2}} \\]",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": "To find \\(f(g(2))\\), we first need to evaluate \\(g(2)\\) using the function \\(g(x) = x^2\\). Then, we use that result as the input for the function \\(f(x) = 2x + 3\\) to compute \\(f(g(2))\\).\n\n1. Evaluate \\(g(2)\\):\n\\[ g(2) = 2^2 = 4 \\]\n\n2. Now, evaluate \\(f(g(2)) = f(4)\\) using the function \\(f(x) = 2x + 3\\):\n\\[ f(4) = 2*4 + 3 = 8 + 3 = 11 \\]\n\nTherefore, \\(f(g(2))\\) is equal to 11.",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": "```json\n{\n  \"name\": \"Alice\",\n  \"age\": 34,\n  \"occupation\": \"engineer\",\n  \"city\": \"Berlin\"\n}\n```",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": "```json\n{\n  \"product\": \"Model-B widget\",\n  \"quantity\": 12,\n  \"unit_price\": \"$4.50\"\n}\n```",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'product': 'Model-B widget', 'quantity': 12, 'unit_price': '$4.50'}"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": "```json\n{\n  \"date\": \"2026-08-14\",\n  \"time\": \"15:30\",\n  \"timezone\": \"UTC\",\n  \"topic\": \"budget review\"\n}\n```",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": "```json\n{\n  \"client_ip\": \"192.168.1.42\",\n  \"endpoint\": \"/api/v1/users\",\n  \"status\": \"404\",\n  \"latency_ms\": 123\n}\n```",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'client_ip': '192.168.1.42', 'endpoint': '/api/v1/users', 'status': '404', 'latency_ms': 123}"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": "```json\n{\n  \"bug_id\": \"4712\",\n  \"severity\": \"high\",\n  \"reporter\": \"rina@example.com\",\n  \"blocks_release\": \"2.3\"\n}\n```",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'bug_id': '4712', 'severity': 'high', 'reporter': 'rina@example.com', 'blocks_release': '2.3'}"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": "```json\n{\n  \"ingredients\": [\n    {\"item\": \"flour\", \"quantity\": \"300g\", \"unit\": \"\"},\n    {\"item\": \"eggs\", \"quantity\": \"2\", \"unit\": \"\"},\n    {\"item\": \"milk\", \"quantity\": \"150ml\", \"unit\": \"\"}\n  ],\n  \"temperature_c\": 180,\n  \"duration_min\": 25\n}\n```",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "```json\n{\n  \"full_name\": \"Yuki Tanaka\",\n  \"department\": \"Data Science\",\n  \"hire_date\": \"2024-01-15\",\n  \"annual_salary_usd\": 82000\n}\n```",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "```json\n{\n  \"latitude\": \"55.7558\",\n  \"longitude\": \"37.6173\",\n  \"altitude_m\": \"156\",\n  \"accuracy_m\": \"5\"\n}\n```",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'latitude': '55.7558', 'longitude': '37.6173', 'altitude_m': '156', 'accuracy_m': '5'}"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "To determine the minimum total time required to complete all three tasks, we need to consider the dependency between B and A, as well as the fact that C has no dependencies.\n\nLet's break down the problem step by step:\n\n1. **Identify Dependencies:**\n   - Task A takes 20 minutes.\n   - Task B depends on Task A, so it must start after Task A is completed.\n   - Task C can be done independently and does not depend on any other tasks.\n\n2. **Assign Tasks to Workers:**\n   - Worker 1 (A) will complete Task A in 20 minutes.\n   - Worker 2 (B) will need time to wait for Task A to finish before starting Task B, which is after 20 minutes from the start of Task A.\n   - After completing Task B, Worker 2 can immediately start Task C.\n\n3. **Calculate Total Time:**\n   - The total time required is determined by the longest task that cannot be completed in parallel with others due to dependencies.\n   - Since Task A takes 20 minutes and Task B depends on it, Task B will take at least 20 minutes after Task A starts.\n   - Therefore, the minimum total time to complete all three tasks is 20 minutes.\n\nThus, the minimum total time required to complete all three tasks is \\(\\boxed{20}\\) minutes.",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": "To solve this problem, we need to find a time that fits all constraints:\n- Meetings X (1h), Y (30 min), Z (1.5h)\n- All three meetings must fit inside a 9:00\u201312:00 window\n- Y must end before X starts\n- X must end before Z starts\n\nLet's break it down step by step:\n\n### Step 1: Determine the total time available for meetings\nThe meeting times are:\n- X (1h)\n- Y (30 min) = 0.5 hours\n- Z (1.5h)\n\nTotal time required is \\(1 + 0.5 + 1.5 = 3\\) hours.\n\n### Step 2: Find the earliest possible start for X\nSince Y must end before X starts, and X ends before Z starts, we need to find a time that allows all three meetings within the 9:00\u201312:00 window.\n\nLet's denote:\n- Start of X as \\(T\\)\n- End of Y as \\(T + 0.5\\) (since Y is 30 minutes after X starts)\n- End of Z as \\(T + 1.5\\)\n\n### Step 3: Check the constraints\nWe need to ensure that all times fit within the 9:00\u201312:00 window:\n- \\(T \\leq 9:00\\) (start of meeting X must be before 9:00)\n- \\(T + 0.5 > 9:00\\), which means \\(T > 8:59.5\\) (end of Y must start after 9:00, so it cannot overlap with the window)\n- \\(T + 1.5 \\leq 12:00\\) (start of meeting Z must be before 12:00)\n\n### Step 4: Find a suitable time\nWe need to find a time \\(T\\) that satisfies all constraints:\n- Start of X at 8:59.5 or earlier\n- End of Y at 9:00 or later\n- End of Z at 12:00 or before\n\nLet's try different times:\n\n- If we start X at 8:59, it will end at 9:00.\n- This means Y can start anytime after 8:59 and end by 9:00.\n\nSince Y must end before X starts:\n- The earliest possible time for Y to start is 8:59 (since it ends at 9:00).\n\nNow, let's check the constraints with these times:\n\n- Start of X at 8:59\n- End of Y at 9:00\n- End of Z at 12:00\n\nAll three meetings fit within the 9:00\u201312:00 window and do not overlap.\n\n### Conclusion:\nThe start time of X is **8:59**.",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "```json\n{\n    \"alice\": \"D2\",\n    \"bob\": \"D3\",\n    \"carol\": \"D1\"\n}\n```",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": "To determine the total number of hours needed for the workers to complete making 20 widgets, we need to follow these steps:\n\n1. Calculate the time it takes for one worker to make one widget.\n2. Determine the combined rate at which all three workers can produce widgets together.\n3. Use this combined rate to find out how many widgets they can produce in total hours.\n4. Finally, round up to the nearest whole number if necessary.\n\nLet's go through each step:\n\n1. **Time per widget for one worker:**\n   - The problem states that a worker takes 4 hours to make one widget.\n   \n2. **Combined rate of all three workers:**\n   - Since there are 3 workers, their combined rate is \\(3 \\text{ workers} \\times 4 \\text{ hours/worker} = 12 \\text{ hours/widgets}\\).\n\n3. **Total widgets produced in total hours:**\n   - We need to find out how many widgets they can produce together in the time it takes for one worker to make one widget, which is 4 hours.\n   - Since all three workers are working simultaneously, their combined rate of producing widgets is \\(12 \\text{ widgets/hour}\\).\n   - Therefore, in 4 hours (the time it takes one worker to make one widget), they can produce \\(12 \\text{ widgets/hour} \\times 4 \\text{ hours} = 48 \\text{ widgets}\\).\n\nSince the problem asks for the total number of hours needed and we need to round up, the answer is:\n\n\\[\n\\boxed{5}\n\\]",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "To solve this problem, we need to find a way to split the weights into two groups such that the total weight of each group differs by the smallest possible amount.\n\nFirst, let's list all the weights: 3 kg, 5 kg, 7 kg, 8 kg, and 12 kg. We want to minimize the difference between the total weight of the two groups.\n\nLet's denote the sum of the weights in the first group as \\( S_1 \\) and the second group as \\( S_2 \\). The goal is to make \\( |S_1 - S_2| \\) as small as possible. \n\nWe can start by trying different combinations:\n\n1. **Combination 1:**\n   - Group 1: 3 kg, 5 kg\n     - Total weight: \\( 3 + 5 = 8 \\)\n   - Group 2: 7 kg, 8 kg, 12 kg\n     - Total weight: \\( 7 + 8 + 12 = 27 \\)\n\n   Difference: \\( |8 - 27| = 19 \\)\n\n2. **Combination 2:**\n   - Group 1: 3 kg, 5 kg, 7 kg\n     - Total weight: \\( 3 + 5 + 7 = 15 \\)\n   - Group 2: 8 kg, 12 kg\n     - Total weight: \\( 8 + 12 = 20 \\)\n\n   Difference: \\( |15 - 20| = 5 \\)\n\n3. **Combination 3:**\n   - Group 1: 3 kg, 7 kg, 8 kg\n     - Total weight: \\( 3 + 7 + 8 = 18 \\)\n   - Group 2: 5 kg, 12 kg\n     - Total weight: \\( 5 + 12 = 17 \\)\n\n   Difference: \\( |18 - 17| = 1 \\)\n\n4. **Combination 4:**\n   - Group 1: 3 kg, 5 kg, 12 kg\n     - Total weight: \\( 3 + 5 + 12 = 20 \\)\n   - Group 2: 7 kg, 8 kg\n     - Total weight: \\( 7 + 8 = 15 \\)\n\n   Difference: \\( |20 - 15| = 5 \\)\n\n5. **Combination 5:**\n   - Group 1: 3 kg, 8 kg, 12 kg\n     - Total weight: \\( 3 + 8 + 12 = 23 \\)\n   - Group 2: 5 kg, 7 kg\n     - Total weight: \\( 5 + 7 = 12 \\)\n\n   Difference: \\( |23 - 12| = 11 \\)\n\n6. **Combination 6:**\n   - Group 1: 5 kg, 8 kg, 12 kg\n     - Total weight: \\( 5 + 8 + 12 = 25 \\)\n   - Group 2: 3 kg, 7 kg\n     - Total weight: \\( 3 + 7 = 10 \\)\n\n   Difference: \\( |25 - 10| = 15 \\)\n\nFrom the above combinations, we see that the minimum difference is 1. This occurs in both Combination 1 and Combination 4.\n\nTherefore, the minimum total-weight difference between groups is:\n\n\\[\n\\boxed{1}\n\\]",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": "To determine the minimum number of bins needed to pack 4 items with sizes 3, 4, 5, and 6 into bins of capacity 8, we can use a greedy algorithm approach.\n\n### Step-by-Step Solution:\n\n1. **Sort the Items by Size:**\n   - Sort the items in ascending order of size.\n   - The sorted list is: [3, 4, 5, 6]\n\n2. **Initialize Variables:**\n   - Initialize an empty list to keep track of bins used.\n   - Initialize a counter for the number of bins needed.\n\n3. **Pack Items into Bins:**\n   - Start with the smallest item and try to fit it into existing bins or create new ones if necessary.\n   - Continue this process until all items are packed.\n\n### Step-by-Step Packing:\n\n1. **First Item (Size 3):**\n   - Check if a bin is available for size 3: No, so use a new bin.\n   - Bin count: 1\n\n2. **Second Item (Size 4):**\n   - Check if a bin is available for size 4: Yes, it fits in the first bin.\n   - Bin count: 1\n\n3. **Third Item (Size 5):**\n   - Check if a bin is available for size 5: No, so use a new bin.\n   - Bin count: 2\n\n4. **Fourth Item (Size 6):**\n   - Check if a bin is available for size 6: Yes, it fits in the second bin.\n   - Bin count: 2\n\n### Final Count:\n- We used 2 bins to pack all 4 items.\n\nThus, the minimum number of bins needed is **2**.",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "The reversed string is \"oldt\".",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "The transformed string with swapped cases for each character in 'aBcDeFg' is: `AbCdEfG`.",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": "The output is: ing",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": "bc/bc/bc",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": "2",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": "To determine how many positions have the same letters in \"planet\" and \"planed\", we can compare each character position of these two words.\n\nLet's align them for comparison:\n\n```\nplanet\nplaned\n```\n\nNow, let's count the number of matching characters from left to right:\n\n1. First letter: 'p' (match)\n2. Second letter: 'l' (match)\n3. Third letter: 'n' (match)\n4. Fourth letter: 'e' (match)\n5. Fifth letter: 't' (match)\n6. Sixth letter: 'a' (no match)\n\nSo, the positions that have the same letters are 1, 2, 3, and 4.\n\nTherefore, there are 4 positions where the letters in \"planet\" and \"planed\" are the same.",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "93",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "To convert the decimal number 173 to its binary representation, we can use the method of successive division by 2 and recording the remainders.\n\nLet's go through this step-by-step:\n\n1. Divide 173 by 2:\n   - Quotient: 86, Remainder: 1\n\n2. Divide 86 by 2:\n   - Quotient: 43, Remainder: 0\n\n3. Divide 43 by 2:\n   - Quotient: 21, Remainder: 1\n\n4. Divide 21 by 2:\n   - Quotient: 10, Remainder: 1\n\n5. Divide 10 by 2:\n   - Quotient: 5, Remainder: 0\n\n6. Divide 5 by 2:\n   - Quotient: 2, Remainder: 1\n\n7. Divide 2 by 2:\n   - Quotient: 1, Remainder: 0\n\n8. Finally, divide 1 by 2:\n   - Quotient: 0, Remainder: 1\n\nNow we read the remainders from bottom to top:\n\nThe binary representation of 173 is **10101101**.",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "242",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "Let the total capacity of the container be \\( C \\) liters.\n\nGiven that the container is initially \\( \\frac{1}{4} \\) full and after adding 6 liters, it becomes \\( \\frac{5}{8} \\) full. We can set up the following equation to represent this situation:\n\n\\[\nC - 6 = \\frac{5}{8}C\n\\]\n\nTo solve for \\( C \\), we first isolate \\( C \\) on one side of the equation by subtracting \\( \\frac{5}{8}C \\) from both sides:\n\n\\[\nC - \\frac{5}{8}C = 6\n\\]\n\nThis simplifies to:\n\n\\[\n\\frac{3}{8}C = 6\n\\]\n\nNext, we solve for \\( C \\) by dividing both sides of the equation by \\( \\frac{3}{8} \\):\n\n\\[\nC = 6 \\div \\frac{3}{8}\n\\]\n\nDividing by a fraction is equivalent to multiplying by its reciprocal:\n\n\\[\nC = 6 \\times \\frac{8}{3}\n\\]\n\nSimplify the multiplication:\n\n\\[\nC = 2 \\times 8\n\\]\n\\[\nC = 16\n\\]\n\nThus, the total capacity of the container is \\( 16 \\) liters.",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": "ad",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": "acbcd",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "ayd",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": "ayds",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": "ten",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": "adcb",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}
