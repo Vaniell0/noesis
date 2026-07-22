@@ -17,10 +17,11 @@
 
 use std::process::Stdio;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use noesis_schema::EventInput;
 use noesis_store::Store;
+use serde::Deserialize;
 use serde_json::json;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::net::TcpStream;
@@ -29,8 +30,15 @@ use tracing::{info, warn};
 
 #[derive(Debug, Clone)]
 pub enum Backend {
-    RwkvCpp { binary: String },
-    Ollama { endpoint: String },
+    RwkvCpp {
+        binary: String,
+    },
+    Ollama {
+        endpoint: String,
+        model: Option<String>,
+        heartbeat_prompt: String,
+        heartbeat: Duration,
+    },
     Unspecified,
 }
 
@@ -53,8 +61,22 @@ impl Default for InferenceConfig {
 pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> {
     match cfg.backend {
         Backend::RwkvCpp { binary } => run_rwkv_cpp(store, binary).await,
-        Backend::Ollama { endpoint } => {
-            run_ollama(store, endpoint, cfg.health_interval, cfg.connect_timeout).await
+        Backend::Ollama {
+            endpoint,
+            model,
+            heartbeat_prompt,
+            heartbeat,
+        } => {
+            run_ollama(
+                store,
+                endpoint,
+                model,
+                heartbeat_prompt,
+                heartbeat,
+                cfg.health_interval,
+                cfg.connect_timeout,
+            )
+            .await
         }
         Backend::Unspecified => {
             warn!("inference backend unspecified — supervisor idle");
@@ -63,46 +85,152 @@ pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> 
     }
 }
 
-/// Ollama: no child process; the daemon is already system-wide. We just
-/// probe its TCP port on a fixed cadence and emit `ollama_health` events
-/// into `system_obs` so downstream can see uptime / gaps.
+/// Ollama: no child process; the daemon is already system-wide. Two
+/// interleaved ticks share one task:
+///
+/// - **Health tick** (`health_interval`): TCP-connect probe; result lands
+///   in `system_obs` as `inference_health`.
+/// - **Heartbeat tick** (`heartbeat`, opt-in via `model`): actual
+///   `/api/generate` round-trip; response text + timing lands in
+///   `session_scratch` as `ollama_generation`.
+///
+/// The heartbeat proves the model round-trip works end-to-end. Without a
+/// configured model the runtime stays health-check-only.
+#[allow(clippy::too_many_arguments)]
 async fn run_ollama(
     store: Arc<Store>,
     endpoint: String,
+    model: Option<String>,
+    heartbeat_prompt: String,
+    heartbeat: Duration,
     health_interval: Duration,
     connect_timeout: Duration,
 ) -> anyhow::Result<()> {
     let addr = parse_host_port(&endpoint)?;
-    let mut ticker = tokio::time::interval(health_interval);
-    ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let http = reqwest::Client::builder()
+        .timeout(Duration::from_secs(120))
+        .build()?;
+    let mut health_ticker = tokio::time::interval(health_interval);
+    health_ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let mut heartbeat_ticker = tokio::time::interval(heartbeat);
+    heartbeat_ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
     loop {
-        ticker.tick().await;
-        let ok = match tokio::time::timeout(connect_timeout, TcpStream::connect(&addr)).await {
-            Ok(Ok(_)) => true,
-            Ok(Err(e)) => {
-                warn!(error = %e, addr = %addr, "ollama TCP connect failed");
-                false
+        tokio::select! {
+            _ = health_ticker.tick() => {
+                let ok = tcp_probe(&addr, connect_timeout).await;
+                let payload = json!({
+                    "backend": "ollama",
+                    "endpoint": endpoint,
+                    "reachable": ok,
+                });
+                if let Err(e) = store.system_obs.insert(&EventInput {
+                    kind: "inference_health".into(),
+                    payload,
+                    refs: vec![],
+                }) {
+                    warn!(error = %e, "inference_health insert failed");
+                }
             }
-            Err(_) => {
-                warn!(addr = %addr, timeout_s = connect_timeout.as_secs(),
-                      "ollama TCP connect timed out");
-                false
+            _ = heartbeat_ticker.tick() => {
+                let Some(model_name) = model.as_deref() else { continue; };
+                match ollama_generate(&http, &endpoint, model_name, &heartbeat_prompt).await {
+                    Ok(result) => {
+                        info!(
+                            model = model_name,
+                            eval_count = result.eval_count.unwrap_or(0),
+                            eval_ms = result.eval_duration_ms(),
+                            "ollama heartbeat ok",
+                        );
+                        let payload = json!({
+                            "backend": "ollama",
+                            "endpoint": endpoint,
+                            "model": model_name,
+                            "prompt": heartbeat_prompt,
+                            "response": result.response,
+                            "eval_count": result.eval_count,
+                            "eval_duration_ns": result.eval_duration,
+                            "prompt_eval_count": result.prompt_eval_count,
+                            "prompt_eval_duration_ns": result.prompt_eval_duration,
+                            "total_duration_ns": result.total_duration,
+                            "wall_ms": result.wall_ms,
+                        });
+                        if let Err(e) = store.session_scratch.insert(&EventInput {
+                            kind: "ollama_generation".into(),
+                            payload,
+                            refs: vec![],
+                        }) {
+                            warn!(error = %e, "ollama_generation insert failed");
+                        }
+                    }
+                    Err(e) => warn!(error = %e, model = model_name, "ollama heartbeat failed"),
+                }
             }
-        };
-        let payload = json!({
-            "backend": "ollama",
-            "endpoint": endpoint,
-            "reachable": ok,
-        });
-        let input = EventInput {
-            kind: "inference_health".into(),
-            payload,
-            refs: vec![],
-        };
-        if let Err(e) = store.system_obs.insert(&input) {
-            warn!(error = %e, "inference_health insert failed");
         }
     }
+}
+
+async fn tcp_probe(addr: &str, timeout: Duration) -> bool {
+    match tokio::time::timeout(timeout, TcpStream::connect(addr)).await {
+        Ok(Ok(_)) => true,
+        Ok(Err(e)) => {
+            warn!(error = %e, addr = %addr, "ollama TCP connect failed");
+            false
+        }
+        Err(_) => {
+            warn!(addr = %addr, "ollama TCP connect timed out");
+            false
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct OllamaGenerateResponse {
+    #[serde(default)]
+    response: String,
+    #[serde(default)]
+    eval_count: Option<u64>,
+    #[serde(default)]
+    eval_duration: Option<u64>,
+    #[serde(default)]
+    prompt_eval_count: Option<u64>,
+    #[serde(default)]
+    prompt_eval_duration: Option<u64>,
+    #[serde(default)]
+    total_duration: Option<u64>,
+    #[serde(skip)]
+    wall_ms: u64,
+}
+
+impl OllamaGenerateResponse {
+    fn eval_duration_ms(&self) -> u64 {
+        self.eval_duration.map(|ns| ns / 1_000_000).unwrap_or(0)
+    }
+}
+
+async fn ollama_generate(
+    http: &reqwest::Client,
+    endpoint: &str,
+    model: &str,
+    prompt: &str,
+) -> anyhow::Result<OllamaGenerateResponse> {
+    let url = format!("{}/api/generate", endpoint.trim_end_matches('/'));
+    let started = Instant::now();
+    let resp = http
+        .post(&url)
+        .json(&json!({
+            "model": model,
+            "prompt": prompt,
+            "stream": false,
+        }))
+        .send()
+        .await?;
+    if !resp.status().is_success() {
+        anyhow::bail!("ollama /api/generate returned HTTP {}", resp.status());
+    }
+    let mut parsed: OllamaGenerateResponse = resp.json().await?;
+    parsed.wall_ms = started.elapsed().as_millis() as u64;
+    Ok(parsed)
 }
 
 /// rwkv-cpp: try to invoke the binary with `--help` to verify it's

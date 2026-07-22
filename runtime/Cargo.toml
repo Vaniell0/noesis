@@ -23,6 +23,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "time", "process", "io-util", "net"] }
 toml = "0.8"
 evdev = "0.13"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 
 [profile.release]
 lto = "thin"

@@ -12,6 +12,7 @@
 
 mod collectors;
 mod inference;
+mod retention;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -46,6 +47,20 @@ struct RwkvCppSection {
 #[derive(Debug, Deserialize)]
 struct OllamaSection {
     endpoint: String,
+    #[serde(default)]
+    model: Option<String>,
+    #[serde(default = "default_heartbeat_prompt")]
+    heartbeat_prompt: String,
+    #[serde(default = "default_heartbeat_secs")]
+    heartbeat_secs: u64,
+}
+
+fn default_heartbeat_prompt() -> String {
+    "You are noesis, a persistent cognitive runtime. Report your status in one sentence.".into()
+}
+
+fn default_heartbeat_secs() -> u64 {
+    300
 }
 
 fn default_backend() -> String {
@@ -63,6 +78,9 @@ fn inference_config_from(cfg: &Config) -> inference::InferenceConfig {
         "ollama" => match &cfg.ollama {
             Some(s) => inference::Backend::Ollama {
                 endpoint: s.endpoint.clone(),
+                model: s.model.clone(),
+                heartbeat_prompt: s.heartbeat_prompt.clone(),
+                heartbeat: Duration::from_secs(s.heartbeat_secs),
             },
             None => inference::Backend::Unspecified,
         },
@@ -112,6 +130,10 @@ async fn main() -> Result<()> {
 
     let inference_cfg = inference_config_from(&cfg);
     let inference_handle = tokio::spawn(inference::run(Arc::clone(&store), inference_cfg));
+    let retention_handle = tokio::spawn(retention::run(
+        Arc::clone(&store),
+        retention::RetentionConfig::default(),
+    ));
     let _ = cfg.model_path;
 
     let collector_handles = vec![
@@ -177,6 +199,7 @@ async fn main() -> Result<()> {
         let _ = name;
     }
     inference_handle.abort();
+    retention_handle.abort();
     for (name, handle) in collector_handles {
         match handle.await {
             Ok(Ok(())) => {}
@@ -190,6 +213,12 @@ async fn main() -> Result<()> {
         Ok(Err(e)) => warn!(component = "inference", error = %e, "exited with error"),
         Err(e) if e.is_cancelled() => info!(component = "inference", "cancelled"),
         Err(e) => warn!(component = "inference", error = %e, "join error"),
+    }
+    match retention_handle.await {
+        Ok(Ok(())) => {}
+        Ok(Err(e)) => warn!(component = "retention", error = %e, "exited with error"),
+        Err(e) if e.is_cancelled() => info!(component = "retention", "cancelled"),
+        Err(e) => warn!(component = "retention", error = %e, "join error"),
     }
 
     info!("noesis-runtime stopped");
