@@ -611,3 +611,71 @@ copies.
 **Status.** Untested. Phase 2 architectural probe. Two experiments
 (H12a probe, H12b LoRA); each budget < 24 GPU-hours at 0.4B.
 
+---
+
+## H13. State compresses geometry, not just token distributions
+### *(wager, precedent-informed but not yet directly tested inside noesis)*
+
+**Claim.** The state-as-computation dynamics that H8 probes for text
+generalise to **visual patch streams** — the WKV state can absorb
+2D geometric structure (patch tokens flattened in a fixed
+raster / spatial curve order) and produce useful downstream
+representations without needing an attention operator over the whole
+image. If true, RWKV-7 becomes a natural **multimodal substrate**:
+one architecture, one state format, text ⊕ image ⊕ (possibly) audio
+under the same delta-rule update.
+
+**Motivation.** User intuition 2026-07-22: image is a *representation
+of geometry*, and RWKV's state — evolved per-token by a delta-rule
+update — is a plausible place for geometric structure to compress.
+Precedent (user-cited): the VisualRWKV line of work (BlinkDL /
+academic follow-ups) already shows RWKV variants absorbing visual
+tokens; this hypothesis is that the same phenomenon extends to the
+G1-line state dynamics noesis is staked on. If P4 / H4b hold, they
+should hold for image tokens too — the model does not "know" the
+tokens are visual.
+
+**Why it matters for noesis.** noesis observes a Linux session — the
+richest single sensor is the framebuffer, not the keystrokes. If
+RWKV-7 can absorb visual patches through the same state mechanism,
+the runtime can eventually feed screenshots, wallpaper regions, video
+frames straight into the model without a bolted-on vision head. This
+is the difference between "noesis reads about what happened on the
+screen" and "noesis saw the screen."
+
+**Prediction (small-scale probe, before any noesis-side integration).**
+Take G1d-0.4B, feed a patch-tokenised image (raster order, standard
+patch size) as a prompt, then decode. Two disjoint claims:
+
+1. **State-dynamics parity.** On a matched-length text prompt and a
+   matched-length visual patch prompt, the state-motion metrics from
+   H8 (delta-norm, curvature, stable rank) are within one order of
+   magnitude of each other. The state is *doing something* with the
+   visual input, not going flat.
+2. **Task carry-through.** Fine-tune a small readout head on top of
+   the final state for a coarse visual task (e.g. CIFAR-10 or
+   MNIST-scale classification) and reach ≥ 0.7 accuracy at very
+   modest data budget (< 100 k examples). Baseline is a random-init
+   RWKV of matched parameter count fine-tuned on the same data.
+
+**Falsification (per-claim).**
+- If state metrics on visual prompts collapse to noise (delta-norm
+  drops by an order of magnitude vs text at matched length), the
+  state does not engage with patch tokens — visual generalisation of
+  state-as-computation is refuted; multimodal support has to come
+  from a bolted-on vision encoder, not from state alone.
+- If the readout head cannot beat the random-init baseline at any
+  data budget, geometry does not compress into the state usefully.
+
+**Related.** Phase 3+ direction; not on Phase 1 or Phase 2 critical
+path. Depends on H8 verdict (state must first do work for text).
+Adjacent to VisualRWKV literature — this hypothesis is the *noesis-
+side reason* to care about that literature, not a claim of novelty
+over it. If PASS, ROADMAP Track B expands to include a passive
+visual observation collector (screenshot cadence, framebuffer
+snapshot) as first-class alongside keyboard / journal input.
+
+**Status.** Untested. Speculative wager. Recorded 2026-07-22 as a
+future-Phase direction rather than a near-term probe.
+
+
