@@ -1,0 +1,657 @@
+{
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "backend": "ollama",
+  "n_tasks": 48,
+  "elapsed_s": 1113.0300271511078,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 7,
+    "overall_accuracy": 0.14583333333333334,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 2,
+        "accuracy": 0.25
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 2,
+        "accuracy": 0.25
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 2,
+        "accuracy": 0.3333333333333333
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 1,
+        "accuracy": 0.25
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": "The decoded text is \"ABCD\".",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "The decoded UTF-8 string is: **\"aef657369\"**",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "To decode a base64 string into a byte array, follow these steps:\n1. **Split the Base64 String**: Break the decoded string into groups of 2 bytes each using `base64.decodestring`.\n2. **Convert Each Group to Bytes**: For each group, convert it to 8-bit integers (0-255) and store them as a byte array.\n3. **Combine Bytes**: Collect all byte arrays into a single list and convert it to a byte array using `base64.b64encode`.\n4. **Decode the Encoded String**: Use `base64.b64decode` to convert the encoded bytes back to their original string form.\n**Example**:  \nDecoded string: `\"cmVhc29uaW5nIHdpbnM=\"`  \nSplit into groups: `['c', 'o', 'm', 'v', 'h', 'p', 'n', 'b', 'm']` \u2192 Convert each to 8-bit integers: `[0, 0, 1, 2, 0, 0, 1, 2]`.  \nEncoded bytes: `[0x00, 0x01, 0x02]`.  \nDecoded string: `\"c0m0v0c0m1e1d1e2\"`.\n**Code**:\n```python\ndef decode_base64(decoded_str):\n    # Split the decoded string into groups of 2 bytes\n    groups = decoded_str.split('=', 1)\n    decoded_bytes = []\n    for group in groups:\n        # Convert each group to 8-bit integers (0-255)\n        byte_array = [int(group[0:8], 2), int(group[1:8], 2)]\n        decoded_bytes.append(byte_array)\n    # Convert bytes to base64 string\n    encoded_bytes = bytes(b for b in decoded_bytes)\n    decoded_str = base64.b64encode(encoded_bytes).decode('utf-8')\n    return decoded_str\n```",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": "```python\ndef rot_13_decode(s):\n    for c in s:\n        if c.isalpha():\n            new_c = chr((ord(c) - ord('a') + 13) % 26 + ord('a'))\n            decoded = chr((ord(new_c) - ord('a') + 1) % 26 + ord('a'))\n        else:\n            decoded = c\n    return decoded\n# Example usage:\n# print(rot_13_decode(\"nggnpx ng qnja\"))  # Output: \"nggnpxngqjnaa\"\n```",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": "The ASCII decimal codes are:  \n- **112** \u2192 `33`  \n- **114** \u2192 `148`  \n- **1** \u2192 `1`  \n- **1** \u2192 `1`  \n- **0** \u2192 `0`  \n- **2** \u2192 `2`",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "\u03b3\u03b1\u03b7\u03b5",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "5",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": "\\(x = -6\\)",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": "\\(4a + 6b\\)",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": "2500 grams = 2.5 kilograms",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": "",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": "3",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": "",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": "```json\n{\n  \"product\": \"Model-B\",\n  \"quantity\": \"12\",\n  \"unit_price\": \"$4.50\"\n}\n```",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'product': 'Model-B', 'quantity': '12', 'unit_price': '$4.50'}"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": "```json\n{\n  \"date\": \"2026-08-14T15:30:00Z\",\n  \"time\": \"15:30 UTC\",\n  \"timezone\": \"UTC\",\n  \"topic\": \"budget review\"\n}\n```",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'date': '2026-08-14T15:30:00Z', 'time': '15:30 UTC', 'timezone': 'UTC', 'topic': 'budget review'}"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": "```json\n{\n  \"client_ip\": \"192.168.1.42\",\n  \"endpoint\": \"/api/v1/users\",\n  \"status\": 404,\n  \"latency_ms\": 123\n}\n```",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": "```json\n{\n  \"bug_id\": \"4712\",\n  \"severity\": \"high\",\n  \"reporter\": \"rina@example.com\",\n  \"blocks_release\": \"2.3\"\n}\n```",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'bug_id': '4712', 'severity': 'high', 'reporter': 'rina@example.com', 'blocks_release': '2.3'}"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": "```json\n{\n  \"ingredients\": [\n    {\n      \"item\": \"flour\",\n      \"quantity\": 300,\n      \"unit\": \"g\"\n    },\n    {\n      \"item\": \"eggs\",\n      \"quantity\": 2,\n      \"unit\": \"c\"\n    },\n    {\n      \"item\": \"temperature_c\",\n      \"value\": 180,\n      \"unit\": \"\u00b0C\"\n    }\n  ],\n  \"duration_min\": 25\n}\n```",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'ingredients': [{'item': 'flour', 'quantity': 300, 'unit': 'g'}, {'item': 'eggs', 'quantity': 2, 'unit': 'c'}, {'item': 'temperature_c', 'value': 180, 'unit': '\u00b0C'}], 'duration_min': 25}"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "{\n  \"full_name\": \"Yuki Tanaka\",\n  \"department\": \"Data Science\",\n  \"hire_date\": \"2024-01-15\",\n  \"annual_salary_usd\": \"$82,000.00 USD\"\n}",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'full_name': 'Yuki Tanaka', 'department': 'Data Science', 'hire_date': '2024-01-15', 'annual_salary_usd': '$82,000.00 USD'}"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "{\n  \"latitude\": 55.7558,\n  \"longitude\": 37.6173,\n  \"altitude_m\": 156,\n  \"accuracy_m\": 5\n}",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": "",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": "The total time required is 12 hours.",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": "",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "```python\nreversed_string = s[::-1]\nprint(reversed_string)\n```",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "To solve this problem, we need to take a string and swap the case of every character in it. This means converting uppercase letters to lowercase and vice versa while leaving other characters unchanged. \n### Approach\n1. **Convert String to List**: Convert the input string into a list of characters so that we can easily manipulate each character individually.\n2. **Iterate Through Characters**: Loop through each character in the list and check if it is uppercase or lowercase using the `isupper()` method.\n3. **Swap Case**: For each character, if it is uppercase, convert it to lowercase; otherwise, convert it to uppercase.\n4. **Join Characters**: Join the list of characters back into a single string using `''.join()` to form the final transformed string.\n### Solution Code\n```python\ns = \"aBcDeFg\"\ntransformed = ''.join([char.lower() if char.isupper() else char.upper() for char in s])\nprint(transformed)\n```\n### Explanation\n- **List Conversion**: The string `\"aBcDeFg\"` is converted into a list of characters using `''.join()`, which efficiently combines all characters into a single string.\n- **Character Transformation**: Each character in the list is checked to determine if it is uppercase or lowercase. If it is uppercase, it is converted to lowercase; otherwise, it remains uppercase.\n- **Result Construction**: The transformed string is constructed by joining the list of characters back into a single string with spaces between each character.\nThis approach ensures that all characters are processed correctly and efficiently, leveraging Python's built-in methods for string manipulation.",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": "To solve this problem, we need to remove all duplicate letters from a given string while preserving the original order of the remaining letters. The solution involves two main steps: identifying unique characters and then removing duplicates based on their frequency in the string.\n### Approach\n1. **Identify Unique Characters**: Convert the input string into a set to automatically handle duplicates, as sets only allow unique elements. This step ensures that each character is processed once, even if it appears multiple times in the original string.\n2. **Remove Duplicates**: Iterate through each character in the set and check if it has been seen before. If not, add it to the result list. This approach ensures that each character is only added once, preserving the order of its first occurrence in the original string.\n### Solution Code\n```python\ndef remove_duplicates(s):\n    seen = set()\n    result = []\n    for char in s:\n        if char not in seen:\n            seen.add(char)\n            result.append(char)\n    return ''.join(result)\n```\n### Explanation\n- **Set Conversion**: The input string is converted into a set to allow O(1) average time complexity for membership checks, which is crucial for handling duplicates efficiently.\n- **Character Processing**: For each character in the set, if it hasn't been seen before (checked using `not in seen`), it is added to the result list. This ensures that each character appears only once in the result.\n- **Result Construction**: The result list is constructed by iterating through the characters of the input string and appending each unique character to the result list.\nThis approach efficiently handles all edge cases, including strings with no duplicates and strings with multiple duplicates, ensuring that the output is a valid representation of the original string with unique characters in their original order.",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": "",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": "To determine how many words in the string \"the quick brown fox\" have exactly 3 letters, we first identify all the characters in the string:\n- t h e q u i c k b r o w n f o x\nCounting each character:\n- t (1)\n- h (1)\n- e (2) \u2013 two more letters, but not part of the three 'q's.\n- q (3) \u2013 the three 'q's.\n- u (1)\n- c (1)\n- k (1)\n- b (1)\n- r (1)\n- o (2) \u2013 two more letters, but not part of the three 'q's.\nThus, the words with exactly 3 letters are: t h e q u i c k b r o w n f o x. There are 5 such words.\n\\[\n\\boxed{5}\n\\]",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": "```python\ndef count_same_letters(planet, planed):\n    count = 0\n    for char in planet:\n        if char == planed[0]:\n            count += 1\n    return count\n```",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "34",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "173 in base 10 is 56 in binary:  \n\\[ \\text{Binary} = 1010111_2 \\]",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "The hexadecimal number 0xFA can be converted to decimal by breaking it down digit by digit:\n1. **First digit (rightmost):**  \n   0 * 16^1 = 0  \n2. **Second digit (next):**  \n   1 * 16^1 = 16  \n3. **Third digit (next):**  \n   0 * 16^2 = 0  \n4. **Fourth digit (last):**  \n   F * 16^3 = 61440  \nAdding these values together:  \n0 + 16 + 0 + 61440 = **61466**\nThus, the decimal equivalent of 0xFA is **61466**.",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "The total capacity of the container is \\(\\frac{51}{4}\\) liters.",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": "a b c d e",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "[\"0\",\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\"]",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}

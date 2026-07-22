@@ -31,6 +31,7 @@ the 4 models (qwen skipped for battery budget — see §Constraints).
 | rwkv7-1.5b:latest (World)  | 1.5 B | **26.2%** | 384 s | RWKV-7-World base, pre-A1 baseline |
 | mollysama/rwkv-7-g1h:2.9b  | 2.9 B | **38.1%** | 4865 s | reasoning-tuned; corrected 2026-07-22 (was 7.1 % under num_predict=256 budget artifact) |
 | gemma3:4b (Transformer)    | 4 B | **38.1%** | 1046 s | larger reference; ties qwen 1.5B overall |
+| mollysama/rwkv-7-g1d:0.4b  | 0.4 B | **14.6%** | 1113 s | 2026-07-22 addon, quantised (ollama). Smallest G1-tuned target — pilot-fine-tune substrate. Scored on 48 tasks (base 42 + 6 `bit_book_*` folded into `bit_decoding`). |
 
 ## Per-category × per-model
 
@@ -42,6 +43,23 @@ the 4 models (qwen skipped for battery budget — see §Constraints).
 | scheduling        | 3/6 (50.0%)   | 1/6 (16.7%)   | 1/6 (16.7%)  | 2/6 (33.3%)   |
 | string_ops        | 3/6 (50.0%)   | 1/6 (16.7%)   | 3/6 (50.0%)  | 2/6 (33.3%)   |
 | arithmetic_chain  | 0/4 (0.0%)    | 0/4 (0.0%)    | 3/4 (75.0%)  | 2/4 (50.0%)   |
+
+### 0.4B addon (2026-07-22, quantised ollama)
+
+`rwkv7_g1d_04b` was scored on all 48 tasks in one pass, so the categories
+below sum to 48 (base-42 `bit_decoding` was merged with `bit_book_*` into
+a single `bit_decoding` bucket of 16). Not directly comparable line-by-
+line to the base-42 table above; provided as the pre-A1 substrate
+snapshot for the pilot-fine-tune target.
+
+| category          | g1d-0.4B (48-task run) |
+|---|---:|
+| bit_decoding (10 base + 6 book) | 0/16 (0.0%)   |
+| symbolic          | 2/8 (25.0%)  |
+| extraction        | 2/8 (25.0%)  |
+| scheduling        | 0/6 (0.0%)   |
+| string_ops        | 2/6 (33.3%)  |
+| arithmetic_chain  | 1/4 (25.0%)  |
 
 ## Key observations
 
@@ -137,6 +155,36 @@ as the classic RNN-halt-condition failure from a Transformer. Now
 also apply this framing to mollysama's `bit_book_04` prose-wrap:
 it *has* the answer, just cannot cleanly terminate at the last code.
 
+### 6. G1-tune signal survives to 0.4B, but state-carry does not scale down
+
+Added 2026-07-22 with the `rwkv7_g1d_04b` addon (quantised ollama, 48
+tasks in 1113 s wall time).
+
+- **G1-tune transfer to the small end is real.** `arith` 1/4 = 25 % at
+  0.4B, above both World-1.5B (0/4) and World-2.9B baseline. Even at the
+  smallest pilot size the reasoning-tuning delta over pure `World`
+  shows up on multi-step arithmetic. Small n, but the direction is what
+  the G1 line advertises.
+- **Bit-decoding wall holds at 0.4B, deep.** 0/16 (10 base + 6
+  `bit_book_*` merged). g1h-2.9B managed 3/6 on `bit_book_*` fixed-
+  width codebooks; g1d-0.4B managed 0/6 on the same subset. The
+  chunk-and-carry state that g1h at 2.9 B demonstrated does not appear
+  at 0.4 B — matches the "state-carry needs capacity" reading.
+- **Realistic A1-pilot target for 0.4B.** Not "match g1h 2.9B" (39.6 %
+  on base-42), but "close ~10 pp of the ~25 pp gap on the categories
+  where 0.4B has non-zero baseline" (`string_ops` 33 %, `arith` 25 %,
+  `symbolic` 25 %). Bit-decoding at 0.4B is likely out of reach for a
+  logic-only LoRA — that lift will need capacity, not just state-reg.
+- **Substrate is usable for pilot.** 14.6 % overall on a broader task
+  set is real signal, not noise. The pilot smoke can therefore compare
+  α=0 vs α>0 on the same 0.4B checkpoint with a meaningful denominator.
+
+Caveats: quantised via ollama registry (`mollysama/rwkv-7-g1d:0.4b`,
+~500 MB), so precision is not comparable to bf16 A0.5 runs — this is a
+*logic* baseline, not a *precision* baseline (per 2026-07-22 decision:
+precision-heavy runs were required for A0.5 signal validation, not for
+A1 fine-tune substrate).
+
 ### 5. category ranking is stable — extraction > symbolic > scheduling ≈ string_ops > bit ≈ arith
 
 Every model that scores anything on procedural categories scores
@@ -153,7 +201,8 @@ show either:
 - Raw per-task JSON: `results/qwen25_15b.json`, `results/rwkv7_15b_world.json`,
   `results/rwkv7_29b_g1h.json` (initial, num_predict=256 — kept for provenance),
   `results/rwkv7_29b_g1h_np2048.json` (**corrected 2026-07-22, current**),
-  `results/gemma3_4b.json`.
+  `results/gemma3_4b.json`,
+  `results/rwkv7_g1d_04b_np2048.json` (**2026-07-22 addon, 0.4B pilot substrate**).
 - `bit_book_*` subset: `results/bit_book_gemma3_4b.json`,
   `results/bit_book_rwkv7_15b_world.json`,
   `results/bit_book_rwkv7_29b_g1h.json` (mollysama's np=2048 re-run
@@ -199,3 +248,11 @@ show either:
    - Hold arithmetic_chain ≥ 75 % and extraction ≥ 87 % (no regression
      on strong pre-A1 categories).
    - Push symbolic 25 % → ≥ 50 % (algebra/dimensional analysis).
+5. **0.4B pilot smoke** (added 2026-07-22). Substrate baseline recorded
+   above (14.6 % overall, 25 % arith, 0/16 bit). Blocked on compute —
+   GTX 1050 cannot host 0.4B LoRA in bf16; CPU BlinkDL path is not
+   differentiable. See `training/README.md` §Pending Step 6-7.
+   Success target for the 0.4B pilot is NOT "match g1h" — it is
+   "close ~10 pp on categories with non-zero baseline (string_ops,
+   arith, symbolic) without regressing anything". Bit-decoding lift at
+   0.4B is out-of-scope for a logic-only LoRA.

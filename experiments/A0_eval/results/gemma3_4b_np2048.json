@@ -1,0 +1,657 @@
+{
+  "model": "gemma3:4b",
+  "backend": "ollama",
+  "n_tasks": 48,
+  "elapsed_s": 1255.9423780441284,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 20,
+    "overall_accuracy": 0.4166666666666667,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 1,
+        "accuracy": 0.0625
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 3,
+        "accuracy": 0.375
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 6,
+        "accuracy": 0.75
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 5,
+        "accuracy": 0.8333333333333334
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 2,
+        "accuracy": 0.3333333333333333
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 3,
+        "accuracy": 0.75
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": "Here's the decoding of the provided 8-bit binary data, with MSB first:\n\n01001000 -> H\n01000101 -> e\n01001100 -> l\n01001100 -> l\n01001111 -> o\n",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": "Okay, let's decode this ASCII binary sequence. We'll break it down into 8-bit chunks and convert each chunk to its corresponding ASCII character:\n\n*   **01110010:**  Decimal 114 = **r**\n*   **01110101:**  Decimal 117 = **u**\n*   **01101110:**  Decimal 102 = **f**\n*   **00100000:**  Decimal 32 = **space**\n*   **01110100:**  Decimal 116 = **t**\n*   **01100101:**  Decimal 97 = **a**\n*   **01110011:**  Decimal 115 = **s**\n*   **01110100:**  Decimal 116 = **t**\n\nTherefore, the decoded ASCII sequence is:\n\n**ru f space ta st**",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "```python\nimport codecs\n\nhex_string = \"6e6f65736973\"\ndecoded_string = codecs.decode(hex_string, 'hex')\nprint(decoded_string)\n```\n\nThis code will output:\n\n```\nwrite\n```\n\n**Explanation:**\n\n* **`codecs.decode(hex_string, 'hex')`**: This function takes the hexadecimal string (`hex_string`) and decodes it using the 'hex' encoding.  The 'hex' encoding specifies that the input is a sequence of hexadecimal digits (0-9 and A-F).\n* **\"6e6f65736973\"**: This is the given hexadecimal representation.\n    * `6e` = w\n    * `6f` = r\n    * `65` = i\n    * `73` = t\n    * `69` = i\n    * `73` = t\n* The function then converts each pair of hexadecimal digits into its corresponding ASCII character, resulting in the string \"write\".\n",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "```\nThis is a secret message!\n```\n\n**Explanation:**\n\nThe hexadecimal string `74686520616e73776572206973203432` decodes to the ASCII characters:\n\n*   74 = T\n*   68 = h\n*   65 = e\n*   20 = (space)\n*   61 = a\n*   6e = n\n*   73 = s\n*   77 = w\n*   65 = e\n*   72 = r\n*   20 = (space)\n*   69 = i\n*   73 = s\n*   20 = (space)\n*   34 =  \"\n*   32 = 2",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "Tell me the world\n",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": "hello this\n",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": "The given ciphertext is \"olsw\". We are looking for a Caesar cipher with key $N$ such that it decodes to a real English word. The possible values of $N$ range from 1 to 25.\n\nWe can try different values of $N$ and see if we get a valid word.\n- If $N=1$, \"olsw\" becomes \"mnlq\", which is not a word.\n- If $N=2$, \"olsw\" becomes \"kprr\", which is not a word.\n- If $N=3$, \"olsw\" becomes \"jots\", which is not a word.\n- If $N=4$, \"olsw\" becomes \"iuns\", which is not a word.\n- If $N=5$, \"olsw\" becomes \"hrmt\", which is not a word.\n- If $N=6$, \"olsw\" becomes \"gsqo\", which is not a word.\n- If $N=7$, \"olsw\" becomes \"frpn\", which is not a word.\n- If $N=8$, \"olsw\" becomes \"eqmo\", which is not a word.\n- If $N=9$, \"olsw\" becomes \"dlnl\", which is not a word.\n- If $N=10$, \"olsw\" becomes \"ckmk\", which is not a word.\n- If $N=11$, \"olsw\" becomes \"bjj j\", which is not a word.\n- If $N=12$, \"olsw\" becomes \"aiipi\", which is not a word.\n- If $N=13$, \"olsw\" becomes \"zhzzo\", which is not a word.\n- If $N=14$, \"olsw\" becomes \"yhyyy\", which is not a word.\n- If $N=15$, \"olsw\" becomes \"xggxx\", which is not a word.\n- If $N=16$, \"olsw\" becomes \"wffww\", which is not a word.\n- If $N=17$, \"olsw\" becomes \"v eeev\", which is not a word.\n- If $N=18$, \"olsw\" becomes \"u dddu\", which is not a word.\n- If $N=19$, \"olsw\" becomes \"t ccc t\", which is not a word.\n- If $N=20$, \"olsw\" becomes \"s bbbb s\", which is not a word.\n- If $N=21$, \"olsw\" becomes \"r aaaa r\", which is not a word.\n- If $N=22$, \"olsw\" becomes \"q zzzz q\", which is not a word.\n- If $N=23$, \"olsw\" becomes \"p yyyy p\", which is not a word.\n- If $N=24$, \"olsw\" becomes \"o xxxx o\", which is not a word.\n- If $N=25$, \"olsw\" becomes \"n wwww n\", which is not a word.\n\nHowever, let's consider the reverse Caesar cipher. We can also try to find an $N$ such that \"olsw\" decodes to a real word by shifting backwards.\nIf we shift back by N, we have:\n- If $N=1$, \"olsw\" -> \"mnlq\" (not a word)\n- If $N=2$, \"olsw\" -> \"kprr\" (not a word)\n...\n\nLet's try to find the word that \"olsw\" decodes to. We can consider words with 4 letters.\nIf we shift by N, we want to get a real English word.\nConsider $N=13$. Then \"olsw\" becomes \"zzzo\", which is not a word.\n\nLet's try another approach. The ciphertext is \"olsw\". Let's assume the decoded word is \"snow\".\nIf we shift by N, then 'o' -> 's', 'l' -> 'n', 's' -> 'o', 'w' -> 'w'.\no - s = 7\nl - n = 2\ns - o = 1\nw - w = 0\n\nThis doesn't give us a constant shift.\n\nLet's try to find the word \"slow\".\nIf we shift by N, then 'o' -> 's', 'l' -> 'l', 's' -> 'o', 'w' -> 'w'.\no - s = 7\nl - l = 0\ns - o = 1\nw - w = 0\n\nThis doesn't give us a constant shift.\n\nLet's try the word \"loss\".\nIf we shift by N, then 'o' -> 'l', 'l' -> 'o', 's' -> 's', 'w' -> 's'.\no - l = 7\nl - o = -7\ns - s = 0\nw - s = 1\n\nLet's try the word \"rows\".\nIf we shift by N, then 'o' -> 'r', 'l' -> 'o', 's' -> 'w', 'w' -> 's'.\no - r = 7\nl - o = -7\ns - w = 1\nw - s = 1\n\nLet's try the word \"slow\".\nIf we shift by N, then 'o' -> 's', 'l' -> 'l', 's' -> 'o', 'w' -> 'w'.\no - s = 7\nl - l = 0\ns - o = 1\nw - w = 0\n\nConsider the word \"loss\". We have:\nolsw -> loss.\no (15) -> l (12), difference is 3.\nl (12) -> o (15), difference is 3.\ns (19) -> s (19), difference is 0.\nw (23) ->  (no letter).\n\nIf we shift by 3, \"olsw\" becomes \"loss\". So N = 3.\n\nFinal Answer: The final answer is $\\boxed{3}$",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "Okay, let's decode this XORed text.\n\n**1. The XOR Operation:**\n\nWe have the following bytes and their XOR with key `0x2A`:\n\n*   `47` XOR `0x2A` = `69` (Hex)\n*   `4f` XOR `0x2A` = `73` (Hex)\n*   `4f` XOR `0x2A` = `73` (Hex)\n*   `5e` XOR `0x2A` = `86` (Hex)\n*   `0a` XOR `0x2A` = `26` (Hex)\n*   `47` XOR `0x2A` = `69` (Hex)\n*   `4f` XOR `0x2A` = `73` (Hex)\n\n**2. Decoding the Resulting Bytes:**\n\nNow, let's convert these hexadecimal values back to ASCII characters:\n\n*   `69` -> i\n*   `73` -> s\n*   `73` -> s\n*   `86` -> V\n*   `26` ->  (Control character - often represented as a space)\n*   `69` -> i\n*   `73` -> s\n\n**3. The Decoded Text:**\n\nPutting it all together, the decoded text is:\n\n```\nissV is\n```\n\n**Important Note:** The `0a` (line feed/newline character) was XORed with 0x2A resulting in a control character which is often represented as a space.  This can happen when dealing with binary data and encryption.",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": "Okay, let's decode those ASCII values into text:\n\n*   **112:**  Lowercase 'p'\n*   **114:**  Lowercase 'r'\n*   **111:**  Lowercase 'o'\n*   **111:**  Lowercase 'o'\n*   **102:**  Lowercase 'f'\n\nTherefore, the decoded text is: **\"proof\"**",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "cafe\n",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "7\n",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": "-1\n",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": "To simplify the expression (2a + 3b) - (a - b), we distribute the negative sign to each term in the second parentheses and then combine like terms.\n\n(2a + 3b) - (a - b) = 2a + 3b - a + b\n\nNow, we combine the 'a' terms:\n2a - a = a\n\nAnd we combine the 'b' terms:\n3b + b = 4b\n\nSo, the simplified expression is:\na + 4b\n\nFinal Answer: The final answer is $\\boxed{a+4b}$",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": "2.  5 kg",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "20\n",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "kg*m^2/s^2\n",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": "Here's how to determine the base SI units of pressure:\n\n*   **Pressure Definition:** Pressure is defined as Force / Area.\n*   **Force (F):** The base SI unit of force is the Newton (N), which is kg\u22c5m/s\u00b2.\n*   **Area (A):** The base SI unit of area is the square meter (m\u00b2).\n\nTherefore, the base SI units of pressure are:\n\n**(kg\u22c5m/s\u00b2) / m\u00b2 = kg/(m\u00b2)**\n\nSo the answer is **kg/(m\u00b2)**.",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": "We are given the functions $f(x) = 2x+3$ and $g(x) = x^2$. We want to find $f(g(2))$.\n\nFirst, we evaluate $g(2)$.\n$$ g(2) = (2)^2 = 4 $$\nThen, we evaluate $f(g(2)) = f(4)$.\n$$ f(4) = 2(4) + 3 = 8+3 = 11 $$\n\nThus, $f(g(2)) = 11$.\n\nFinal Answer: The final answer is $\\boxed{11}$",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": "```json\n{\n  \"name\": \"Alice\",\n  \"age\": 34,\n  \"occupation\": \"engineer\",\n  \"city\": \"Berlin\"\n}\n```\n",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": "```json\n{\n  \"product\": \"Model-B widget\",\n  \"quantity\": 12,\n  \"unit_price\": 4.50\n}\n```\n",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": "```json\n{\n  \"date\": \"2026-08-14\",\n  \"time\": \"15:30\",\n  \"timezone\": \"UTC\",\n  \"topic\": \"budget review\"\n}\n```\n",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": "```json\n{\n  \"client_ip\": \"192.168.1.42\",\n  \"endpoint\": \"/api/v1/users\",\n  \"status\": \"404\",\n  \"latency_ms\": 123\n}\n```\n",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'client_ip': '192.168.1.42', 'endpoint': '/api/v1/users', 'status': '404', 'latency_ms': 123}"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": "```json\n{\n  \"bug_id\": \"4712\",\n  \"severity\": \"high\",\n  \"reporter\": \"rina@example.com\",\n  \"blocks_release\": \"2.3\"\n}\n```\n",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'bug_id': '4712', 'severity': 'high', 'reporter': 'rina@example.com', 'blocks_release': '2.3'}"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": "```json\n{\n  \"ingredients\": [\n    {\"item\": \"flour\", \"quantity\": 300, \"unit\": \"g\"},\n    {\"item\": \"eggs\", \"quantity\": 2, \"unit\": \"\"},\n    {\"item\": \"milk\", \"quantity\": 150, \"unit\": \"ml\"}\n  ],\n  \"temperature_c\": 180,\n  \"duration_min\": 25\n}\n```",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "```json\n{\n  \"full_name\": \"Yuki Tanaka\",\n  \"department\": \"Data Science\",\n  \"hire_date\": \"2024-01-15\",\n  \"annual_salary_usd\": 82000\n}\n```\n",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "```json\n{\n  \"latitude\": 55.7558,\n  \"longitude\": 37.6173,\n  \"altitude_m\": 156,\n  \"accuracy_m\": 5\n}\n```\n",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "Let's analyze the problem and find the minimum total time to complete all three tasks with two workers, considering the dependencies and individual task times.\n\nTasks:\n- A takes 20 min\n- B takes 30 min (depends on A)\n- C takes 15 min (no dependencies)\n\nWorkers: Two workers who can each do one task at a time.\n\nWe want to minimize the total time to complete all three tasks. Since B depends on A, we must complete A before starting B. Also, C has no dependencies and can be done concurrently with A or B.\n\nHere's a possible schedule that minimizes the overall time:\n\n1. Worker 1 starts Task A (20 min)\n2. Worker 2 starts Task C (15 min)\n3. When A is finished (at 20 min), Worker 1 starts Task B (30 min).  Worker 2 continues with Task C until it's done at 15 minutes.\n4. When B is finished (at 30 min), all tasks are complete.\n\nHowever, we can do better by having both workers work on the shortest task first. Since C takes only 15 minutes and has no dependencies, let's start with C.\n\n1. Worker 1 starts Task C (15 min)\n2. Worker 2 starts Task A (20 min)\n3. When A is finished (at 20 min), Worker 1 continues with Task B (30 min).\n4. When B is finished (at 30 min), all tasks are complete.\n\nTotal time = 15 + 20 + 30 = 65 minutes.\n\nLet's consider another approach:\n- Worker 1 does A (20 min) and C (15 min). Total time for A and C is 35 min.\n- Worker 2 does B (30 min).\nThis doesn't work because B depends on A, so we can't start B until A is done.\n\nLet's consider the following:\n1. Worker 1 starts Task A (20 min)\n2. Worker 2 starts Task C (15 min)\n3. When A finishes at 20 min, Worker 1 starts Task B (30 min).  Worker 2 continues with Task C until it's done at 15 minutes.\n4. When B finishes at 30 min, all tasks are complete.\n\nTotal time = 20 + 15 + 30 = 65 minutes.\n\nAnother possible schedule:\n- Worker 1 does A (20 min)\n- Worker 2 does C (15 min)\nNow we have A and C done in 35 min.  B needs to be done, which takes 30 min. Since B depends on A, it must start after A is finished. So B starts at 20 min and finishes at 50 min. Total time = 50 min.\n\nLet's consider the following:\n1. Worker 1 does A (20 min)\n2. Worker 2 does C (15 min)\n3. At 20 min, worker 1 finishes A.  Worker 2 is still working on C.\n4. At 15 min, worker 2 finishes C. Now we have A and C done in 35 minutes.\n5. Worker 1 starts B (30 min).\n6. At 30 min, worker 1 finishes B.\n\nTotal time = 30 + 30 = 60 minutes is not correct because B depends on A.\n\nThe optimal strategy is to have one worker do the shortest task first and another worker do the longest task that has no dependencies.\nWorker 1 does C (15 min)\nWorker 2 does A (20 min)\nAt 15 min, Worker 1 finishes C.\nAt 20 min, Worker 2 finishes A.\nNow B needs to be done in 30 minutes. Since A is finished at 20 min, we can start B immediately.\nWorker 1 does B (30 min)\nAt 30 min, Worker 1 finishes B.\n\nTotal time = 15 + 20 + 30 = 65 minutes.\n\nFinal Answer: The final answer is $\\boxed{65}$",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": "Let's analyze the constraints to determine the start time of meeting X.\n\n*   **Total Window:** 9:00 \u2013 12:00 (3 hours = 180 minutes)\n*   **Meeting Durations:**\n    *   X: 1 hour (60 minutes)\n    *   Y: 30 minutes\n    *   Z: 1.5 hours (90 minutes)\n\n*   **Constraints:**\n    1.  All three meetings must fit within the 9:00 \u2013 12:00 window.\n    2.  Meetings cannot overlap.\n    3.  Y must end before X starts.\n    4.  X must end before Z starts.\n\nLet's represent the meeting times as intervals. We want to find a starting time for X such that all constraints are satisfied.\n\nFirst, let's calculate the total duration of the meetings: 60 + 30 + 90 = 180 minutes. This exactly fills the window, so we need to schedule them sequentially.\n\nNow, let's consider the constraints:\n*   Y must end before X starts.\n*   X must end before Z starts.\n\nLet $t_x$ be the start time of meeting X.\nMeeting Y ends at $t_x$.\nMeeting X ends at $t_x + 60$ minutes.\nMeeting Z starts at $t_x + 60$ minutes.\n\nSince all meetings must fit within the 9:00 \u2013 12:00 window, we have:\n$9:00 \\le t_x \\le 12:00 - 60 = 11:00$ (for X to finish by 12:00)\n$t_x + 30 \\le 12:00$ (for Y to finish by 12:00)\n$t_x + 60 \\le 12:00$ (for X to finish by 12:00)\n\nAlso, we have $t_x + 30 < t_x + 60$, which is always true.\nAnd $t_x + 60 < 12:00$.\n\nLet's consider the latest possible start time for X to ensure all meetings fit within the window.  Since Y must end before X starts, and X must end before Z starts, we can calculate the maximum possible start time of X.\nY ends at $t_x$, so $t_x + 30$ minutes is the end time of Y.\nX starts at $t_x$, and lasts for 60 minutes. So X ends at $t_x + 60$.\nZ starts at $t_x + 60$, and lasts for 90 minutes.  So Z ends at $t_x + 150$ minutes.\n\nWe need to ensure that $t_x + 150 \\le 12:00$, which means $t_x \\le 12:00 - 150 = 12:00 - 1.25 hours = 10:30$.\n\nHowever, we also have the constraint that Y must end before X starts. So, if X starts at $t_x$, then Y must end before $t_x$.\nSince Y is 30 minutes long, it ends at $t_x - 30$ (if $t_x > 30$).\n\nLet's consider the time slots:\nY: 30 min\nX: 60 min\nZ: 90 min\n\nTotal time = 180 min.\nWe need to find a start time for X such that Y finishes before X starts and X finishes before Z starts.\n\nIf X starts at 9:00, then Y ends at 9:30, X ends at 10:00, and Z starts at 10:00. This works!\nSo the start time of X is 9:00.\n\nFinal Answer: The final answer is $\\boxed{09:00}$",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "```json\n{\n  \"alice\": \"D2\",\n  \"bob\": \"D3\",\n  \"carol\": \"D1\"\n}\n```\n\n**Explanation:**\n\n1. **Carol wants D1:** Carol *must* have D1.\n2. **Alice cannot use D3:** Alice is excluded from using D3.\n3. **Bob refuses D1:** Bob is excluded from using D1.\n\nThis leaves:\n   - D1 for Carol\n   - D2 for Alice\n   - D3 for Bob \n\nTherefore, the assignment is as shown in the JSON output.",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": "Let the time taken by one worker to make one widget be $t = 4$ hours.\nThere are 3 workers and 20 widgets to make.\nIf they can all work in parallel, we want to find the total number of hours needed to make 20 widgets with 3 workers working simultaneously.\n\nThe rate at which each worker makes widgets is $\\frac{1}{4}$ widget per hour.\nWith 3 workers, the combined rate is $3 \\times \\frac{1}{4} = \\frac{3}{4}$ widgets per hour.\nLet $h$ be the number of hours needed to make 20 widgets with 3 workers working in parallel. Then we have:\n$\\frac{3}{4} h = 20$\nMultiply both sides by $\\frac{4}{3}$:\n$h = 20 \\times \\frac{4}{3} = \\frac{80}{3}$ hours.\n\nNow, we need to round up the value of $h$.\n$\\frac{80}{3} = 26\\frac{2}{3} = 26.666...$\nSince we need to round up, we take the next integer, which is 27 hours.\n\nAlternatively, we can calculate the total work needed:\nTotal widgets = 20\nTime per widget = 4 hours\nTotal time if one worker makes all widgets = $20 \\times 4 = 80$ hours.\nSince there are 3 workers working in parallel, they can complete the work in half the time.\nSo, total time needed $= \\frac{80}{3} = 26\\frac{2}{3}$ hours.\nRounding up to the nearest whole number, we get 27 hours.\n\nAnother approach:\nEach worker takes 4 hours per widget. So, in one hour, each worker makes $\\frac{1}{4}$ of a widget.\nWith 3 workers, they make $3 \\times \\frac{1}{4} = \\frac{3}{4}$ widgets per hour.\nTo make 20 widgets, the number of hours needed is $\\frac{20}{\\frac{3}{4}} = \\frac{20 \\times 4}{3} = \\frac{80}{3} = 26\\frac{2}{3}$.\nRounding up to the nearest whole number, we get 27 hours.\n\nFinal Answer: The final answer is $\\boxed{27}$",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "Let the weights of the five boxes be $w_1 = 3$, $w_2 = 5$, $w_3 = 7$, $w_4 = 8$, and $w_5 = 12$. We want to split these boxes into two groups such that the total weight difference between the two groups is minimized.\nLet $S$ be the sum of all weights: $S = 3 + 5 + 7 + 8 + 12 = 35$.\nWe want to divide the set $\\{3, 5, 7, 8, 12\\}$ into two subsets such that the absolute difference between their sums is minimized. Let the sum of one group be $A$ and the sum of the other group be $B$. Then $A + B = S = 35$, and we want to minimize $|A - B|$. Since $A+B=35$, we have $A = \\frac{35 + |A-B|}{2}$ and $B = \\frac{35 - |A-B|}{2}$.\nTo minimize the difference between the two groups, we should make the sums of the two groups as close to each other as possible. This means that one group should have a sum close to $\\frac{35}{2} = 17.5$.\n\nWe can try different combinations of boxes into groups such that their sums are close to $17.5$.\nLet's consider the possible sums for the two groups:\nGroup 1: $\\{3, 5, 7\\}$ has a sum of $3+5+7 = 15$\nGroup 2: $\\{8, 12\\}$ has a sum of $8+12 = 20$. The difference is $|15-20| = 5$.\n\nGroup 1: $\\{3, 5, 8\\}$ has a sum of $3+5+8 = 16$\nGroup 2: $\\{7, 12\\}$ has a sum of $7+12 = 19$. The difference is $|16-19| = 3$.\n\nGroup 1: $\\{3, 5, 7, 8\\}$ has a sum of $3+5+7+8 = 23$\nGroup 2: $\\{12\\}$ has a sum of $12$. The difference is $|23-12| = 11$.\n\nGroup 1: $\\{3, 5, 7, 12\\}$ has a sum of $3+5+7+12 = 27$\nGroup 2: $\\{8\\}$ has a sum of $8$. The difference is $|27-8| = 19$.\n\nGroup 1: $\\{3, 5, 8, 12\\}$ has a sum of $3+5+8+12 = 28$\nGroup 2: $\\{7\\}$ has a sum of $7$. The difference is $|28-7| = 21$.\n\nGroup 1: $\\{3, 7, 8, 12\\}$ has a sum of $3+7+8+12 = 30$\nGroup 2: $\\{5\\}$ has a sum of $5$. The difference is $|30-5| = 25$.\n\nGroup 1: $\\{5, 7, 8, 12\\}$ has a sum of $5+7+8+12 = 32$\nGroup 2: $\\{3\\}$ has a sum of $3$. The difference is $|32-3| = 29$.\n\nLet's try to get the sums as close to 17.5 as possible.\nConsider Group 1: $\\{3, 8, 7\\}$. Sum $= 18$. Then Group 2: $\\{5, 12\\}$ has a sum of $17$. The difference is $|18-17| = 1$.\n\nConsider Group 1: $\\{3, 5, 7\\}$. Sum $= 15$. Then Group 2: $\\{8, 12\\}$ has a sum of $20$. The difference is $|15-20| = 5$.\nConsider Group 1: $\\{3, 5, 8\\}$. Sum $= 16$. Then Group 2: $\\{7, 12\\}$ has a sum of $19$. The difference is $|16-19| = 3$.\n\nLet's try to make the sums as close as possible.\nIf we take $\\{3, 5, 7, 8\\}$, then the sum is 23. We need to put the remaining boxes into a group with a sum of $35 - 23 = 12$, which can be done by taking $\\{12\\}$. The difference between the groups is $|23-12| = 11$.\nIf we take $\\{3, 5, 7, 12\\}$, then the sum is 27. We need to put the remaining boxes into a group with a sum of $35 - 27 = 8$, which can be done by taking $\\{8\\}$. The difference between the groups is $|27-8| = 19$.\n\nConsider Group 1: $\\{3, 5, 7\\}$ and Group 2: $\\{8, 12\\}$. Sums are $15$ and $20$, so the difference is $|15 - 20| = 5$.\nConsider Group 1: $\\{3, 5, 8\\}$ and Group 2: $\\{7, 12\\}$. Sums are $16$ and $19$, so the difference is $|16 - 19| = 3$.\n\nThe minimum difference we found is 3.\n\nFinal Answer: The final answer is $\\boxed{3}$",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": "Let the sizes of the items be $s = \\{3, 4, 5, 6\\}$. The capacity of each bin is $C = 8$. We want to find the minimum number of bins needed to pack these items into bins with a capacity of 8.\n\nWe can use the following approach:\n1. First, let's try to fill the bins as much as possible.\n2. We have the sizes $\\{3, 4, 5, 6\\}$. The sum of these sizes is $3+4+5+6 = 18$.\n3. Since each bin has a capacity of 8, we can find the number of bins needed by dividing the total size by the capacity: $\\frac{18}{8} = 2.25$. This means we need at least 3 bins to hold all items.\n\nLet's try to pack the items into bins as follows:\n- Bin 1: $6 + 4 + 3 + 1 = 8$ (We can use any combination of sizes that sum up to 8)\n- Bin 2: $5 + 3 = 8$\n- Bin 3: $6$\n\nHowever, we have the items $\\{3, 4, 5, 6\\}$. We want to minimize the number of bins.\nLet's try to pack the items into bins as follows:\nBin 1: 6 + 2 = 8 (We can use any combination of sizes that sum up to 8)\nBin 2: 5 + 3 = 8\nBin 3: 4\n\nThis requires 3 bins. However, we have the items $\\{3, 4, 5, 6\\}$. We want to find a packing such that we use the minimum number of bins.\n\nLet's try another approach:\n- Bin 1: $6 + 2 = 8$ (We can use any combination of sizes that sum up to 8)\n- Bin 2: $5 + 3 = 8$\n- Bin 3: $4$\nThis requires 3 bins.\n\nLet's try a different packing:\n- Bin 1: $6+2=8$. We are left with 3, 4, 5.\n- Bin 2: $5+3 = 8$. We are left with 4.\n- Bin 3: 4\nThis requires 3 bins.\n\nLet's try another packing:\n- Bin 1: $6 + 3 + ( -1) = 8$ (Not allowed since we can only use the given sizes)\n- Bin 2: $5+4=9 > 8$. This doesn't work.\n\nConsider the following arrangement:\nBin 1: 6 + 2 = 8 (We need to find a combination of items that sum up to 2, but we only have 3, 4, 5, 6)\nLet's try to pack as much as possible into each bin.\n\n- Bin 1: $6+2=8$ - No, we can't use 2.\n- Bin 1: $6 + 3 = 9 > 8$. So we cannot put 6 and 3 in the same bin.\n\nLet's try to pack as follows:\nBin 1: 6 + 4 + 3 + 1 = 8 (We can use any combination of sizes that sum up to 8) - No, we need to use only the given items.\n- Bin 1: $6+2=8$ - We are left with 3, 4, 5.\n- Bin 2: $5+3 = 8$. We are left with 4.\n- Bin 3: 4\n\nLet's try another packing:\nBin 1: 6 + 4 = 10 > 8. This doesn't work.\n\nConsider the following arrangement:\nBin 1: $5+3=8$\nBin 2: $6+2=8$ - No, we can't use 2.\nBin 3: 4\n\nLet's try to pack as follows:\n- Bin 1: 6 + 4 = 10 > 8. This doesn't work.\n- Bin 1: $5+3=8$\n- Bin 2: 6\n- Bin 3: 4\nThis requires 3 bins.\n\nLet's try to pack as follows:\nBin 1: 6 + 4 = 10 > 8. This doesn't work.\nWe need at least 3 bins.\n\nConsider the following packing:\nBin 1: $6+2=8$ - No, we can't use 2.\nLet's try to pack as follows:\n- Bin 1: 6 + 4 = 10 > 8. This doesn't work.\nWe need at least 3 bins.\n\nConsider the following packing:\nBin 1: $5+3=8$\nBin 2: $6+2=8$ - No, we can't use 2.\nBin 3: 4\n\nLet's try to pack as follows:\n- Bin 1: 6 + 4 = 10 > 8. This doesn't work.\nWe need at least 3 bins.\n\nThe minimum number of bins needed is 3.\n\nFinal Answer: The final answer is $\\boxed{3}$",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "yleetrot\n",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "```python\ndef swap_case(s):\n  \"\"\"Swaps the case of each character in a string.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    The string with swapped cases.\n  \"\"\"\n  result = \"\"\n  for char in s:\n    if 'a' <= char <= 'z':\n      result += char.upper()\n    elif 'A' <= char <= 'Z':\n      result += char.lower()\n    else:\n      result += char  # Keep non-alphabetic characters as they are\n  return result\n\nstring = 'aBcDeFg'\ntransformed_string = swap_case(string)\nprint(transformed_string)\n```\n\nOutput:\n\n```\nAbCdEfG\n```",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": "```python\ndef remove_duplicate_letters(s):\n  \"\"\"Removes duplicate letters from a string, preserving original order.\n\n  Args:\n    s: The input string.\n\n  Returns:\n    A new string with duplicate letters removed, maintaining the original order of remaining characters.\n  \"\"\"\n  seen = set()\n  result = \"\"\n  for char in s:\n    if char not in seen:\n      result += char\n      seen.add(char)\n  return result\n\n# Example usage:\ninput_string = \"engineering\"\noutput_string = remove_duplicate_letters(input_string)\nprint(output_string)\n```\n\n**Explanation:**\n\n1. **Initialization:**\n   - `seen`: A set to keep track of the letters we've already encountered in the string. Sets provide efficient (O(1)) lookups for checking if an element exists.\n   - `result`: An empty string that will store the characters from the input string, but only the first occurrence of each letter.\n\n2. **Iteration:**\n   - The code iterates through the input string `s` character by character.\n\n3. **Duplicate Check:**\n   - For each `char`, it checks if `char` is already present in the `seen` set using `if char not in seen:`.\n\n4. **Adding Unique Characters:**\n   - If `char` is *not* in `seen` (meaning we haven't encountered it before):\n     - We append `char` to the `result` string (`result += char`).\n     - We add `char` to the `seen` set (`seen.add(char)`) so that we don't add it again if we encounter it later in the string.\n\n5. **Return Value:**\n   - After iterating through the entire input string, the function returns the `result` string, which contains only the unique characters from the original string, preserving their original order of appearance.\n\n**How it works with \"engineering\":**\n\n1. `seen = {}`, `result = \"\"`\n2. **e:** Not in `seen`.  `result += 'e'`, `seen = {'e'}`\n3. **n:** Not in `seen`.  `result += 'n'`, `seen = {'e', 'n'}`\n4. **g:** Not in `seen`.  `result += 'g'`, `seen = {'e', 'n', 'g'}`\n5. **i**n: Not in `seen`. `result += 'i'`, `seen = {'e', 'n', 'g', 'i'}`\n6. **n**g: Not in `seen`. `result += 'n'`, `seen = {'e', 'n', 'g', 'i'}` (already present, so skipped)\n7. **g:** Not in `seen`. `result += 'g'`, `seen = {'e', 'n', 'g', 'i'}` (already present, so skipped)\n8. **i**n: Not in `seen`. `result += 'i'`, `seen = {'e', 'n', 'g', 'i'}` (already present, so skipped)\n9. **n**g: Not in `seen`. `result += 'n'`, `seen = {'e', 'n', 'g', 'i'}` (already present, so skipped)\n\nFinally, the function returns \"engine\".\n",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": "aabbccddccbbbaa\n",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": "2\n",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": "2\n",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "61\n",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "10101101\n",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "250\n",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "Let the total capacity of the container be $C$ liters.\n\nInitially, the container is $\\frac{1}{4}$ full, so it contains $\\frac{1}{4} C$ liters.\nAfter adding 6 liters, the container becomes $\\frac{5}{8}$ full, so it contains $\\frac{5}{8} C$ liters.\nThe amount of liquid in the container after adding 6 liters is equal to the initial amount plus 6 liters. So we have:\n$$ \\frac{1}{4} C + 6 = \\frac{5}{8} C $$\n\nTo solve for $C$, we can first subtract $\\frac{1}{4} C$ from both sides of the equation:\n$$ 6 = \\frac{5}{8} C - \\frac{1}{4} C $$\nWe need to find a common denominator for $\\frac{5}{8}$ and $\\frac{1}{4}$. The least common multiple of 8 and 4 is 8, so we can rewrite $\\frac{1}{4}$ as $\\frac{2}{8}$:\n$$ 6 = \\frac{5}{8} C - \\frac{2}{8} C $$\n$$ 6 = \\frac{3}{8} C $$\n\nNow, multiply both sides by $\\frac{8}{3}$ to solve for $C$:\n$$ 6 \\cdot \\frac{8}{3} = C $$\n$$ \\frac{48}{3} = C $$\n$$ 16 = C $$\n\nSo the total capacity of the container is 16 liters.\n\nWe can check our answer:\nInitially, the container is $\\frac{1}{4}$ full, so it contains $\\frac{1}{4}(16) = 4$ liters.\nAfter adding 6 liters, the container has $4 + 6 = 10$ liters.\nThe container is $\\frac{5}{8}$ full, so it should contain $\\frac{5}{8}(16) = \\frac{80}{8} = 10$ liters.\nSince $10 = 10$, our answer is correct.\n\nFinal Answer: The final answer is $\\boxed{16}$",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": "cbcd\n",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": "bcddcba\n",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "r e a d y s\n",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": "rryddss\n",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": "etanet\n",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": "abcc\n",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}

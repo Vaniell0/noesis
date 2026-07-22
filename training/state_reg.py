@@ -198,16 +198,19 @@ def _layer_stable_rank_std(s_seq: torch.Tensor) -> torch.Tensor:
 # ------------------------------------------------------------------------- #
 
 def compute_state_reg(
-    wkv_per_layer: Sequence[torch.Tensor],
+    wkv_per_layer,
     config: StateRegConfig,
 ) -> torch.Tensor:
     """Compute L_state.
 
     Args:
-      wkv_per_layer: list of length n_layer, each element shape
+      wkv_per_layer: indexable of per-layer state tensors, each shape
         [batch, T, n_head, head_size, head_size]. T is the sequence
-        length (state at each timestep). Requires T >= 3 for the
-        curvature term.
+        length (state at each timestep). ``__getitem__(L)`` must
+        resolve every ``L in config.work_layers``. For T < 3 the
+        summation range (t in [2, T-1]) is empty and the returned
+        loss is zero — matches the "Zero for t < 2" contract in the
+        formula section of this module's docstring.
       config: StateRegConfig.
 
     Returns:
@@ -217,17 +220,24 @@ def compute_state_reg(
     if config.mode == "off":
         return torch.zeros((), dtype=torch.float32)
 
-    device = wkv_per_layer[0].device
-    dtype = wkv_per_layer[0].dtype
+    # Materialise the first work-layer state so we can (a) probe device/dtype
+    # and (b) short-circuit degenerate sequence lengths without doing further
+    # indexing (matters when the caller's __getitem__ has side effects).
+    first_layer = config.work_layers[0]
+    first_state = wkv_per_layer[first_layer]
+    device = first_state.device
+    dtype = first_state.dtype
+    if first_state.shape[1] < 3:
+        # Empty summation range → 0. Returning float32 loses grad edge
+        # cases; but T<3 means no state trajectory exists to
+        # differentiate, so a detached zero is correct.
+        return torch.zeros((), device=device, dtype=dtype)
+
     total = torch.zeros((), device=device, dtype=dtype)
 
     for L in config.work_layers:
         w_L = config.layer_weights[L]
         s = wkv_per_layer[L]                    # [B, T, H, h, h]
-        if s.shape[1] < 3:
-            raise ValueError(
-                f"layer {L}: need T>=3 for curvature, got T={s.shape[1]}"
-            )
         s_pp = s[:, :-2]
         s_p = s[:, 1:-1]
         s_c = s[:, 2:]

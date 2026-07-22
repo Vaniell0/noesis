@@ -1,10 +1,17 @@
-# Pilot LoRA config — action-cloning on Claude Code corpus, α=0 baseline.
+# Pilot LoRA config — open tool-call + honesty fixture, α=0 baseline.
 #
-# Filled in with placeholder values that mirror the design decisions in
-# `plans/cosmic-purring-cocke.md` §Design. The training driver
-# (`training/lora_train.py`) is NOT yet written — waiting on A0.5 verdict
-# for the state-reg branch decision. This file exists so that when the
-# driver lands, "just point it at pilot.yaml and press run" is enough.
+# Post-2026-07-22 pivot per runtime-decisions §7 "Variant A locked":
+# fine-tune signal comes from `training/fixtures/tool_call_open.jsonl`
+# (open sources: Anthropic public tool-use docs, MCP schema examples,
+# hand-crafted "I don't know → invoke tool" patterns). Personal Claude
+# CLI corpus is retrieval-only, NOT training data. See
+# `training/README.md` §Corpus policy and `training/corpus/RECLASSIFIED.md`.
+#
+# Values mirror the design decisions in `plans/cosmic-purring-cocke.md`
+# §Design. `training/lora_train.py` exposes StateCapture + train_step
+# primitives; full Lightning-driven training requires the documented
+# vendor patch (`light_rwkv.py::training_step`, infctx branch) which
+# is not yet applied.
 
 model:
   # Cached checkpoint at ~/.libs/models/rwkv7/rwkv7-g1d-0.4b — smallest
@@ -34,17 +41,36 @@ training:
   early_stop_val_no_drop_by_steps: 500  # abort if no improvement by 500 steps
 
 corpus:
-  tokenised_dir: "training/tokenised/pilot_5pct"
-  val_fraction: 0.05
-  a02_eval_path: "experiments/A0_baseline/a02_eval.jsonl"
+  # Post-pivot: fixture-only for pilot smoke. `tokenized_pt` points to
+  # the output of `training/tokenize_fixture.py`. Bigger open-corpus
+  # tokenised dir is future work under `training/tokenised/`.
+  tokenized_pt: "training/fixtures/tool_call_open.pt"
+  val_fraction: 0.0        # fixture is too small to split; pilot smoke only
+  a02_eval_path: "experiments/A0_eval/tasks.jsonl"
 
-# State-reg hook — STUB. Concrete branch chosen after A0.5 (§Step 8).
-# α=0 makes state_reg.compute_state_reg a no-op regardless of mode.
+# State-reg hook. A0.5 PASS on all three sub-tests (verdict.md) locked
+# the branch: trajectory_reg with A0.5-derived layer weights
+# (see state_reg.py::_A05_ZERO_LAYER_KL). alpha=0 leaves the hookup wired
+# but makes total loss == CE (state_reg branch short-circuits early).
+#
+# Pilot bring-up plan:
+#   1. mode=off, alpha=0.0                   — baseline CE loss curve, no
+#      state capture, no hook overhead.
+#   2. mode=trajectory_reg, alpha=0.0        — sanity: state hooks fire, CE
+#      curve identical to step 1 (proves capture is non-invasive).
+#   3. mode=trajectory_reg, alpha=1e-3..1e-1 — sweep to find the value
+#      that lifts bit_book_05 (variable-length prefix code) without
+#      regressing extraction. Start low; state_reg motion+curvature terms
+#      are unnormalised and can dominate CE at alpha ~= 1.
 state_reg:
   mode: "off"
   alpha: 0.0
-  delta_min: 0.0
-  layer_mask: []
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  # A0.5-sampled layers with above-floor KL. For a 24-layer target the
+  # default sample set is {12, 16, 20}; empty here so state_reg.py's
+  # default_layer_weights kicks in unmodified.
+  work_layers: []
 
 logging:
   run_dir: "training/runs"
