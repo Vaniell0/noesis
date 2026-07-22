@@ -60,10 +60,55 @@ in
       '';
     };
 
+    ollamaModel = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = ''
+        Ollama model tag (e.g. "mollysama/rwkv-7-g1d:0.4b"). When set, the
+        supervisor performs an /api/generate heartbeat on `ollamaHeartbeatSecs`
+        cadence and stores the response in session_scratch. Null keeps the
+        Ollama backend health-check-only (TCP probe, no generation).
+      '';
+    };
+
+    ollamaHeartbeatPrompt = lib.mkOption {
+      type = lib.types.str;
+      default = "You are noesis, a persistent cognitive runtime. Report your status in one sentence.";
+      description = "Prompt used for the /api/generate heartbeat.";
+    };
+
+    ollamaHeartbeatSecs = lib.mkOption {
+      type = lib.types.int;
+      default = 300;
+      description = "Interval between Ollama /api/generate heartbeats.";
+    };
+
     memoryMax = lib.mkOption {
       type = lib.types.str;
       default = "6G";
       description = "systemd MemoryMax for the runtime process.";
+    };
+
+    sourcePath = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = ''
+        Absolute path to the noesis source checkout on this host (i.e. where
+        `flake.nix` lives). Required when `autoRebuild` is enabled — the
+        rebuild service invokes `nix build` against this flake and restarts
+        the runtime.
+      '';
+    };
+
+    autoRebuild = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Enable a systemd .path watcher that rebuilds noesis-runtime from
+        `sourcePath` and restarts the service whenever files under
+        `runtime/` change on disk. Convenience for on-host development;
+        disable in production. Requires `sourcePath` to be set.
+      '';
     };
   };
 
@@ -97,8 +142,18 @@ in
       ${lib.optionalString (cfg.inferenceBackend == "ollama") ''
         [ollama]
         endpoint = "http://127.0.0.1:11434"
+        heartbeat_prompt = "${cfg.ollamaHeartbeatPrompt}"
+        heartbeat_secs = ${toString cfg.ollamaHeartbeatSecs}
+        ${lib.optionalString (cfg.ollamaModel != null) ''model = "${cfg.ollamaModel}"''}
       ''}
     '';
+
+    assertions = [
+      {
+        assertion = !cfg.autoRebuild || cfg.sourcePath != null;
+        message = "services.noesis-runtime.autoRebuild requires sourcePath to be set.";
+      }
+    ];
 
     systemd.user.services.noesis-runtime = {
       Unit = {
@@ -121,6 +176,39 @@ in
       };
       Install = lib.mkIf cfg.autoStart {
         WantedBy = [ "graphical-session.target" ];
+      };
+    };
+
+    systemd.user.services.noesis-runtime-rebuild = lib.mkIf cfg.autoRebuild {
+      Unit = {
+        Description = "Rebuild noesis-runtime from source and restart the service";
+        After = [ "network.target" ];
+      };
+      Service = {
+        Type = "oneshot";
+        Environment = [
+          "PATH=${lib.makeBinPath [ pkgs.nix pkgs.systemd pkgs.coreutils ]}"
+        ];
+        WorkingDirectory = cfg.sourcePath;
+        ExecStart = pkgs.writeShellScript "noesis-runtime-rebuild" ''
+          set -euo pipefail
+          cd "${cfg.sourcePath}"
+          nix build .#noesis-runtime --no-link --print-out-paths
+          systemctl --user try-restart noesis-runtime.service || true
+        '';
+      };
+    };
+
+    systemd.user.paths.noesis-runtime-rebuild = lib.mkIf cfg.autoRebuild {
+      Unit = {
+        Description = "Watch noesis runtime/ source for changes and trigger rebuild";
+      };
+      Path = {
+        PathChanged = "${cfg.sourcePath}/runtime";
+        Unit = "noesis-runtime-rebuild.service";
+      };
+      Install = {
+        WantedBy = [ "default.target" ];
       };
     };
   };

@@ -491,6 +491,11 @@ token, more state work should compound. Deliverable: a runtime
 `effort` registry with noesis-specific presets (fast / normal / deep)
 selected from the measured Pareto frontier, not copy-pasted from
 Transformer effort levels. Design draft: `docs/effort-frontier.md`.
+Competing axis: H12 asks whether the ceiling being probed here is set
+by *single-state capacity* rather than by test-time compute per token.
+Both are legitimate frontier directions but the tests answer disjoint
+questions — H10 measures how far one state can be pushed, H12 asks
+whether one state is the right unit at all.
 
 **Status.** Untested; runner and eval design in
 `experiments/A0.8_refine/` (pending). Scheduled after A0.6/A0.7 —
