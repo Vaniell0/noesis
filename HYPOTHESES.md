@@ -532,3 +532,77 @@ as M_B).
 
 **Status.** Untested. Runs after A1 lands and Phase B/D seedling is
 online. Not in Phase 1 critical path.
+
+---
+
+## H12. Working-memory bottleneck vs decay-rate bottleneck in WKV
+
+**Claim.** RWKV-7's failure mode on cross-domain reasoning is
+dominated by **active-representation width** — how many *distinct*
+concepts the state can hold simultaneously — not by decay-rate over
+distance. That is, the model *knows* the pieces (weights carry them)
+but cannot hold enough of them active at once to discover cross-links.
+If true, a multi-slot state extension (K parallel WKV slots per layer
+with input-dependent gating and cross-slot read) buys more accuracy
+than an equivalent-parameter widening of a single-slot state, at
+comparable FLOPs/token.
+
+**Motivation.** User intuition 2026-07-22: "модель работает как
+процессор ... не хватает не знаний, а возможности собирать более
+обширные представления". The multi-core analogy is misleading (CPUs
+went multi-core against a thermal wall; models don't have one), but
+the underlying observation — that working-memory width, not knowledge
+count, may be the binding constraint — is empirically open. Prior art
+in the direction: RetNet (multi-retention), Griffin (linear recurrence
++ sliding-window attention), Titans (learned long-term memory slot).
+
+**Two disjoint failure modes to distinguish first (H12a).**
+
+- *Decay-mode.* Error rate scales with token-distance to the referent.
+  Close is remembered, far is forgotten.
+- *Width-mode.* Error rate scales with the *number* of simultaneously
+  active concepts required to answer, at *small* token-distance.
+
+**Prediction (H12a — bottleneck attribution).** Construct a
+cross-linking probe: N triples `(entity → property)` in a short
+context (≤ 512 tokens), question requires finding all entity pairs
+sharing a property. Sweep `N ∈ {4, 8, 16, 32, 64}` at fixed context
+length on G1d-0.4B.
+
+- If accuracy falls sharply with N at N ≪ context-length capacity,
+  width is the bottleneck → H12b becomes worth running.
+- If accuracy is flat in N but falls with mean triple-to-question
+  distance, decay is the bottleneck → H12b drops; retrieval / longer
+  effective context are the right fixes.
+
+**Prediction (H12b — multi-slot fix, gated on H12a = width).**
+LoRA-add `K = 4` parallel WKV slots per layer, input-dependent gating
+routes each incoming token's contribution across slots, simple learned
+merge (weighted sum with per-slot query) at readout. Retest H12a's
+probe.
+
+- If the largest N with ≥ 0.9 baseline accuracy grows by ≥ 2× under
+  the K=4 variant at ≤ 1.5× FLOPs/token, multi-slot is validated.
+- Ablation: equivalent-parameter widening of a single slot (same
+  parameter budget, K=1) as a control — multi-slot must beat this,
+  not just beat vanilla, to earn the architectural cost.
+
+**Falsification.**
+- H12a fails ⇒ decay dominates; H12b is not worth running. Fixes
+  are retrieval / longer-window / different decay schedule.
+- H12b fails despite H12a pass ⇒ width is the constraint but
+  multi-slot is not the right mechanism. Register in `FAILED.md`;
+  falls back to widening single-slot state (dumber but cheaper).
+
+**Related.** Track A, deferred from Phase 1 (H7 lock keeps logic
+in weights, knowledge in context; multi-slot state is an
+architectural change, not a Phase 1 lever). Adjacent to H8 (state-as-
+computation) and H10 (test-time compute) — those probe *how* the
+single state works; H12 probes *whether one is enough*. Adjacent to
+A0.6/A0.7 verdict: if state is not portable between instances, any
+multi-slot design must live inside one forward-pass, not across model
+copies.
+
+**Status.** Untested. Phase 2 architectural probe. Two experiments
+(H12a probe, H12b LoRA); each budget < 24 GPU-hours at 0.4B.
+
