@@ -371,6 +371,20 @@ testable — RWKV could still win on end-task quality via other
 mechanisms (e.g. training-data quality, tokenizer choice) even if H8
 falls.
 
+**Frontier adjacency (Transformer side, 2026-07-23).** Anthropic's
+MyTHOS line and the OpenMythos open follow-up couple Recurrent-Depth
+Transformers with MoE and memory compression. Recurrent-Depth
+Transformer = looped forward pass over the same block stack = *depth-
+side* computation-in-forward, the Transformer-flavoured answer to
+the same underlying question H8 asks in *width-side* (state-per-token)
+form. This is not a claim of equivalence, and the two mechanisms are
+not interchangeable; but the frontier's decision to invest in
+computation-inside-forward-pass rather than more parameters or more
+tokens strengthens the *class* of bet noesis is on. Useful marker for
+framing H8's significance in any public write-up. **Not evidence for
+H8.** The frontier converging does not mean the RWKV-side version
+works — that is what A0.4/A0.5 exists to measure.
+
 **Related.** Track A (A0.4). Feeds into A1 loss-formulation decision
 (see ROADMAP Gate 1 exit criteria).
 
@@ -599,6 +613,17 @@ probe.
   multi-slot is not the right mechanism. Register in `FAILED.md`;
   falls back to widening single-slot state (dumber but cheaper).
 
+**Frontier adjacency (Transformer side, 2026-07-23).** OpenMythos and
+the MyTHOS-line MoE + memory-compression stack address the same
+underlying question by *routing* rather than *widening*: expert
+selection per token acts as a discrete cousin of multi-slot state
+where different experts hold different sub-representations active in
+parallel. Not equivalence — MoE routing operates on FFN blocks, not
+on the recurrent state; the analogy is by function (parallel
+sub-representations) not by mechanism. Useful marker: the frontier is
+independently converging on "one dense representation is not enough,"
+which is what H12b bets on for the RWKV state specifically.
+
 **Related.** Track A, deferred from Phase 1 (H7 lock keeps logic
 in weights, knowledge in context; multi-slot state is an
 architectural change, not a Phase 1 lever). Adjacent to H8 (state-as-
@@ -613,7 +638,7 @@ copies.
 
 ---
 
-## H13. State compresses geometry, not just token distributions
+## H13a. State compresses geometry, not just token distributions
 ### *(wager, precedent-informed but not yet directly tested inside noesis)*
 
 **Claim.** The state-as-computation dynamics that H8 probes for text
@@ -677,5 +702,118 @@ snapshot) as first-class alongside keyboard / journal input.
 
 **Status.** Untested. Speculative wager. Recorded 2026-07-22 as a
 future-Phase direction rather than a near-term probe.
+
+---
+
+## H13b. Image-in-context beats text-digest for screen-content tasks
+### *(near-term, well-supported by precedent — cheap to test)*
+
+**Claim.** For tasks where the input is a rendered screen, a
+vision-capable model that receives the **screenshot itself as
+context** (patch tokens or native-vision channel) outperforms an
+otherwise-identical text-only pipeline that receives a
+carefully-digested textual summary of the same screen. The precedent
+is broad: Claude Vision, GPT-4V, Gemini, and the MyTHOS-line vision
+reconstruction demos all show frontier models routinely reasoning
+about layout, whitespace, colour cues, and iconography that no
+practical OCR-plus-digest pipeline captures without hand-tuning.
+
+**Distinction from H13a.** H13a is the *architectural* wager (state
+absorbs geometry). H13b is the *pipeline* wager (feeding the raw
+pixels into a context window is already yielding, today, on
+mainstream vision-capable models). H13a says "the WKV state can be
+the vision head"; H13b says "wherever the vision head lives, don't
+throw away the image before you reason." H13a's outcome is
+independent of H13b — H13b can hold with a bolted-on encoder just
+fine.
+
+**Motivation (2026-07-23).** User push-back against a split
+perception-backend + reasoning-backend architecture: coordination,
+format translation, and latency across two models are real costs;
+the frontier is investing in unified multimodal models
+(vision-language, and MyTHOS-line where Recurrent-Depth Transformers
+absorb visual input through the same forward pass) rather than
+gluing two backends together. H13b captures the near-term evidence
+that image-in-context is the dominant strategy in practice.
+
+**Prediction.** On a coarse screen-content classification benchmark
+(≥ 30 held-out screenshots from the user's real Linux session, five
+labels: `code_editor / terminal / browser_docs / video_media /
+other`), a vision-capable model with the screenshot in context
+outperforms the same-class text-only model with a
+carefully-digested textual description of the same screen by
+**≥ 2× accuracy** (measured as either overall accuracy on a
+class-balanced set or F1 macro on a class-imbalanced one).
+
+**Falsification.**
+- If the text-digest baseline reaches within 0.5× accuracy of the
+  vision-in-context path, the practical case for image-in-context on
+  *this* task class is weak — text digestion is enough. Would push
+  noesis toward keeping the vision channel out of the critical path
+  and re-investigate for finer-grained tasks (UI-element extraction,
+  spatial reasoning) instead.
+- If the vision-in-context model is confused by the raster order or
+  tokeniser choice (accuracy at chance), the pipeline is broken, not
+  the hypothesis. Fix and re-run before drawing conclusions.
+
+**Related.** Track B (visual observation collector, gated on
+verdict) and Track C (screenshot-in-context handoff, C2/C3 side).
+Cheap to test — needs a small labelled screenshot set and a
+vision-capable Ollama-servable model, both attainable in-week.
+Interacts with H11 (lens design) — if H13b holds, `screen` becomes
+a first-class zone alongside `events` / `insights` / `vault`.
+
+**Status.** Untested. Near-term candidate for the next probe cycle
+after A0.3 completes.
+
+---
+
+## Architectural note — unified multimodal RWKV, not split backends
+### *(locked 2026-07-23)*
+
+**Decision.** noesis targets a *unified* multimodal backbone (one
+model, one state format, text ⊕ image ⊕ (possibly) audio through
+the same delta-rule update) rather than a split perception-backend
++ reasoning-backend architecture. If, at any point, adding a vision
+head means introducing a second model with a serialised handoff
+protocol between the two, the architectural drift needs to be
+challenged before committing.
+
+**Why.** Split backends carry real costs:
+- **Coordination overhead** — two schedulers, two lifecycles, two
+  memory footprints resident.
+- **Format translation** — perception-side output has to be
+  serialised into text (or a synthetic embedding format) that the
+  reasoning-side model can consume; the serialisation itself is
+  lossy and slow.
+- **Latency stack-up** — inference on both models in sequence, plus
+  the translation step, dominates any per-step wins from
+  specialising each backend.
+- **Frontier signal.** MyTHOS-line and OpenMythos work
+  (Recurrent-Depth Transformer + MoE + memory-compression) is
+  investing in *state-side* computation and multimodal-in-context,
+  not in inter-model orchestration. If the frontier is unifying, a
+  small research project should not be gluing.
+
+**How this shapes near-term work.** H13a and H13b are the two probes
+that inform the unified-substrate wager. H13b is the cheap
+near-term test (does image-in-context yield with any vision-capable
+substrate?); H13a is the deep wager (does the *RWKV* state itself
+carry that yield without a bolted-on encoder?). Both are worth
+running; neither justifies introducing a second local reasoning
+model to service perception.
+
+**Escape hatch.** If H13a fails clearly (state cannot absorb visual
+tokens) *and* H13b holds (image-in-context yield is real, but only
+via an external vision head), the escape hatch is a *fused*
+architecture where the vision head produces tokens or embeddings
+consumed inside the same forward pass of the reasoning backbone —
+not a split-backends handoff protocol. This preserves the
+single-cognitive-engine constraint from `CLAUDE.md`.
+
+**Recorded from.** User push-back 2026-07-23 in response to a design
+sketch that proposed a split perception/reasoning stack. Recorded to
+prevent architectural drift over the next 3–6 months while H13
+probes are pending.
 
 
