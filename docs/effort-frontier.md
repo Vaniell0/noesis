@@ -5,6 +5,17 @@
 > framing before A0.8 runner design lands. Falsifier + prediction are
 > locked as **H10** in `HYPOTHESES.md` (expanded from N-only sweep to
 > 3D matrix on 2026-07-22).
+>
+> **First data point (2026-07-23).** Adaptive per-N budget variant
+> of H12a on G1d-0.4B (see
+> `experiments/A0_H12a_working_memory/results-g1d-n30-adaptive/REPORT.md`)
+> gives a *partial* K-axis frontier hint: at N ≤ 8, budget → recall is
+> monotone-positive (cutting budget from 2048 to 512 dropped recall
+> 0.50 → 0.28); at N ≥ 32, +952 tokens above 2048 did not move recall
+> from floor. Frontier looks monotone-positive with a plateau, not
+> inverted-U. Only one data point on the H10 grid — a real sweep
+> needs the full (N, K, mode) matrix + `state_readout` which has not
+> been implemented yet.
 
 ## Problem
 

@@ -75,9 +75,17 @@ per runtime-decisions §7:
   (mode=off) path without loading deepspeed/CUDA. Actual execution
   needs a GPU: BlinkDL `rwkv 0.8.32` is `torch.no_grad`-only (no
   autograd on CPU), and the RWKV-PEFT trainer requires deepspeed +
-  CUDA kernels. **Compute path options**: (a) local GTX 1050 4GB
-  via WSL2 using `training/bootstrap_pilot_gpu.sh`; (b) cloud burst
-  (explicit decision per CLAUDE.md "cheap by construction").
+  CUDA kernels. **Adjacent progress (2026-07-23):** the
+  serving-side quantisation pipeline is now green — `nix/noesis-model.nix`
+  produces Q8_0 through `rwkv-quantize` from `rwkv.cpp` in a two-stage
+  build (FP16 intermediate → Q8_0), and the CPU-served model runs at
+  ~30 tok/s on Alder Lake through the in-process rwkv.cpp bindings.
+  This closes the serving loop but does *not* unblock training —
+  training still needs a real backward pass. **Compute path options**:
+  (a) local GTX 1050 4GB via WSL2 using
+  `training/bootstrap_pilot_gpu.sh`; (b) cloud burst (explicit
+  decision per CLAUDE.md "cheap by construction"). H12b LoRA sits
+  behind the same gate.
 - **Step 7 — pilot smoke run** on the open fixture, 0.4B, one α
   (α=0 baseline). Goal: verify convergence direction, not final
   metrics. Post-smoke eval on A0.2 subset (bit_book + arithmetic)

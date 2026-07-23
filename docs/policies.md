@@ -58,20 +58,36 @@ undecided. The default for unlocked items is *ask the user*.
 - SSD hardware encryption alone is **not** sufficient (known firmware
   attacks; often not actually enabled). Software layer is required.
 
-### CPU budget (locked 2026-07-22, mirrors HYPOTHESES §H1)
+### CPU budget (locked 2026-07-22, tightened 2026-07-24, mirrors HYPOTHESES §H1)
 
-Two disjoint regimes; the scheduler enforces both:
+**Two disjoint regimes with different constraints.** Conflating them
+is the error mode.
 
-- **Steady:** < 1 % CPU. Model resident but idle
-  (Ollama `keep_alive: -1`); only collectors and scheduler run.
-- **Burst:** up to ~20 % CPU for tens of seconds at
-  minute-scale periodicity. Every LLM job — composer, incremental
-  digest, reflection, retrieval-rerank — is a burst.
+**Steady mode** — no user activity for `interactive_window_minutes`
+(default 5). Bounded by:
+- `< 1 %` package CPU (H1 ceiling).
+- **Fan-off invariant** (user policy 2026-07-24): fans never
+  audible. Stricter than CPU % alone — constrains sustained thermal
+  load, not just instantaneous CPU. Default
+  `drip.rate_tokens_per_sec = 0.3` bounds package CPU at ~0.27 %
+  analytically (runtime plan §11).
+- Only collectors, scheduler, and rate-limited drip run.
+- Ollama model resident but idle (`keep_alive: -1`).
 
-Long-running jobs are **fragmented into burst chunks**, never allowed
-to sustain. A job that overruns its budget window is deferred to the
-next window, not extended. Enforced by `noesis-scheduler` (Rust
-runtime).
+**Interactive mode** — user activity within
+`interactive_window_minutes`. Bounded only by:
+- Hardware thermal limits.
+- **H1 does NOT apply. Fan-off does NOT apply.** Interactive is
+  exactly when the model is allowed to use the compute it was
+  optimised for. User is present, requested compute, tolerates fan
+  noise for responsive answers.
+- Long-running interactive jobs may be fragmented into burst chunks
+  for fairness with other user processes, but never for H1
+  compliance.
+
+Steady-mode jobs that overrun their CPU window are deferred to the
+next window, never extended. Interactive-mode jobs run to
+completion. Enforced by `noesis-scheduler` (Rust runtime).
 
 ### Ollama child sandboxing (locked 2026-07-22)
 

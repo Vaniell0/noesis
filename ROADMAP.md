@@ -8,8 +8,10 @@ serialize them.
 
 ### A0. Baseline (weeks 1–2)
 - Install RWKV-7-G1 2.9B via Ollama, verify inference throughput on the
-  user's hardware (target: reproduce the observed ~15–20 tok/s CPU and
-  ~50+ tok/s on 1050).
+  user's hardware. **Measured 2026-07-23**: 0.4B World Q8_0 via rwkv.cpp
+  on i5-1235U (Alder Lake, 4 threads) delivers ~30 tok/s steady-state;
+  load 506 ms; RSS ~1.16 GB. 2.9B target and GTX 1050 numbers still
+  untested.
 - Assemble a held-out eval set of 30–50 real reasoning tasks drawn from
   the user's actual workflow — not GSM8K, not MMLU.
 - Baseline eval: RWKV-7-G1 2.9B against Qwen-2.5-3B-Instruct and Phi-4-mini
@@ -23,6 +25,9 @@ serialize them.
   the wrong question.
 - Trigger: fires once Phase B/D of the runtime plan lands a working
   seedling (memory-store online + noesis-runtime supervisor running).
+  **Seedling running** (verdicts/2026-07-22-phase-b-skeleton.md — 6
+  collectors + retention + Ollama HTTP heartbeat validated). 24 h
+  measurement itself still pending.
   Runs on the target host (i5-1235U laptop) under a realistic wake
   pattern — idle mostly, periodic ingest ticks, one daily-digest style
   burst.
@@ -181,7 +186,12 @@ serialize them.
 ## Open questions
 
 - **Cloud training budget.** Local-only or cloud burst on A100 for
-  continued pretraining? Decide before A3.
+  continued pretraining? Decide before A3. Also required for H12b LoRA
+  + H12b.i utilisation regularizer (K=4 WKV slots with slot-usage
+  entropy + cross-slot dissimilarity losses, <24 GPU-hours at 0.4B)
+  if the H12a v2 verdict lands as width-bottleneck. Local GTX 1050
+  sits at the edge of feasibility; A100 burst (~24 wall-hours × ~$2/h)
+  is the realistic path.
 - **Model size.** Start with 2.9B for fast iteration; revisit 13.3B after
   Gate 1.
 - **Escalation semantics.** When user invokes Claude, does it replace
@@ -193,3 +203,10 @@ serialize them.
   (state ↔ natural-language summary ↔ re-prompt). Which one — or both —
   becomes the actual inter-model transfer mechanism informs both the
   memory-track schema and the C3 escalation UX.
+- **Multimodal substrate (Phase 3+).** H13a (state absorbs visual
+  patches through the same delta-rule update), H13b (image-in-context
+  beats text-digest for screen tasks) and H16 (gated externalisation
+  from a continuous silent think-stream so the model self-initiates
+  rather than being polled) are logged in HYPOTHESES.md. All three are
+  Phase 3+; H13b is the cheap near-term probe if noesis needs
+  screen-content assistance before Phase 3 lands.
