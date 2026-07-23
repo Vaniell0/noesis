@@ -1,0 +1,11 @@
+[package]
+name = "noesis-rwkv-sys"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+links = "rwkv"
+
+[dependencies]
+
+[build-dependencies]
+bindgen = "0.71"

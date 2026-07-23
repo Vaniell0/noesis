@@ -12,6 +12,11 @@
 
       rwkv-cpp = pkgs.callPackage ./nix/rwkv-cpp.nix { };
 
+      noesis-model = pkgs.callPackage ./nix/noesis-model.nix { inherit rwkv-cpp; };
+      noesis-model-q8_0 = noesis-model.override { dtype = "Q8_0"; };
+      noesis-model-q5_1 = noesis-model.override { dtype = "Q5_1"; };
+      noesis-model-q4_0 = noesis-model.override { dtype = "Q4_0"; };
+
       noesis-runtime = pkgs.rustPlatform.buildRustPackage {
         pname = "noesis-runtime";
         version = "0.1.0";
@@ -28,7 +33,7 @@
       };
     in {
       packages.${system} = {
-        inherit rwkv-cpp noesis-runtime;
+        inherit rwkv-cpp noesis-model noesis-model-q8_0 noesis-model-q5_1 noesis-model-q4_0 noesis-runtime;
         default = noesis-runtime;
       };
 
@@ -38,9 +43,13 @@
           rustc cargo rust-analyzer clippy rustfmt
           # C/C++ toolchain for rwkv.cpp local hacking.
           cmake ninja pkg-config openblas
+          # libclang for bindgen in noesis-rwkv-sys.
+          llvmPackages.libclang
           # Python side of experiments (A0.6/A0.7/A0.8 sweeps).
           python312 uv
         ];
+        # bindgen locates libclang via LIBCLANG_PATH.
+        LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
       };
 
       homeModules.default = import ./nix/hm-module.nix self;

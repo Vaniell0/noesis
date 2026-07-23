@@ -15,6 +15,7 @@ mod inference;
 mod retention;
 
 use std::path::PathBuf;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -39,9 +40,26 @@ struct Config {
 
 #[derive(Debug, Deserialize)]
 struct RwkvCppSection {
-    binary: String,
+    /// Path to the rwkv.cpp .bin model. Falls back to top-level
+    /// `model_path` when omitted.
+    #[serde(default)]
+    model_path: Option<PathBuf>,
     #[serde(default)]
     threads: Option<u32>,
+    #[serde(default = "default_heartbeat_prompt")]
+    heartbeat_prompt: String,
+    #[serde(default = "default_heartbeat_secs")]
+    heartbeat_secs: u64,
+    #[serde(default = "default_rwkv_max_gen")]
+    max_gen_tokens: usize,
+    /// `host:port` for the Ollama-shape HTTP shim. When absent the shim
+    /// is disabled and the backend only runs the heartbeat loop.
+    #[serde(default)]
+    http_bind: Option<String>,
+}
+
+fn default_rwkv_max_gen() -> usize {
+    20
 }
 
 #[derive(Debug, Deserialize)]
@@ -70,8 +88,36 @@ fn default_backend() -> String {
 fn inference_config_from(cfg: &Config) -> inference::InferenceConfig {
     let backend = match cfg.inference_backend.as_str() {
         "rwkv-cpp" => match &cfg.rwkv_cpp {
-            Some(s) => inference::Backend::RwkvCpp {
-                binary: s.binary.clone(),
+            Some(s) => match s.model_path.clone().or_else(|| cfg.model_path.clone()) {
+                Some(model_path) => {
+                    let n_threads = s.threads.unwrap_or_else(|| {
+                        std::thread::available_parallelism()
+                            .map(|n| n.get().min(4) as u32)
+                            .unwrap_or(2)
+                    });
+                    let http_bind = s.http_bind.as_ref().and_then(|s| {
+                        match s.parse() {
+                            Ok(addr) => Some(addr),
+                            Err(e) => {
+                                warn!(http_bind = %s, error = %e,
+                                      "invalid rwkv_cpp.http_bind — HTTP shim disabled");
+                                None
+                            }
+                        }
+                    });
+                    inference::Backend::RwkvCpp {
+                        model_path,
+                        n_threads,
+                        heartbeat_prompt: s.heartbeat_prompt.clone(),
+                        heartbeat: Duration::from_secs(s.heartbeat_secs),
+                        max_gen_tokens: s.max_gen_tokens,
+                        http_bind,
+                    }
+                }
+                None => {
+                    warn!("rwkv-cpp backend has no model_path — supervisor idle");
+                    inference::Backend::Unspecified
+                }
             },
             None => inference::Backend::Unspecified,
         },
@@ -129,13 +175,12 @@ async fn main() -> Result<()> {
     info!("all zone stores open");
 
     let inference_cfg = inference_config_from(&cfg);
+    let shutdown_flag = Arc::clone(&inference_cfg.shutdown);
     let inference_handle = tokio::spawn(inference::run(Arc::clone(&store), inference_cfg));
     let retention_handle = tokio::spawn(retention::run(
         Arc::clone(&store),
         retention::RetentionConfig::default(),
     ));
-    let _ = cfg.model_path;
-
     let collector_handles = vec![
         (
             "system_obs",
@@ -194,6 +239,10 @@ async fn main() -> Result<()> {
         }
     }
 
+    // Flip the cooperative shutdown flag first: rwkv-cpp runs on a
+    // spawn_blocking OS thread that ignores `abort()` mid-eval; the flag
+    // lets it exit at the next heartbeat boundary.
+    shutdown_flag.store(true, Ordering::SeqCst);
     for (name, handle) in &collector_handles {
         handle.abort();
         let _ = name;

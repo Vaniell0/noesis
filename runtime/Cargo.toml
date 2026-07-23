@@ -4,6 +4,8 @@ members = [
     "noesis-schema",
     "noesis-store",
     "noesis-runtime",
+    "noesis-rwkv-sys",
+    "noesis-rwkv",
 ]
 
 [workspace.package]
@@ -24,6 +26,7 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal", "tim
 toml = "0.8"
 evdev = "0.13"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+axum = { version = "0.7", default-features = false, features = ["tokio", "http1", "json"] }
 
 [profile.release]
 lto = "thin"
