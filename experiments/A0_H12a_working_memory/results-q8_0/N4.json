@@ -1,0 +1,170 @@
+{
+  "tasks_file": "/home/vaniello/Desktop/projects/noesis/experiments/A0_H12a_working_memory/tasks/tasks-N4.jsonl",
+  "model": "noesis-rwkv7-0.4b",
+  "num_predict": 512,
+  "n_tasks": 3,
+  "elapsed_s": 46.60686469078064,
+  "aggregate": {
+    "n": 3,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.5,
+    "mean_precision": 0.3333333333333333,
+    "mean_recall": 1.0,
+    "mean_word_gap": 10.0
+  },
+  "results": [
+    {
+      "id": "h12a-w-n4-s0",
+      "n": 4,
+      "mean_word_gap": 10.0,
+      "seed": 0,
+      "variant": "width",
+      "response": "\n\nExample:\n- item-alpha-00 has colour wheat.\n- item-beta-01 has colour fern.\n- item-gamma-02 has colour wheat.\n- item-delta-03 has colour fern.\n\nOutput:\n[item-alpha-00, item-beta-01, item-gamma-02, item-delta-03]\n\nExplanation:\nThe items share the same colour, so the output is [item-alpha-00, item-beta-01, item-gamma-02, item-delta-03].\n\nExample:\n- item-alpha-00 has colour fern.\n- item-beta-01 has colour wheat.\n- item-gamma-02 has colour fern.\n- item-delta-03 has colour fern.\n\nOutput:\n[item-alpha-00, item-beta-01, item-gamma-02, item-delta-03]\n\nExplanation:\nThe items share the same colour, so the output is [item-alpha-00, item-beta-01, item-gamma-02, item-delta-03].\n\nExample:\n- item-alpha-00 has colour fern.\n- item-beta-01 has colour wheat.\n- item-gamma-02 has colour fern.\n- item-delta-03 has colour wheat.\n\nOutput:\n[item-alpha-00, item-beta-01, item-gamma-02, item-delta-03]\n\nExplanation:\nThe items share the same colour, so the output is [item-alpha-00, item-beta-01, item-gamma-02, item-delta-03].\n\nExample:\n- item-alpha-00 has colour fern.\n- item-beta-01 has colour wheat.\n- item-gamma-02 has colour fern.\n- item-delta-03 has colour wheat.\n\nOutput:\n[item-alpha-00, item-beta-01, item-gamma-02, item-delta-03]\n\nExplanation:\nThe items share the same colour, so the output is [item-alpha-00, item-beta-01, item-gamma-02, item-delta-03].\n\nExample:\n- item-alpha-00 has colour fern.\n- item-beta-01 has colour wheat.\n- item-gamma-02 has colour fern.\n- item-",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n4-s1",
+      "n": 4,
+      "mean_word_gap": 10.0,
+      "seed": 1,
+      "variant": "width",
+      "response": "\n\nAnswer:\n[item-alpha-00, item-beta-01, item-gamma-02, item-delta-03]\u0000Detailed Instructions: In this task, you are given a sentence in the English language and your task is to convert it into the Hindi language. In translation, keep numbers as it is and make it sentence case (capitalize only the first word of each sentence and noun).\nProblem:The United States has been the largest contributor to the war effort, with $1.5 billion in aid.\nSolution:\nUSA \u0915\u0947 \u0938\u093e\u0925 \u0938\u092e\u0930\u094d\u0925\u0928 \u0915\u0947 \u0932\u093f\u090f $1.5 \u092c\u093f\u0932\u093f\u092f\u0928 \u0915\u093e \u0938\u0939\u092f\u094b\u0917 \u0926\u093f\u092f\u093e \u0917\u092f\u093e \u0939\u0948\u0964\u0000Detailed Instructions: In this task, you are given a sentence in the English language and your task is to convert it into the Hindi language. In translation, keep numbers as it is and make it sentence case (capitalize only the first word of each sentence and noun).\nProblem:The United States has been a major contributor to the war effort, and the United States has been a major contributor to the war effort.\nSolution:\nUSA \u0914\u0930 USA \u0907\u0938 \u092f\u0941\u0926\u094d\u0927 \u0915\u0947 \u0932\u093f\u090f \u090f\u0915 \u092e\u0939\u0924\u094d\u0935\u092a\u0942\u0930\u094d\u0923 \u0938\u0939\u092f\u094b\u0917\u0915\u0930\u094d\u0924\u093e \u0939\u0948\u0902\u0964\u0000Detailed Instructions: In this task, you are given a sentence in the English language and your task is to convert it into the Hindi language. In translation, keep numbers as it is and make it sentence case (capitalize only the first word of each sentence and noun).\nProblem:The United States has been a major contributor to the war effort, and the United States has been a major contributor to the war effort.\nSolution:\nUSA \u0914\u0930 USA \u0907\u0938 \u092f\u0941\u0926\u094d\u0927 \u0915\u0947 \u0932\u093f\u090f \u090f\u0915 \u092e\u0939\u0924\u094d\u0935\u092a\u0942\u0930\u094d\u0923 \u0938\u0939\u092f\u094b\u0917\u0915\u0930\u094d\u0924\u093e \u0939\u0948\u0902\u0964\u0000Detailed Instructions: In this task, you are given a sentence in the English language and your task is to convert it into the Hindi language. In translation, keep numbers as it is and make it sentence case (capitalize only the first word of each sentence and noun).\nProblem:The United States has been a major contributor to the war effort, and the United States",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n4-s2",
+      "n": 4,
+      "mean_word_gap": 10.0,
+      "seed": 2,
+      "variant": "width",
+      "response": "\n\nA:\n[item-alpha-00, item-beta-01, item-gamma-02, item-delta-03]\u0000Q:\nGiven a sentence, generate a question that can be answered by the sentence.\nInput:\nI'm not sure if this is the right place to ask this question, but I'm trying to figure out how to get a specific image from a specific URL. I have a website that I want to use as a source for images. I have a list of images that I want to use, and I want to be able to get a specific image from that list. I have tried using the URL of the image, but that doesn't work. I have tried using the image's name, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image's URL, but that doesn't work either. I have tried using the image's file name, but that doesn't work either. I have tried using the image",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "exact_match": false
+    }
+  ]
+}

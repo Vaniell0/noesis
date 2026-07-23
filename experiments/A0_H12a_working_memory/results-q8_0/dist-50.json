@@ -1,0 +1,194 @@
+{
+  "tasks_file": "/home/vaniello/Desktop/projects/noesis/experiments/A0_H12a_working_memory/tasks/tasks-dist-50.jsonl",
+  "model": "noesis-rwkv7-0.4b",
+  "num_predict": 512,
+  "n_tasks": 3,
+  "elapsed_s": 63.147796392440796,
+  "aggregate": {
+    "n": 3,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.14652014652014653,
+    "mean_precision": 0.09696969696969697,
+    "mean_recall": 0.3333333333333333,
+    "mean_word_gap": 40.333333333333336
+  },
+  "results": [
+    {
+      "id": "h12a-d-g50-s0",
+      "n": 16,
+      "mean_word_gap": 63.0,
+      "seed": 0,
+      "variant": "dist",
+      "response": "\n\nAnswer: Here is the solution:\n```python\ndef find_pairs(items):\n    pairs = []\n    for item in items:\n        if item.has_color(item.get_color()):\n            pairs.append((item.get_color(), item.get_color()))\n    return pairs\nitems = [\n    (\"item-alpha-00\", \"item-beta-01\"),\n    (\"item-gamma-02\", \"item-delta-03\"),\n    (\"item-epsilon-04\", \"item-zeta-05\"),\n    (\"item-eta-06\", \"item-theta-07\"),\n    (\"item-iota-08\", \"item-kappa-09\"),\n    (\"item-lambda-10\", \"item-mu-11\"),\n    (\"item-nu-12\", \"item-pi-13\"),\n    (\"item-xi-14\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-wine\"),\n    (\"item-zeta-05\", \"item-eta-06\"),\n    (\"item-theta-07\", \"item-iota-08\"),\n    (\"item-kappa-09\", \"item-lambda-10\"),\n    (\"item-lambda-10\", \"item-mu-11\"),\n    (\"item-nu-12\", \"item-pi-13\"),\n    (\"item-xi-14\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-wine\"),\n]\nprint(find_pairs(items))\n```\nThis solution uses a list comprehension to iterate over the items and check if they share the same colour. If they do, it appends the colour to the `pairs` list. The `find_pairs` function returns a list of pairs.\u0000Q: \u8bf7\u5c06\u4e0b\u6587\u7ffb\u8bd1\u6210\u4e2d\u6587\n1. \u4f60\u6709\u4ec0\u4e48\u597d\u7684\u5efa\u8bae\u6765\u5e2e\u52a9\u6211\u4eec\u66f4\u597d\u5730\u7406\u89e3\u8fd9\u4e2a\u95ee\u9898\uff1f\n2. \u4f60\u8ba4\u4e3a\u8fd9\u4e2a\u95ee\u9898\u7684\u7b54\u6848\u662f\u4ec0\u4e48\uff1f\n3. \u4f60\u8ba4\u4e3a\u8fd9\u4e2a\u95ee\u9898\u7684\u7b54\u6848\u662f\u4ec0\u4e48\uff1f\n4. \u4f60\u8ba4\u4e3a\u8fd9\u4e2a\u95ee\u9898\u7684\u7b54\u6848\u662f\u4ec0\u4e48\uff1f\n5. \u4f60\u8ba4\u4e3a\u8fd9\u4e2a\u95ee\u9898\u7684\u7b54\u6848\u662f\u4ec0\u4e48\uff1f\n6. \u4f60\u8ba4\u4e3a\u8fd9\u4e2a\u95ee\u9898\u7684\u7b54\u6848\u662f\u4ec0\u4e48\uff1f\n7. \u4f60\u8ba4\u4e3a\u8fd9\u4e2a\u95ee\u9898\u7684\u7b54\u6848",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-lambda-10"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-theta-07"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-pi-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-14"
+        ]
+      ],
+      "tp": 1,
+      "fp": 10,
+      "fn": 1,
+      "precision": 0.09090909090909091,
+      "recall": 0.5,
+      "f1": 0.15384615384615385,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g50-s1",
+      "n": 16,
+      "mean_word_gap": 14.0,
+      "seed": 1,
+      "variant": "dist",
+      "response": "\n\nAnswer: Here is the solution:\n```python\ndef find_pairs(items):\n    pairs = []\n    for item in items:\n        if item.color == \"black\":\n            pairs.append((item, \"black\"))\n        elif item.color == \"red\":\n            pairs.append((item, \"red\"))\n        elif item.color == \"green\":\n            pairs.append((item, \"green\"))\n        elif item.color == \"blue\":\n            pairs.append((item, \"blue\"))\n        elif item.color == \"yellow\":\n            pairs.append((item, \"yellow\"))\n        elif item.color == \"orange\":\n            pairs.append((item, \"orange\"))\n        elif item.color == \"purple\":\n            pairs.append((item, \"purple\"))\n        elif item.color == \"pink\":\n            pairs.append((item, \"pink\"))\n        elif item.color == \"brown\":\n            pairs.append((item, \"brown\"))\n        elif item.color == \"white\":\n            pairs.append((item, \"white\"))\n        elif item.color == \"black\":\n            pairs.append((item, \"black\"))\n        elif item.color == \"red\":\n            pairs.append((item, \"red\"))\n        elif item.color == \"green\":\n            pairs.append((item, \"green\"))\n        elif item.color == \"blue\":\n            pairs.append((item, \"blue\"))\n        elif item.color == \"yellow\":\n            pairs.append((item, \"yellow\"))\n        elif item.color == \"orange\":\n            pairs.append((item, \"orange\"))\n        elif item.color == \"purple\":\n            pairs.append((item, \"purple\"))\n        elif item.color == \"pink\":\n            pairs.append((item, \"pink\"))\n        elif item.color == \"brown\":\n            pairs.append((item, \"brown\"))\n        elif item.color == \"white\":\n            pairs.append((item, \"white\"))\n        elif item.color == \"black\":\n            pairs.append((item, \"black\"))\n    return pairs\nitems = [\n    (\"item-alpha-00\", \"item-beta-01\"),\n    (\"item-gamma-02\", \"item-delta-03\"),\n    (\"item-epsilon-04\", \"item-zeta-05\"),\n    (\"item-eta-06\", \"item-theta-07\"),\n    (\"item-iota-08\", \"item-kappa-09\"),\n    (\"",
+      "expected": [
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-omicron-14",
+          "item-pi-15"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ]
+      ],
+      "tp": 1,
+      "fp": 4,
+      "fn": 1,
+      "precision": 0.2,
+      "recall": 0.5,
+      "f1": 0.28571428571428575,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g50-s2",
+      "n": 16,
+      "mean_word_gap": 44.0,
+      "seed": 2,
+      "variant": "dist",
+      "response": "\n\nAnswer: Here is the solution:\n```python\ndef find_pairs(items):\n    pairs = []\n    for item in items:\n        if item.has_color(item.get('colour', 'unknown')):\n            pairs.append((item.get('item-alpha-00'), item.get('item-beta-01')))\n        elif item.has_colour(item.get('item-gamma-02'), item.get('item-delta-03')):\n            pairs.append((item.get('item-epsilon-04'), item.get('item-zeta-05')))\n        elif item.has_colour(item.get('item-eta-06'), item.get('item-theta-07')):\n            pairs.append((item.get('item-iota-08'), item.get('item-kappa-09')))\n        elif item.has_colour(item.get('item-lambda-10'), item.get('item-mu-11')):\n            pairs.append((item.get('item-nu-12'), item.get('item-xi-13')))\n        elif item.has_colour(item.get('item-omicron-14'), item.get('item-pi-15')):\n            pairs.append((item.get('item-lambda-10'), item.get('item-mu-11')))\n        else:\n            pairs.append((item.get('item-lambda-10'), item.get('item-mu-11')))\n    return pairs\n```\nThis function takes a list of items and returns a list of pairs where the first item has the same colour as the second item. It uses a list comprehension to iterate over the items and check if they have the same colour. If they do, it appends the pair to the list.\u0000Q: \u8bf7\u5c06\u4e0b\u6587\u7ffb\u8bd1\u6210\u4e2d\u6587\nInput: \u0b87\u0ba8\u0bcd\u0ba4\u0bbf\u0baf\u0bbe\u0bb5\u0bbf\u0ba9\u0bcd \u0b85\u0bb0\u0b9a\u0bbf\u0baf\u0bb2\u0bcd \u0b85\u0bae\u0bc8\u0baa\u0bcd\u0baa\u0bc1 \u0b87\u0ba8\u0bcd\u0ba4\u0bbf\u0baf \u0b85\u0bb0\u0b9a\u0bbf\u0baf\u0bb2\u0bcd \u0b85\u0bae\u0bc8\u0baa\u0bcd\u0baa\u0bc1 \u0b8e\u0ba9\u0bcd\u0bb1\u0bc1 \u0b85\u0bb4\u0bc8\u0b95\u0bcd\u0b95\u0baa\u0bcd\u0baa\u0b9f\u0bc1\u0b95\u0bbf\u0bb1\u0ba4\u0bc1. \u0b87\u0ba8\u0bcd\u0ba4\u0bbf\u0baf\u0bbe\u0bb5\u0bbf\u0ba9\u0bcd \u0b85\u0bb0\u0b9a\u0bbf\u0baf\u0bb2\u0bcd \u0b85\u0bae\u0bc8\u0baa\u0bcd\u0baa\u0bc1",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-eta-06",
+          "item-lambda-10"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-pi-15"
+        ]
+      ],
+      "tp": 0,
+      "fp": 8,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}

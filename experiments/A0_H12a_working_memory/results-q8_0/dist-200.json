@@ -1,0 +1,270 @@
+{
+  "tasks_file": "/home/vaniello/Desktop/projects/noesis/experiments/A0_H12a_working_memory/tasks/tasks-dist-200.jsonl",
+  "model": "noesis-rwkv7-0.4b",
+  "num_predict": 512,
+  "n_tasks": 3,
+  "elapsed_s": 89.88693404197693,
+  "aggregate": {
+    "n": 3,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.0,
+    "mean_precision": 0.0,
+    "mean_recall": 0.0,
+    "mean_word_gap": 314.1666666666667
+  },
+  "results": [
+    {
+      "id": "h12a-d-g200-s0",
+      "n": 16,
+      "mean_word_gap": 132.5,
+      "seed": 0,
+      "variant": "dist",
+      "response": "\n\nAnswer: Here is the solution in Python:\n```python\ndef find_pairs(items):\n    pairs = []\n    for item in items:\n        if item.has_color(item.has_color()):\n            pairs.append((item.has_color(), item.has_color()))\n    return pairs\nitems = [\n    (\"item-alpha-00\", \"item-beta-01\"),\n    (\"item-gamma-02\", \"item-delta-03\"),\n    (\"item-epsilon-04\", \"item-zeta-05\"),\n    (\"item-iota-08\", \"item-theta-07\"),\n    (\"item-kappa-09\", \"item-lambda-10\"),\n    (\"item-mu-11\", \"item-nu-12\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-lambda-1020\"),\n    (\"item-mu-12\", \"item-nu-13\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-lambda-1020\"),\n    (\"item-mu-12\", \"item-nu-13\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-lambda-1020\"),\n    (\"item-mu-12\", \"item-nu-13\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-lambda-1020\"),\n    (\"item-mu-12\", \"item-nu-13\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-lambda-1020\"),\n    (\"item-mu-12\", \"item-nu-13\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-lambda-1020\"),\n    (\"item-mu-12\", \"item-nu-13\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\", \"item-lambda-1020\"),\n    (\"item-mu-12\", \"item-nu-13\"),\n    (\"item-xi-13\", \"item-omicron-14\"),\n    (\"item-pi-15\",",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-lambda-10",
+          "item-omicron-14"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-theta-07"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-lambda-10",
+          "item-pi-15"
+        ],
+        [
+          "item-mu-11",
+          "item-nu-12"
+        ],
+        [
+          "item-mu-12",
+          "item-nu-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-13"
+        ]
+      ],
+      "tp": 0,
+      "fp": 9,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g200-s1",
+      "n": 16,
+      "mean_word_gap": 502.0,
+      "seed": 1,
+      "variant": "dist",
+      "response": "\n\nAnswer: Here is the solution in Python:\n```python\ndef find_pairs(items):\n    pairs = []\n    for item in items:\n        if item.has_color(item.get('color', 'unknown')):\n            pairs.append((item.get('item-alpha-00'), item.get('item-beta-01')))\n        elif item.has_color(item.get('item-gamma-02'), item.get('item-delta-03')):\n            pairs.append((item.get('item-gamma-02'), item.get('item-delta-03')))\n        elif item.has_color(item.get('item-zeta-05'), item.get('item-epsilon-04')):\n            pairs.append((item.get('item-zeta-05'), item.get('item-epsilon-04')))\n        elif item.has_color(item.get('item-iota-08'), item.get('item-kappa-09')):\n            pairs.append((item.get('item-iota-08'), item.get('item-kappa-09')))\n        elif item.has_color(item.get('item-lambda-10'), item.get('item-mu-11')):\n            pairs.append((item.get('item-lambda-10'), item.get('item-mu-11')))\n        elif item.has_color(item.get('item-nu-12'), item.get('item-pi-13')):\n            pairs.append((item.get('item-nu-12'), item.get('item-pi-13')))\n        elif item.has_color(item.get('item-iota-14'), item.get('item-kappa-15')):\n            pairs.append((item.get('item-iota-14'), item.get('item-kappa-15')))\n        elif item.has_color(item.get('item-lambda-15'), item.get('item-mu-16')):\n            pairs.append((item.get('item-lambda-15'), item.get('item-mu-16')))\n        elif item.has_color(item.get('item-iota-16'), item.get('item-kappa-17')):\n            pairs.append((item.get('item-iota-16'), item.get('item-kappa-17')))\n        elif item.has_",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-xi-13"
+        ],
+        [
+          "item-beta-01",
+          "item-pi-15"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-14",
+          "item-kappa-15"
+        ],
+        [
+          "item-iota-16",
+          "item-kappa-17"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-15",
+          "item-mu-16"
+        ],
+        [
+          "item-nu-12",
+          "item-pi-13"
+        ]
+      ],
+      "tp": 0,
+      "fp": 9,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g200-s2",
+      "n": 16,
+      "mean_word_gap": 308.0,
+      "seed": 2,
+      "variant": "dist",
+      "response": "\n\nAnswer: Here is the solution in Python:\n```python\ndef find_pairs(items):\n    pairs = []\n    for item in items:\n        if item in pairs:\n            pairs.append(item)\n        else:\n            pairs.append(item)\n    return pairs\nitems = [\n    (\"item-alpha-00\", \"item-beta-01\"),\n    (\"item-gamma-02\", \"item-delta-03\"),\n    (\"item-epsilon-04\", \"item-zeta-05\"),\n    (\"item-iota-08\", \"item-kappa-09\"),\n    (\"item-lambda-10\", \"item-mu-11\"),\n    (\"item-nu-12\", \"item-pi-15\"),\n    (\"item-item-alpha-14\", \"item-item-beta-15\"),\n    (\"item-item-gamma-16\", \"item-item-delta-17\"),\n    (\"item-item-epsilon-18\", \"item-item-mu-19\"),\n    (\"item-item-iota-20\", \"item-item-kappa-21\"),\n    (\"item-item-lambda-22\", \"item-item-mu-23\"),\n    (\"item-item-pi-24\", \"item-item-mu-25\"),\n    (\"item-item-nu-26\", \"item-item-mu-27\"),\n    (\"item-item-mu-28\", \"item-item-mu-29\"),\n    (\"item-item-mu-30\", \"item-item-mu-31\"),\n    (\"item-item-mu-32\", \"item-item-mu-33\"),\n    (\"item-item-mu-34\", \"item-item-mu-35\"),\n    (\"item-item-mu-36\", \"item-item-mu-37\"),\n    (\"item-item-mu-38\", \"item-item-mu-39\"),\n    (\"item-item-mu-40\", \"item-item-mu-41\"),\n    (\"item-item-mu-42\", \"item-item-mu-43\"),\n    (\"item-item-mu-44\", \"item-item-mu-45\"),\n    (\"item-item-mu-46\", \"item-item-mu-47\"),\n    (\"item-item-mu-48\", \"item-item-mu-49\"),\n    (\"item-item-mu-50\", \"item-item-mu-51\"),",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-pi-15"
+        ],
+        [
+          "item-eta-06",
+          "item-lambda-10"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-14",
+          "item-beta-15"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-17",
+          "item-gamma-16"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-18",
+          "item-mu-19"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-20",
+          "item-kappa-21"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-22",
+          "item-mu-23"
+        ],
+        [
+          "item-mu-25",
+          "item-pi-24"
+        ],
+        [
+          "item-mu-27",
+          "item-nu-26"
+        ],
+        [
+          "item-mu-28",
+          "item-mu-29"
+        ],
+        [
+          "item-mu-30",
+          "item-mu-31"
+        ],
+        [
+          "item-mu-32",
+          "item-mu-33"
+        ],
+        [
+          "item-mu-34",
+          "item-mu-35"
+        ],
+        [
+          "item-mu-36",
+          "item-mu-37"
+        ],
+        [
+          "item-mu-38",
+          "item-mu-39"
+        ],
+        [
+          "item-mu-40",
+          "item-mu-41"
+        ],
+        [
+          "item-mu-42",
+          "item-mu-43"
+        ],
+        [
+          "item-mu-44",
+          "item-mu-45"
+        ],
+        [
+          "item-mu-46",
+          "item-mu-47"
+        ],
+        [
+          "item-mu-48",
+          "item-mu-49"
+        ],
+        [
+          "item-mu-50",
+          "item-mu-51"
+        ],
+        [
+          "item-nu-12",
+          "item-pi-15"
+        ]
+      ],
+      "tp": 0,
+      "fp": 25,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}
