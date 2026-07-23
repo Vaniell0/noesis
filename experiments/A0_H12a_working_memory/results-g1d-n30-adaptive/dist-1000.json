@@ -1,0 +1,2222 @@
+{
+  "tasks_file": "tasks-n30/tasks-dist-1000.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 512,
+  "num_predict_per_n": 128,
+  "num_predict_cap": 3000,
+  "n_tasks": 30,
+  "elapsed_s": 1458.734754562378,
+  "aggregate": {
+    "n": 30,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.0,
+    "mean_precision": 0.0,
+    "mean_recall": 0.0,
+    "mean_word_gap": 999.6833333333333
+  },
+  "results": [
+    {
+      "id": "h12a-d-g1000-s0",
+      "n": 8,
+      "mean_word_gap": 1174.5,
+      "seed": 0,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their values.\nFirst, let's list all the items with their keys:\n- item-delta-03 has color saffron.\n- item-epsilon-05 has color goldenrod.\n- item-delta-04 has color auburn.\n- item-epsilon-06 has color goldenrod.\nWait, but the problem says to output each pair as a list of tuples, one per line. So for each color, I need to collect all the items that have that color and their values.\nLet me go through each item and check if they have the specified color.\nStarting with item-delta-03:\n- value is 96.59, tolerance 4.68 \u2192 this is saffron (color 'saffron'). So add to list: [('item-delta-03', 'saffron')]\nNext, item-epsilon-05 has color goldenrod. Let's check:\n- value is 44.49, tolerance 3.23 \u2192 goldenrod (color 'goldenrod')\nSo add that as well.\nThen item-delta-04 has color auburn. Auburn is red, so no color here. So no entries for that color.\nNext, item-epsilon-06 has color goldenrod. Goldenrod is also red, so same as above.\nNow, let's list all the items with their colors and values:\n1. saffron (color 'saffron', value 96.59) \u2192 add to list [('item-delta-03', 'saffron')]\n2. goldenrod (color 'goldenrod', value 44.49) \u2192 add to list [('item-epsilon-05', 'goldenrod')]\n3. auburn (color 'auburn', value 96.59) \u2192 no color, so no entry here.\n4. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n5. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, so no entry here.\n6. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n7. auburn (color 'auburn', value 96.59) \u2192 no color, no entry here.\n8. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, no entry here.\n9. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n10. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, no entry here.\n11. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n12. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, no entry here.\n13. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n14. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, no entry here.\n15. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n16. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, no entry here.\n17. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n18. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, no entry here.\n19. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to list [('item-epsilon-06', 'goldenrod')]\n20. red (color 'red', value 19.6C, humidity 71%, pressure 1030 hPa) \u2192 no color, no entry here.\n21. goldenrod (color 'goldenrod', value 44.49) \u2192 same as above, add to\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s1",
+      "n": 8,
+      "mean_word_gap": 336.5,
+      "seed": 1,
+      "variant": "dist",
+      "response": "Okay, I need to process this data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **Item-delta-03**: Color is red (red), Value is 70.70. So (red, 70).\n2. **Item-zeta-05**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n3. **Item-zeta-06**: Color is green (green), Value is 7.7C. So (green, 7.7C).\n4. **Item-zeta-07**: Color is yellow (yellow), Value is 60.2C. So (yellow, 60.2C).\n5. **Item-zeta-08**: Color is orange (orange), Value is 35.1C. So (orange, 35.1C).\n6. **Item-zeta-09**: Color is red (red), Value is 7.3C. So (red, 7.3C).\n7. **Item-zeta-10**: Color is blue (blue), Value is 7.8C. So (blue, 7.8C).\n8. **Item-zeta-11**: Color is green (green), Value is 6.5C. So (green, 6.5C).\n9. **Item-zeta-12**: Color is yellow (yellow), Value is 60.2C. So (yellow, 60.2C).\n10. **Item-zeta-13**: Color is red (red), Value is 7.7C. So (red, 7.7C).\n11. **Item-zeta-14**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n12. **Item-zeta-15**: Color is green (green), Value is 6.5C. So (green, 6.5C).\n13. **Item-zeta-16**: Color is red (red), Value is 60.2C. So (red, 60.2C).\n14. **Item-zeta-17**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n15. **Item-zeta-18**: Color is yellow (yellow), Value is 6.5C. So (yellow, 6.5C).\n16. **Item-zeta-19**: Color is red (red), Value is 60.2C. So (red, 60.2C).\n17. **Item-zeta-20**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n18. **Item-zeta-21**: Color is green (green), Value is 6.5C. So (green, 6.5C).\n19. **Item-zeta-22**: Color is red (red), Value is 60.2C. So (red, 60.2C).\n20. **Item-zeta-23**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n21. **Item-zeta-24**: Color is green (green), Value is 6.5C. So (green, 6.5C).\n22. **Item-zeta-25**: Color is red (red), Value is 60.2C. So (red, 60.2C).\n23. **Item-zeta-26**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n24. **Item-zeta-27**: Color is green (green), Value is 6.5C. So (green, 6.5C).\n25. **Item-zeta-28**: Color is red (red), Value is 60.2C. So (red, 60.2C).\n26. **Item-zeta-29**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n27. **Item-zeta-30**: Color is green (green), Value is 6.5C. So (green, 6.5C).\n28. **Item-zeta-31**: Color is red (red), Value is 60.2C. So (red, 60.2C).\n29. **Item-zeta-32**: Color is blue (blue), Value is 7.3C. So (blue, 7.3C).\n30. **Item-zeta-33**: Color is green (green), Value is 6.5C. So (green, 6.5C).\n31. **Item-zeta-34**: Color is red (red), Value\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s2",
+      "n": 8,
+      "mean_word_gap": 1511.0,
+      "seed": 2,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of all pairs of items with the same color. Let me start by looking at each item's color and checking if there are any other items with that color.\nFirst, I'll go through each item in the JSON data one by one. For each item, I'll check if its color is present in the 'color' field. If it is, I need to look for all other items that also have that color and add them to the list of pairs.\nLet me list out all the items with their colors:\n1. Item 0: color red (red)\n2. Item 1: color blue (blue)\n3. Item 2: color green (green)\n4. Item 3: color yellow (yellow)\n5. Item 4: color orange (orange)\n6. Item 5: color purple (purple)\n7. Item 6: color brown (brown)\n8. Item 7: color black (black)\n9. Item 8: color white (white)\n10. Item 9: color red (red)\n11. Item 10: color blue (blue)\n12. Item 11: color green (green)\n13. Item 12: color yellow (yellow)\n14. Item 13: color orange (orange)\n15. Item 14: color purple (purple)\n16. Item 15: color brown (brown)\n17. Item 16: color black (black)\n18. Item 17: color white (white)\n19. Item 18: color red (red)\n20. Item 19: color blue (blue)\n21. Item 20: color green (green)\n22. Item 21: color yellow (yellow)\n23. Item 22: color orange (orange)\n24. Item 23: color purple (purple)\n25. Item 24: color brown (brown)\n26. Item 25: color black (black)\n27. Item 26: color white (white)\n28. Item 27: color red (red)\n29. Item 28: color blue (blue)\n30. Item 29: color green (green)\n31. Item 30: color yellow (yellow)\n32. Item 31: color orange (orange)\n33. Item 32: color purple (purple)\n34. Item 33: color brown (brown)\n35. Item 34: color black (black)\n36. Item 35: color white (white)\n37. Item 36: color red (red)\n38. Item 37: color blue (blue)\n39. Item 38: color green (green)\n40. Item 39: color yellow (yellow)\n41. Item 40: color orange (orange)\n42. Item 41: color purple (purple)\n43. Item 42: color brown (brown)\n44. Item 43: color black (black)\n45. Item 44: color white (white)\n46. Item 45: color red (red)\n47. Item 46: color blue (blue)\n48. Item 47: color green (green)\n49. Item 48: color yellow (yellow)\n50. Item 49: color orange (orange)\n51. Item 50: color purple (purple)\n52. Item 51: color brown (brown)\n53. Item 52: color black (black)\n54. Item 53: color white (white)\n55. Item 54: color red (red)\n56. Item 55: color blue (blue)\n57. Item 56: color green (green)\n58. Item 57: color yellow (yellow)\n59. Item 58: color orange (orange)\n60. Item 59: color purple (purple)\n61. Item 60: color brown (brown)\n62. Item 61: color black (black)\n63. Item 62: color white (white)\n64. Item 63: color red (red)\n65. Item 64: color blue (blue)\n66. Item 65: color green (green)\n67. Item 66: color yellow (yellow)\n68. Item 67: color orange (orange)\n69. Item 68: color purple (purple)\n70. Item 69: color brown (brown)\n71. Item 70: color black (black)\n72. Item 71: color white (white)\n73. Item 72: color red (red)\n74. Item 73: color blue (blue)\n75. Item 74: color green (green)\n76. Item 75: color yellow (yellow)\n77. Item 76: color orange (orange)\n78. Item 77: color purple (purple)\n79. Item 78: color brown (brown)\n80. Item 79: color black (black)\n81. Item 80: color white (white)\n82. Item 81: color red (red)\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s3",
+      "n": 8,
+      "mean_word_gap": 1171.0,
+      "seed": 3,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **Item-delta-03**: Color is aqua (blue), value is 788. So the pair is (aqua, 788).\n2. **Item-zeta-05**: Color is blue, value is 180. Pair: (blue, 180).\n3. **Item-zeta-06**: Color is blue, value is 201. Pair: (blue, 201).\n4. **Item-zeta-07**: Color is blue, value is 172. Pair: (blue, 172).\n5. **Item-zeta-08**: Color is blue, value is 180. Pair: (blue, 180).\n6. **Item-zeta-09**: Color is blue, value is 201. Pair: (blue, 201).\n7. **Item-zeta-10**: Color is blue, value is 172. Pair: (blue, 172).\n8. **Item-zeta-11**: Color is blue, value is 180. Pair: (blue, 180).\n9. **Item-zeta-12**: Color is blue, value is 201. Pair: (blue, 201).\n10. **Item-zeta-13**: Color is blue, value is 172. Pair: (blue, 172).\n11. **Item-zeta-14**: Color is blue, value is 180. Pair: (blue, 180).\n12. **Item-zeta-15**: Color is blue, value is 201. Pair: (blue, 201).\n13. **Item-zeta-16**: Color is blue, value is 172. Pair: (blue, 172).\n14. **Item-zeta-17**: Color is blue, value is 180. Pair: (blue, 180).\n15. **Item-zeta-18**: Color is blue, value is 201. Pair: (blue, 201).\n16. **Item-zeta-19**: Color is blue, value is 172. Pair: (blue, 172).\n17. **Item-zeta-20**: Color is blue, value is 180. Pair: (blue, 180).\n18. **Item-zeta-21**: Color is blue, value is 201. Pair: (blue, 201).\n19. **Item-zeta-22**: Color is blue, value is 172. Pair: (blue, 172).\n20. **Item-zeta-23**: Color is blue, value is 180. Pair: (blue, 180).\n21. **Item-zeta-24**: Color is blue, value is 201. Pair: (blue, 201).\n22. **Item-zeta-25**: Color is blue, value is 172. Pair: (blue, 172).\n23. **Item-zeta-26**: Color is blue, value is 180. Pair: (blue, 180).\n24. **Item-zeta-27**: Color is blue, value is 201. Pair: (blue, 201).\n25. **Item-zeta-28**: Color is blue, value is 172. Pair: (blue, 172).\n26. **Item-zeta-29**: Color is blue, value is 180. Pair: (blue, 180).\n27. **Item-zeta-30**: Color is blue, value is 201. Pair: (blue, 201).\n28. **Item-zeta-31**: Color is blue, value is 172. Pair: (blue, 172).\n29. **Item-zeta-32**: Color is blue, value is 180. Pair: (blue, 180).\n30. **Item-zeta-33**: Color is blue, value is 201. Pair: (blue, 201).\n31. **Item-zeta-34**: Color is blue, value is 172. Pair: (blue, 172).\n32. **Item-zeta-35**: Color is blue, value is 180. Pair: (blue, 180).\n33. **Item-zeta-36**: Color is blue, value is 201. Pair: (blue, 201).\n34. **Item-zeta-37**: Color is blue, value is 172. Pair: (blue, 172).\n35. **Item-zeta-38**: Color is blue, value is 180. Pair: (blue, 180).\n36. **Item-zeta-39**: Color is blue, value is 201. Pair:\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s4",
+      "n": 8,
+      "mean_word_gap": 1337.0,
+      "seed": 4,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their properties:\n1. item-delta-03 has color cobalt.\n2. item-delta-04 has color cobalt.\n3. item-delta-05 has color cobalt.\n4. item-delta-06 has color cobalt.\n5. item-delta-07 has color cobalt.\n6. item-delta-08 has color cobalt.\n7. item-delta-09 has color cobalt.\n8. item-delta-10 has color cobalt.\n9. item-delta-11 has color cobalt.\n10. item-delta-12 has color cobalt.\n11. item-delta-13 has color cobalt.\n12. item-delta-14 has color cobalt.\n13. item-delta-15 has color cobalt.\n14. item-delta-16 has color cobalt.\n15. item-delta-17 has color cobalt.\n16. item-delta-18 has color cobalt.\n17. item-delta-19 has color cobalt.\n18. item-delta-20 has color cobalt.\n19. item-delta-21 has color cobalt.\n20. item-delta-22 has color cobalt.\n21. item-delta-23 has color cobalt.\n22. item-delta-24 has color cobalt.\n23. item-delta-25 has color cobalt.\n24. item-delta-26 has color cobalt.\n25. item-delta-27 has color cobalt.\n26. item-delta-28 has color cobalt.\n27. item-delta-29 has color cobalt.\n28. item-delta-30 has color cobalt.\n29. item-delta-31 has color cobalt.\n30. item-delta-32 has color cobalt.\n31. item-delta-33 has color cobalt.\n32. item-delta-34 has color cobalt.\n33. item-delta-35 has color cobalt.\n34. item-delta-36 has color cobalt.\n35. item-delta-37 has color cobalt.\n36. item-delta-38 has color cobalt.\n37. item-delta-39 has color cobalt.\n38. item-delta-40 has color cobalt.\n39. item-delta-41 has color cobalt.\n40. item-delta-42 has color cobalt.\n41. item-delta-43 has color cobalt.\n42. item-delta-44 has color cobalt.\n43. item-delta-45 has color cobalt.\n44. item-delta-46 has color cobalt.\n45. item-delta-47 has color cobalt.\n46. item-delta-48 has color cobalt.\n47. item-delta-49 has color cobalt.\n48. item-delta-50 has color cobalt.\n49. item-delta-51 has color cobalt.\n50. item-delta-52 has color cobalt.\n51. item-delta-53 has color cobalt.\n52. item-delta-54 has color cobalt.\n53. item-delta-55 has color cobalt.\n54. item-delta-56 has color cobalt.\n55. item-delta-57 has color cobalt.\n56. item-delta-58 has color cobalt.\n57. item-delta-59 has color cobalt.\n58. item-delta-60 has color cobalt.\n59. item-delta-61 has color cobalt.\n60. item-delta-62 has color cobalt.\n61. item-delta-63 has color cobalt.\n62. item-delta-64 has color cobalt.\n63. item-delta-65 has color cobalt.\n64. item-delta-66 has color cobalt.\n65. item-delta-67 has color cobalt.\n66. item-delta-68 has color cobalt.\n67. item-delta-69 has color cobalt.\n68. item-delta-70 has color cobalt.\n69. item-delta-71 has color cobalt.\n70. item-delta-72 has color cobalt.\n71. item-delta-73 has color cobalt.\n72. item-delta-74 has color cobalt.\n73. item-delta-75 has color cobalt.\n74. item-delta-76 has color cobalt.\n75. item-delta-77 has color cobalt.\n76. item-delta-78 has color cobalt.\n77. item-delta-79 has color cobalt.\n78. item-delta-80 has color cobalt.\n79. item-delta-81 has color cobalt.\n80. item-delta-82 has color cobalt.\n81. item-delta-83 has color cobalt.\n82.\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s5",
+      "n": 8,
+      "mean_word_gap": 838.5,
+      "seed": 5,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their colors:\n- Item 0: red (red)\n- Item 1: blue (blue)\n- Item 2: green (green)\n- Item 3: yellow (yellow)\n- Item 4: orange (orange)\n- Item 5: purple (purple)\nNow, for each color, I need to find all items that have that color. Let's go through each item and check if their color matches the given color.\nStarting with the first item: red. The red item has a value of 786. So, any red item with a value of 786 should be included in the list. But wait, the problem says \"all items that have this color\". So even if another item has a different color but same value, it's still considered. Wait, no. Wait, the problem says \"list every pair of items that share the same color\". So each item is considered once per color. For example, if two red items have the same value, they are both included in the list.\nSo for each color (red), we need to find all red items where their value is 786. Then, collect all such pairs.\nLet me check each item's color:\n1. Red (red): 786 \u2192 yes, so include this item.\n2. Blue (blue): 786 \u2192 yes, include this item.\n3. Green (green): 786 \u2192 yes, include this item.\n4. Yellow (yellow): 786 \u2192 yes, include this item.\n5. Orange (orange): 786 \u2192 yes, include this item.\n6. Purple (purple): 786 \u2192 yes, include this item.\n7. Red (red): 786 \u2192 yes, include this item.\n8. Blue (blue): 786 \u2192 yes, include this item.\n9. Green (green): 786 \u2192 yes, include this item.\n10. Yellow (yellow): 786 \u2192 yes, include this item.\n11. Orange (orange): 786 \u2192 yes, include this item.\n12. Purple (purple): 786 \u2192 yes, include this item.\n13. Red (red): 786 \u2192 yes, include this item.\n14. Blue (blue): 786 \u2192 yes, include this item.\n15. Green (green): 786 \u2192 yes, include this item.\n16. Yellow (yellow): 786 \u2192 yes, include this item.\n17. Orange (orange): 786 \u2192 yes, include this item.\n18. Purple (purple): 786 \u2192 yes, include this item.\n19. Red (red): 786 \u2192 yes, include this item.\n20. Blue (blue): 786 \u2192 yes, include this item.\n21. Green (green): 786 \u2192 yes, include this item.\n22. Yellow (yellow): 786 \u2192 yes, include this item.\n23. Orange (orange): 786 \u2192 yes, include this item.\n24. Purple (purple): 786 \u2192 yes, include this item.\n25. Red (red): 786 \u2192 yes, include this item.\n26. Blue (blue): 786 \u2192 yes, include this item.\n27. Green (green): 786 \u2192 yes, include this item.\n28. Yellow (yellow): 786 \u2192 yes, include this item.\n29. Orange (orange): 786 \u2192 yes, include this item.\n30. Purple (purple): 786 \u2192 yes, include this item.\n31. Red (red): 786 \u2192 yes, include this item.\n32. Blue (blue): 786 \u2192 yes, include this item.\n33. Green (green): 786 \u2192 yes, include this item.\n34. Yellow (yellow): 786 \u2192 yes, include this item.\n35. Orange (orange): 786 \u2192 yes, include this item.\n36. Purple (purple): 786 \u2192 yes, include this item.\n37. Red (red): 786 \u2192 yes, include this item.\n38. Blue (blue): 786 \u2192 yes, include this item.\n39. Green (green): 786 \u2192 yes, include this item.\n40. Yellow (yellow): 786 \u2192 yes, include this item.\n41. Orange (orange): 786 \u2192 yes, include this item.\n42. Purple (purple): 786 \u2192 yes, include this item.\n43. Red (red): 786 \u2192 yes, include this item.\n44. Blue (blue): 786 \u2192 yes, include this item.\n45. Green (green): 786 \u2192 yes, include this item.\n46. Yellow (yellow): 786\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s6",
+      "n": 8,
+      "mean_word_gap": 1667.5,
+      "seed": 6,
+      "variant": "dist",
+      "response": "Okay, I need to process this data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **Item-delta-03** - Color: auburn, Value: 62.53\n2. **Item-zeta-05** - Color: ochre, Value: 371.23\n3. **Item-epsilon-06** - Color: ochre, Value: 68.57\n4. **Item-zeta-07** - Color: ochre, Value: 115.22\n5. **Item-delta-08** - Color: auburn, Value: 264.20\n6. **Item-zeta-09** - Color: ochre, Value: 739.73\n7. **Item-epsilon-10** - Color: ochre, Value: 1005.43\n8. **Item-zeta-11** - Color: ochre, Value: 1004.43\n9. **Item-delta-12** - Color: auburn, Value: 264.20\n10. **Item-zeta-13** - Color: ochre, Value: 739.73\n11. **Item-epsilon-14** - Color: ochre, Value: 1004.43\n12. **Item-zeta-15** - Color: ochre, Value: 1018.43\n13. **Item-delta-16** - Color: auburn, Value: 264.20\n14. **Item-zeta-17** - Color: ochre, Value: 739.73\n15. **Item-epsilon-18** - Color: ochre, Value: 1004.43\n16. **Item-zeta-19** - Color: ochre, Value: 1018.43\n17. **Item-delta-20** - Color: auburn, Value: 264.20\n18. **Item-zeta-21** - Color: ochre, Value: 739.73\n19. **Item-epsilon-22** - Color: ochre, Value: 1004.43\n20. **Item-zeta-23** - Color: ochre, Value: 1018.43\n21. **Item-delta-24** - Color: auburn, Value: 264.20\n22. **Item-zeta-25** - Color: ochre, Value: 739.73\n23. **Item-epsilon-26** - Color: ochre, Value: 1004.43\n24. **Item-zeta-27** - Color: ochre, Value: 1018.43\n25. **Item-delta-28** - Color: auburn, Value: 264.20\n26. **Item-zeta-29** - Color: ochre, Value: 739.73\n27. **Item-epsilon-30** - Color: ochre, Value: 1004.43\n28. **Item-zeta-31** - Color: ochre, Value: 1018.43\n29. **Item-delta-32** - Color: auburn, Value: 264.20\n30. **Item-zeta-33** - Color: ochre, Value: 739.73\n31. **Item-epsilon-34** - Color: ochre, Value: 1004.43\n32. **Item-zeta-35** - Color: ochre, Value: 1018.43\n33. **Item-delta-36** - Color: auburn, Value: 264.20\n34. **Item-zeta-37** - Color: ochre, Value: 739.73\n35. **Item-epsilon-38** - Color: ochre, Value: 1004.43\n36. **Item-zeta-39** - Color: ochre, Value: 1018.43\n37. **Item-delta-40** - Color: auburn, Value: 264.20\n38. **Item-zeta-41** - Color: ochre, Value: 739.73\n39. **Item-epsilon-42** - Color: ochre, Value: 1004.43\n40. **Item-zeta-43** - Color: ochre, Value: 1018.43\n41. **Item-delta-44** - Color: auburn, Value: 264.20\n42. **Item-zeta-45** - Color: ochre, Value: 739.73\n43. **Item-epsilon-46** - Color: ochre, Value: 1004.43\n44. **Item-zeta-47** - Color: ochre, Value: 1018.43\n45. **Item-delta\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s7",
+      "n": 8,
+      "mean_word_gap": 1168.0,
+      "seed": 7,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **Item-delta-03**: Color is saffron (color: saffron, value: 77), temperature is 20.7C, humidity is 46%. So the pair should be (saffron, 77).\n2. **Item-epsilon-04**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n3. **Item-zeta-05**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n4. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n5. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n6. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n7. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n8. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n9. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n10. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n11. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n12. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n13. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n14. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n15. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n16. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n17. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n18. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n19. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n20. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n21. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n22. **Item-eta-06**: Color is lavender (lavender, value: 106), temperature is 20.9C, humidity is 34%. So lavender and 106.\n23. **Item-zeta-07**: Color is saffron (saffron, value: 77), temperature is 20.7C, humidity is 46%. So saffron and 77.\n24. **Item-eta-06**:\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s8",
+      "n": 8,
+      "mean_word_gap": 670.5,
+      "seed": 8,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their properties:\n1. item-delta-01 has color lavender (color_name lavender).\n2. item-delta-02 has color bronze (color_name bronze).\n3. item-delta-03 has color peach (color_name peach).\n4. item-delta-04 has color bronze (color_name bronze).\n5. item-delta-05 has color lavender (color_name lavender).\n6. item-delta-06 has color bronze (color_name bronze).\n7. item-delta-07 has color lavender (color_name lavender).\n8. item-delta-08 has color bronze (color_name bronze).\n9. item-delta-09 has color bronze (color_name bronze).\n10. item-delta-10 has color bronze (color_name bronze).\n11. item-delta-11 has color lavender (color_name lavender).\n12. item-delta-12 has color bronze (color_name bronze).\n13. item-delta-13 has color bronze (color_name bronze).\n14. item-delta-14 has color bronze (color_name bronze).\n15. item-delta-15 has color lavender (color_name lavender).\n16. item-delta-16 has color bronze (color_name bronze).\n17. item-delta-17 has color bronze (color_name bronze).\n18. item-delta-18 has color bronze (color_name bronze).\n19. item-delta-19 has color bronze (color_name bronze).\n20. item-delta-20 has color lavender (color_name lavender).\n21. item-delta-21 has color bronze (color_name bronze).\n22. item-delta-22 has color bronze (color_name bronze).\n23. item-delta-23 has color bronze (color_name bronze).\n24. item-delta-24 has color bronze (color_name bronze).\n25. item-delta-25 has color lavender (color_name lavender).\n26. item-delta-26 has color bronze (color_name bronze).\n27. item-delta-27 has color bronze (color_name bronze).\n28. item-delta-28 has color bronze (color_name bronze).\n29. item-delta-29 has color bronze (color_name bronze).\n30. item-delta-30 has color lavender (color_name lavender).\n31. item-delta-31 has color bronze (color_name bronze).\n32. item-delta-32 has color bronze (color_name bronze).\n33. item-delta-33 has color bronze (color_name bronze).\n34. item-delta-34 has color bronze (color_name bronze).\n35. item-delta-35 has color lavender (color_name lavender).\n36. item-delta-36 has color bronze (color_name bronze).\n37. item-delta-37 has color bronze (color_name bronze).\n38. item-delta-38 has color bronze (color_name bronze).\n39. item-delta-39 has color bronze (color_name bronze).\n40. item-delta-40 has color bronze (color_name bronze).\n41. item-delta-41 has color lavender (color_name lavender).\n42. item-delta-42 has color bronze (color_name bronze).\n43. item-delta-43 has color bronze (color_name bronze).\n44. item-delta-44 has color bronze (color_name bronze).\n45. item-delta-45 has color lavender (color_name lavender).\n46. item-delta-46 has color bronze (color_name bronze).\n47. item-delta-47 has color bronze (color_name bronze).\n48. item-delta-48 has color bronze (color_name bronze).\n49. item-delta-49 has color lavender (color_name lavender).\n50. item-delta-50 has color bronze (color_name bronze).\n51. item-delta-51 has color bronze (color_name bronze).\n52. item-delta-52 has color bronze (color_name bronze).\n53. item-delta-53 has color lavender (color_name lavender).\n54. item-delta-54 has color bronze (color_name bronze).\n55. item-delta-55 has color bronze (color_name bronze).\n56. item-delta-56 has color bronze (\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s9",
+      "n": 8,
+      "mean_word_gap": 1348.0,
+      "seed": 9,
+      "variant": "dist",
+      "response": "Okay, let's see. I need to process all the data and find pairs of items with the same color. The input is a list of dictionaries where each dictionary has keys like 'name', 'temperature', 'humidity', etc. Each item has a 'color' key which is either a hex string or an integer (like 0x1234).\nFirst, I need to go through each item and check if their color matches any other item's color. For example, if two items have the same color, they should be in the same pair. But wait, maybe there are duplicates? The problem says \"each item has a unique color\", so probably no duplicates. So for each item, check all other items to see if their colors match.\nSo the plan is:\n1. Iterate over each item in the input list.\n2. For each item, check all other items to see if their color matches.\n3. If a match is found, add the pair (item_name, item_color) to the result list.\n4. After processing all items, return the list of pairs sorted by item name? Or maybe just by item name? The problem says \"list every pair\", so probably in order of appearance. But since there might be duplicates, we need to sort them first.\nWait, but the problem says \"each item has a unique color\". So each pair is unique. So when checking, if two items have the same color, they are considered different pairs. But maybe the input could have multiple items with the same color? The problem statement doesn't specify, but looking at the example given:\nIn the sample input, there's one item with color 0x1234 (the 'item-theta-07' which is a hex string). Then another item with color 0x1234 again. So each item has a unique color. So when checking, if two items have the same color, they are considered different pairs. But maybe the problem expects that even if two items have the same color, they are considered as separate pairs? Or perhaps not. The problem statement says \"each item has a unique color\", so each pair is unique. So for example, if two items have the same color, they are considered different pairs. But in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are considered as separate pairs.\nSo the approach is:\n- For each item in the list:\n   - Check all other items to see if their colors match.\n   - If a match is found, add the pair (item_name, item_color) to the result list.\nBut how to handle cases where multiple items have the same color? The problem says \"each item has a unique color\", so each pair is unique. So when checking, if two items have the same color, they are considered different pairs. But maybe the problem expects that even if two items have the same color, they are considered as separate pairs. For example, in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are considered different pairs. But perhaps the problem expects that even if two items have the same color, they are considered as separate pairs. Wait, but in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are considered different pairs. But maybe the problem expects that even if two items have the same color, they are considered as separate pairs. For example, in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are considered different pairs. But perhaps the problem expects that even if two items have the same color, they are considered as separate pairs. Wait, but in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are considered different pairs. But maybe the problem expects that even if two items have the same color, they are considered as separate pairs. For example, in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are considered different pairs. But perhaps the problem expects that even if two items have the same color, they are considered as separate pairs. Wait, but in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are considered different pairs. But maybe the problem expects that even if two items have the same color, they are considered as separate pairs. For example, in the sample input, there's only one item with color 0x1234. So when checking, if two items have the same color, they are\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s10",
+      "n": 8,
+      "mean_word_gap": 669.0,
+      "seed": 10,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their color and temperature/humidity/pressure values. The JSON has several entries here. Let me go through them one by one.\nStarting with the first item: \"item-delta-03\" has color red, temperature 26.8C, humidity 85%, pressure 1026 hPa. So that's (red, 26.8, 85). Then \"item-delta-04\" is blue, 27.5C, humidity 61%, pressure 1009 hPa. That's (blue, 27.5, 61). Next is \"item-delta-05\" green, 25.4C, humidity 84%, pressure 987 hPa. So (green, 25.4, 84). Then \"item-delta-06\" red again, 26.8C, humidity 85%, pressure 1026 hPa. That's (red, 26.8, 85). Then \"item-delta-07\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-08\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-09\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-10\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-11\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-12\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-13\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-14\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-15\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-16\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-17\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-18\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-19\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-20\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-21\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-22\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-23\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-24\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-25\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-26\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-27\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue, 27.5, 61). Then \"item-delta-28\" red again, 26.8C, humidity 85%, pressure 1026 hPa. So (red, 26.8, 85). Then \"item-delta-29\" blue again, 27.5C, humidity 61%, pressure 1009 hPa. So (blue,\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-delta-03",
+          "item-delta-04"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-08"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-09"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-10"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-05"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-06"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-07"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-08"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-09"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-10"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-06"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-07"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-08"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-09"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-10"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-05",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-07"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-08"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-09"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-10"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-06",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-08"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-09"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-10"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-07",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-09"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-10"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-08",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-10"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-09",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-11"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-10",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-12"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-11",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-13"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-12",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-14"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-13",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-15"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-14",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-16"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-15",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-17"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-16",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-18"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-17",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-19"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-18",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-20"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-19",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-21"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-20",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-22"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-21",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-22",
+          "item-delta-23"
+        ],
+        [
+          "item-delta-22",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-22",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-22",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-22",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-22",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-22",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-23",
+          "item-delta-24"
+        ],
+        [
+          "item-delta-23",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-23",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-23",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-23",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-23",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-24",
+          "item-delta-25"
+        ],
+        [
+          "item-delta-24",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-24",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-24",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-24",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-25",
+          "item-delta-26"
+        ],
+        [
+          "item-delta-25",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-25",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-25",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-26",
+          "item-delta-27"
+        ],
+        [
+          "item-delta-26",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-26",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-27",
+          "item-delta-28"
+        ],
+        [
+          "item-delta-27",
+          "item-delta-29"
+        ],
+        [
+          "item-delta-28",
+          "item-delta-29"
+        ]
+      ],
+      "tp": 0,
+      "fp": 351,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s11",
+      "n": 8,
+      "mean_word_gap": 1004.5,
+      "seed": 11,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by understanding what each color represents.\nFirst, the 'color' field is a string like 'red', 'green', etc., which maps to the item's name. The 'value' field is an integer representing the temperature in Celsius. The 'humidity' is a number between 0 and 100, indicating relative humidity. The 'pressure' is a number between 1000 and 1001 hPa, representing atmospheric pressure.\nThe task is to create a list of pairs where each pair has two items: one from the color field and one from the temperature/humidity/pressure fields. Each pair should be in the format (color, temperature, humidity, pressure).\nLooking at the data provided:\n- Color 'red' maps to 'item-delta-03', 'item-delta-04', etc. So for each color, we need to find all items that have that color and their respective values. Then, for each such item, add a pair (color, temperature, humidity, pressure).\nBut wait, the problem says \"each item has a unique color\". So for each color in the JSON data, we need to check if there's an item with that color. If yes, then create a pair (color_name, temperature_value, humidity_value, pressure_value).\nSo first step: iterate through each item in the JSON data. For each item, check if its color is present in the 'color' field. If yes, add a pair (color_name, temperature_value, humidity_value, pressure_value) to the list of pairs.\nBut wait, the problem says \"each item has a unique color\". So for each color in the JSON data, we need to check if there's an item with that color. If yes, then create a pair (color_name, temperature_value, humidity_value, pressure_value).\nSo the plan is:\n1. Iterate over each item in the JSON data.\n2. For each item:\n   a. Check if its color is present in the 'color' field. If yes, add a pair (color_name, temperature_value, humidity_value, pressure_value).\n3. Collect all such pairs into a list of tuples.\nNow, how to implement this in Python?\nFirst, parse the JSON data into a Python dictionary. Then loop through each item in the dictionary. For each item:\n- Check if its color is present in the 'color' field. If yes, add (item_name, temperature_value, humidity_value, pressure_value) to the list.\nSo code steps:\n1. Parse the JSON data into a Python dictionary.\ndata = json.loads(json_string)\n2. Initialize an empty list to hold the pairs.\npairs = []\n3. Iterate over each item in data:\n   a. Check if its color is in the 'color' field (using .get or .get('color'))\n   b. If yes, add (item_name, temperature_value, humidity_value, pressure_value) to pairs.\n4. Return the list of pairs.\nNow, let's think about how to parse the JSON data. The problem says that each item has a unique color. So for each item in the JSON data, we need to check if its color is present in the 'color' field. If yes, then create a pair (item_name, temperature_value, humidity_value, pressure_value).\nSo code steps:\ndata = json.loads(json_string)\npairs = []\nfor item in data:\n    color = item.get('color')\n    if color in ['red', 'green', 'blue', 'yellow']:\n        item_name = item.get('item-delta-03')\n        temperature = item.get('value')\n        humidity = item.get('value')\n        pressure = item.get('value')\n        pairs.append( (item_name, temperature, humidity, pressure) )\nYes, that should work.\nNow, the JSON data is a list of dictionaries with keys 'color', 'value', etc. So each dictionary has those keys.\nSo putting it all together:\ndata = json.loads(json_string)\npairs = []\nfor item in data:\n    color = item.get('color')\n    if color in ['red', 'green', 'blue', 'yellow']:\n        item_name = item.get('item-delta-03')\n        temperature = item.get('value')\n        humidity = item.get('value')\n        pressure = item.get('value')\n        pairs.append( (item_name, temperature, humidity, pressure) )\nThen, convert pairs to a list of\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-delta-03",
+          "item-delta-04"
+        ]
+      ],
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s12",
+      "n": 8,
+      "mean_word_gap": 1177.5,
+      "seed": 12,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties.\nFirst item: color blue (blue). The values are [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]. So the pairs would be (1,1), (2,2), etc., up to (7,7). But wait, the first item's value is 1.0 which is a single number. So for each color in blue:\n- The first item's value is 1.0 \u2192 pair (1,1)\n- The second item's value is 0.0 \u2192 pair (2,2)\n- Third item's value is 0.0 \u2192 pair (3,3)\n- Fourth item's value is 0.0 \u2192 pair (4,4)\n- Fifth item's value is 1.0 \u2192 pair (5,5)\n- Sixth item's value is 2.0 \u2192 pair (6,6)\n- Seventh item's value is 3.0 \u2192 pair (7,7)\nSo the pairs would be:\n(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7)\nNow moving to red. The first item's value is 1.0 \u2192 pair (1,1)\nSecond item's value is 0.0 \u2192 pair (2,2)\nThird item's value is 0.0 \u2192 pair (3,3)\nFourth item's value is 1.0 \u2192 pair (4,4)\nFifth item's value is 2.0 \u2192 pair (5,5)\nSixth item's value is 3.0 \u2192 pair (6,6)\nSeventh item's value is 4.0 \u2192 pair (7,7)\nSo the pairs would be:\n(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7)\nNext is green. The first item's value is 1.0 \u2192 pair (1,1)\nSecond item's value is 2.0 \u2192 pair (2,2)\nThird item's value is 3.0 \u2192 pair (3,3)\nFourth item's value is 4.0 \u2192 pair (4,4)\nFifth item's value is 5.0 \u2192 pair (5,5)\nSixth item's value is 6.0 \u2192 pair (6,6)\nSeventh item's value is 7.0 \u2192 pair (7,7)\nSo the pairs would be:\n(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7)\nNow blue and green. The first item's value is 1.0 \u2192 pair (1,1)\nSecond item's value is 2.0 \u2192 pair (2,2)\nThird item's value is 3.0 \u2192 pair (3,3)\nFourth item's value is 4.0 \u2192 pair (4,4)\nFifth item's value is 5.0 \u2192 pair (5,5)\nSixth item's value is 6.0 \u2192 pair (6,6)\nSeventh item's value is 7.0 \u2192 pair (7,7)\nSo the pairs would be:\n(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7)\nBlue and green. The first item's value is 1.0 \u2192 pair (1,1)\nSecond item's value is 2.0 \u2192 pair (2,2)\nThird item's value is 3.0 \u2192 pair (3,3)\nFourth item's value is 4.0 \u2192 pair (4,4)\nFifth item's value is 5.0 \u2192 pair (5,5)\nSixth item's value is 6.0 \u2192 pair (6,6)\nSeventh item's value is 7.0 \u2192 pair (7,7)\nSo the pairs would be:\n(1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7)\nBlue and green. The first item's value is 1.0 \u2192 pair (1,1)\nSecond item's value is 2.0 \u2192 pair (2,2)\nThird item's value is 3.0 \u2192 pair (3,3)\nFourth item's value is 4.0 \u2192 pair (4,4)\nFifth item's value is 5.\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s13",
+      "n": 8,
+      "mean_word_gap": 673.0,
+      "seed": 13,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each item. Let me start by looking at each item's properties.\nFirst item: \"item-delta-03\" has color cyan, humidity 70%, pressure 985 hPa. So the pair is (cyan, 70).\nNext, \"item-epsilon-07\" has color olive, humidity 56%. Pair is (olive, 56).\nThen \"item-epsilon-04\" has color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again. Color is cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: color cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68%).\nThen \"item-delta-03\" again: cyan. Pair is (cyan, 70).\nNext item: \"item-delta-04\" has color olive. Pair is (olive, 68%).\nThen \"item-epsilon-07\" again: color olive. Pair is (olive, 68\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s14",
+      "n": 8,
+      "mean_word_gap": 673.5,
+      "seed": 14,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their properties:\n1. **item-delta-03**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 26.5C\n   - reading 872: temperature 28.6C, humidity 77%, pressure 997 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n2. **item-delta-04**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 863: value 33.27, tolerance 2.04\n3. **item-delta-05**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n4. **item-delta-06**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n5. **item-delta-07**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n6. **item-delta-08**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n7. **item-delta-09**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n8. **item-delta-10**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n9. **item-delta-11**: color emerald (green)\n   - humidity 46%\n   - pressure 987 hPa\n   - temperature 265C, humidity 56%\n   - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n   - instrument log 866: value 37.26, tolerance 0.42\n10. **item-delta-12**: color emerald (green)\n    - humidity 46%\n    - pressure 987 hPa\n    - temperature 265C, humidity 56%\n    - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n    - instrument log 866: value 37.26, tolerance 0.42\n11. **item-delta-13**: color emerald (green)\n    - humidity 46%\n    - pressure 987 hPa\n    - temperature 265C, humidity 56%\n    - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n    - instrument log 866: value 37.26, tolerance 0.42\n12. **item-delta-14**: color emerald (green)\n    - humidity 46%\n    - pressure 987 hPa\n    - temperature 265C, humidity 56%\n    - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n    - instrument log 866: value 37.26, tolerance 0.42\n13. **item-delta-15**: color emerald (green)\n    - humidity 46%\n    - pressure 987 hPa\n    - temperature 265C, humidity 56%\n    - reading 870: temperature 28.9C, humidity 77%, pressure 996 hPa\n    - instrument log 866: value 37.26, tolerance 0.42\n14. **item-delta-16**: color emerald (green)\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s15",
+      "n": 8,
+      "mean_word_gap": 839.0,
+      "seed": 15,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their properties:\n1. item-delta-03 has color indigo (color: indigo)\n2. item-delta-04 has color mint (color: mint)\n3. item-delta-05 has color indigo (color: indigo)\n4. item-delta-06 has color mint (color: mint)\n5. item-delta-07 has color indigo (color: indigo)\n6. item-delta-08 has color mint (color: mint)\n7. item-delta-09 has color indigo (color: indigo)\n8. item-delta-10 has color mint (color: mint)\n9. item-delta-11 has color indigo (color: indigo)\n10. item-delta-12 has color mint (color: mint)\n11. item-delta-13 has color indigo (color: indigo)\n12. item-delta-14 has color mint (color: mint)\n13. item-delta-15 has color indigo (color: indigo)\n14. item-delta-16 has color mint (color: mint)\n15. item-delta-17 has color indigo (color: indigo)\n16. item-delta-18 has color mint (color: mint)\n17. item-delta-19 has color indigo (color: indigo)\n18. item-delta-20 has color mint (color: mint)\n19. item-delta-21 has color indigo (color: indigo)\n20. item-delta-22 has color mint (color: mint)\n21. item-delta-23 has color indigo (color: indigo)\n22. item-delta-24 has color mint (color: mint)\n23. item-delta-25 has color indigo (color: indigo)\n24. item-delta-26 has color mint (color: mint)\n25. item-delta-27 has color indigo (color: indigo)\n26. item-delta-28 has color mint (color: mint)\n27. item-delta-29 has color indigo (color: indigo)\n28. item-delta-30 has color mint (color: mint)\n29. item-delta-31 has color indigo (color: indigo)\n30. item-delta-32 has color mint (color: mint)\n31. item-delta-33 has color indigo (color: indigo)\n32. item-delta-34 has color mint (color: mint)\n33. item-delta-35 has color indigo (color: indigo)\n34. item-delta-36 has color mint (color: mint)\n35. item-delta-37 has color indigo (color: indigo)\n36. item-delta-38 has color mint (color: mint)\n37. item-delta-39 has color indigo (color: indigo)\n38. item-delta-40 has color mint (color: mint)\n39. item-delta-41 has color indigo (color: indigo)\n40. item-delta-42 has color mint (color: mint)\n41. item-delta-43 has color indigo (color: indigo)\n42. item-delta-44 has color mint (color: mint)\n43. item-delta-45 has color indigo (color: indigo)\n44. item-delta-46 has color mint (color: mint)\n45. item-delta-47 has color indigo (color: indigo)\n46. item-delta-48 has color mint (color: mint)\n47. item-delta-49 has color indigo (color: indigo)\n48. item-delta-50 has color mint (color: mint)\n49. item-delta-51 has color indigo (color: indigo)\n50. item-delta-52 has color mint (color: mint)\n51. item-delta-53 has color indigo (color: indigo)\n52. item-delta-54 has color mint (color: mint)\n53. item-delta-55 has color indigo (color: indigo)\n54. item-delta-56 has color mint (color: mint)\n55. item-delta-57 has color indigo (color: indigo)\n56. item-delta-58 has color mint (color: mint)\n57. item-delta-59 has color indigo (color: indigo)\n58. item-\n",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s16",
+      "n": 8,
+      "mean_word_gap": 2002.5,
+      "seed": 16,
+      "variant": "dist",
+      "response": "Okay, I need to process this data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **Item-delta-03**: Color is green (green), value is 0.40 (40%). So, it's a pair where the first item has a lower value than the second.\n2. **Item-delta-04**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n3. **Item-delta-05**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n4. **Item-delta-06**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n5. **Item-delta-07**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n6. **Item-delta-08**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n7. **Item-delta-09**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n8. **Item-delta-10**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n9. **Item-delta-11**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n10. **Item-delta-12**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n11. **Item-delta-13**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n12. **Item-delta-14**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n13. **Item-delta-15**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n14. **Item-delta-16**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n15. **Item-delta-17**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n16. **Item-delta-18**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n17. **Item-delta-19**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n18. **Item-delta-20**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n19. **Item-delta-21**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n20. **Item-delta-22**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n21. **Item-delta-23**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n22. **Item-delta-24**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n23. **Item-delta-25**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n24. **Item-delta-26**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n25. **Item-delta-27**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n26. **Item-delta-28**: Color is blue (blue), value is 0.60 (60%). The first item has a higher value than the second.\n27. **Item-delta-29**: Color is green (green), value is 0.40 (40%). The first item has a lower value than the second.\n28. **Item-delta-30**: Color is blue (blue), value is 0.60\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s17",
+      "n": 8,
+      "mean_word_gap": 833.5,
+      "seed": 17,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their colors:\n1. **Item-Alphabet**: red (color 0x00ff00)\n2. **Item-Alphabet**: green (color 0x00ff00)\n3. **Item-Alphabet**: blue (color 0x00ff00)\n4. **Item-Alphabet**: yellow (color 0xffffff)\n5. **Item-Alphabet**: orange (color 0xffff00)\n6. **Item-Alphabet**: purple (color 0xffffff)\n7. **Item-Alphabet**: brown (color 0x808080)\n8. **Item-Alphabet**: red (color 0xff0000)\n9. **Item-Alphabet**: green (color 0x00ff00)\n10. **Item-Alphabet**: blue (color 0x00ff00)\n11. **Item-Alphabet**: yellow (color 0xffffff)\n12. **Item-Alphabet**: orange (color 0xffff00)\n13. **Item-Alphabet**: purple (color 0xffffff)\n14. **Item-Alphabet**: brown (color 0x808080)\n15. **Item-Alphabet**: red (color 0x00ff00)\n16. **Item-Alphabet**: green (color 0x00ff00)\n17. **Item-Alphabet**: blue (color 0x00ff00)\n18. **Item-Alphabet**: yellow (color 0xffffff)\n19. **Item-Alphabet**: orange (color 0xffff00)\n20. **Item-Alphabet**: purple (color 0xffffff)\n21. **Item-Alphabet**: brown (color 0x808080)\n22. **Item-Alphabet**: red (color 0x00ff00)\n23. **Item-Alphabet**: green (color 0x00ff00)\n24. **Item-Alphabet**: blue (color 0x00ff00)\n25. **Item-Alphabet**: yellow (color 0xffffff)\n26. **Item-Alphabet**: orange (color 0xffff00)\n27. **Item-Alphabet**: purple (color 0xffffff)\n28. **Item-Alphabet**: brown (color 0x808080)\n29. **Item-Alphabet**: red (color 0x00ff00)\n30. **Item-Alphabet**: green (color 0x00ff00)\n31. **Item-Alphabet**: blue (color 0x00ff00)\n32. **Item-Alphabet**: yellow (color 0xffffff)\n33. **Item-Alphabet**: orange (color 0xffff00)\n34. **Item-Alphabet**: purple (color 0xffffff)\n35. **Item-Alphabet**: brown (color 0x808080)\n36. **Item-Alphabet**: red (color 0x00ff00)\n37. **Item-Alphabet**: green (color 0x00ff00)\n38. **Item-Alphabet**: blue (color 0x00ff00)\n39. **Item-Alphabet**: yellow (color 0xffffff)\n40. **Item-Alphabet**: orange (color 0xffff00)\n41. **Item-Alphabet**: purple (color 0xffffff)\n42. **Item-Alphabet**: brown (color 0x808080)\n43. **Item-Alphabet**: red (color 0x00ff00)\n44. **Item-Alphabet**: green (color 0x00ff00)\n45. **Item-Alphabet**: blue (color 0x00ff00)\n46. **Item-Alphabet**: yellow (color 0xffffff)\n47. **Item-Alphabet**: orange (color 0xffff00)\n48. **Item-Alphabet**: purple (color 0xffffff)\n49. **Item-Alphabet**: brown (color 0x808080)\n50. **Item-Alphabet**: red (color 0x00ff00)\n51. **Item-Alphabet**: green (color 0x00ff00)\n52. **Item-Alphabet**: blue (color 0x00ff00)\n53. **Item-Alphabet**: yellow (color 0xffffff)\n54. **Item-Alphabet**: orange (color 0xffff00)\n55. **Item-Alphabet**: purple (color 0xffffff)\n56. **Item-Alphabet**: brown (color 0x808080)\n57. **Item-Alphabet\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s18",
+      "n": 8,
+      "mean_word_gap": 664.0,
+      "seed": 18,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their colors:\n1. **item-delta-03**: red (color 'red')\n2. **item-epsilon-04**: blue (color 'blue')\n3. **item-zeta-05**: green (color 'green')\n4. **item-eta-06**: yellow (color 'yellow')\n5. **item-theta-07**: purple (color 'purple')\n6. **item-zeta-08**: orange (color 'orange')\n7. **item-epsilon-09**: blue (color 'blue')\n8. **item-zeta-10**: green (color 'green')\n9. **item-eta-11**: yellow (color 'yellow')\n10. **item-theta-12**: purple (color 'purple')\n11. **item-zeta-13**: orange (color 'orange')\n12. **item-epsilon-14**: blue (color 'blue')\n13. **item-zeta-15**: green (color 'green')\n14. **item-eta-16**: yellow (color 'yellow')\n15. **item-theta-17**: purple (color 'purple')\n16. **item-zeta-18**: orange (color 'orange')\n17. **item-epsilon-19**: blue (color 'blue')\n18. **item-zeta-20**: green (color 'green')\n19. **item-eta-21**: yellow (color 'yellow')\n20. **item-theta-22**: purple (color 'purple')\n21. **item-zeta-23**: orange (color 'orange')\n22. **item-epsilon-24**: blue (color 'blue')\n23. **item-zeta-25**: green (color 'green')\n24. **item-eta-26**: yellow (color 'yellow')\n25. **item-theta-27**: purple (color 'purple')\n26. **item-zeta-28**: orange (color 'orange')\n27. **item-epsilon-29**: blue (color 'blue')\n28. **item-zeta-30**: green (color 'green')\n29. **item-eta-31**: yellow (color 'yellow')\n30. **item-theta-32**: purple (color 'purple')\n31. **item-zeta-33**: orange (color 'orange')\n32. **item-epsilon-34**: blue (color 'blue')\n33. **item-zeta-35**: green (color 'green')\n34. **item-eta-36**: yellow (color 'yellow')\n35. **item-theta-37**: purple (color 'purple')\n36. **item-zeta-38**: orange (color 'orange')\n37. **item-epsilon-39**: blue (color 'blue')\n38. **item-zeta-40**: green (color 'green')\n39. **item-eta-41**: yellow (color 'yellow')\n40. **item-theta-42**: purple (color 'purple')\n41. **item-zeta-43**: orange (color 'orange')\n42. **item-epsilon-44**: blue (color 'blue')\n43. **item-zeta-45**: green (color 'green')\n44. **item-eta-46**: yellow (color 'yellow')\n45. **item-theta-47**: purple (color 'purple')\n46. **item-zeta-48**: orange (color 'orange')\n47. **item-epsilon-49**: blue (color 'blue')\n48. **item-zeta-50**: green (color 'green')\n49. **item-eta-51**: yellow (color 'yellow')\n50. **item-theta-52**: purple (color 'purple')\n51. **item-zeta-53**: orange (color 'orange')\n52. **item-epsilon-54**: blue (color 'blue')\n53. **item-zeta-55**: green (color 'green')\n54. **item-eta-56**: yellow (color 'yellow')\n55. **item-theta-57**: purple (color 'purple')\n56. **item-zeta-58**: orange (color 'orange')\n57. **item-epsilon-59**: blue (color 'blue')\n58. **item-zeta-60**: green (color 'green')\n59. **item-eta-61**: yellow (color 'yellow')\n60. **item-theta-62**: purple (color 'purple')\n61. **item-zeta-63**: orange (color 'orange\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s19",
+      "n": 8,
+      "mean_word_gap": 1005.0,
+      "seed": 19,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their properties:\n1. item-delta-03 has color ruby.\n2. item-delta-04 has color fern.\n3. item-delta-05 has color eggshell.\n4. item-delta-06 has color fern.\n5. item-delta-07 has color eggshell.\n6. item-delta-08 has color fern.\n7. item-epsilon-04 has color eggshell.\n8. item-epsilon-05 has color eggshell.\n9. item-epsilon-06 has color eggshell.\n10. item-epsilon-07 has color eggshell.\n11. item-zeta-05 has color ruby.\n12. item-zeta-06 has color fern.\n13. item-zeta-07 has color fern.\n14. item-zeta-08 has color eggshell.\n15. item-eta-06 has color eggshell.\n16. item-eta-07 has color eggshell.\n17. item-eta-08 has color eggshell.\n18. item-theta-07 has color ruby.\n19. item-theta-08 has color fern.\n20. item-theta-09 has color eggshell.\n21. item-theta-10 has color eggshell.\n22. item-theta-11 has color eggshell.\n23. item-theta-12 has color eggshell.\n24. item-theta-13 has color eggshell.\n25. item-theta-14 has color eggshell.\n26. item-theta-15 has color eggshell.\n27. item-theta-16 has color eggshell.\n28. item-theta-17 has color eggshell.\n29. item-theta-18 has color eggshell.\n30. item-theta-19 has color eggshell.\n31. item-theta-20 has color eggshell.\n32. item-theta-21 has color eggshell.\n33. item-theta-22 has color eggshell.\n34. item-theta-23 has color eggshell.\n35. item-theta-24 has color eggshell.\n36. item-theta-25 has color eggshell.\n37. item-theta-26 has color eggshell.\n38. item-theta-27 has color eggshell.\n39. item-theta-28 has color eggshell.\n40. item-theta-29 has color eggshell.\n41. item-theta-30 has color eggshell.\n42. item-theta-31 has color eggshell.\n43. item-theta-32 has color eggshell.\n44. item-theta-33 has color eggshell.\n45. item-theta-34 has color eggshell.\n46. item-theta-35 has color eggshell.\n47. item-theta-36 has color eggshell.\n48. item-theta-37 has color eggshell.\n49. item-theta-38 has color eggshell.\n50. item-theta-39 has color eggshell.\n51. item-theta-40 has color eggshell.\n52. item-theta-41 has color eggshell.\n53. item-theta-42 has color eggshell.\n54. item-theta-43 has color eggshell.\n55. item-theta-44 has color eggshell.\n56. item-theta-45 has color eggshell.\n57. item-theta-46 has color eggshell.\n58. item-theta-47 has color eggshell.\n59. item-theta-48 has color eggshell.\n60. item-theta-49 has color eggshell.\n61. item-theta-50 has color eggshell.\n62. item-theta-51 has color eggshell.\n63. item-theta-52 has color eggshell.\n64. item-theta-53 has color eggshell.\n65. item-theta-54 has color eggshell.\n66. item-theta-55 has color eggshell.\n67. item-theta-56 has color eggshell.\n68. item-theta-57 has color eggshell.\n69. item-theta-58 has color eggshell.\n70. item-theta-59 has color eggshell.\n71. item-theta-60 has color eggshell.\n72. item-theta-61 has color eggshell.\n73. item-theta-62 has color eggshell.\n74. item-theta-63 has color eggshell.\n75. item-theta-64 has color eggshell.\n76. item-theta-65 has\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s20",
+      "n": 8,
+      "mean_word_gap": 675.0,
+      "seed": 20,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties.\nFirst item: color red (red). The values are temperature 18.2C, humidity 57%, pressure 1012 hPa. So the pair is (18.2, 57).\nSecond item: color blue (blue). Temperature 20.7C, humidity 56%. So (20.7, 56).\nThird item: color green (green). Temperature 21.9C, humidity 70%. So (21.9, 70).\nFourth item: color yellow (yellow). Temperature 22.5C, humidity 40%. So (22.5, 40).\nFifth item: color orange (orange). Temperature 23.1C, humidity 62%. So (23.1, 62).\nSixth item: color purple (purple). Temperature 24.3C, humidity 80%. So (24.3, 80).\nSeventh item: color red (red). Temperature 27.7C, humidity 56%. So (27.7, 56).\nEighth item: color blue (blue). Temperature 28.7C, humidity 58%. So (28.7, 58).\nNinth item: color green (green). Temperature 29.6C, humidity 74%. So (29.6, 74).\nTenth item: temperature 31.5C, humidity 33%. So (31.5, 33).\nEleventh item: temperature 30.2C, humidity 81%. So (30.2, 81).\nTwelfth item: temperature 32.7C, humidity 84%. So (32.7, 84).\nThirteenth item: temperature 34.3C, humidity 80%. So (34.3, 80).\nFourteenth item: temperature 35.4C, humidity 88%. So (35.4, 88).\nFifteenth item: temperature 36.3C, humidity 85%. So (36.3, 85).\nSixteenth item: temperature 37.9C, humidity 70%. So (37.9, 70).\nSeventeenth item: temperature 38.0C, humidity 58%. So (38.0, 58).\nEighteenth item: temperature 39.7C, humidity 59%. So (39.7, 59).\nNineteenth item: temperature 40.8C, humidity 60%. So (40.8, 60).\nTwentieth item: temperature 41.4C, humidity 61%. So (41.4, 61).\nTwenty-first item: temperature 42.3C, humidity 62%. So (42.3, 62).\nTwenty-second item: temperature 43.1C, humidity 63%. So (43.1, 63).\nTwenty-third item: temperature 44.0C, humidity 64%. So (44.0, 64).\nTwenty-fourth item: temperature 45.2C, humidity 65%. So (45.2, 65).\nTwenty-fifth item: temperature 46.3C, humidity 66%. So (46.3, 66).\nTwenty-sixth item: temperature 47.4C, humidity 67%. So (47.4, 67).\nTwenty-seventh item: temperature 48.5C, humidity 68%. So (48.5, 68).\nTwenty-eighth item: temperature 49.6C, humidity 69%. So (49.6, 69).\nTwenty-ninth item: temperature 50.7C, humidity 70%. So (50.7, 70).\nThirtieth item: temperature 51.4C, humidity 71%. So (51.4, 71).\nTwenty-first item: temperature 52.8C, humidity 72%. So (52.8, 72).\nTwenty-second item: temperature 53.9C, humidity 73%. So (53.9, 73).\nTwenty-third item: temperature 54.2C, humidity 74%. So (54.2, 74).\nTwenty-fourth item: temperature 55.7C, humidity 75%. So (55.7, 75).\nTwenty-fifth item: temperature 56.0C, humidity 76%. So (56.0, 76).\nTwenty-sixth item: temperature 57.1C, humidity 77%. So (57.1, 77).\nTwenty-seventh item: temperature 58.2C, humidity 78%. So (58.2, 78).\nTwenty-eighth item: temperature 59.3C, humidity 79%. So (59.3, 79).\nTwenty-ninth item: temperature 60.4C, humidity 80%. So (60.4, 80).\nThirtieth item: temperature 61.5C, humidity 81%. So (61.5, 81).\nTwenty-first item: temperature 62.6C, humidity 82%. So (62.6, 82\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s21",
+      "n": 8,
+      "mean_word_gap": 1675.5,
+      "seed": 21,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties.\nFirst item: color is 'red'. The values are [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]. So the pairs would be (0,0), (0,0), (0,0), etc., but since there are no other items with red color in this list, each pair is just [red].\nNext item: color is 'green'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one green item here, each pair is just [green].\nThird item: color is 'blue'. The values are [0.00, 0.00, 0.00]. So the pairs would be (0,0), (0,0), (0,0). Again, no other blue items here.\nFourth item: color is 'purple'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one purple item here, each pair is just [purple].\nFifth item: color is 'orange'. The values are [0.00, 0.00, 0.00]. So the pairs would be (0,0), (0,0), (0,0). Again, no other orange items here.\nSixth item: color is 'yellow'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one yellow item here, each pair is just [yellow].\nSeventh item: color is 'green'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one green item here, each pair is just [green].\nEighth item: color is 'blue'. The values are [0.00, 0.00, 0.00]. So the pairs would be (0,0), (0,0), (0,0). Again, no other blue items here.\nNinth item: color is 'purple'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one purple item here, each pair is just [purple].\nTenth item: color is 'orange'. The values are [0.00, 0.00, 0.00]. So the pairs would be (0,0), (0,0), (0,0). Again, no other orange items here.\nEleventh item: color is 'yellow'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one yellow item here, each pair is just [yellow].\nTwelfth item: color is 'green'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one green item here, each pair is just [green].\nThirteenth item: color is 'blue'. The values are [0.00, 0.00, 0.00]. So the pairs would be (0,0), (0,0), (0,0). Again, no other blue items here.\nFourteenth item: color is 'purple'. The values are [1.5, 2.5, 3.5]. So the pairs would be (1.5,2.5), (2.5,3.5), etc., but again, since there's only one purple item here, each pair is just [purple].\nFifteenth item: color is 'orange'. The values are [0.00, 0.00, 0.00]. So the pairs would be (0,0), (0,0), (0,0). Again, no other orange items here.\nSixteenth item: color is 'yellow'. The values are [1.5, 2\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s22",
+      "n": 8,
+      "mean_word_gap": 667.0,
+      "seed": 22,
+      "variant": "dist",
+      "response": "Okay, I need to process this data into a structured format with each item as a row and their color as a column. Let me start by looking at the data again to understand what each item represents.\nFirst, there are several items with different identifiers like \"item-X\", \"item-Y\", etc. Each of these has various values such as temperature, humidity, pressure, etc. The task is to group these items into pairs based on their color and then output each pair in a specific format.\nLooking at the data structure: each item has a unique identifier (like item-X), followed by its value (e.g., \"item-X\", \"value-123\"), and then another identifier like \"item-Y\". The pairs are separated by commas, and each pair is on a new line.\nSo, the first step is to group all items by their color. Then, for each color group, extract the pairs of items that share that color. Each pair should be in a separate row with the item's identifier and its value.\nLet me start by grouping by color. The data has multiple colors like \"item-X\", \"item-Y\", etc., but some are repeated (like \"item-X\" and \"item-Y\"). So, I need to group all items by their color.\nOnce grouped, for each color, I can extract the pairs of items that share that color. Each pair should be in a row with the item's identifier and its value.\nLet me think about how to structure this. For example, if there are two items with \"item-X\" and \"item-Y\", they should both be in the same group. So, for each color, I can loop through all items and collect their pairs.\nBut wait, the data has multiple items per color. So, for each color group (like \"item-X\"), I need to collect all items that have that color. Then, for each such item, extract the pair of values (e.g., \"item-X\", \"value-123\").\nSo, the plan is:\n1. Group all items by their color.\n2. For each group, collect all pairs of items with the same color.\n3. For each pair in a group, extract the item's identifier and its value.\n4. Output each pair on a new line, with the item's identifier first and then the value.\nNow, how to implement this in Python?\nFirst, I'll need to parse the data into a structured format. The input is given as a list of dictionaries, each with \"item\" and \"value\".\nSo, for each item in the input list:\n- Extract item_id and value from the dictionary.\n- Then, group by color. For each color, collect all items that have that color.\nOnce I have all items grouped by color, for each group:\n- Take the first item (or any one) from the group.\n- Extract its \"item\" and \"value\".\n- Collect all pairs of these two items.\nThen, for each pair in the group, output them on a new line with the item's identifier and value.\nSo, let's start by grouping by color. Let's see:\nFirst, I can loop through each item in the input list. For each item, check if its color is present in the items_by_color dictionary. If yes, add it to a list of items for that color.\nThen, for each group (color), collect all items in that group. Then, for each such group, extract the first item (or any one) and create a pair with that item's value and the next item's value.\nOnce all groups are processed, I can output each pair on a new line.\nLet me think about how to implement this in Python.\nFirst, parse the input data into a list of dictionaries. Each dictionary will have \"item\" and \"value\".\nThen, for each item in the input list:\n- Check if its color is present in items_by_color. If yes, add it to the group.\n- Then, extract the first item (or any one) from the group.\n- Extract the value pair from that item and add it to a list of pairs for that color.\nOnce all groups are processed, iterate over each group in items_by_color:\nFor each group:\n   Take the first item (or any one) from the group.\n   Extract its \"item\" and \"value\".\n   Create a pair with these two values.\n   Append this pair to a list of pairs for that color.\nFinally, output each pair on a new line.\nNow, let's think about how to implement this in Python.\nFirst, parse the input data:\ndata = [\n    {\"item\": \"item-X\", \"value\": 12\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s23",
+      "n": 8,
+      "mean_word_gap": 839.5,
+      "seed": 23,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each item. Let me start by looking at each item's properties.\nFirst item: temperature is -0.6C, humidity is 68%. The value is 0.06, which is 0.06 * 100 = 6%. So the pair should be (-0.6, 6). But wait, the problem says to output pairs separated by commas and no spaces between items. Also, each item's value must be a number with exactly two decimal places? Wait, looking at the JSON data: the values are given as numbers with two decimal places. For example, 0.06 is correct. So I should format each pair as a string like \"item-X, item-Y\" where X and Y are floats.\nNext, the second item is -0.1C, humidity 68%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-0.1, 6.05\". But wait, the problem says to output pairs separated by commas and no spaces between items. So each pair should be a string like \"item-X, item-Y\" where X and Y are floats.\nThird item: temperature -4.0C, humidity 77%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-4.0, 6.05\". Again, no spaces between items.\nFourth item: temperature -2.7C, humidity 75%. The value is 0.066, which is 6.06 with two decimal places. So the pair would be \"-2.7, 6.06\". No spaces between items here either.\nFifth item: temperature -0.1C, humidity 58%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-0.1, 6.05\". Again, no spaces between items.\nSixth item: temperature -2.7C, humidity 75%. The value is 0.066, which is 6.06 with two decimal places. So the pair would be \"-2.7, 6.06\". No spaces between items here either.\nSeventh item: temperature -0.1C, humidity 58%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-0.1, 6.05\". Again, no spaces between items.\nEighth item: temperature -2.7C, humidity 75%. The value is 0.066, which is 6.06 with two decimal places. So the pair would be \"-2.7, 6.06\". No spaces between items here either.\nNinth item: temperature -0.1C, humidity 58%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-0.1, 6.05\". Again, no spaces between items.\nTenth item: temperature -2.7C, humidity 75%. The value is 0.066, which is 6.06 with two decimal places. So the pair would be \"-2.7, 6.06\". No spaces between items here either.\nEleventh item: temperature -0.1C, humidity 58%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-0.1, 6.05\". Again, no spaces between items.\nTwelfth item: temperature -2.7C, humidity 75%. The value is 0.066, which is 6.06 with two decimal places. So the pair would be \"-2.7, 6.06\". No spaces between items here either.\nThirteenth item: temperature -0.1C, humidity 58%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-0.1, 6.05\". Again, no spaces between items here.\nFourteenth item: temperature -2.7C, humidity 75%. The value is 0.066, which is 6.06 with two decimal places. So the pair would be \"-2.7, 6.06\". No spaces between items here either.\nFifteenth item: temperature -0.1C, humidity 58%. The value is 0.065, which is 6.05 with two decimal places. So the pair would be \"-0.1, 6.05\". Again, no spaces between items here.\nSixteenth item: temperature -2.7C, humidity 75%. The value is 0.066, which is 6.06 with two decimal places. So the pair would be \"-2.7, 6.06\". No spaces between items here either.\nSeventeenth item: temperature\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s24",
+      "n": 8,
+      "mean_word_gap": 335.5,
+      "seed": 24,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's properties and their colors.\nFirst, let's list all the items with their properties:\n1. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n2. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n3. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n4. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n5. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n6. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n7. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n8. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n9. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n10. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n11. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n12. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n13. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n14. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n15. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n16. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n17. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n18. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n19. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n20. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n21. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n22. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n23. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n24. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n25. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n26. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n27. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n28. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n29. **item-epsilon-04**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 997 hPa.\n30. **item-epsilon-05**: color goldenrod (green), temperature 34.5C, humidity 56%, pressure 998 hPa.\n31. **item-delta-03**: color goldenrod (green), temperature 34.5C, humidity 33%, pressure 994 hPa.\n32. **item-epsilon-04**: color goldenrod (\n",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s25",
+      "n": 8,
+      "mean_word_gap": 1179.0,
+      "seed": 25,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each item. Let me start by looking at each item's properties.\nFirst item: temperature is 22.3C, humidity is 40%, pressure 1023 hPa. The color is violet (0x00FF00). So the pair should be (22.3, 0x00FF00).\nSecond item: temperature 23.5C, humidity 41%, pressure 994 hPa. Color is blue (0x00FFFF). So (23.5, 0x00FFFF).\nThird item: temperature 24.3C, humidity 33%, pressure 1005 hPa. Color is violet (0x8000FF). So (24.3, 0x8000FF).\nFourth item: temperature 16.3C, humidity 32%, pressure 996 hPa. Color is blue (0xFF00FF). So (16.3, 0xFF00FF).\nFifth item: temperature 32.5C, humidity 72%, pressure 1002 hPa. Color is violet (0x8000FF). So (32.5, 0x8000FF).\nSixth item: temperature 23.0C, humidity 34%, pressure 999 hPa. Color is blue (0xFF00FF). So (23.0, 0xFF00FF).\nSeventh item: temperature 30.5C, humidity 75%, pressure 1010 hPa. Color is violet (0x8000FF). So (30.5, 0x8000FF).\nEighth item: temperature 26.6C, humidity 84%, pressure 991 hPa. Color is blue (0xFF00FF). So (26.6, 0xFF00FF).\nNinth item: temperature 24.3C, humidity 33%, pressure 1005 hPa. Color is violet (0x8000FF). So (24.3, 0x8000FF).\nTenth item: temperature 16.3C, humidity 32%, pressure 994 hPa. Color is blue (0xFF00FF). So (16.3, 0xFF00FF).\nEleventh item: temperature 32.5C, humidity 72%, pressure 1002 hPa. Color is violet (0x8000FF). So (32.5, 0x8000FF).\nTwelfth item: temperature 23.0C, humidity 34%, pressure 999 hPa. Color is blue (0xFF00FF). So (23.0, 0xFF00FF).\nThirteenth item: temperature 30.5C, humidity 75%, pressure 1010 hPa. Color is violet (0x8000FF). So (30.5, 0x8000FF).\nFourteenth item: temperature 26.6C, humidity 84%, pressure 991 hPa. Color is blue (0xFF00FF). So (26.6, 0xFF00FF).\nFifteenth item: temperature 24.3C, humidity 33%, pressure 1005 hPa. Color is violet (0x8000FF). So (24.3, 0x8000FF).\nSixteenth item: temperature 23.0C, humidity 34%, pressure 999 hPa. Color is blue (0xFF00FF). So (23.0, 0xFF00FF).\nSeventeenth item: temperature 30.5C, humidity 75%, pressure 1010 hPa. Color is violet (0x8000FF). So (30.5, 0x8000FF).\nEighteenth item: temperature 26.6C, humidity 84%, pressure 991 hPa. Color is blue (0xFF00FF). So (26.6, 0xFF00FF).\nNineteenth item: temperature 24.3C, humidity 33%, pressure 1005 hPa. Color is violet (0x8000FF). So (24.3, 0x8000FF).\nTwentieth item: temperature 16.3C, humidity 32%, pressure 994 hPa. Color is blue (0xFF00FF). So (16.3, 0xFF00FF).\nTwenty-first item: temperature 32.5C, humidity 72%, pressure 1002 hPa. Color is violet (0x8000FF). So (32.5, 0x8000FF).\nTwenty-second item: temperature 23.0C, humidity 34%, pressure 999 hPa. Color is blue (0xFF00FF). So (23.0, 0xFF00FF).\nTwenty-third item: temperature 30.5C, humidity 75%, pressure 1010 hPa. Color is violet (0x8000FF). So (30.5, 0x8000FF).\nTwenty-fourth item: temperature 26.6C, humidity 84%, pressure 991 hPa. Color is blue (0xFF00FF). So (26.6, 0\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s26",
+      "n": 8,
+      "mean_word_gap": 1011.5,
+      "seed": 26,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **item-delta-03**: Value 57.87, Tolerance 0.25 \u2192 (57, 3)\n2. **item-epsilon-04**: Value 93.67, Tolerance 1.86 \u2192 (93, 4)\n3. **item-epsilon-07**: Value 78.89, Tolerance 4.11 \u2192 (78, 5)\n4. **item-epsilon-08**: Value 62.27, Tolerance 0.17 \u2192 (62, 6)\n5. **item-epsilon-09**: Value 72.06, Tolerance 1.34 \u2192 (72, 7)\n6. **item-epsilon-10**: Value 52.23, Tolerance 4.11 \u2192 (52, 8)\n7. **item-epsilon-12**: Value 55.68, Tolerance 0.81 \u2192 (55, 9)\n8. **item-epsilon-13**: Value 221, Tolerance 4.77 \u2192 (221, 10)\n9. **item-epsilon-14**: Value 34.5C, Tolerance 1.66 \u2192 (34, 11)\n10. **item-epsilon-15**: Value 5.7C, Tolerance 2.24 \u2192 (5, 12)\n11. **item-epsilon-16**: Value 747, Tolerance 4.85 \u2192 (747, 13)\n12. **item-epsilon-17**: Value 920, Tolerance 1.37 \u2192 (920, 14)\n13. **item-epsilon-18**: Value 931, Tolerance 3.53 \u2192 (931, 15)\n14. **item-epsilon-19**: Value 987, Tolerance 2.36 \u2192 (987, 16)\n15. **item-epsilon-20**: Value 563, Tolerance 0.78 \u2192 (563, 17)\n16. **item-epsilon-21**: Value 889, Tolerance 1.91 \u2192 (889, 18)\n17. **item-epsilon-22**: Value 988, Tolerance 2.36 \u2192 (988, 19)\n18. **item-epsilon-23**: Value 563, Tolerance 0.78 \u2192 (563, 20)\n19. **item-epsilon-24**: Value 550, Tolerance 0.81 \u2192 (550, 21)\n20. **item-epsilon-25**: Value 625, Tolerance 1.27 \u2192 (625, 22)\n21. **item-epsilon-26**: Value 611, Tolerance 4.77 \u2192 (611, 23)\n22. **item-epsilon-27**: Value 604, Tolerance 0.74 \u2192 (604, 24)\n23. **item-epsilon-28**: Value 732, Tolerance 1.34 \u2192 (732, 25)\n24. **item-epsilon-29**: Value 221, Tolerance 4.11 \u2192 (221, 26)\n25. **item-epsilon-30**: Value 201, Tolerance 4.02 \u2192 (201, 27)\n26. **item-epsilon-31**: Value 808, Tolerance 3.95 \u2192 (808, 28)\n27. **item-epsilon-32**: Value 625, Tolerance 2.27 \u2192 (625, 29)\n28. **item-epsilon-33**: Value 632, Tolerance 0.78 \u2192 (632, 30)\n29. **item-epsilon-34**: Value 550, Tolerance 0.81 \u2192 (550, 31)\n30. **item-epsilon-35**: Value 221, Tolerance 4.11 \u2192 (221, 32)\n31. **item-epsilon-36**: Value 808, Tolerance 4.02 \u2192 (808, 33)\n32. **item-epsilon-37**: Value 603, Tolerance 0.76 \u2192 (603, 34)\n33. **item-epsilon-38**: Value 737, Tolerance 1.34 \u2192 (737, 35)\n34. **item-epsilon-39**: Value 550, Tolerance 1.18 \u2192 (550, 36)\n35. **item-epsilon-40**: Value 221, Tolerance 4.11 \u2192 (221, 37)\n36. **item-epsilon-41**: Value 808, Tolerance 4.02 \u2192 (808,\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s27",
+      "n": 8,
+      "mean_word_gap": 1171.0,
+      "seed": 27,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of all pairs of items that have the same color. Let me start by looking at each item's properties and their colors.\nFirst, let's list out all the items with their properties:\n1. Item-delta-03 has color brown.\n2. Item-delta-04 has color blue.\n3. Item-delta-05 has color green.\n4. Item-delta-06 has color red.\n5. Item-delta-07 has color yellowish orange (but the value is 0, which might be a typo or maybe a different color? Wait, looking back at the JSON data:\n   Item-delta-07 has value 0, which is probably a mistake. Maybe it's supposed to be green? Or perhaps there's an error in the JSON. Let me check again.\nWait, looking at the JSON structure:\nThe first item is delta-03 with color brown. Then delta-04 is blue. Then delta-05 is green. Then delta-06 is red. Then delta-07 has value 0, which might be a typo or maybe it's supposed to be yellowish orange (which would be a different color). But the user provided the JSON as:\n{\n  \"delta_03\": {\n    \"color\": \"brown\",\n    \"value\": 0\n  },\n  \"delta_04\": {\n    \"color\": \"blue\",\n    \"value\": 5.0\n  },\n  ... etc.\n}\nSo delta_07 is probably a typo for yellowish orange (which would be a different color). But the user's JSON has it as 0, which might be a mistake. However, the problem says to output only the pairs of items that share the same color. So even if delta_07 is supposed to be yellowish orange, but maybe in the JSON it's written as 0. Hmm, perhaps there's a formatting error here. But according to the user's input, delta_07 is 0, which might be a typo for yellowish orange (which would be a different color). But since the user provided the JSON as is, I have to work with that.\nSo now, I need to process each item and check if their color matches. Then collect all pairs where both items have the same color.\nLet me list each item's properties:\n1. delta_03: brown (color \"brown\")\n2. delta_04: blue (color \"blue\")\n3. delta_05: green (color \"green\")\n4. delta_06: red (color \"red\")\n5. delta_07: yellowish orange (but maybe a typo for yellowish orange, which would be a different color)\nWait, the user's JSON has delta_07 as 0, which might be a mistake. But according to the problem statement, the JSON is as given. So perhaps delta_07 is supposed to be yellowish orange (which would be a different color). But since the user provided it as 0, maybe there's an error. However, the problem says to output only the pairs of items that share the same color. So even if delta_07 is supposed to be yellowish orange, but in reality it's red, then we need to include both.\nBut looking at the JSON:\ndelta_07 has value 0, which might be a typo for yellowish orange (which would be a different color). But since the user provided it as 0, perhaps there's an error. However, the problem says to output only the pairs of items that share the same color. So even if delta_07 is supposed to be yellowish orange, but in reality it's red, then we need to include both.\nBut how do I handle this? The user's JSON has delta_07 as 0, which might be a typo for yellowish orange (which would be a different color). But since the problem says to output only the pairs of items that share the same color, perhaps we should include both. However, the user's example shows that if there are multiple items with the same color, they are listed as pairs. So even if delta_07 is supposed to be yellowish orange, but in reality it's red, then we need to include both.\nBut how do I handle this? The problem says to output only the pairs of items that share the same color. So even if delta_07 is supposed to be yellowish orange, but in reality it's red, then we need to include both. But according to the JSON structure, delta_07 is a property of each item. So perhaps delta_07 is a typo for yellowish orange (which would be a different color). But since the user's JSON has it as 0, maybe there's an error. However, the problem says to output only the pairs of items that share the same color. So even if delta_07 is supposed to be yellow\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s28",
+      "n": 8,
+      "mean_word_gap": 838.5,
+      "seed": 28,
+      "variant": "dist",
+      "response": "Okay, I need to process this data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **Item-delta-03**: Color is indigo (blue), value is 0.50. So it's blue with a value of 0.50.\n2. **Item-eta-06**: Color is indigo, value is 0.41, temperature range -4.5C to 4.8C, humidity range 20% to 70%.\n3. **Item-zeta-05**: Color is indigo, value is 0.27, temperature range -1.3C to 1.16, humidity range 60% to 78%.\n4. **Item-theta-07**: Color is indigo, value 0.61, temperature range 3.8C to 5.6C, humidity range 20% to 70%.\n5. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n6. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n7. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n8. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n9. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n10. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n11. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n12. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n13. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n14. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n15. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n16. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n17. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n18. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n19. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n20. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n21. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n22. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n23. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70%.\n24. **Item-eta-06**: Color is indigo, value 0.9, temperature range 5.1C to 7.9C, humidity range 20% to 70%.\n25. **Item-zeta-08**: Color is indigo, value 0.37, temperature range 4.2C to 6.4C, humidity range 60% to 70\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s29",
+      "n": 8,
+      "mean_word_gap": 834.0,
+      "seed": 29,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by understanding what each color represents.\nFirst, let's look at the items in the JSON structure. Each item has a \"color\" key with a value like \"red\", \"green\", etc., followed by some other properties. The task is to group these items into pairs based on their color and then output each pair as a list of two items.\nLooking at the data, there are several colors: red, green, blue, yellow, orange, purple, cyan, magenta. Each color has multiple items with different properties like temperature (in Celsius), humidity (percentage), pressure (hPa), etc. The pairs should be ordered by color and then by temperature or humidity? Wait, the problem says \"pairs of items sharing the same color\". So maybe each pair is a tuple of two items from different colors. But how are they ordered?\nLooking at the data, some items have multiple properties. For example, item-delta-03 has three properties: value, tolerance, humidity. The problem doesn't specify how to order these pairs. Maybe we need to sort them by color first, then by temperature or humidity? Or perhaps the order is arbitrary? The problem statement isn't clear on this. But since the user wants a list of pairs, perhaps each pair is a tuple of two items from different colors.\nWait, looking at the sample data provided in the JSON, there are multiple pairs. For example, item-delta-03 has three properties: value (reading temperature), tolerance (tolerance), humidity (humidity). So maybe each pair is a tuple of two items from different colors. But how to sort them? The problem doesn't specify, so perhaps we need to sort the pairs by color first, then by temperature or humidity? Or maybe the order is arbitrary. Hmm.\nAlternatively, maybe the pairs are ordered based on their color and then sorted by temperature or humidity. Let me check the sample data again.\nLooking at item-delta-03: value is 3.8C, tolerance 0.86, humidity 68%. So perhaps the order is (item-delta-03, item-delta-04), (item-delta-04, item-delta-05), etc., but that's not clear. Alternatively, maybe the pairs are ordered by their color and then sorted by temperature or humidity. But how to determine which comes first?\nAlternatively, perhaps the pairs are ordered based on their color and then sorted by temperature or humidity. For example, if two items have the same color, they might be ordered by temperature in ascending order. But that's not specified. The problem statement doesn't mention this. So perhaps the correct approach is to sort the pairs first by color, then by temperature or humidity?\nLooking at the sample data:\n- item-delta-03 has three properties: value (reading temperature), tolerance (tolerance), humidity (humidity). So maybe each pair is a tuple of two items from different colors. But how to order them? The problem statement doesn't specify, so perhaps we need to sort the pairs by color first, then by temperature or humidity.\nAlternatively, maybe the pairs are ordered based on their color and then sorted by temperature or humidity. For example, if two items have the same color, they might be ordered in ascending order of temperature. But that's not specified.\nWait, looking at the sample data again:\n- item-delta-03 has three properties: value (reading temperature), tolerance (tolerance), humidity (humidity). So perhaps each pair is a tuple of two items from different colors. The problem statement doesn't specify how to order them, but the example given in the JSON shows that some pairs have multiple properties. For example, item-delta-04 has three properties: value (reading temperature), tolerance (tolerance), humidity (humidity). So perhaps each pair is a tuple of two items from different colors. The problem statement doesn't specify how to order them, but the sample data shows that some pairs have multiple properties.\nBut how to sort them? The problem statement doesn't mention this, so perhaps we need to sort the pairs by color first, then by temperature or humidity. But that's not specified. Alternatively, maybe the pairs are ordered based on their color and then sorted by temperature or humidity. For example, if two items have the same color, they might be ordered in ascending order of temperature.\nAlternatively, perhaps the pairs are ordered based on their color and then sorted by temperature or humidity. Let's look at the sample data again.\nLooking at the sample data:\n- item-delta-03 has three properties: value (reading temperature), tolerance (tolerance), humidity (humidity). So perhaps each pair is a tuple of two items from different colors. The problem statement doesn't specify how to order them, but the example given in the JSON shows that some pairs have multiple\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-delta-03",
+          "item-delta-04"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-05"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 3,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}

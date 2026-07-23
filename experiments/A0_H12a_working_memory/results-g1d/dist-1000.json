@@ -1,0 +1,95 @@
+{
+  "tasks_file": "/home/vaniello/Desktop/projects/noesis/experiments/A0_H12a_working_memory/tasks/tasks-dist-1000.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 2048,
+  "n_tasks": 3,
+  "elapsed_s": 229.10125708580017,
+  "aggregate": {
+    "n": 3,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.0,
+    "mean_precision": 0.0,
+    "mean_recall": 0.0,
+    "mean_word_gap": 860.1666666666666
+  },
+  "results": [
+    {
+      "id": "h12a-d-g1000-s0",
+      "n": 16,
+      "mean_word_gap": 1158.5,
+      "seed": 0,
+      "variant": "dist",
+      "response": "Okay, I need to process this data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **item-iota-08**: Color is violet (purple). Value is 76.37. So, (item-iota-08, \"violet\")\n2. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n3. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n4. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n5. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n6. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n7. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n8. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n9. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n10. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n11. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n12. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n13. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n14. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n15. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n16. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n17. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n18. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n19. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n20. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n21. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n22. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n23. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n24. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n25. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n26. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n27. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n28. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n29. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n30. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n31. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n32. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n33. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n34. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n35. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n36. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n37. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n38. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n39. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n40. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n41. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n42. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n43. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n44. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n45. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n46. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n47. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n48. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n49. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n50. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n51. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n52. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n53. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n54. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n55. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n56. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n57. **item-mu-11**: Color is cobalt. Value is 76.37. So, (item-mu-11, \"cobalt\")\n58. **item-iota-08**: Color is violet. Value is 76.37. So, (item-iota-08, \"violet\")\n59. **item-theta-07**: Color is cobalt. Value is 76.38. So, (item-theta-07, \"cobalt\")\n60. **item-mu-11\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-mu-11"
+        ],
+        [
+          "item-eta-06",
+          "item-iota-08"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s1",
+      "n": 16,
+      "mean_word_gap": 266.0,
+      "seed": 1,
+      "variant": "dist",
+      "response": "Okay, I need to process this JSON data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **item-iota-08**: Color is lavender (purple), Value is 84.67. So, (item-iota-08, 84.67)\n2. **item-iota-09**: Color is lavender, Value is 84.64. So, (item-iota-09, 84.64)\n3. **item-iota-10**: Color is lavender, Value is 84.41. So, (item-iota-10, 84.41)\n4. **item-iota-11**: Color is lavender, Value is 84.07. So, (item-iota-11, 84.07)\n5. **item-iota-12**: Color is lavender, Value is 84.64. So, (item-iota-12, 84.64)\n6. **item-iota-13**: Color is lavender, Value is 84.67. So, (item-iota-13, 84.67)\n7. **item-iota-14**: Color is lavender, Value is 84.41. So, (item-iota-14, 84.41)\n8. **item-iota-15**: Color is lavender, Value is 84.07. So, (item-iota-15, 84.07)\n9. **item-iota-16**: Color is lavender, Value is 84.64. So, (item-iota-16, 84.64)\n10. **item-iota-17**: Color is lavender, Value is 84.41. So, (item-iota-17, 84.41)\n11. **item-iota-18**: Color is lavender, Value is 84.07. So, (item-iota-18, 84.07)\n12. **item-iota-19**: Color is lavender, Value is 84.64. So, (item-iota-19, 84.64)\n13. **item-iota-20**: Color is lavender, Value is 84.41. So, (item-iota-20, 84.41)\n14. **item-iota-21**: Color is lavender, Value is 84.07. So, (item-iota-21, 84.07)\n15. **item-iota-22**: Color is lavender, Value is 84.64. So, (item-iota-22, 84.64)\n16. **item-iota-23**: Color is lavender, Value is 84.41. So, (item-iota-23, 84.41)\n17. **item-iota-24**: Color is lavender, Value is 84.07. So, (item-iota-24, 84.07)\n18. **item-iota-25**: Color is lavender, Value is 84.64. So, (item-iota-25, 84.64)\n19. **item-iota-26**: Color is lavender, Value is 84.41. So, (item-iota-26, 84.41)\n20. **item-iota-27**: Color is lavender, Value is 84.07. So, (item-iota-27, 84.07)\n21. **item-iota-28**: Color is lavender, Value is 84.64. So, (item-iota-28, 84.64)\n22. **item-iota-29**: Color is lavender, Value is 84.41. So, (item-iota-29, 84.41)\n23. **item-iota-30**: Color is lavender, Value is 84.07. So, (item-iota-30, 84.07)\n24. **item-iota-31**: Color is lavender, Value is 84.64. So, (item-iota-31, 84.64)\n25. **item-iota-32**: Color is lavender, Value is 84.41. So, (item-iota-32, 84.41)\n26. **item-iota-33**: Color is lavender, Value is 84.07. So, (item-iota-33, 84.07)\n27. **item-iota-34**: Color is lavender, Value is 84.64. So, (item-iota-34, 84.64)\n28. **item-iota-35**: Color is lavender, Value is 84.41. So, (item-iota-35, 84.41)\n29. **item-iota-36**: Color is lavender, Value is 84.07. So, (item-iota-36, 84.07)\n30. **item-iota-37**: Color is lavender, Value is 84.64. So, (item-iota-37, 84.64)\n31. **item-iota-38**: Color is lavender, Value is 84.41. So, (item-iota-38, 84.41)\n32. **item-iota-39**: Color is lavender, Value is 84.07. So, (item-iota-39, 84.07)\n33. **item-iota-40**: Color is lavender, Value is 84.64. So, (item-iota-40, 84.64)\n34. **item-iota-41**: Color is lavender, Value is 84.41. So, (item-iota-41, 84.41)\n35. **item-iota-42**: Color is lavender, Value is 84.07. So, (item-iota-42, 84.07)\n36. **item-iota-43**: Color is lavender, Value is 84.64. So, (item-iota-43, 84.64)\n37. **item-iota-44**: Color is lavender, Value is 84.41. So, (item-iota-44, 84.41)\n38. **item-iota-45**: Color is lavender, Value is 84.07. So, (item-iota-45, 84.07)\n39. **item-iota-46**: Color is lavender, Value is 84.64. So, (item-iota-46, 84.64)\n40. **item-iota-47**: Color is lavender, Value is 84.41. So, (item-iota-47, 84.41)\n41. **item-iota-48**: Color is lavender, Value is 84.07. So, (item-iota-48, 84.07)\n42. **item-iota-49**: Color is lavender, Value is 84.64. So, (item-iota-49, 84.64)\n43. **item-iota-50**: Color is lavender, Value is 84.41. So, (item-iota-50, 84.41)\n44. **item-iota-51**: Color is lavender, Value is 84.07. So, (item-iota-51, 84.07)\n45. **item-iota-52**: Color is lavender, Value is 84.64. So, (item-iota-52, 84.64)\n46. **item-iota-53**: Color is lavender, Value is 84.41. So, (item-iota-53, 84.41)\n47. **item-iota-54**: Color is lavender, Value is 84.07. So, (item-iota-54, 84.07)\n48. **item-iota-55**: Color is lavender, Value is 84.64. So, (item-iota-55, 84.64)\n49. **item-iota-56**: Color is lavender, Value is 84.41. So, (item-iota-56, 84.41)\n50. **item-iota-57**: Color is lavender, Value is 84.07. So, (item-iota-57, 84.07)\n51. **item-iota-58**: Color is lavender, Value is 84.64. So, (item-iota-58, 84.64)\n52. **item-iota-59**: Color is lavender, Value is 84.41. So, (item-iota-59, 84.41)\n53. **item-iota-60**: Color is lavender, Value is 84.07. So, (item-iota-60, 84.07)\n54. **item-iota-61**: Color is lavender, Value is 84.64. So, (item-iota-61, 84.64)\n55. **item-iota-62**: Color is lavender, Value is 84.41. So, (item-iota-62, 84.41)\n56. **item-iota-63**: Color is lavender, Value is 84.07. So, (item-iota-63, 84.07)\n57. **item-iota-64**: Color is lavender, Value is 84.64. So, (item-iota-64, 84.64)\n58. **item-iota-65**: Color is lavender, Value is 84.41. So, (item-iota-65, 84.41)\n59. **item-iota-66**: Color is lavender, Value is 84.07. So\n",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g1000-s2",
+      "n": 16,
+      "mean_word_gap": 1156.0,
+      "seed": 2,
+      "variant": "dist",
+      "response": "Okay, I need to process this data and generate a list of pairs for each color. Let me start by looking at each item's color and its corresponding value.\nFirst, let's list all the items with their colors and values:\n1. **item-iota-08**: red (color red) - value 78.52\n2. **item-iota-09**: blue (color blue) - value 37.99\n3. **item-iota-10**: green (color green) - value 33.70\n4. **item-iota-11**: yellow (color yellow) - value 85.04\n5. **item-iota-12**: orange (color orange) - value 87.24\n6. **item-iota-13**: purple (color purple) - value 11.10\n7. **item-iota-14**: pink (color pink) - value 13.18\n8. **item-iota-15**: brown (color brown) - value 4.87\n9. **item-iota-16**: black (color black) - value 4.87\n10. **item-iota-17**: gray (color gray) - value 4.87\n11. **item-iota-18**: white (color white) - value 4.87\n12. **item-iota-19**: blue (color blue) - value 12.83\n13. **item-iota-20**: green (color green) - value 33.70\n14. **item-iota-21**: yellow (color yellow) - value 85.04\n15. **item-iota-22**: orange (color orange) - value 87.24\n16. **item-iota-23**: purple (color purple) - value 11.10\n17. **item-iota-24**: pink (color pink) - value 13.18\n18. **item-iota-25**: brown (color brown) - value 4.87\n19. **item-iota-26**: black (color black) - value 4.87\n20. **item-iota-27**: gray (color gray) - value 4.87\n21. **item-iota-28**: white (color white) - value 4.87\n22. **item-iota-29**: blue (color blue) - value 12.83\n23. **item-iota-30**: green (color green) - value 33.70\n24. **item-iota-31**: yellow (color yellow) - value 85.04\n25. **item-iota-32**: orange (color orange) - value 87.24\n26. **item-iota-33**: purple (color purple) - value 11.10\n27. **item-iota-34**: pink (color pink) - value 13.18\n28. **item-iota-35**: brown (color brown) - value 4.87\n29. **item-iota-36**: black (color black) - value 4.87\n30. **item-iota-37**: gray (color gray) - value 4.87\n31. **item-iota-38**: white (color white) - value 4.87\n32. **item-iota-39**: blue (color blue) - value 12.83\n33. **item-iota-40**: green (color green) - value 33.70\n34. **item-iota-41**: yellow (color yellow) - value 85.04\n35. **item-iota-42**: orange (color orange) - value 87.24\n36. **item-iota-43**: purple (color purple) - value 11.10\n37. **item-iota-44**: pink (color pink) - value 13.18\n38. **item-iota-45**: brown (color brown) - value 4.87\n39. **item-iota-46**: black (color black) - value 4.87\n40. **item-iota-47**: gray (color gray) - value 4.87\n41. **item-iota-48**: white (color white) - value 4.87\n42. **item-iota-49**: blue (color blue) - value 12.83\n43. **item-iota-50**: green (color green) - value 33.70\n44. **item-iota-51**: yellow (color yellow) - value 85.04\n45. **item-iota-52**: orange (color orange) - value 87.24\n46. **item-iota-53**: purple (color purple) - value 11.10\n47. **item-iota-54**: pink (color pink) - value 13.18\n48. **item-iota-55**: brown (color brown) - value 4.87\n49. **item-iota-56**: black (color black) - value 4.87\n50. **item-iota-57**: gray (color gray) - value 4.87\n51. **item-iota-58**: white (color white) - value 4.87\n52. **item-iota-59**: blue (color blue) - value 12.83\n53. **item-iota-60**: green (color green) - value 33.70\n54. **item-iota-61**: yellow (color yellow) - value 85.04\n55. **item-iota-62**: orange (color orange) - value 87.24\n56. **item-iota-63**: purple (color purple) - value 11.10\n57. **item-iota-64**: pink (color pink) - value 13.18\n58. **item-iota-65**: brown (color brown) - value 4.87\n59. **item-iota-66**: black (color black) - value 4.87\n60. **item-iota-67**: gray (color gray) - value 4.87\n61. **item-iota-68**: white (color white) - value 4.87\n62. **item-iota-69**: blue (color blue) - value 12.83\n63. **item-iota-70**: green (color green) - value 33.70\n64. **item-iota-71**: yellow (color yellow) - value 85.04\n65. **item-iota-72**: orange (color orange) - value 87.24\n66. **item-iota-73**: purple (color purple) - value 11.10\n67. **item-iota-74**: pink (color pink) - value 13.18\n68. **item-iota-75**: brown (color brown) - value 4.87\n69. **item-iota-76**: black (color black) - value 4.87\n70. **item-iota-77**: gray (color gray) - value 4.87\n71. **item-iota-78**: white (color white) - value 4.87\n72. **item-iota-79**: blue (color blue) - value 12.83\n73. **item-iota-80**: green (color green) - value 33.70\n74. **item-iota-81**: yellow (color yellow) - value 85.04\n75. **item-iota-82**: orange (color orange) - value 87.24\n76. **item-iota-83**: purple (color purple) - value 11.10\n77. **item-iota-84**: pink (color pink) - value 13.18\n78. **item-iota-85**: brown (color brown) - value 4.87\n79. **item-iota-86**: black (color black) - value 4.87\n80. **item-iota-87**: gray (color gray) - value 4.87\n81. **item-iota-88**: white (color white) - value 4.87\n82. **item-iota-89**: blue (color blue) - value 12.83\n83. **item-iota-90**: green (color green) - value 33.70\n84. **item-iota-91**: yellow (color yellow) - value 85.04\n85. **item-iota-92**: orange (color orange) - value 87.24\n86. **item-iota-93**: purple (color purple) - value 11.10\n87. **item-iota-94**: pink (color pink) - value 13.18\n88. **item-iota-95**: brown (color brown) - value 4.87\n89. **item-iota-96**: black (color black) - value 4.87\n90. **item-iota-97**: gray (color gray) - value 4.87\n91. **item-iota-98**: white (color white) - value 4.87\n92. **item-iota-99**: blue (color blue) - value 12.83\n93. **item-iota-100**: green (color green) - value 33.70\n94. **item-iota-101**: yellow (color yellow) - value 85.04\n95. **item-iota-102**: orange (color orange) - value 87.24\n96. **item-iota-103**: purple (color purple) - value 11.10\n97. **item-iota-104**: pink (color pink) - value 13.18\n98. **item-iota-105**: brown (color brown) - value 4.87\n99. **item-iota-106**: black (color black) - value 4.87\n100: gray (color gray) -\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-lambda-10"
+        ],
+        [
+          "item-mu-11",
+          "item-pi-15"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}

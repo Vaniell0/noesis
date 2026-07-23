@@ -254,7 +254,11 @@ def main() -> int:
     ap.add_argument("--width-ns", type=int, nargs="+", default=[4, 8, 16, 32, 64],
                     help="N values for the width sweep.")
     ap.add_argument("--dist-gaps", type=int, nargs="+", default=[50, 200, 500, 1000],
-                    help="Target word-gap values for the distance sweep (fixed N=16).")
+                    help="Target word-gap values for the distance sweep.")
+    ap.add_argument("--dist-n", type=int, default=16,
+                    help="Fixed N for the distance sweep. Default 16 matches "
+                         "the original design; drop to 8 if width sweep shows "
+                         "the model floors before N=16.")
     args = ap.parse_args()
 
     here = pathlib.Path(__file__).resolve().parent
@@ -269,7 +273,7 @@ def main() -> int:
         print(f"  width  N={n:>3}  {len(tasks)} tasks   mean-gap={sum(gaps)/len(gaps):.1f}w")
 
     for g in args.dist_gaps:
-        tasks = gen_distance_tasks(n=16, n_pairs=args.n_pairs, gap_words=g, seeds=seeds)
+        tasks = gen_distance_tasks(n=args.dist_n, n_pairs=args.n_pairs, gap_words=g, seeds=seeds)
         _write_tasks(tasks, out_dir / f"tasks-dist-{g}.jsonl")
         gaps = [t.mean_word_gap for t in tasks]
         print(f"  dist   g={g:>4}  {len(tasks)} tasks   mean-gap={sum(gaps)/len(gaps):.1f}w (target ~{g})")

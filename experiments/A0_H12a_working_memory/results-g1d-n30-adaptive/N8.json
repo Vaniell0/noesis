@@ -1,0 +1,1903 @@
+{
+  "tasks_file": "tasks-n30/tasks-N8.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 512,
+  "num_predict_per_n": 128,
+  "num_predict_cap": 3000,
+  "n_tasks": 30,
+  "elapsed_s": 779.0339043140411,
+  "aggregate": {
+    "n": 30,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.060588235294117644,
+    "mean_precision": 0.0405006105006105,
+    "mean_recall": 0.31666666666666665,
+    "mean_word_gap": 14.25
+  },
+  "results": [
+    {
+      "id": "h12a-w-n8-s0",
+      "n": 8,
+      "mean_word_gap": 17.5,
+      "seed": 0,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to find all pairs of items that share the same color. Each pair should be on a separate line with the item names separated by commas. Hmm, how do I approach this?\nFirst, I remember that in Python, there's a built-in function called set() which can take a list and return a new set of elements. That might help here because sets automatically handle duplicates and allow for efficient lookups. So maybe I can use set operations to find the common colors between all items.\nWait, but how do I get the unique colors? Oh right, using a set comprehension or perhaps converting the list into a set and then back to a list. Let me think. For example, if I have a list like ['item-alpha', 'item-beta'], converting it to a set would give {'alpha', 'beta'}, which is the same as the original list. Then, I can loop through each item in this set and check if their colors are different from all others.\nSo the steps would be:\n1. Convert the input list into a set of items (since sets automatically handle duplicates).\n2. Iterate over each item in this set.\n3. For each item, check if its color is different from all other items in the set. If yes, add their pair to the result list.\n4. Return the result list as a comma-separated string.\nLet me test this logic with the sample input given:\nSample Input: ['item-alpha-00', 'item-beta-01', 'item-gamma-02', 'item-delta-03', 'item-epsilon-04', 'item-zeta-05', 'item-eta-06', 'item-theta-07']\nConverting to set: {'alpha','beta','gamma','delta','epsilon','zeta','eta','theta'}\nThen, for each item in this set, check if their color is different from all others. Let's see:\nItem 0: alpha (color brown) vs others. Brown is different from all except maybe some? Wait, the sample output includes 'item-alpha-00' and 'item-beta-01'. So perhaps the colors are unique. Let me check each item's color against others.\nItem 0: brown vs others (like item 1: lavender). Different.\nItem 1: lavender vs others (like item 2: emerald, etc.) different.\nItem 2: emerald vs others (different from all except maybe some? Wait, the sample output includes 'item-alpha-00' and 'item-beta-01'. So perhaps the colors are unique. Let me check each item's color against others.\nItem 0: brown vs others (like item 1: lavender). Different.\nItem 1: lavender vs others (like item 2: emerald, etc.) different.\nItem 2: emerald vs others (different from all except maybe some? Wait, the sample output includes 'item-alpha-00' and 'item-beta-01'. So perhaps the colors are unique. Let me check each item's color against others.\nItem 0: brown vs others (like item 1: lavender). Different.\nItem 1: lavender vs others (like item 2: emerald, etc.) different.\nItem 2: emerald vs others (different from all except maybe some? Wait, the sample output includes 'item-alpha-00' and 'item-beta-01'. So perhaps the colors are unique. Let me check each item's color against others.\nItem 0: brown vs others (like item 1: lavender). Different.\nItem 1: lavender vs others (like item 2: emerald, etc.) different.\nItem 2: emerald vs others (different from all except maybe some? Wait, the sample output includes 'item-alpha-00' and 'item-beta-01'. So perhaps the colors are unique. Let me check each item's color against others.\nItem 0: brown vs others (like item 1: lavender). Different.\nItem 1: lavender vs others (like item 2: emerald, etc.) different.\nItem 2: emerald vs others (different from all except maybe some? Wait, the sample output includes 'item-alpha-00' and 'item-beta-01'. So perhaps the colors are unique. Let me check each item's color against others.\nItem 0: brown vs others (like item 1: lavender). Different.\nItem 1: lavender vs others (like item 2: emerald, etc.) different.\nItem 2: emerald vs others (different from all except maybe some? Wait, the sample output includes 'item-alpha-00' and 'item-beta-01'. So perhaps\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s1",
+      "n": 8,
+      "mean_word_gap": 10.0,
+      "seed": 1,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new color, we check if it's already in the set. If it is, then we add the pair of items to the result list. If not, we add them to the set and continue processing.\nWait, right. So here's the plan:\n1. Initialize an empty set called seen_colors to keep track of colors we've encountered so far.\n2. Iterate through each item in the input list:\n   a. For each item, check if its color is already in the seen_colors set.\n   b. If it is, add the pair (item1, item2) to the result list and break out of the loop since we've found a match.\n   c. If it's not, add the item and its color to the seen_colors set.\n3. After processing all items, return the result list.\nLet me think about how to implement this in Python. The input is a list of tuples, each with an item and its color. So for example:\nitems = [(\"item-alpha-00\", \"sapphire\"), (\"item-beta-01\", \"gold\"), (\"item-gamma-02\", \"mint\"), (\"item-delta-03\", \"gold\"), (\"item-epsilon-04\", \"slate\"), (\"item-zeta-05\", \"blue\"), (\"item-eta-06\", \"slate\"), (\"item-theta-07\", \"indigo\")]\nThe output should be [(\"item1, item2\"), (\"item3, item4\")].\nSo the steps are:\nInitialize a set called seen_colors = set()\nLoop through each item in items:\n   color = item[1]\n   if color is in seen_colors:\n       add (item[0], item[1]) to result list and break out of loop\n   else:\n       add (item[0], item[1]) to seen_colors\nReturn the result list.\nYes, that should work. Let me test this logic with the sample input.\nSample Input: [(\"item-alpha-00\", \"sapphire\"), (\"item-beta-01\", \"gold\"), (\"item-gamma-02\", \"mint\"), (\"item-delta-03\", \"gold\"), (\"item-epsilon-04\", \"slate\"), (\"item-zeta-05\", \"blue\"), (\"item-eta-06\", \"slate\"), (\"item-theta-07\", \"indigo\")]\nProcessing:\nFirst item is (alpha, sapphire). Check if 'sapphire' is in seen_colors. Yes, add (alpha, sapphire) to result. Then break.\nSecond item is (beta, gold). Check if 'gold' is in seen_colors. Yes, add (beta, gold) to result. Break.\nThird item is (gamma, mint). Check if 'mint' is in seen_colors. Yes, add (gamma, mint) to result. Break.\nFourth item is (delta, gold). Check if 'gold' is in seen_colors. Yes, add (delta, gold) to result. Break.\nFifth item is (epsilon, slate). Check if 'slate' is in seen_colors. Yes, add (epsilon, slate) to result. Break.\nSixth item is (zeta, blue). Check if 'blue' is in seen_colors. Yes, add (zeta, blue) to result. Break.\nSeventh item is (eta, slate). Check if 'slate' is in seen_colors. Yes, add (eta, slate) to result. Break.\nEighth item is (theta, indigo). Check if 'indigo' is in seen_colors. Yes, add (theta, indigo) to result. Break.\nSo the output list would be [(\"item1\", \"sapphire\"), (\"item2\", \"mint\"), (\"item3\", \"gold\"), (\"item4\", \"slate\"), (\"item5\", \"blue\"), (\"item6\", \"slate\"), (\"item7\", \"indigo\")].\nYes, that's correct. So the code should work.\nNow, how to implement this in Python. The function will take the list as input and return a list of tuples.\nSo the code would be:\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        color = item[1]\n        if color in seen:\n            result.\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s2",
+      "n": 8,
+      "mean_word_gap": 12.5,
+      "seed": 2,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list. But wait, what if there are multiple items with the same color? Like if two items have the same color but different values? Oh right, in that case, we just need to check each item against all others and collect those pairs.\nSo the steps I need to take are:\n1. Create a set of colors from the input list. Because if two items share a color, their colors will be unique once they're added to the set.\n2. Iterate through each item in the input list. For each item, check if its color is already in the set. If it is, add both the current item and its color to the result list. If not, add it to the set and add its color to the result list.\n3. Finally, output all elements of the result list on separate lines, each pair separated by a space.\nLet me think about possible edge cases. What if there are no items with a certain color? Then the result list will be empty, which is correct. Also, what if two items have the same color but different values? Like item-alpha and item-beta both have violet. Then they should be added as (item-alpha, item-beta).\nSo the plan is solid. Now, how to implement this in Python.\nThe function will take a list of items and a list of colors. Let's see:\nFirst, create a set called colors_seen. Then loop through each item in items_list:\nfor item in items_list:\n    if item['color'] in colors_seen:\n        result.append((item, item['color']))\n    else:\n        result.append((item, item['color']))\n        colors_seen.add(item['color'])\nThen, print each element of result on separate lines.\nWait, but what if the input list is empty? Then the result would be an empty list, which is correct.\nTesting with sample input:\nSample Input 1:\nitems = [\n    {'color': 'maroon'},\n    {'color': 'violet'},\n    {'color': 'turquoise'},\n    {'color': 'red'}\n]\ncolors_seen starts as {'maroon', 'violet', 'turquoise'}.\nProcessing item 0: color maroon. Not in colors_seen, add to result and set. Result is [(0,0)].\nItem 1: color violet. Check if violet is in colors_seen? No. Add (1, violet). Set becomes {maroon, violet}.\nItem 2: color turquoise. Check if turquoise is in colors_seen? Yes. Add (2, turquoise). Set becomes {maroon, violet, turquoise}.\nItem 3: color red. Not in colors_seen. Add (3, red). Set becomes {maroon, violet, turquoise, red}.\nItem 4: color cobalt. Check if cobalt is in colors_seen? No. Add (4, cobalt). Set becomes {maroon, violet, turquoise, red, cobalt}.\nItem 5: color violet. Check if violet is in colors_seen? Yes. Add (5, violet). Set becomes {maroon, violet, turquoise, red, cobalt, violet}.\nItem 6: color turquoise. Check if turquoise is in colors_seen? Yes. Add (6, turquoise). Set becomes {maroon, violet, turquoise, red, cobalt, violet, turquoise}.\nItem 7: color red. Check if red is in colors_seen? No. Add (7, red). Set becomes {maroon, violet, turquoise, red, cobalt, violet, turquoise}.\nNow the result list is [(0,0), (1, violet), (2, turquoise), (3, red), (4, cobalt), (5, violet), (6, turquoise), (7, red)].\nWhich matches the sample output. So that works.\nAnother test case: if two items have the same color but different values. Like item-alpha and item-beta both have violet. Then they should be added as (item-alpha, item-beta).\nYes, because when we process item-alpha first, it's in the set. Then when processing item-beta, since it's not in the set yet, add\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s3",
+      "n": 8,
+      "mean_word_gap": 15.0,
+      "seed": 3,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, right. So first, I should figure out how to group the items by their colors. Oh right, maybe using a dictionary where the keys are the colors and the values are lists of items that have that color.\nWait, but how do I get all the items with a particular color? Like for each color in the input list, I loop through each item and check if their color matches. Then collect all those pairs.\nSo step by step:\n1. Create a dictionary where the keys are colors and the values are lists of items that have that color.\n2. Iterate over each item in the input list.\n3. For each item, check if its color is in the dictionary's keys. If yes, add it to a list of pairs (item1, item2).\n4. After processing all items, output each pair on a new line with two items separated by a space.\nLet me think about possible edge cases. What if there are no items with a certain color? Then the output should be an empty list. Also, what if the same color appears multiple times? Like in the sample input where item-alpha-00 and item-beta-01 share color salmon. The output would include both pairs.\nSo the code structure would be:\nRead the input as a list of strings. Then create a dictionary with colors as keys and lists of items as values. Then loop through each item in the input, check if its color is in the dictionary's keys, and collect those pairs into a list.\nWait, but how to handle the input? The problem says that the input is given as a list of strings. So for example, if the input is [\"item-alpha-00\", \"item-beta-01\"], then the code would process each item in order.\nSo in Python:\nitems = [\n    \"item-alpha-00\",\n    \"item-beta-01\",\n    \"item-gamma-02\",\n    \"item-delta-03\",\n    \"item-epsilon-04\",\n    \"item-zeta-05\",\n    \"item-eta-06\",\n    \"item-theta-07\"\n]\ncolors = {color: [item for item in items if color in item] for color in colors}\nThen, collect all pairs where the color is present. So for each color in colors, loop through all items and check if their color is in the list of items. Then collect those pairs into a list.\nSo putting it all together:\ncolors = {color: [item for item in items if color in item] for color in colors}\nThen, output each pair on a new line. So using a list comprehension to create the pairs and then joining with spaces.\nWait, but how to format the output? Like, for each pair (item1, item2), print them separated by a space. So maybe:\nfor color, items in colors.items():\n    print(f\"{color} {items}\")\nYes, that should work. Let me test this logic with the sample input.\nSample input: [\"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\"]\nColors:\ncolor: salmon \u2192 items with salmon are item1 and item2. So pair (item1, item2).\ncolor: lime \u2192 item3 and item4.\ncolor: turquoise \u2192 items5 and 6.\nSo the pairs would be (item1, item2), (item3, item4), (item5, item6). Which matches the sample output. So that's correct.\nWhat about if there are no items with a certain color? Like if all items have unique colors. Then the output is empty list.\nSo this code should handle all cases correctly.\n\n```python\n# Define the colors as a dictionary where keys are colors and values are lists of items sharing that color\ncolors = {color: [item for item in items if color in item] for color in colors}\n# Output each pair on a new line with two items separated by a space\nfor color, items in colors.items():\n    print(f\"{color} {items}\")\n```",
+      "expected": [
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s4",
+      "n": 8,
+      "mean_word_gap": 15.0,
+      "seed": 4,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Create an empty set to keep track of colors we've already encountered.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set so that we don't process it again.\n   b. If not, add it to the set and append its color to the result list.\n4. After processing all items, return the result list containing all unique pairs (item1, item2) where item1's color equals item2's color.\nWait, but what about duplicates? Like if two items have the same color, they should be considered as a pair once. For example, if item1 and item2 both have color blue, then the pair (item1, item2) is added once. So even if there are multiple occurrences of the same color in the input list, we need to process each occurrence once.\nSo the algorithm should work as follows:\nInitialize an empty set called seen_colors.\nInitialize an empty list for result.\nLoop through each item in the input list:\n   color = item[1]\n   if color is in seen_colors:\n       add (item, color) to result\n       remove (item, color) from seen_colors\n   else:\n       add (item, color) to seen_colors\nAt the end, return the result list.\nYes, that makes sense. Let's test this logic with the sample input given.\nSample Input:\nitems = [\n    {'color': 'beige', 'alpha': 0},\n    {'color': 'beige', 'alpha': 1},\n    {'color': 'beige', 'alpha': 2},\n    {'color': 'beige', 'alpha': 3},\n    {'color': 'beige', 'alpha': 4},\n    {'color': 'beige', 'alpha': 5},\n    {'color': 'beige', 'alpha': 6},\n    {'color': 'beige', 'alpha': 7}\n]\nProcessing:\n- item 0: color beige. Not in seen_colors (initially empty). Add to result, remove from set. Result is [(0,0)].\n- item 1: color beige. Already in seen_colors. So add to result and remove from set. Result is [(0,1)].\n- item 2: color beige. Not in seen_colors. Add to result and remove from set. Result is [(0,2)].\n- item 3: color beige. Not in seen_colors. Add to result and remove from set. Result is [(0,3)].\n- item 4: color beige. Not in seen_colors. Add to result and remove from set. Result is [(0,4)].\n- item 5: color beige. Already in seen_colors (from item 0). So add to result and remove from set. Result is [(0,5)].\n- item 6: color beige. Not in seen_colors. Add to result and remove from set. Result is [(0,6)].\n- item 7: color beige. Not in seen_colors. Add to result and remove from set. Result is [(0,7)].\nSo the output would be [(0,0), (0,1), (0,2), (0,3), (0,4), (0,5), (0,6), (0,7)], which matches the sample output.\nAnother test case: if two items have the same color but different alphas. Like item 1 has color blue and item 2 has color blue. Then they should be added once. So the result would be [(1,2)].\nWhat about if an item has a different alpha than another? Like item 3 has alpha 5 and item 4 has alpha 6. Then they are considered as different items, so their colors are added once each.\nSo the code seems to handle that correctly.\nNow, how to implement this in Python.\nThe function will take the list of items and return a list of tuples. So the code would be:\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        color = item['color']\n        if color in seen:\n            result.append((item\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s5",
+      "n": 8,
+      "mean_word_gap": 7.5,
+      "seed": 5,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, right. So first, I need to figure out how to group the items by their colors and then check each pair in those groups.\nLet me think about the steps here. The input is a list of items with their colors. For example, item-alpha-00 has gainsboro, item-beta-01 has sienna, etc. So I need to process this list and create a dictionary where the keys are the colors and the values are lists of items that share that color. Then, for each color in this dictionary, I can loop through all items in the list and check if they have the same color. If they do, add them to a pair.\nWait, but how do I handle duplicates? Like if two items have the same color, should they be considered as part of the same pair even if there are multiple entries for that color? The problem statement says \"every pair of items that share a colour\". So maybe each item is considered once per color. For example, if item-alpha-00 and item-beta-01 both have gainsboro, then they are considered as a pair. But what if there's another entry with the same color for the same item? Like if there's an entry for goldenrod with gainsboro and another entry for goldenrod with beige. Then those two items would be considered as part of the same pair even though they have different colors.\nSo the approach is: create a dictionary where each key is a color, and the value is a list of items that share that color. Then, for each color in this dictionary, iterate through all items in the list and check if their colors match. If they do, add them to the pair.\nBut wait, what about items with different colors but same values? Like item-alpha-00 has gainsboro (color) and item-beta-01 has sienna (color). So those two would be considered as a pair even though they have different colors. The problem statement says \"every pair of items that share a colour\". So if two items have the same color, they are considered as part of the same pair. So even if there are multiple entries for the same color, each entry is considered once per item.\nSo the steps are:\n1. Create a dictionary where each key is a color, and the value is a list of items that share that color.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is in the dictionary. If yes, add it to the pair list.\n4. Output all pairs in order, separated by commas and spaces.\nNow, how to implement this in Python?\nFirst, create a dictionary with keys as colors and values as lists of items that share that color. Then loop through each item in the input list, check if its color is in the dictionary. If yes, add it to the pair list.\nSo for example:\nitems = [\n    {'alpha-00': gainsboro, 'beta-01': sienna},\n    {'gamma-02': goldenrod, 'delta-03': beige},\n    {'epsilon-04': buff, 'zeta-05': beige},\n    {'eta-06': wheat, 'theta-07': wheat}\n]\nThen the dictionary would be {'gainsboro': [items[0], items[1]], ...}. Then loop through each item in items and check if color is in the dict. For each item, add to pair list.\nSo code steps:\n- Create a dictionary with keys as colors and values as lists of items.\n- Iterate over each item in items:\n   - Check if color is in the dictionary.\n   - If yes, add to pair list.\n- Then print all pairs separated by commas and spaces.\nWait, but how to handle the order? For example, if two items have the same color, like item1 and item2 both have gainsboro. Then they are considered as a pair even if there are multiple entries for gainsboro. So the code should collect all such pairs in the order they appear in the input list.\nSo the code would be:\nitems = [\n    {'alpha-00': gainsboro, 'beta-01': sienna},\n    {'gamma-02': goldenrod, 'delta-03': beige},\n    {'epsilon-04': buff, 'zeta-05': beige},\n    {'eta-06': wheat, 'theta-07': wheat}\n]\nThen create the dictionary:\ncolors = {}\nfor item in items:\n    if item['color'] in colors:\n        colors[item['color']].append(item)\nThen loop through each color in\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ]
+      ],
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s6",
+      "n": 8,
+      "mean_word_gap": 22.5,
+      "seed": 6,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new color, we check if it's already in the set. If it is, then we add the pair of items to the result list. If not, we add them to the set and continue processing.\nWait, right. So here's the plan:\n1. Initialize an empty set called seen_colors to keep track of colors we've encountered so far.\n2. Iterate through each item in the input list:\n   a. For each item, check if its color is already in the seen_colors set.\n   b. If it is, add the pair (item1, item2) to the result list and break out of the loop since we've found a match.\n   c. If it's not, add the item and its color to the seen_colors set.\n3. After processing all items, return the result list.\nLet me think about how to implement this in Python. The input is a list of tuples, each with an item and its color. So for example:\nitems = [(\"item-alpha-00\", \"black\"), (\"item-beta-01\", \"auburn\"), (\"item-gamma-02\", \"cerulean\"), (\"item-delta-03\", \"jade\"), (\"item-epsilon-04\", \"black\"), (\"item-zeta-05\", \"ivory\"), (\"item-eta-06\", \"auburn\"), (\"item-theta-07\", \"vermilion\")]\nThe output should be [(\"item1, item2\"], ...).\nSo the steps are:\nInitialize a set called seen_colors = set()\nLoop through each item in items:\n   color = item[1]\n   if color is in seen_colors:\n       add (item[0], item[1]) to result list and break out of loop\n   else:\n       add (item[0], item[1]) to seen_colors\nReturn the result list.\nYes, that should work. Let's test this logic with the example given. The input has items with colors like black, auburn, cerulean, jade, ivory, vermilion. The first color is black (seen), so we add (item0, item1). Then next color is auburn (added), etc. When we get to item2 (vermilion), it's not in seen_colors, so add it. So the output would be [(\"item0\", \"item1\"), (\"item2\", \"item3\")].\nYes, that seems correct. So the code should handle all cases correctly.\nNow, how to implement this in Python. Let's write a function that takes the items list and returns the result list as described.\nThe function would be something like:\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        color = item[1]\n        if color in seen:\n            result.append((item[0], item[1]))\n            seen.remove(color)  # Remove the first occurrence of this color to avoid duplicates\n        else:\n            seen.add(color)\n    return result\nWait, but what if the input list is empty? Then items is empty, and the loop doesn't run, so result is empty. That's correct.\nTesting with the example input:\nitems = [(\"item-alpha-00\", \"black\"), (\"item-beta-01\", \"auburn\"), (\"item-gamma-02\", \"cerulean\"), (\"item-delta-03\", \"jade\"), (\"item-epsilon-04\", \"black\"), (\"item-zeta-05\", \"ivory\"), (\"item-eta-06\", \"auburn\"), (\"item-theta-07\", \"vermilion\")]\nThe code would process each item:\nFirst item is black. seen is empty, so add to seen. result becomes [(\"item0\", \"item1\")].\nSecond item is auburn. color is already in seen (seen has auburn). So add (item0, item1) to result and remove the first occurrence of auburn from seen. Now seen has auburn.\nThird item is cerulean. color is not in seen, so add to seen. result becomes [(\"item0\", \"item1\"), (\"item2\", \"item3\")].\nFourth item is jade. color is not in seen, add to seen. result becomes [(\"item0\", \"item1\"), (\"item2\", \"item3\"), (\"item4\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s7",
+      "n": 8,
+      "mean_word_gap": 10.0,
+      "seed": 7,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Initialize an empty set to keep track of colors we've already encountered.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set to avoid duplicates.\n   b. If not, add it to the set and append it to the result list.\n4. After processing all items, return the result list containing all unique pairs (item1, item2) where item1's color equals item2's color.\nWait, but what about duplicate colors? Like if two items have the same color, they should be considered as a pair once. For example, if item1 and item2 both have color teal, then the output should be (item1, item2) once. So using a set to track colors is correct here.\nLet me think about the sample input given. The sample input has items with colors teal, beige, maroon, khaki, pink, emerald. The output is [(item1, item2), (item3, item4)]. Let's see:\n- Item1 and Item2: teal and beige \u2192 yes.\n- Item3 and Item4: maroon and khaki \u2192 yes.\nSo the output should be those two pairs. So the code needs to collect all such pairs.\nSo in Python, I can use a set to track colors as I iterate through each item. For each item, check if its color is in the set. If yes, add it to the result list and remove it from the set. Otherwise, add it to the set and append to the result list.\nYes, that makes sense. So code steps:\nInitialize an empty set called colors_seen.\nInitialize an empty list called result.\nLoop through each item in items:\n   color = item[1]\n   if color is in colors_seen:\n       add (item, item) to result\n       remove (item, color) from colors_seen\n   else:\n       add (item, item) to result and add (item, color) to colors_seen\nAt the end, return the result list.\nWait, but what if there are multiple items with the same color? Like if two items have the same color. For example, item1 has teal and item2 has beige. Then both should be added to result and removed from colors_seen. So that's correct.\nYes, this approach should work.\nSo putting it all together:\ndef list_pairs(items):\n    colors = set()\n    result = []\n    for item in items:\n        color = item[1]\n        if color in colors:\n            result.append((item, item))\n            colors.remove(color)\n        else:\n            colors.add(color)\n    return result\nWait, but what if the input list is empty? Then the loop doesn't run, and returns an empty list. That's correct.\nTesting this code with the sample input:\nSample Input: [(item1, item2), (item3, item4)]\nProcessing each item:\nitem1: color teal \u2192 add to result and remove from colors.\nitem2: color beige \u2192 add to result and remove from colors.\nitem3: color maroon \u2192 add to result and remove from colors.\nitem4: color khaki \u2192 add to result and remove from colors.\nSo the output is [(item1, item2), (item3, item4)], which matches the sample. So that's correct.\nAnother test case: if two items have the same color but different indices? Like item1 has teal and item2 has beige. Then both should be added to result and removed from colors. So output is [(item1, item2)].\nYes, that's handled correctly.\nSo this code should work. Now, let's write it in Python.\n\n```python\ndef list_pairs(items):\n    colors = set()\n    result = []\n    for item in items:\n        color = item[1]\n        if color in colors:\n            result.append((item, item))\n            colors.remove(color)\n        else:\n            colors.add(color)\n    return result\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s8",
+      "n": 8,
+      "mean_word_gap": 25.0,
+      "seed": 8,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, right. So first, I need to figure out how to group the items by their colors and then find all pairs within each group.\nLet me think about the steps involved here. The input is a list of tuples where each tuple has an item's color and its unique identifier (like item-alpha-00). The output should be a list of pairs, each pair being (item1, item2) where both items have the same color.\nSo the first thing I need to do is group the items by their colors. How can I do that? Maybe using a dictionary where the keys are the colors and the values are lists of tuples representing all items in that color. That way, when I iterate through each item's color, I can check if it's already in the dictionary. If it's not there, add it with an empty list.\nOnce I have all the groups, for each group, I need to collect all the items that share the same color. Then, for each of these items, create a pair (item1, item2) and add them to the result list.\nWait, but how do I handle the grouping? Let's see. For example, if there are two items with color 'red', they should be grouped together. So first, I can loop through each color in the items dictionary. For each color, check if it's already present in the group. If not, add it to the group and append (item1, item2) to the result list.\nSo the steps are:\n1. Create a dictionary where keys are colors and values are lists of tuples (item1, item2).\n2. Iterate over each color in the dictionary's items.\n3. For each color, check if it's already in the group. If not, add it to the group and append (item1, item2) to the result list.\n4. After processing all colors, return the result list.\nLet me think about possible edge cases. What if there are no items with a certain color? Then the result list would be empty. Also, what if two items have the same color but different identifiers? The problem statement says that each item has a unique identifier, so we don't need to worry about duplicates in the input.\nSo for example, if an item has color 'red' and another with color 'red', they should both be in the result list.\nNow, how to implement this in Python. Let's outline the code structure.\nFirst, create a dictionary:\ncolor_groups = {}\nfor item in items:\n    color = item[0]\n    if color not in color_groups:\n        color_groups[color] = []\n    color_groups[color].append( (item[1], item[2]) )\nThen, loop through each color in color_groups. For each color, check if it's already present. If not, add it to the result list and append (item1, item2) to the list.\nSo for example:\nresult = []\nfor color in color_groups:\n    if color not in result:\n        result.append( (color, [item[0] for item in items if item[1] == color]) )\nreturn result\nYes, that should work. Let's test this logic with the sample input.\nSample input:\nitems = [\n    ('item-alpha-00', 'turquoise'),\n    ('item-beta-01', 'crimson'),\n    ('item-gamma-02', 'silver'),\n    ('item-delta-03', 'sapphire'),\n    ('item-epsilon-04', 'mint'),\n    ('item-zeta-05', 'wine'),\n    ('item-eta-06', 'sapphire'),\n    ('item-theta-07', 'turquoise')\n]\nProcessing each color:\ncolor_groups starts as empty.\nFirst color is 'turquoise'. Add to result. Then, check if it's already in the group. It's not, so add (item1, item2) = ('item-alpha-00', 'turquoise').\nSecond color is 'crimson'. Not present. Add (item1, item2) = ('item-beta-01', 'crimson').\nThird color is 'silver'. Not present. Add (item1, item2) = ('item-gamma-02', 'silver').\nFourth color is 'sapphire'. Not present. Add (item1, item2) = ('item-delta-03', 'sapphire').\nFifth color is 'mint'. Not present. Add (item1, item2) =\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s9",
+      "n": 8,
+      "mean_word_gap": 5.0,
+      "seed": 9,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. So for each color in the input, I should look through all the items and collect those that share that color. Then output each pair on a separate line, like \"item-X, item-Y\".\nFirst, I need to process the input. The input is a list of strings representing colors. Each item has a unique color. So for example, if the input is [\"vermilion\", \"green\", \"red\"], then the output should be [\"item-beta-01\", \"item-gamma-02\"].\nThe steps I need to take are:\n1. Iterate through each item in the input list.\n2. For each item, check if its color is present in a set of colors that we already have. Wait, but how do I track which colors have been seen? Because if two items share the same color, they should both be in the set of colors that are already present. So maybe I can create a set of all unique colors from the input. Then, for each item, check if its color is in this set. If yes, add it to a list of pairs.\nWait, but how do I track which colors have been seen? Because if two items share the same color, then their colors are the same. So perhaps I can create a set called 'seen_colors' that contains all unique colors from the input. Then, for each item in the input list, check if its color is in 'seen_colors'. If yes, add it to a list of pairs.\nSo the plan is:\n- Create a set called seen_colors containing all unique colors from the input.\n- Initialize an empty list to collect the pairs.\n- Iterate over each item in the input list:\n   - Check if color is in seen_colors. If yes, add it to the list of pairs.\n- Output each pair on a separate line, with items separated by commas and spaces.\nWait, but how do I check if an item's color is in the set? Because the input could have duplicates. For example, if two items have the same color, they would both be in seen_colors. So when checking for membership in seen_colors, we can use a set to make it O(1) lookups.\nSo here's the plan:\nInitialize a set called seen_colors = {'vermilion', 'green', 'red'}\nThen, for each item in the input list:\n   if color is in seen_colors:\n       add (item, color) to the list of pairs.\nSo that's straightforward. Now, how to implement this in Python.\nThe input is a list of strings. So first, split the input into individual items. Then process each item as per the steps above.\nSo code steps:\nRead the input line, split into items and colors. For example:\nitems = input().split(', ')\ncolors = [item for item in items if item]  # but wait, what if there are multiple commas? Like \"vermilion, green\" would split into [\"vermilion\", \"green\"]\nThen, create a set of unique colors. So:\nseen_colors = set()\nfor color in colors:\n    seen_colors.add(color)\nThen, for each item in items:\n   if color in seen_colors:\n       add (item, color) to the list.\nSo that's the code. Then, output each pair on a separate line, with items separated by commas and spaces.\nTesting this logic with the sample input:\nSample input: [\"vermilion\", \"green\", \"red\"]\nProcessing:\nseen_colors = {'vermilion', 'green', 'red'}\nFor item 0 (vermilion): color is in seen_colors \u2192 add (item0, vermilion)\nItem 1 (green): color is in seen_colors \u2192 add (item1, green)\nItem 2 (red): color is not in seen_colors \u2192 skip.\nSo the output would be:\nvermilion, green\nitem-beta-01, item-gamma-02\nThat's correct. So the code should work.\nNow, code:\nRead the input line, split into items and colors. Then process each color in seen_colors.\nSo the code would be:\nseen_colors = set()\nfor item in items:\n    if item in seen_colors:\n        seen_colors.add(item)\nThen, for each item in items, check if its color is in seen_colors. If yes, add to the list of pairs.\nSo the code would be:\nitems = input().split(', ')\nseen_\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s10",
+      "n": 8,
+      "mean_word_gap": 20.0,
+      "seed": 10,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. Because if two items have the same color, they will be in the same set. So maybe I can iterate through each item and check if its color is already in the set. If it is, add both to the result list; otherwise, add them as a pair.\nWait, but what about duplicates? Like if an item has two colors that are the same. For example, item-alpha-00 and item-beta-01 both have beige. Then they should be added as a pair once. So the set will automatically handle that because when you add them to the set, they are considered distinct even if their colors are the same.\nSo the steps would be:\n1. Initialize an empty set to keep track of colors we've seen.\n2. Iterate over each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add both items to the result list and break out of the loop since they are duplicates.\n   b. If no, add them to the set and continue.\n4. After processing all items, return the result list as a list of tuples (item1, item2).\nLet me think about possible edge cases. What if there are multiple pairs with the same color? Like item-alpha-00 and item-beta-01 both have beige. Then they should be added once. Also, what if an item has no colors? Then it's just a single pair.\nTesting this logic with the sample input:\nSample Input:\n[\"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\"]\nProcessing each item:\nItem 0: beige. Not in set. Add (0,1). Set is {0,1}.\nItem 1: plum. Not in set. Add (1,2). Set {0,1,2}.\nItem 2: eggshell. Not in set. Add (2,3). Set {0,1,2,3}.\nItem 3: silver. Not in set. Add (3,4). Set {0,1,2,3,4}.\nItem 4: plum. Same as item-2's color? Wait no. Item 2 is eggshell (color egg), item 3 is silver (color silver). So they are different colors. So add (3,4) once. Set now has 0,1,2,3,4.\nItem 5: beige. Not in set. Add (5,6). Set {0,1,2,3,4,5}.\nItem 6: orange. Not in set. Add (6,7). Set {0,1,2,3,4,5}.\nItem 7: wine. Not in set. Add (7,8). Set {0,1,...,6}.\nSo the output would be [(0,1), (2,3), (6,7)]. Which matches the sample input's expected output. So that works.\nAnother test case: if an item has no colors. Like item-alpha-00 has no color. Then it's added once as a pair.\nWhat about if two items have the same color but different values? Like item-alpha-00 and item-beta-01 both have beige, but their values are different. Then they are added once as (0,1).\nSo the code should handle all these cases.\nNow, coding this in Python. The function will take a list of items and return the list of pairs.\nThe function signature is: def solution(items):\nSo inside the function, initialize an empty set called seen_colors. Then loop through each item in items:\nfor item in items:\n    if item['color'] in seen_colors:\n        # add both to result\n        result.append((item['item-alpha'], item['item-beta']))\n        result.append((item['item-gamma'], item['item-delta']))\n        result.append((item['item-epsilon'], item['item-zeta']))\n        result.append((item['item-eta'], item['item-theta']))\n        result.append((item['item-zeta'], item['item-eta']))\n        result.append((item['item-theta'], item['item-zeta']))\n    else:\n        seen_colors.\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s11",
+      "n": 8,
+      "mean_word_gap": 5.0,
+      "seed": 11,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, right. So first, I need to figure out how to group the items by their colors. Oh right, maybe using a dictionary where the keys are the colors and the values are lists of items that have that color.\nWait, but how do I check if two items share a color? Like, for each item in the list, check if its color is present in another item's color list. If it is, then they share a color. So for each item in the input list, I need to look up all other items' colors and see if any of them have that same color.\nSo the steps would be:\n1. Create a dictionary where the keys are colors and the values are lists of items with that color.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is in the dictionary's keys. If yes, add it to a list of pairs (item, other_item).\n4. After processing all items, collect all these pairs into a list and print them separated by commas.\nWait, but how do I handle the input? The input is given as a list of strings. So for example, if the input is [\"item-alpha-00\", \"item-beta-01\"], then the dictionary would have keys like \"alpha\" and \"beta\". Then, for each item in the list, check if its color is in that key's values.\nSo in Python, I can create a dictionary where each key is a color, and the value is a list of items with that color. Then iterate through each item in the input list, check if its color is in the dictionary's keys. If yes, add it to the pair list.\nLet me think about possible edge cases. What if there are multiple items with the same color? Like two items with \"gold\" and \"gold\". Then they would both be added to the pair list. That's correct because they share a color.\nWhat about if an item has no colors? Then it's not in the dictionary, so it's not added to the pair list.\nSo the code structure would be:\n- Create a dictionary with keys as colors and values as lists of items with that color.\n- Iterate over each item in the input list.\n- For each item, check if its color is in the dictionary's keys. If yes, add it to the pair list.\n- After processing all items, print each pair on a new line.\nLet me test this logic with the sample input given:\nSample Input: [\"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\"]\nProcessing each item:\nItem 0: alpha \u2192 not in the dictionary. Add to pair.\nItem 1: beta \u2192 add.\nItem 2: gamma \u2192 no.\nItem 3: delta \u2192 no.\nItem 4: epsilon \u2192 no.\nItem 5: zeta \u2192 no.\nItem 6: eta \u2192 no.\nItem 7: theta \u2192 no.\nSo the pairs are (0,1), (2,3), (4,5). So output is those three lines. Which matches the sample output. So that works.\nAnother test case: if an item has a color that's not in any other item's list, like \"gold\" and \"gold\". Then it's added to the pair. If there are two items with \"gold\", then they both get added to the pair.\nSo the code should handle all these cases.\nNow, how to implement this in Python.\nThe function will take a list of strings as input. So:\ndef find_pairs(items):\n    color_dict = {}\n    for item in items:\n        color = item[0]\n        if color in color_dict:\n            color_dict[color].append(item)\n        else:\n            color_dict[color] = [item]\n    pairs = []\n    for color, items in color_dict.items():\n        for item in items:\n            if item in color_dict[color]:\n                pairs.append((item, color_dict[color][0]))\n    return pairs\nWait, but what if the input list is empty? Then the code would have an empty dictionary and no pairs. That's correct.\nTesting this code with the sample input:\nSample Input: [\"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\", \"item\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s12",
+      "n": 8,
+      "mean_word_gap": 10.0,
+      "seed": 12,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track colors and then iterate through the items. But wait, what if there are duplicates? Like if two items have the same color but different alphas or betas. Oh right, the problem statement says \"unique colors\", so maybe we don't need to handle duplicates. So I can just collect all unique colors and their pairs.\nSo the steps would be:\n1. Create a set of colors from the list of items.\n2. Iterate through each item in the list.\n3. For each item, check if its color is already in the set. If yes, add it to a result list; else, add it to the result list and mark it as unique (since we don't need duplicates).\n4. Finally, print all elements of the result list on separate lines.\nWait, but what about items that have multiple colors? Like if an item has two different colors. The problem says \"unique colors\", so each item's color is considered once. So even if an item has two different colors, they are considered as a pair only once.\nSo the code structure would be:\n- Create a set called unique_colors.\n- Iterate over each item in the items list.\n- For each item, check if its color is in unique_colors. If yes, add to result list and mark as unique. Else, add to result list and mark as unique.\n- Then print all elements of result list on separate lines.\nYes, that makes sense. Let's think about the example given:\nSample Input:\nlist of items with colors:\nitem-alpha-00 has color slate. So alpha is 's' (since it's lowercase). So alpha is 's'.\nitem-beta-01 has khaki. Khaki is 'k', so khaki is 'k'.\nitem-gamma-02 has sapphire. Sapphire is 'p', so p.\nitem-delta-03 has cinnabar. Cinnabar is 'c', so c.\nitem-epsilon-04 has honey. Honey is 'e', so e.\nitem-zeta-05 has forest. Forest is 'f', so f.\nitem-eta-06 has honey. Honey is 'e', so e again? Wait, no, the sample output shows item-eta-06 as honey, which is two items with color 'e'. So in the code, when we check if the color is in unique_colors, for each item's color, we check if it's already present.\nSo for item-alpha-00: alpha is 's', so s is not in unique_colors. Then item-beta-01: khaki is 'k' which is in unique_colors. So add to result list and mark as unique.\nitem-gamma-02: sapphire is 'p', which is not in unique_colors. So add to result, mark as unique.\nitem-delta-03: cinnabar is 'c', which is in unique_colors. Add to result, mark as unique.\nitem-epsilon-04: honey is 'e', which is in unique_colors. Add to result, mark as unique.\nitem-zeta-05: forest is 'f', not in unique_colors. So add to result and mark as unique.\nitem-eta-06: honey again, so same color as item-epsilon-04? Wait, no. The sample output shows item-eta-06 has honey, which is the same color as item-epsilon-04. But according to the problem statement, each pair is considered once. So even if two items have the same color, they are considered a pair only once.\nWait, but in the sample input, item-eta-06 has honey and item-epsilon-04 has honey. So their colors are the same. So when we check if honey is in unique_colors, it's 'e', which is present. So both items would be added to result and marked as unique. But according to the problem statement, each pair is considered once. So even if two items have the same color, they are considered a pair only once.\nSo the code should handle that correctly.\nSo the code steps:\n1. Create a set called unique_colors.\n2. Iterate over each item in items:\n   a. Check if item's color is in unique_colors.\n   b. If yes, add to result list and mark as unique (since we don't need duplicates).\n   c. Else, add to result and mark as\n",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "tp": 1,
+      "fp": 1,
+      "fn": 1,
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s13",
+      "n": 8,
+      "mean_word_gap": 5.0,
+      "seed": 13,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, right. So first, I need to figure out how to group the items by their colors and then check each pair in those groups.\nLet me think about the steps here. The input is a list of items, each with a color. The output should be a list of pairs where each pair consists of two items that share the same color. So for example, if there are three items with color honey, and two others with khaki and azure, then the output would be [(item-alpha-00, item-beta-01), (item-gamma-02, item-delta-03)].\nSo the plan is: first, group all items by their colors. Then for each group of items with the same color, collect all pairs that share that color.\nHow to do this in Python? Well, I can use a dictionary where the keys are the colors and the values are lists of items with that color. Then iterate through each key-value pair in the dictionary, check if both items have the same color, and add them to the result list.\nWait, but what about duplicates? Like if two items have the same color but different indices. For example, item-alpha-00 and item-beta-01 are both in color honey. So when we process them, they would be added to the same group. But since we're using a dictionary, each key is unique, so even if two items have the same color, their indices will be different. So that's okay.\nSo the steps in code:\n1. Create an empty dictionary to hold the colors and their items.\n2. Iterate over each item in the input list:\n   a. If the item's color is already a key in the dictionary, add it to the corresponding list of items with that color.\n   b. Else, add it to the dictionary with color as an empty list.\n3. Then, for each key in the dictionary (which represents a group of items sharing a color), check if all elements in that group have the same color. If yes, add them to the result list.\n4. Return the result list.\nLet me test this logic with the sample input given:\nSample Input:\n[\"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\"]\nProcessing each item:\nItem 0: color olive. Not in any group. Add to group with color olive.\nItem 1: color honey. Group now has [0,1]. Check if honey and khaki are the same? No. So add (0,1) to result.\nItem 2: color honey. Group now has [0,1]. Check if honey and cerulean are the same? No. Add (0,2) to result.\nItem 3: color khaki. Not in any group. Add (3,4).\nItem 4: color azure. Not in any group. Add (4,5).\nItem 5: color azure. Not in any group. Add (5,6).\nItem 6: color coral. Not in any group. Add (6,7).\nItem 7: color coral. Not in any group. Add (7,8).\nSo the result list would be [(0,1), (3,4), (5,6), (7,8)]. Which matches the sample output. So that works.\nNow, how to implement this in Python.\nFirst, create a dictionary. Let's see:\ncolors = {}\nfor item in items:\n    if item['color'] not in colors:\n        colors[item['color']] = []\n    colors[item['color']].append(item)\nThen, for each key in colors, check if all elements are the same color. If yes, add to result list.\nSo code:\nresult = []\nfor color in colors:\n    group = [item for item in items if color == item['color']]\n    if len(group) == 1:\n        result.append(group[0])\n    else:\n        result.extend(group)\nreturn result\nYes, that should work. Let's test this logic with the sample input.\nSample Input:\n[\"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\"]\nProcessing:\ncolors becomes {0: [0,1], 1:\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s14",
+      "n": 8,
+      "mean_word_gap": 17.5,
+      "seed": 14,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I should think about how to group the items by their colors. So maybe create a dictionary where each key is a color, and the value is a list of items that have that color. Then, for each color in the dictionary, I can loop through all items in that color's list and collect those pairs.\nWait, right. So for example, if the input is [item-alpha-00, item-beta-01], then the output would be [(item-alpha-00, item-beta-01)]. Because both have color sapphire.\nSo the steps are:\n1. Create a dictionary where each key is a color, and the value is a list of items that share that color.\n2. Iterate over each item in the input list.\n3. For each item, check if its color is in the dictionary. If yes, add it to the corresponding list in the dictionary.\n4. Collect all these pairs into a list and return it.\nLet me think about how to implement this in Python. The input is a list of items, each with a color and an item-id. So for example, if the input is [item-alpha-00, item-beta-01], then the dictionary would have color sapphire with [item-alpha-00] and color turquoise with [item-beta-01].\nSo in Python, I can create a dictionary like {color: [item_id for item in items if item.color == color]}. Then loop through each item in the input list, check if its color is in the dictionary, and collect the pairs.\nWait, but what if an item has multiple colors? Like, maybe an item has two different colors. But according to the problem statement, each item's color is unique. So no duplicates here. So for each item's color in the input list, we can add it to the dictionary with that color as the key.\nSo putting it all together:\ncolors = {color: [item for item in items if item.color == color]}\nThen, for each color in colors, loop through all items in items where color is that color, and collect (item_id, item_name) pairs. Then return the list of these pairs.\nSo the code would look something like:\ncolors = {color: [item for item in items if item.color == color]}\nfor color, items in colors.items():\n    result = []\n    for item in items:\n        if color in result:\n            result[color].append(item)\n        else:\n            result.append([item])\n    print(result)\nYes, that should work. Let me test this logic with the sample input.\nSample Input:\n[item-alpha-00, item-beta-01]\n[item-gamma-02, item-delta-03]\n[item-epsilon-04, item-zeta-05]\n[item-eta-06, item-theta-07]\nSo the colors are sapphire (color 0), turquoise (1), periwinkle (2), emerald (3). The items with color 0 are item 0 and item 1. Their pairs are (0,1) and (1,2). Then color 1 has items 2 and 3. So their pairs are (1,2) and (2,3). Etc.\nSo the output would be:\n[(0,1), (1,2), (2,3)]\nWhich matches the sample output. So this code should work.\nI think that's all. The code is straightforward. Just create a dictionary with colors as keys and lists of items as values, then loop through each item in the input list and collect those pairs where color equals the key.\n\n```python\ncolors = {color: [item for item in items if color == item[0]]}\nfor color, items in colors.items():\n    result = []\n    for item in items:\n        if color in result:\n            result[color].append(item)\n        else:\n            result.append([item])\n    print(result)\n```",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "tp": 0,
+      "fp": 4,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s15",
+      "n": 8,
+      "mean_word_gap": 17.5,
+      "seed": 15,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Create an empty set to keep track of colors we've already seen.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is in the set. If yes, add it to the result list and remove it from the set so that we don't process it again for future items.\n4. After processing all items, return the result list containing all unique pairs (item1, item2) where item1's color equals item2's color.\nWait, but what if there are multiple pairs with the same color? Like if two different items share a color. The problem statement says \"every pair of items that share a colour\", so each pair is considered once. So even if two items have the same color, they should be added once per occurrence.\nSo the algorithm would be:\nInitialize an empty set called seen_colors.\nLoop through each item in the input list:\n   if item's color is in seen_colors:\n       add it to result list and remove it from seen_colors\n   else:\n       add it to result list and add to seen_colors.\nAt the end, return the result list.\nYes, that makes sense. Let's test this logic with the sample input given.\nSample Input:\nitems = [\n    {'color': 'tangerine', 'item-alpha-00'},\n    {'color': 'black', 'item-beta-01'},\n    {'color': 'silver', 'item-gamma-02'},\n    {'color': 'blue', 'item-delta-03'},\n    {'color': 'red', 'item-epsilon-04'},\n    {'color': 'green', 'item-zeta-05'},\n    {'color': 'black', 'item-eta-06'},\n    {'color': 'silver', 'item-theta-07'}\n]\nProcessing each item:\nFirst item is alpha. color is tangerine. Not in seen_colors. Add to result, remove from set. Now seen_colors has {blue, red}.\nSecond item is beta. color black. Check if in seen_colors? No. Add to result, remove from set. Now seen_colors has {blue, red}.\nThird item is gamma-02. color silver. Not in seen_colors. Add to result, remove from set. Now seen_colors has {blue, red}.\nFourth item is delta-03. color silver. Not in seen_colors. Add to result, remove from set. Now seen_colors has {blue, red}.\nFifth item is epsilon-04. color green. Not in seen_colors. Add to result, remove from set. Now seen_colors has {blue, red}.\nSixth item is theta-07. color lime. Not in seen_colors. Add to result, remove from set. Now seen_colors has {blue, red}.\nSo the output list would be [('item-alpha-00', 'item-beta-01'), ('item-gamma-02', 'item-delta-03'), ('item-epsilon-04', 'item-theta-07')], which matches the sample. So this approach works.\nNow, how to implement this in Python.\nThe function will take the list of items and return a list of tuples.\nSo code steps:\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item['color'] in seen:\n            result.append(item)\n            seen.remove(item['color'])\n        else:\n            seen.add(item['color'])\n    return result\nWait, but what if the list is empty? Then the loop doesn't run, and returns an empty list. Which is correct.\nTesting this code with the sample input should give the expected output. Let's see:\nSample input items:\nitems = [\n    {'color': 'tangerine', 'item-alpha-00'},\n    {'color': 'black', 'item-beta-01'},\n    {'color': 'silver', 'item-gamma-02'},\n    {'color': 'blue', 'item-delta-03'},\n    {'color': 'red', 'item-epsilon-04'},\n    {'color': 'green', 'item-zeta-05'},\n    {'color': 'black', '\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ]
+      ],
+      "tp": 1,
+      "fp": 14,
+      "fn": 1,
+      "precision": 0.06666666666666667,
+      "recall": 0.5,
+      "f1": 0.11764705882352941,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s16",
+      "n": 8,
+      "mean_word_gap": 10.0,
+      "seed": 16,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, right. So first, I need to figure out how to group the items by their colors. Oh right, maybe using a dictionary where the keys are the colors and the values are lists of items that have that color.\nWait, but how do I check if two items share a color? Like, for each item in the list, check if its color is present in another item's color list. If it is, then they share a color. So for each item in the input list, I need to look up all other items' colors and see if any of them have that same color.\nSo the steps would be:\n1. Create a dictionary where the keys are colors and the values are lists of items with that color.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is in the dictionary's keys. If yes, add it to a list of pairs (item_alpha, item_beta) where item_alpha and item_beta are different items with the same color.\n4. Collect all these pairs into a list and print them separated by commas.\nWait, but how do I check if two items have the same color? For example, if an item is 'item-alpha-00' and another is 'item-beta-01', then they share the same color. So for each item in the input list, I need to check all other items and see if their colors are present in the dictionary's keys.\nSo the code structure would be:\nCreate a dictionary with colors as keys and lists of items as values. Then loop through each item in the input list. For each item, check if its color is in the dictionary's keys. If yes, add it to a list of pairs (item_alpha, item_beta) where item_alpha != item_beta. Then print all these pairs separated by commas.\nYes, that makes sense. So the code would look something like:\ncolors = {\n    'item-alpha-00': ['item-beta-01'],\n    'item-beta-01': ['item-gamma-02'],\n    'item-gamma-02': ['item-delta-03'],\n    'delta-03': ['item-epsilon-04'],\n    'item-epsilon-04': ['item-zeta-05'],\n    'item-zeta-05': ['item-aqua'],\n    'item-aqua': [],  # since it's unique, but maybe the problem expects to include all items with that color? Wait, the problem says \"list every pair of items that share a colour\". So if an item has a color in the dictionary, then it's part of that pair. But what if an item has no other items with that color? Then it's not part of any pair.\nSo for example, if an item has no other items with the same color, then it's not part of any pair. So in the code, when checking if an item is in the dictionary's keys, we need to check all other items. So for each item in the input list, check if its color is in the dictionary's keys. If yes, add it to a list of pairs (item_alpha, item_beta) where item_alpha != item_beta.\nSo the code would look like:\ncolors = {\n    'item-alpha-00': ['item-beta-01'],\n    'item-beta-01': ['item-gamma-02'],\n    'item-gamma-02': ['item-delta-03'],\n    'delta-03': ['item-epsilon-04'],\n    'item-epsilon-04': ['item-zeta-05'],\n    'item-zeta-05': [],  # since it's unique, but maybe the problem expects to include all items with that color? Wait, no. Because if an item has no other items with the same color, then it's not part of any pair. So in the code, when checking if an item is in the dictionary's keys, we need to check all other items. So for each item in the input list, check if its color is in the dictionary's keys. If yes, add it to a list of pairs (item_alpha, item_beta) where item_alpha != item_beta.\nSo for example:\nIf an item has no other items with the same color, then it's not part of any pair. So in the code, when checking if an item is in the dictionary's keys, we need to check all other items. So for each item in the input list, check if its color is in the dictionary's keys. If yes, add it to a list of pairs\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 4,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s17",
+      "n": 8,
+      "mean_word_gap": 5.0,
+      "seed": 17,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Initialize an empty set to keep track of colors we've already encountered.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set to avoid duplicates.\n   b. If not, add it to the set and append it to the result list.\n4. After processing all items, return the result list containing all unique pairs (item1, item2) where item1's color equals item2's color.\nWait, but what about duplicate colors? Like if two items have the same color, they should be considered as a pair once. For example, if item1 and item2 both have teal, then the output should include both (item1, item2) and (item2, item1). But in the sample input given, the output is just one line with each pair separated by commas. So maybe the problem expects that each pair is unique even if they share a color. Or perhaps not? The sample input shows that some items share a color, but the output lists them once per pair.\nLooking at the sample input:\nThe items are:\n- item-alpha-00 has teal.\n- item-beta-01 has teal.\n- item-gamma-02 has forest.\n- item-delta-03 has goldenrod.\nSo the output is two lines: \"item1, item2\" and \"item2, item1\". So each pair is unique even if they share a color. So the approach of checking for duplicates in the set would work here.\nSo the steps are:\nInitialize an empty set called seen_colors.\nLoop through each item in the input list:\n   if item's color is in seen_colors:\n       add it to result list and remove from seen_colors.\n   else:\n       add to result list and add to seen_colors.\nAt the end, return the result list.\nYes, that makes sense. So for each item, check if its color is already in the set. If yes, add to the result and remove from the set. Otherwise, add to the set and append to the result.\nSo in Python code:\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item['color'] in seen:\n            result.append(item)\n            seen.remove(item['color'])\n        else:\n            seen.add(item['color'])\n            result.append(item)\n    return result\nWait, but what if the same color is present multiple times? Like if two items have the same color, they are considered as a pair once. That's correct according to the problem statement.\nTesting this with the sample input:\nSample input:\nitems = [\n    {'color': 'teal'},\n    {'color': 'beta-01'},\n    {'color': 'gamma-02'},\n    {'color': 'forest'},\n    {'color': 'delta-03'},\n    {'color': 'goldenrod'}\n]\nProcessing each item:\nitem1: color teal. Not in seen. Add to result, remove from seen. Result is [item1].\nitem2: color beta-01. Not in seen. Add to result, remove from seen. Result [item1, item2].\nitem3: color forest. Not in seen. Add to result, remove from seen. Result [item1, item2, item3].\nitem4: color goldenrod. Not in seen. Add to result, remove from seen. Result [item1, item2, item3, item4].\nitem5: color mauve. Not in seen. Add to result, remove from seen. Result [item1, item2, item3, item4, item5].\nitem6: color jade. Not in seen. Add to result, remove from seen. Result [item1, item2, item3, item4, item5, item6].\nitem7: color slate. Not in seen. Add to result, remove from seen. Result [item1, item2, item3, item4, item5, item6, item7].\nWhich matches the sample output. So this code should work.\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s18",
+      "n": 8,
+      "mean_word_gap": 30.0,
+      "seed": 18,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. Because if two items have the same color, they will be in the same set. So maybe I can iterate through each item and check if its color is already in the set. If it is, add both to the result list; otherwise, add them as a new pair.\nWait, but what about duplicates? Like if an item has two colors that are the same, like item-alpha-00 and item-beta-01 both have mint. Then they should be considered as a single pair. So the set approach would handle that correctly because when you add both to the set, it's one entry.\nSo the steps are:\n1. Initialize an empty set to keep track of colors we've seen.\n2. Iterate over each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add both items to the result list and break out of the loop since they share a color.\n   b. If no, add them to the set and continue.\n4. After processing all items, return the result list with each pair as a tuple (item1, item2).\nLet me think about possible edge cases. What if there are multiple pairs? Like in the sample input given, the output is two lines: item-alpha-00 and item-beta-01. That's correct because they share color mint.\nAnother example: if an item has two colors that are different, like item-gamma-02 and item-delta-03. Then they should be considered as a single pair.\nSo the code structure would be something like:\ndef list_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        color = item[1]\n        if color in seen:\n            result.append((item, item))\n            seen.remove(color)  # Wait, no. Because if we remove the color from the set, then when we check again, it's possible that the same color is already present? No, because we are checking each item once per pair. So even if an item has two colors that are different, like item-gamma-02 and item-delta-03, they would be considered as a single pair. Because when you add both to the set, it's one entry. So the code is correct here.\nWait, but in the code above, when we check if color is in seen, we remove it from the set. So for example, if item-gamma-02 has color mint and item-delta-03 has color saffron, then when we process item-gamma-02 (color mint), it's added to the set. Then when processing item-delta-03 (color saffron), since color is not in the set, it's added as a new entry. So the result list will have two entries: (item-gamma-02, item-delta-03). Which is correct.\nSo the code should work. Let me test this logic with the sample input.\nSample input:\nitems = [\n    {'color': 'mint', 'alpha': 0},\n    {'color': 'ivory', 'beta': 1},\n    {'color': 'sienna', 'gamma': 2},\n    {'color': 'saffron', 'delta': 3},\n    {'color': 'cyan', 'epsilon': 4},\n    {'color': 'green', 'zeta': 5},\n    {'color': 'mint', 'eta': 6},\n    {'color': 'mint', 'theta': 7}\n]\nProcessing each item:\nitem 0: color mint. Check if mint is in seen (no). Add to result. seen becomes {mint}.\nitem 1: color ivory. Check if ivory is in seen (yes, since it's the same as mint). So add both to result. Now result has two entries: (item-alpha-00, item-beta-01) and (item-gamma-02, item-delta-03).\nitem 2: color sienna. Check if sienna is in seen. Yes, since it's the same as ivory's color. So add both to result. Now result has two entries: (item-gamma-02, item-delta-03) and (item-delta-03, item-epsilon-04).\nitem 3: color saffron. Check if saffron is in seen. Yes, since it's the same as sienna's color. So add both to result. Now\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 0,
+      "fp": 8,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s19",
+      "n": 8,
+      "mean_word_gap": 12.5,
+      "seed": 19,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list. But wait, what if there are duplicates? Like if two items have the same color but different values? The problem statement says \"unique colors\", so maybe duplicates are not allowed. So I should check if the current item's color is already in the set before adding it again.\nSo the steps would be:\n1. Create an empty set to keep track of colors we've seen.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set to avoid duplicates.\n   b. If not, add it to the set and add a new entry to the result list with that color as the key.\n4. After processing all items, return the result list sorted by item's index? Or maybe just in any order, but since we need pairs, perhaps we can sort them first. Wait, the problem says \"list every pair of items that share a colour\". So maybe the order doesn't matter as long as each pair is unique. But if there are duplicates, like two items with the same color but different indices, they would be considered the same pair. So perhaps we need to sort them first.\nWait, but in Python, when you sort a list of tuples (item_index, item_color), it will arrange them in order of their index. So if two items have the same color and different indices, they will be sorted by index. But the problem says \"list every pair of items that share a colour\". So maybe we need to collect all pairs where the colors are unique, regardless of their positions.\nSo perhaps after collecting all pairs, we can sort them first by item index (so that when we process each item, we check if it's already in the result list). But how?\nAlternatively, maybe the problem expects us to return all possible pairs regardless of order. So for example, if two items have the same color but different indices, they are considered the same pair. So in that case, we need to collect all such pairs and then sort them by item index.\nSo the approach would be:\n- Create a set of colors to track seen colors.\n- Iterate through each item in the input list.\n- For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set.\n   b. If not, add it to the result list and add a new entry to the set with its color as the key.\n- Then, sort all items by their index (so that when we process them in order, each item is added to the result list in order of their index).\nWait, but how do we handle duplicates? For example, if two items have the same color and different indices. Let's say item A has color red and item B has color blue. Then, when processing item A first, we add it to the result list and remove it from the set. Then when processing item B, since its color is blue (same as before), we check if it's already in the set. If not, add it and add a new entry with color red. So the result list would have two entries: (item A, red) and (item B, blue). But since the order of processing is item A first, then item B, the result list would be sorted by item index.\nSo the steps are:\n1. Create a set to track colors seen so far.\n2. Initialize an empty list to collect all pairs.\n3. Iterate over each item in the input list:\n   a. For each item, check if its color is in the set.\n   b. If yes, add it to the result list and remove it from the set (since we've already seen this color before).\n   c. If not, add it to the result list and add a new entry with its color as the key.\n4. After processing all items, sort the result list by item index (so that when we process each item in order, their colors are added in order of their occurrence).\nWait, but how do we handle duplicates? For example, if two items have the same color and different indices. Let's say item A has color red and item B has color blue. Then, when processing item A first, we add it to the\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s20",
+      "n": 8,
+      "mean_word_gap": 10.0,
+      "seed": 20,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Create an empty set to keep track of colors we've already seen.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set so that we don't process it again.\n   b. If not, add it to the set and add a new entry to the result list with that color as the key.\n4. After processing all items, return the result list sorted by item's color? Wait, no, the problem says nothing about sorting. The output is just a list of pairs, each pair being (item1, item2) where item1 and item2 are from different lists. So maybe we don't need to sort them. But the problem statement doesn't mention anything about sorting the output. So perhaps we can just return the list as is, but wait, the example given in the problem shows that each pair is on a separate line. Wait, looking back at the example:\nIn the sample input, item-alpha-00 has color saffron. The output would be [(item1, item2)] where item1 and item2 are from different lists. But how do we know which items to include in the result?\nWait, the problem says \"list every pair of items that share a colour\". So each pair is (item1, item2) where item1 and item2 are from different lists. So the output should be a list of such pairs, each on their own line. But how do we know which items to include?\nThe problem statement doesn't specify any constraints on the order of the items in the output. So perhaps we can just return them as is, but that would result in duplicates if there are multiple items with the same color. For example, if two different items have the same color, they would both be added to the result list. But that's not desired. So maybe we need to deduplicate them first.\nSo the approach is:\n- Use a set to track colors we've seen so far.\n- Iterate through each item in the input list.\n- For each item, check if its color is in the set. If yes, add it to the result list and remove it from the set. Otherwise, add it to the result list and add a new entry to the set with that color as the key.\nWait, but how do we know which items to include in the result? The problem says nothing about sorting them. So perhaps we can just return them as is, but that's not desired. So maybe we need to deduplicate them first.\nSo here's the plan:\nInitialize an empty set called seen_colors.\nInitialize an empty list called result.\nIterate over each item in the input list:\n   if item's color is in seen_colors:\n       add it to result and remove it from seen_colors.\n   else:\n       add it to result and add a new entry to seen_colors with the current color as the key.\nWait, but how do we know which items to include in the result? The problem statement doesn't specify any constraints on the order of the items in the output. So perhaps we can just return them as is, but that's not desired. So maybe we need to deduplicate them first.\nSo here's a possible approach:\nInitialize a set called seen_colors.\nInitialize an empty list called result.\nIterate over each item in the input list:\n   if item's color is in seen_colors:\n       add it to result and remove it from seen_colors.\n   else:\n       add it to result and add a new entry to seen_colors with the current color as the key.\nBut wait, how do we know which items to include in the result? The problem statement doesn't specify any constraints on the order of the items in the output. So perhaps we can just return them as is, but that's not desired. So maybe we need to deduplicate them first.\nSo here's a possible approach:\nInitialize an empty set called seen_colors.\nInitialize an empty list called result.\nIterate over each item in the input list:\n   if item's color is in seen_colors:\n       add it to result and remove it from seen_colors.\n   else:\n       \n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s21",
+      "n": 8,
+      "mean_word_gap": 22.5,
+      "seed": 21,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Initialize an empty set to keep track of colors we've already encountered.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set so that we don't process it again.\n   b. If not, add it to the set and append its color to the result list.\n4. After processing all items, return the result list containing all unique pairs (item1, item2) where item1's color equals item2's color.\nWait, but what about duplicates? Like if two items have the same color, they should be considered as a pair once. So even if there are multiple occurrences of the same color in the input, we only add them once to the result list.\nLet me think about how to implement this in Python.\nThe function will take a list of items and return a list of pairs. So first, I need to create an empty set called seen_colors. Then loop through each item in the input list:\nfor item in items:\n    if item['color'] in seen_colors:\n        seen_colors.remove(item['color'])\n        seen_colors.add(item['color'])\n    else:\n        seen_colors.add(item['color'])\nThen, after processing all items, we need to create a list of pairs where each pair is item1 and item2. So for each element in seen_colors, we can create a tuple (item1['color'], item2['color']). Then collect all these tuples into a list and return it.\nYes, that makes sense. Let's test this logic with the sample input given.\nSample Input:\nitems = [\n    {'color': 'navy', 'item-alpha-00'},\n    {'color': 'ruby', 'item-beta-01'},\n    {'color': 'coral', 'item-gamma-02'},\n    {'color': 'red', 'item-delta-03'},\n    {'color': 'ochre', 'item-epsilon-04'},\n    {'color': 'tangerine', 'item-zeta-05'},\n    {'color': 'copper', 'item-eta-06'},\n    {'color': 'navy', 'item-theta-07'}\n]\nProcessing each item:\nFirst item is navy. Check if it's in seen_colors. It's not, so add to seen_colors. Then remove from seen_colors. Now seen_colors has {red, orange}.\nSecond item is ruby. Check if in seen_colors. Yes, remove and add to result. Now result has (navy, ruby).\nThird item is coral. Not in seen_colors, add to result and remove from seen_colors. Now seen_colors has {red, orange, coral}.\nFourth item is red. Check if in seen_colors. Yes, remove and add to result. Now result has (navy, ruby, coral).\nFifth item is orange. Not in seen_colors, add to result and remove from seen_colors. Now seen_colors has {red, orange, coral}.\nSixth item is copper. Check if in seen_colors. Yes, remove and add to result. Now result has (navy, ruby, coral).\nSeventh item is navy again. Check if in seen_colors. Yes, remove and add to result. Now result has (navy, ruby, coral).\nEighth item is tangerine. Not in seen_colors, add to result and remove from seen_colors. Now seen_colors has {red, orange, coral}.\nNinth item is copper again. Check if in seen_colors. Yes, remove and add to result. Now result has (navy, ruby, coral).\nTenth item is navy again. Check if in seen_colors. Yes, remove and add to result. Now result has (navy, ruby, coral).\nSo the pairs would be:\n(navy, ruby), (ruby, coral), (coral, orange), (orange, copper), (copper, red), (red, tangerine), (tangerine, copper).\nWhich matches the sample output. So the code should work.\nNow,\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s22",
+      "n": 8,
+      "mean_word_gap": 7.5,
+      "seed": 22,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, right. So first, I should figure out how to group the items by their colors. Oh right, maybe using a dictionary where the keys are the colors and the values are lists of items that have that color.\nWait, but how do I check if two items share a color? Like, for each item in the list, check if its color is in another item's color list. If it is, then they share a color. So for each item in the input list, I need to look up all other items and see if their colors are the same as this one.\nSo the steps would be:\n1. Create a dictionary where each key is a color, and the value is a list of items that have that color.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is in the dictionary's keys. If yes, add it to the corresponding list in the dictionary.\n4. Then, collect all these pairs into a list and print them separated by commas, each on a new line.\nWait, but how do I handle the input? The input is given as a list of items with their colors. So for example, if the input is [\"item-alpha-00\", \"item-beta-01\"], then the dictionary would have color gainsboro under item-alpha and under item-beta. Then, when checking, we look up each item's color in the dictionary.\nSo the code structure would be:\nCreate a dictionary with colors as keys and lists of items as values. Then loop through each item in the input list. For each item, check if its color is in the dictionary's keys. If yes, add it to a list of pairs. Then print each pair on a new line.\nSo in Python, I can do something like:\nitems = [\n    {\"color\": \"gainsboro\"},\n    {\"color\": \"beta-01\"},\n    {\"color\": \"gamma-02\"},\n    {\"color\": \"delta-03\"},\n    {\"color\": \"epsilon-04\"},\n    {\"color\": \"zeta-05\"},\n    {\"color\": \"eta-06\"},\n    {\"color\": \"theta-07\"}\n]\nThen, create a dictionary:\ncolors = {}\nfor item in items:\n    if item[\"color\"] in colors:\n        colors[item[\"color\"]].append(item)\nThen, loop through each color in colors.values():\nfor color, items in colors.items():\n    print(\" \".join(map(str, items)))\nWait, but the output should be each pair on a separate line. So for example, if the input is two items with colors \"gainsboro\" and \"beta-01\", then the output would be \"gainsboro, item-beta-01\".\nYes. That should work. Let me test this logic with the sample input.\nSample Input:\n[\"item-alpha-00\", \"item-beta-01\"], [\"item-gamma-02\", \"item-delta-03\"], [\"item-epsilon-04\", \"item-zeta-05\"], [\"item-eta-06\", \"item-theta-07\"]\nProcessing the first item: color is gainsboro. The dictionary has gainsboro under item1 and item2. So when processing item1, it's in the dictionary, so we add it to the list. Then item2 has color beta01, which is not in the dictionary (since beta01 isn't a key). So no pairs here.\nSecond item: color gamma-02. The dictionary has gamma under item3 and item4. So when processing item3, it's in the dictionary, so add to list. Then item4 has color delta03, which is not in the dictionary (since delta03 isn't a key). So no pairs here.\nThird item: color epsilon-04. The dictionary has epsilon under item5 and item6. So when processing item5, it's in the dictionary, so add to list. Then item6 has color theta07, which is not in the dictionary (since theta07 isn't a key). So no pairs here.\nFourth item: color zebra-05. The dictionary has zebra under item7 and item8. So when processing item7, it's in the dictionary, so add to list. Then item8 has color amber, which is not in the dictionary (since amber isn't a key). So no pairs here.\nFifth item: color scarlet. The dictionary has scarlet under item9 and item10. So when processing item9, it's in the dictionary, so add to list. Then item10 has color magenta, which is not\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s23",
+      "n": 8,
+      "mean_word_gap": 12.5,
+      "seed": 23,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new color, we check if it's already in the set. If it is, then we add the pair of items to the result list. If not, we add them to the set and continue processing.\nWait, right. So the steps would be:\n1. Initialize an empty set to keep track of colors seen so far.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add the pair (item_i, item_{i+1}) to the result list and break out of the loop since we've found a match.\n   b. If no, add the item to the set and continue processing.\n4. After processing all items, return the result list.\nLet me think about how to implement this in Python. The input is a list of tuples, each with an item_i and color_j. So for example, [(item_i, color), (item_j, color)] where item_i and item_j are the items themselves.\nSo the code structure would be something like:\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item[1] in seen:\n            result.append((item[0], item[1]))\n            seen.remove(item[1])  # Remove the first occurrence of this color\n        else:\n            seen.add(item[1])\n    return result\nWait, but what if the input list is empty? Then the loop doesn't run, and returns an empty list. That's correct.\nTesting this with some examples. Let's see:\nSample Input 1: [(item_i, color), (item_j, color)]\nFor example, if the input is [(item_i, 'red'), (item_j, 'blue')], then the output should be [('red', 'blue')].\nAnother test case: items with same color. Like [('a', 'b'), ('a', 'b')] would return [('a', 'b')].\nWhat about when there are multiple pairs? Like [(item_i, color), (item_j, color)], then the output is all pairs.\nSo this approach should work. The code seems straightforward. Let me check if there's any edge cases I'm missing.\nWhat if the input list is empty? Then the function returns an empty list, which is correct.\nYes, this should handle all cases. So the Python code would be as written above.\n\n```python\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        if item[1] in seen:\n            result.append((item[0], item[1]))\n            seen.remove(item[1])  # Remove the first occurrence of this color\n        else:\n            seen.add(item[1])\n    return result\n```",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s24",
+      "n": 8,
+      "mean_word_gap": 17.5,
+      "seed": 24,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Initialize an empty set to keep track of colors we've already encountered.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set so that future checks won't include duplicates.\n   b. If not, add it to the set and add a new entry to the result list with that color as the key.\n4. After processing all items, return the result list containing all unique pairs (item1, item2) where item1's color equals item2's color.\nWait, but what about duplicates? Like if two different items have the same color. For example, if item1 is red and item2 is also red. Then when we process them, since they share the same color, we add both to the result list and remove one from the set. So each pair is unique in terms of their colors.\nYes, that makes sense. So the algorithm should work as long as we process each item once and track the colors correctly.\nLet me think about how to implement this in Python. The input is a list of items, each with a color. The output is a list of tuples (item1, item2) where item1's color equals item2's color.\nSo the steps in code:\n- Initialize an empty set called colors_seen.\n- Initialize an empty list to hold the result.\n- Iterate over each item in the input list:\n   - For each item, check if its color is in colors_seen.\n   - If yes, add it to colors_seen and remove it from the result list.\n   - Else, add it to colors_seen and add a new entry to the result list with that color as the key.\nWait, but how do we handle the order? Because when we process each item, we need to check if its color is already in colors_seen. If it is, then we can skip adding it again. Otherwise, add it to the set and add a new entry to the result list with that color as the key.\nYes. So for example:\nitems = [item1, item2, item3]\ncolors = {item1: red, item2: blue}\nProcessing items:\n- first item is red. Check if red is in colors_seen. It's not, so add to colors_seen and add to result list. Now colors_seen has {red}, result is [ (item1, item2) ]\n- second item is blue. Check if blue is in colors_seen. Yes, so remove it from the set and add to result list. Now colors_seen has {red, blue}, result becomes [ (item1, item2), (item3, red) ]\n- third item is black. Check if black is in colors_seen. No, so add to colors_seen and add to result list. Now colors_seen has {red, blue}, result becomes [ (item1, item2), (item3, red), (item4, blue) ]\nSo the final result list would be [(item1, item2), (item3, red), (item4, blue)].\nYes, that seems right.\nSo the code structure would be:\ndef find_pairs(items):\n    colors = set()\n    result = []\n    for item in items:\n        if item in colors:\n            colors.remove(item)\n            result.append( (item, item) )\n        else:\n            colors.add(item)\n            result.append( (item, item) )\n    return result\nWait, but what if the input list is empty? Then the code would return an empty list, which is correct.\nTesting this code with the sample input:\nSample Input 1:\nitems = [item1, item2, item3]\ncolors = {item1: red, item2: blue}\nProcessing each item:\nitem1 is red. Check if red in colors_seen (no). Add to colors and add to result. Now colors is {red}, result is [(item1, item2)].\nitem2 is blue. Check if blue in colors_seen (yes). Remove from colors and add to result. Now colors is {red},\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s25",
+      "n": 8,
+      "mean_word_gap": 25.0,
+      "seed": 25,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track colors and then iterate through the items. But wait, what if there are duplicates? Like if an item has multiple colors. Oh right, the problem statement says \"unique colors\", so each item's color is unique. So no duplicates here.\nSo the plan is: create a set of all unique colors from the items. Then iterate through each item and check if its color is in the set. If it is, add both to a list of pairs.\nWait, but how do I get the unique colors? Oh right, using a set data structure. So first, collect all unique colors from the items. Then loop through each item and check if its color is in that set.\nLet me think about the steps:\n1. Create a set called unique_colors to store the colors of all items.\n2. Iterate over each item in the input list.\n3. For each item, get its color from the items dictionary (or maybe use a helper function to get the color). Wait, but what if an item doesn't have a color? The problem says \"some items share a colour\", so perhaps we can assume that each item has a color. But maybe in code, we need to handle cases where an item might not have a color. But according to the problem statement, the input is valid, so maybe we don't need to handle that.\n4. For each item, get its color from items[item_id]. Then check if this color is in the unique_colors set. If yes, add both (item_id, item_color) to the result list.\n5. Finally, print each pair on a new line.\nWait, but what about the order? The problem says \"list every pair of items that share a colour\", so the order doesn't matter as long as all pairs are included. So the output is just the list of (item_id, item_color) pairs where both items have that color.\nSo putting it all together:\n- Create a set from unique_colors.\n- Iterate over each item in items:\n   - Get color from items[item_id]\n   - Check if color is in the set.\n   - If yes, add (item_id, color) to the result list.\nYes, that should work.\nNow, how to implement this in Python.\nFirst, import List from typing? Wait, the problem says to use Python and provide a solution using only standard library modules. Oh right, but the user's code submission is supposed to be in Python. So I need to include necessary imports.\nWait, the problem says \"You are given a list of items and their colours.\" So the input is a list of dictionaries or something similar. But in Python, lists can be passed as parameters. So perhaps using a list comprehension would be efficient here.\nSo steps:\n1. Create a set from unique_colors.\n2. Iterate over each item in items:\n   a. Get color from items[item_id]\n   b. Check if color is in the set.\n   c. If yes, add (item_id, color) to the result list.\n3. Print each pair on a new line.\nSo code outline:\nfrom typing import List, Dict\ndef main():\n    # Assuming items is a list of dictionaries or similar\n    items = [\n        {'id': 1, 'color': 'aquamarine'},\n        {'id': 2, 'color': 'khaki'},\n        {'id': 3, 'color': 'wheat'},\n        {'id': 4, 'color': 'coral'},\n        {'id': 5, 'color': 'crimson'}\n    ]\n    unique_colors = set()\n    for item in items:\n        unique_colors.add(item['color'])\n    result = []\n    for item_id, color in items:\n        if color in unique_colors:\n            result.append((item_id, color))\n    print(result)\nif __name__ == \"__main__\":\n    main()\nWait, but what if the items list is empty? Then the loop doesn't run, and result is empty. That's correct.\nTesting this code with the sample input:\nSample input:\nitems = [\n    {'id': 1, 'color': 'aquamarine'},\n    {'id': 2, 'color': 'khaki'},\n    {'id': 3, 'color': 'wheat'},\n    {'id': 4, 'color': 'coral'},\n    {'id': 5, 'color': 'crims\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s26",
+      "n": 8,
+      "mean_word_gap": 12.5,
+      "seed": 26,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new color, we check if it's already in the set. If it is, then we add the pair of items to the result list. If not, we add them to the set and continue processing.\nWait, right. So here's the plan:\n1. Initialize an empty set called seen_colors.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in seen_colors.\n   a. If it is, add the pair (item[0], item[1]) to the result list and break out of the loop since we've found a match.\n   b. If not, add the item's color to seen_colors and continue processing.\n4. After processing all items, return the result list.\nLet me think about possible edge cases. What if there are duplicate colors? Like if two items have the same color, they should be included once each. Also, what if there are no duplicates? Then the output is empty list.\nSo in code terms:\nInitialize seen_colors as an empty set.\nLoop through each item in items:\n   color = item[1]\n   if color is in seen_colors:\n       add (item[0], item[1]) to result\n       break out of the loop\n   else:\n       add (item[0], item[1]) to seen_colors\nAt the end, return the result list.\nYes, that should work. Let's test this logic with some examples.\nExample 1: items = [\"alpha-00\", \"beta-01\", \"gamma-02\"], colors = [\"azure\", \"amber\", \"white\"]. The first color is azure, which is in seen_colors (seen_colors has azure). So the pair is (alpha-00, beta-01). Then the next color is amber. It's not in seen_colors, so add alpha-00 and beta-01. Then white comes next. White isn't in seen_colors, so add alpha-00 and beta-01 again. Then gamma-02 has color white, which is already in seen_colors (since it's the same color). So no pairs here.\nAnother example: items = [\"delta-03\", \"epsilon-04\"], colors = [\"fuchsia\", \"indigo\"]. The first color is fuchsia, which is in seen_colors (seen_colors has fuchsia). So add delta-03 and epsilon-04. Then the next color is indigo, which isn't in seen_colors. So no pairs.\nAnother example: items = [\"eta-06\", \"theta-07\"], colors = [\"fuchsia\", \"indigo\"]. The first color is fuchsia, which is in seen_colors (seen_colors has fuchsia). So add theta-07 and eta-06. Then the next color is indigo, which isn't in seen_colors. So no pairs.\nSo the code should handle these cases correctly.\nNow, how to implement this in Python.\nThe function will take a list of items and a list of colors as parameters. The result is a list of tuples (item1, item2) where item1 and item2 are the same color.\nSo in Python:\ndef find_pairs(items, colors):\n    seen = set()\n    result = []\n    for item in items:\n        color = colors[item[1]]\n        if color in seen:\n            result.append((item[0], item[1]))\n            seen.remove(color)\n        else:\n            seen.add(color)\n    return result\nYes, that should work. Let me test this logic with the examples given.\nFirst example: items = [\"alpha-00\", \"beta-01\"], colors = [\"azure\", \"amber\"]. The first color is azure, which is in seen (seen has azure). So result is [(alpha-00, beta-01)]. Then next color is amber, not in seen. So no pairs.\nSecond example: items = [\"gamma-02\", \"delta-03\"], colors = [\"white\", \"amber\"]. The first color is white, which is in seen (seen has white). So result is [(gamma-02, delta-03)]. Then next color is amber, not in seen. So no pairs.\nThird example: items = [\"eta-06\", \"theta-07\"], colors = [\"fuchsia\", \"indigo\"]. The first color is fuchsia\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s27",
+      "n": 8,
+      "mean_word_gap": 15.0,
+      "seed": 27,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new color, we check if it's already in the set. If it is, then we add the pair of items to the result list. Otherwise, we add them to the set and continue processing.\nWait, right. So the steps would be:\n1. Initialize an empty set to keep track of colors seen so far.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add the pair (item_alpha, item_beta) to the result list and break out of the loop since we've found a pair.\n   b. If no, add it to the set and continue.\n4. After processing all items, return the result list containing all such pairs.\nLet me think about how to implement this in Python. The input is a list of tuples, each with two elements: item_alpha and item_beta (the colors). So for example, [('item-alpha', 'item-beta'), ('item-gamma', 'item-delta')] would be processed.\nSo the code structure would be something like:\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        color = item[0]\n        if color in seen:\n            pair = (item[0], item[1])\n            result.append(pair)\n            seen.remove(color)  # Remove the first occurrence of this color to avoid duplicates\n        else:\n            seen.add(color)\n    return result\nWait, but what if the input list is empty? Then the loop doesn't run, and returns an empty list, which is correct.\nTesting this with some examples. Let's see:\nSample Input 1: [('item-alpha', 'item-beta'), ('item-gamma', 'item-delta')]\nProcessing item 0 (alpha): color is alpha. Not in seen (which has beta). Add to seen and result. Then item 1 (beta): color is beta. So pair added, then remove beta from seen. Now seen has alpha and beta. Next item 2: color is gamma. Not in seen, add to seen and result. Then item 3: color is delta. Not in seen, add to seen and result. So the output would be [('item-alpha', 'item-beta'), ('item-gamma', 'item-delta')] which matches the sample input.\nAnother test case: if two items share a color, like (a, b) and (b, a). Then the pair is added once. If they are different colors, no pair.\nWhat about duplicates? Like [('item-alpha', 'item-alpha')]. Then the first item's color is alpha, which is already in seen. So the pair is added once.\nSo this approach should handle all cases correctly. The time complexity is O(n), where n is the number of items, since each item is processed once and a set is maintained with O(1) operations (add and remove). The space complexity is also O(n) in the worst case, but since we only store unique colors, it's acceptable.\nSo the code should be straightforward. Let me write that in Python.\n\n```python\ndef find_pairs(items):\n    seen = set()\n    result = []\n    for item in items:\n        color = item[0]\n        if color in seen:\n            pair = (item[0], item[1])\n            result.append(pair)\n            seen.remove(color)  # Remove the first occurrence of this color to avoid duplicates\n        else:\n            seen.add(color)\n    return result\n```",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s28",
+      "n": 8,
+      "mean_word_gap": 15.0,
+      "seed": 28,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track the colors we've seen so far. That way, when we encounter a new item with the same color as an existing one, we can add it to our result list.\nSo the steps would be:\n1. Create an empty set to keep track of colors we've already encountered.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is already in the set.\n   a. If yes, add it to the result list and remove it from the set to avoid duplicates.\n   b. If not, add it to the set and append it to the result list.\n4. After processing all items, return the result list containing all unique pairs (item1, item2) where item1's color equals item2's color.\nWait, but what about duplicate colors? Like if two items have the same color, they should be considered as a pair once. For example, if item1 and item2 both have color blue, then the pair (item1, item2) is added once. So using a set to track colors would handle that correctly.\nLet me think about the example given in the problem statement. The input is:\n- alpha-00 has colour ochre.\n- beta-01 has aqua.\n- gamma-02 has copper.\n- delta-03 has buff.\n- epsilon-04 has copper.\n- zeta-05 has periwinkle.\n- eta-06 has plum.\n- theta-07 has buff.\nThe output is:\nitem1, item2: (item1, item2) where item1's color is alpha and beta, and item2's color is gamma and delta. So the pairs are (alpha, beta), (gamma, delta), etc. Wait, but in the example output given in the problem statement, the pairs are listed as (item1, item2) where item1's color is alpha and beta. So that's correct.\nSo the approach would be:\nInitialize an empty set called colors.\nLoop through each item in the input list:\n   if item's color is in colors:\n       add it to colors\n       remove it from the set\n   else:\n       add it to colors and add to the result list.\nAt the end, return the result list.\nYes, that makes sense. So for example, if an item has a color that's already in the set, we skip adding it again. Otherwise, we add it to both the set and the result list.\nSo in Python code:\ncolors = set()\nresult = []\nfor item in items:\n    if item['color'] in colors:\n        colors.remove(item['color'])\n        result.append((item['color'], item['color']))\n    else:\n        colors.add(item['color'])\n        result.append((item['color'], item['color']))\nThen, return result.\nYes, that should work. Let's test this logic with the example input.\nExample input:\nitems = [\n    {'color': 'alpha-00', 'color': 'ochre'},\n    {'color': 'beta-01', 'color': 'aqua'},\n    {'color': 'gamma-02', 'color': 'copper'},\n    {'color': 'delta-03', 'color': 'buff'},\n    {'color': 'epsilon-04', 'color': 'copper'},\n    {'color': 'zeta-05', 'color': 'periwinkle'},\n    {'color': 'eta-06', 'color': 'plum'},\n    {'color': 'theta-07', 'color': 'buff'}\n]\nProcessing each item:\nFor item1: color is alpha (ochre). Check if it's in colors. It's not, so add to colors and add to result. Now colors is {ochre, aqua}.\nItem2: color beta (aqua). Check if in colors. Yes, remove from colors and add to result. Now colors is {ochre, aqua}.\nItem3: color gamma (copper). Not in colors. Add to colors and add to result. Now colors is {ochre, aqua, copper}.\nItem4: color delta (buff). Not in colors. Add to colors and add to result. Now colors is {ochre, aqua, copper, buff}.\nItem5: color epsilon (copper). Not in colors. Add to colors and add to result. Now colors is {ochre, aqua, copper, buff, epsilon}.\nItem\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n8-s29",
+      "n": 8,
+      "mean_word_gap": 17.5,
+      "seed": 29,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track colors and then iterate through the items. But wait, what if there are duplicates? Like if two items have the same color but different values. Oh right, because sets automatically handle uniqueness. So maybe I should create a set of all unique colors first.\nSo step one: collect all unique colors from the items. Then, for each color in that set, check if it's present in the list of items. If yes, add the pair (item_color, item_color) to the result list.\nWait, but what about duplicates? Like if two items have the same color but different values. For example, item-alpha-00 and item-beta-01 both have auburn. Then they should be considered as a pair. So the set approach would handle that because sets automatically remove duplicates.\nSo the plan is:\n1. Create a set of unique colors from the items.\n2. Iterate through each color in this set.\n3. For each color, check if it's present in the list of items (i.e., item-color == item-color).\n4. If yes, add the pair (item_color, item_color) to the result list.\n5. Return the result list after processing all colors.\nLet me think about possible edge cases. What if there are no items with a certain color? Then the set will be empty, and we just return an empty list. Also, what if there are multiple items with the same color but different values? Like item-alpha-00 and item-beta-01 both have auburn. Then they should be considered as a pair.\nSo the steps in code:\n- Create a set of unique colors from the items.\n- Iterate through each color in that set.\n- For each color, check if it's present in the list of items (item_color == item_color). If yes, add (item_color, item_color) to the result list.\nYes, that should work. Let's test this logic with the sample input.\nSample Input:\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\",\n    \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\"\n]\nUnique colors: {auburn, yellow, ginger, copper}\nProcessing each color:\nauburn is in the set. So add (auburn, auburn) to the result. Then yellow is present. Add (yellow, yellow). Then ginger and copper are not present. So the output would be [(\"auburn\", \"auburn\"), (\"yellow\", \"yellow\")]. Which matches the sample output given in the problem statement.\nAnother test case: if there's a color that appears multiple times but different values, like item-alpha-00 and item-beta-01 both have auburn. Then they should be considered as a pair. So the set would include both, and the result would be [(\"auburn\", \"auburn\")].\nSo the code seems correct. Now, how to implement this in Python.\nThe function will take the list of items and a color string (like 'auburn'). The steps are:\n1. Create a set of unique colors from the items.\n2. Iterate through each item in the items list.\n3. For each item, check if its color is in the set. If yes, add (item_color, item_color) to the result list.\n4. Return the result list after processing all items.\nSo code:\ndef find_pairs(items, color):\n    unique_colors = set()\n    for item in items:\n        unique_colors.add(item[1])\n    result = []\n    for color in unique_colors:\n        if color in items:\n            result.append((color, color))\n    return result\nYes, that should work. Let me test this logic with the sample input.\nSample Input:\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\", \"item-epsilon-04\",\n    \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\"\n]\nunique_colors = {auburn, yellow, ginger, copper}\nProcessing each color:\nauburn is in the set. So result becomes [('auburn', 'au\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 1,
+      "fp": 12,
+      "fn": 1,
+      "precision": 0.07692307692307693,
+      "recall": 0.5,
+      "f1": 0.13333333333333336,
+      "exact_match": false
+    }
+  ]
+}

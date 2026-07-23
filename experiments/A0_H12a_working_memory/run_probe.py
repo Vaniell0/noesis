@@ -53,7 +53,14 @@ def call_ollama(host: str, model: str, prompt: str, num_predict: int,
     )
     with urllib.request.urlopen(req, timeout=timeout_s) as resp:
         data = json.loads(resp.read().decode())
-    return data.get("response", "")
+    # Reasoning-model tags (e.g. rwkv-7-g1d) emit chain-of-thought into a
+    # separate `thinking` field; the final answer lands in `response` only
+    # after CoT terminates. For H12a we care whether the item IDs surface
+    # anywhere in the completion, so we concatenate both — the pair
+    # extractor is regex-based and language-agnostic.
+    thinking = data.get("thinking") or ""
+    response = data.get("response") or ""
+    return f"{thinking}\n{response}" if thinking else response
 
 
 def extract_pairs(text: str) -> Set[Tuple[str, str]]:
@@ -117,7 +124,8 @@ def _aggregate(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 def run_one_file(host: str, model: str, num_predict: int, timeout_s: int,
                  tasks_path: pathlib.Path, results_dir: pathlib.Path,
-                 tag: str) -> Dict[str, Any]:
+                 tag: str, num_predict_per_n: int = 0,
+                 num_predict_cap: int = 3000) -> Dict[str, Any]:
     with tasks_path.open() as f:
         tasks = [json.loads(l) for l in f if l.strip()]
     print(f"[probe {tag}] {tasks_path.name}: {len(tasks)} tasks", file=sys.stderr, flush=True)
@@ -125,8 +133,15 @@ def run_one_file(host: str, model: str, num_predict: int, timeout_s: int,
     rows: List[Dict[str, Any]] = []
     t0 = time.time()
     for i, task in enumerate(tasks):
+        if num_predict_per_n > 0:
+            per_task_budget = min(
+                max(num_predict, num_predict_per_n * int(task.get("n", 1))),
+                num_predict_cap,
+            )
+        else:
+            per_task_budget = num_predict
         try:
-            resp = call_ollama(host, model, task["prompt"], num_predict, timeout_s)
+            resp = call_ollama(host, model, task["prompt"], per_task_budget, timeout_s)
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
             resp = ""
             print(f"[probe {tag}]   task {i} ({task['id']}) failed: {e}",
@@ -148,6 +163,8 @@ def run_one_file(host: str, model: str, num_predict: int, timeout_s: int,
         "tasks_file": str(tasks_path),
         "model": model,
         "num_predict": num_predict,
+        "num_predict_per_n": num_predict_per_n,
+        "num_predict_cap": num_predict_cap,
         "n_tasks": len(rows),
         "elapsed_s": time.time() - t0,
         "aggregate": _aggregate(rows),
@@ -167,7 +184,17 @@ def main() -> int:
     ap.add_argument("--model", default="mollysama/rwkv-7-g1d:0.4b")
     ap.add_argument("--num-predict", type=int, default=512,
                     help="Max tokens per response. Kept small — task answer "
-                         "is a short pair list.")
+                         "is a short pair list. Also used as the floor when "
+                         "--num-predict-per-n scales below it.")
+    ap.add_argument("--num-predict-per-n", type=int, default=0,
+                    help="If >0, per-task budget = min(cap, max(--num-predict, "
+                         "this * task.n)). Intended for the damped-search "
+                         "variant of H12a (approximation as N grows) — bigger "
+                         "N gets more test-time compute so the model has room "
+                         "to reason rather than diverge into code-mode.")
+    ap.add_argument("--num-predict-cap", type=int, default=3000,
+                    help="Absolute ceiling on per-task budget so context + gen "
+                         "fits within Ollama's -c 4096.")
     ap.add_argument("--timeout", type=int, default=120)
     ap.add_argument("--tasks-dir", type=pathlib.Path, default=None,
                     help="Directory holding tasks-*.jsonl (default: ./tasks).")
@@ -202,7 +229,9 @@ def main() -> int:
 
     for p, tag in files:
         run_one_file(args.host, args.model, args.num_predict, args.timeout,
-                     p, results_dir, tag)
+                     p, results_dir, tag,
+                     num_predict_per_n=args.num_predict_per_n,
+                     num_predict_cap=args.num_predict_cap)
     return 0
 
 

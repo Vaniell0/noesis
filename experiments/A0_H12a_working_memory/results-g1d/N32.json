@@ -1,0 +1,265 @@
+{
+  "tasks_file": "/home/vaniello/Desktop/projects/noesis/experiments/A0_H12a_working_memory/tasks/tasks-N32.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 2048,
+  "n_tasks": 3,
+  "elapsed_s": 214.56512093544006,
+  "aggregate": {
+    "n": 3,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.0,
+    "mean_precision": 0.0,
+    "mean_recall": 0.0,
+    "mean_word_gap": 71.66666666666667
+  },
+  "results": [
+    {
+      "id": "h12a-w-n32-s0",
+      "n": 32,
+      "mean_word_gap": 60.0,
+      "seed": 0,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to find all pairs of items that share the same color. Each pair should be on a separate line, like \"item-X, item-Y\". \nFirst, I need to understand the input structure. The input is a list of strings, each representing an item with its color. For example:\n- item-alpha-00 has colour ochre.\n- item-beta-01 has colour buff.\nSo the first step is to process this list and group items by their colors. Then, for each group of items with the same color, collect all pairs that share that color.\nHmm, how do I group the items by color? Maybe using a dictionary where the key is the color and the value is a list of items in that color. Then, for each group in this dictionary, I can loop through them and collect all pairs.\nWait, but how to handle the input? The input is given as a list of strings. So perhaps I can split each line into individual items and then process each item's color.\nLet me think about the steps:\n1. Split the input list into individual items. Each item is a string, so splitting on whitespace would give each item as a separate element.\n2. For each item in this list, check if its color is present in the dictionary. If it is, add all pairs of items with that color to a result list.\n3. Once all items are processed, output each pair on a new line, separated by spaces or newlines as needed.\nSo the main challenge is grouping the items by their colors and then collecting all pairs within each group.\nLet me outline the steps in code:\n- Create an empty dictionary to hold the color groups.\n- Iterate over each item in the input list:\n   - Split the item into parts using whitespace as a delimiter.\n   - Check if the first part is 'ochre' (for ochre) or 'buff' (for buff). Wait, but maybe it's better to split on any whitespace and then check if the first part is 'ochre' or 'buff'.\nWait, perhaps a better approach is to split each item into two parts: the color and the rest. For example, for \"ochre\", the first part is \"ochre\" (the color), and the second part is \"the rest\". So maybe split on whitespace, then check if the first part is 'ochre' or 'buff'.\nAlternatively, split each item into two parts: the color and the rest. For example, for \"ochre\", it's \"ochre\" (color) and \"the rest\". But how to handle that? Maybe using a regex to split on whitespace.\nSo, for each item in the input list:\n- Split into parts using whitespace as a delimiter. So split on ' ', then take the first part as the color, and the rest as the remaining items.\nWait, but what if there are multiple items with the same color? For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So maybe we can split on any whitespace, but perhaps it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So maybe we can split on any whitespace, but perhaps it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe it's better to split on ' ', then check if the first part is 'ochre' or 'buff'.\nAlternatively, perhaps split on any whitespace and then check if the first part is 'ochre' or 'buff'. But that might not be correct. For example, \"ochre\" and \"buff\" would both be considered in the same group. But according to the problem statement, each item is unique. So perhaps we can split on any whitespace, but maybe\n",
+      "expected": [
+        [
+          "item-chi-21",
+          "item-polar-30"
+        ],
+        [
+          "item-solar-28",
+          "item-xi-13"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n32-s1",
+      "n": 32,
+      "mean_word_gap": 107.5,
+      "seed": 1,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in programming problems like this, usually you can use a set to track colors and then iterate through the items. But wait, what if there are duplicates? Like if two items have the same color but different indices. Oh right, because sets automatically handle uniqueness. So maybe using a set would work here.\nSo the plan is: create a set of all unique colors from the list. Then loop through each item and check if its color is in the set. If it is, add both (item, item) pairs to the result list.\nLet me think about how to implement this in Python. The input is a list of items, each with their own color. So first, I need to get the unique colors from the items. Then loop through each item and check if its color is in that set.\nWait, but what if there are duplicates? Like if two items have the same color but different indices. For example, item-alpha-00 and item-beta-01 both have color olive. The problem says \"share a color\", so even if they share the same color but different indices, they should be considered as one pair. So the set approach would handle that correctly because duplicates are automatically removed when checking membership in a set.\nSo the steps are:\n1. Create a set of all unique colors from the items.\n2. Iterate through each item in the list.\n3. For each item, check if its color is in the set. If yes, add both (item, item) to the result list.\n4. Return the result list as a string with each pair separated by a comma and space, like \"item-alpha-00, item-beta-01\".\nLet me test this logic with the sample input. The sample input has items:\nitem-alpha-00: peach (color)\nitem-beta-01: olive (color)\nitem-gamma-02: auburn (color)\nitem-delta-03: tangerine (color)\nitem-epsilon-04: fern (color)\nitem-zeta-05: violet (color)\nitem-eta-06: mauve (color)\nitem-theta-07: lime (color)\nitem-iota-08: green (color)\nitem-kappa-09: pink (color)\nitem-lambda-10: slate (color)\nitem-mu-11: turquoise (color)\nitem-nu-12: plum (color)\nitem-xi-13: indigo (color)\nitem-omicron-14: cerulean (color)\nitem-pi-15: navy (color)\nitem-rho-16: ivory (color)\nitem-sigma-17: wine (color)\nitem-tau-18: wheat (color)\nitem-upsilon-19: buff (color)\nitem-phi-20: black (color)\nitem-chi-21: aqua (color)\nitem-psi-22: glaucous (color)\nitem-omega-23: tangerine (color)\nitem-north-24: goldenrod (color)\nitem-south-25: yellow (color)\nitem-east-26: magenta (color)\nitem-west-27: purple (color)\nitem-solar-28: orange (color)\nitem-lunar-29: amber (color)\nitem-polar-30: lime (color)\nitem-arctic-31: sapphire (color)\nSo the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input has items with colors peach (item-alpha-00), olive (item-beta-01), auburn (item-gamma-02). So the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which is different. So the unique colors are peach, olive, auburn, green, pink, slate, turquoise, plum, indigo, cerulean. Wait no: wait the sample input's items have colors:\nitem-alpha-00 has peach (color)\nitem-beta-01 has olive (color)\nitem-gamma-02 has auburn (color)\nSo the unique colors are peach and olive. Then item-delta-03 is tangerine, which\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-omega-23"
+        ],
+        [
+          "item-polar-30",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 0,
+      "fp": 6,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-w-n32-s2",
+      "n": 32,
+      "mean_word_gap": 47.5,
+      "seed": 2,
+      "variant": "width",
+      "response": "Okay, let's see. I need to solve this problem where I have a list of items and their colors. The task is to list every pair of items that share the same color. Hmm, how do I approach this?\nFirst, I remember that in Python, there's a set data structure that can help here. Sets are good for storing unique elements because they automatically handle duplicates. So maybe I can create a set from the list of items and then iterate through it to find pairs with the same color.\nWait, but sets are unordered. Oh right, but when we check if two items have the same color, their order might not matter. So even if two different items share the same color, they should be considered as part of the pair. But wait, in the example given, item-alpha-00 and item-beta-01 both have magenta. So their colors are the same. So when we check for a common color, we can just use set operations to find all items with that color and then collect their pairs.\nSo the steps would be:\n1. Create a set of all unique colors from the list. Because if two items have the same color, they will share it once.\n2. Iterate through each item in the list, check if its color is in the set. If yes, add both to a pair.\n3. Collect all such pairs into a list and return them sorted? Or just output them as they are? The problem says nothing about order, so maybe just collect all pairs and then output them separated by commas or something. But the example shows that each item is on its own line, but the output doesn't specify the order. So perhaps we can just collect all pairs and then print them as a list of tuples, but maybe in any order.\nWait, looking at the sample input:\nThe items are:\nitem-alpha-00 has color peach.\nitem-beta-01 has magenta.\nSo their colors are different. So the output should be two lines: item-alpha-00 and item-beta-01. But how to format that? The problem says nothing about the order, so perhaps just list them as pairs separated by commas, but maybe in the example, they are printed as a single line with each pair on a new line.\nSo the code would be:\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-iota-08\", \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\",\n    \"item-nu-12\", \"item-xi-13\", \"item-omicron-14\", \"item-pi-15\",\n    \"item-rho-16\", \"item-sigma-17\", \"item-tau-18\", \"item-upsilon-19\",\n    \"item-phi-20\", \"item-chi-21\", \"item-psi-22\", \"item-omega-23\",\n    \"item-north-\", \"item-\"\n]\ncolors = {\n    \"peach\": item_alpha_00,\n    \"magenta\": item_beta_01,\n    \"mauve\": item_gamma_02,\n    \"red\": item_delta_03,\n    \"azure\": item_epsilon_04,\n    \"sapphire\": item_zeta_05,\n    \"aquamarine\": item_eta_06,\n    \"crimson\": item_theta_07,\n    \"forest\": item_iota_08,\n    \"teal\": item_kappa_09,\n    \"aqua\": item_lambda_10,\n    \"turquoise\": item_mu_11,\n    \"jade\": item_nu_12,\n    \"yellow\": item_xi_13,\n    \"emerald\": item_omicron_14,\n    \"purple\": item_pi_15,\n    \"azure\": item_rho_16,\n    \"sapphire\": item_sigma_17,\n    \"azure\": item_tau_18,\n    \"saffron\": item_upsilon_19,\n    \"chartreuse\": item_omega_20,\n    \"blue\": item_phi_21,\n    \"ash\": item_chi_22,\n    \"copper\": item_delta_23,\n    \"green\": item_epsilon_24,\n    \"yellow\": item_mu_25,\n    \"jade\": item_nu_-26,\n    \"yellow\": item_-27\n}\nThen, for each color in colors.items():\nfor color in colors:\n    if color in items:\n        print(f\"{color}, {item[0]}\")\nWait, but the problem says nothing about the order of the pairs. So maybe just print them as they are. But perhaps the example expects them to be printed in a specific order. Let me check the sample input again. The output is two lines: item-alpha-00 and item-beta-01. So maybe they are printed in that order, but perhaps the problem expects them to be separated by commas and space, but not necessarily ordered.\nBut according to the problem statement, the output should list every pair of items that share a color. So even if two items have the same color, they are considered as part of the pair. So the code above would work.\nBut wait, in Python, when you use set operations, it's possible that some items have duplicate colors. For example, item-alpha-00 and item-beta-01 both have magenta. So their colors are the same. So when we check if color is in items[i], it would include both. But since they are the same color, they will be included once.\nSo the code should work as intended.\nBut let's test with the sample input. The items list has two elements: item-alpha-00 and item-beta-01. Their colors are magenta and mauve, respectively. So when we check if color is in items[0], it's true, so they are added to the pair. Similarly for item-beta-01 and magenta.\nSo the code would output:\nitem-alpha-00, item-beta-01\nBut how to format this? The problem says nothing about the order of the pairs. So perhaps just print them as is, but maybe in a specific way. But according to the problem statement, it's acceptable.\nSo the code would be:\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-\"\n]\ncolors = {\n    \"peach\": item_alpha_00,\n    \"magenta\": item_beta_01,\n    \"mauve\": item_gamma_02,\n    \"red\": item_delta_03,\n    \"azure\": item_epsilon_04,\n    \"sapphire\": item_zeta_05,\n    \"aquamarine\": item_eta_06,\n    \"crimson\": item_theta_07,\n    \"forest\": item_iota_08,\n    \"teal\": item_kappa_09,\n    \"aqua\": item_lambda_10,\n    \"turquoise\": item_mu_-11,\n    \"jade\": item_-12\n}\nfor color in colors.items():\n    if color in items[0]:\n        print(f\"{color}, {item[0]}\")\nBut wait, the problem says nothing about the order of the pairs. So perhaps the code is correct as written. But maybe the user expects that each pair is printed on a new line, but with possible duplicates. For example, if two items have the same color, they are both printed once.\nSo this code should work. Let me check for possible errors.\nWhat if an item has multiple colors? Like item-alpha-00 and item-beta-01 both have magenta. Then their colors would be added to the set, so when checking, they would be included once. So the code is correct.\nYes, this should work. So the code is as written above.\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-\"\n]\ncolors = {\n    \"peach\": item_alpha_00,\n    \"magenta\": item_beta_01,\n    \"mauve\": item_gamma_02,\n    \"red\": item_delta_03,\n    \"azure\": item_epsilon_04,\n    \"sapphire\": item_zeta_-05,\n    \"aquamarine\": item_-06,\n    \"crimson\": item_-07,\n    \"forest\": item_iota_-08,\n    \"teal\": item_kappa_-09,\n    \"aqua\": item_lambda_-10,\n    \"turquoise\": item_mu_-11,\n    \"jade\": item_-12\n}\nfor color in colors.items():\n    if color in items[0]:\n        print(f\"{color}, {items[0]}\")\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-rho-16"
+        ],
+        [
+          "item-kappa-09",
+          "item-nu-12"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-chi-21",
+          "item-omega-23"
+        ],
+        [
+          "item-chi-21",
+          "item-phi-20"
+        ],
+        [
+          "item-chi-21",
+          "item-psi-22"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-omicron-14"
+        ],
+        [
+          "item-nu-12",
+          "item-pi-15"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-omega-23",
+          "item-phi-20"
+        ],
+        [
+          "item-omega-23",
+          "item-psi-22"
+        ],
+        [
+          "item-omicron-14",
+          "item-pi-15"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-13"
+        ],
+        [
+          "item-phi-20",
+          "item-psi-22"
+        ],
+        [
+          "item-pi-15",
+          "item-xi-13"
+        ],
+        [
+          "item-rho-16",
+          "item-sigma-17"
+        ],
+        [
+          "item-rho-16",
+          "item-tau-18"
+        ],
+        [
+          "item-rho-16",
+          "item-upsilon-19"
+        ],
+        [
+          "item-sigma-17",
+          "item-tau-18"
+        ],
+        [
+          "item-sigma-17",
+          "item-upsilon-19"
+        ],
+        [
+          "item-tau-18",
+          "item-upsilon-19"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 36,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}

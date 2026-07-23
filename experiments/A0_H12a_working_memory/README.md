@@ -37,13 +37,42 @@ Two sweeps produce disjoint failure signatures:
 
 ## Status
 
-Design draft only. Runner + task generator to be written after A0.8
-lands and the corresponding Phase 2 architectural window opens. Budget
-< 24 GPU-hours on G1d-0.4B at greedy decode.
+Implemented 2026-07-23. Runner (`run_probe.py`) drives Ollama or the
+in-process rwkv.cpp HTTP shim; generator (`gen_triples.py`) supports
+seed count and dist-N override; summariser (`summarise.py`) applies
+the falsification decision tree.
 
-## Files (planned)
+Runs so far (all CPU-only, i5-1235U Alder Lake):
+
+- `results-q8_0/` — RWKV-7-World-0.4B Q8_0 baseline via the noesis-runtime
+  HTTP shim on :11435. Base model, no instruction tuning; hits the
+  "enumerate-all IDs on one line" failure mode from N=4 onward.
+- `results-g1d/` — mollysama/rwkv-7-g1d:0.4b via system Ollama. Tuned
+  reasoning model; runner patched to concat `thinking + response` since
+  G1d is CoT-formatted. Sanity: n=3 per config.
+- `results-g1d-n30/` — same G1d 0.4B but n=30 per config and dist-N=8
+  fixed (dist sweep at N=16 had floored below task-comprehension
+  threshold in the sanity run).
+- `results-g1d-n30-adaptive/` — adaptive `num_predict = min(3000,
+  max(512, 128 × N))` variant of the n=30 run. Tests whether giving
+  the model more test-time compute at large N produces a *damped-search*
+  degradation curve rather than divergence into code-mode. Follow-up
+  informed by the H10 axis.
+
+Budget for the follow-on H12b LoRA (multi-slot WKV) remains
+< 24 GPU-hours on G1d-0.4B, but H12b is gated on H12a producing a
+clean width-verdict — see `results-*/REPORT.md` for the current gate
+status.
+
+## Files
 
 - `gen_triples.py` — task generator (deterministic seed).
-- `run_probe.py` — Ollama-driven runner over the two sweeps.
-- `results/` — per-config accuracy dumps + summary table.
+- `run_probe.py` — Ollama-shape runner; supports `--num-predict-per-n`
+  and `--dist-n` for the follow-on sweeps.
+- `summarise.py` — decision-tree verdict against the width/distance
+  drop thresholds.
+- `tasks/` — n=3 sanity task set (design default).
+- `tasks-n30/` — n=30 clean-rerun task set (dist-N=8).
+- `results-q8_0/`, `results-g1d/`, `results-g1d-n30/` — per-run
+  results, each with `SUMMARY.txt` and `REPORT.md`.
 - `README.md` — this file.

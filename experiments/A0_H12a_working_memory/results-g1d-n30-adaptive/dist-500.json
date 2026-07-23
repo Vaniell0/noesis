@@ -1,0 +1,931 @@
+{
+  "tasks_file": "tasks-n30/tasks-dist-500.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 512,
+  "num_predict_per_n": 128,
+  "num_predict_cap": 3000,
+  "n_tasks": 30,
+  "elapsed_s": 1271.0922632217407,
+  "aggregate": {
+    "n": 30,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.021666666666666667,
+    "mean_precision": 0.016666666666666666,
+    "mean_recall": 0.03333333333333333,
+    "mean_word_gap": 471.6333333333333
+  },
+  "results": [
+    {
+      "id": "h12a-d-g500-s0",
+      "n": 8,
+      "mean_word_gap": 509.5,
+      "seed": 0,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has a unique identifier (like item-alpha-00), and then there are other items with their own identifiers (like item-beta-01). The color is stored in a separate field, like color-item-alpha or something similar. The checksums are used to verify the color, and the hash values are part of the data structure.\nThe problem says that some items have unique colors, others share a common color. So for each item with a unique color, I need to check all other items that share that color. For each such pair, I need to output their identifiers in order.\nLet me think about how to approach this. The main steps are:\n1. Iterate through each item and check if its color is unique (i.e., not present in any other item's color). If yes, add the pair (item_id, other_item_id) to a list.\n2. Then, for each such pair, check if they share a common color. If yes, add the pair to another list of pairs (since each item has multiple colors).\n3. Finally, output all these pairs in order.\nSo the main challenge is to efficiently check if two items have the same color and then collect their pairs.\nLet me think about how to represent the data structures. Since each item has a unique identifier, we can use a dictionary where the key is the item's ID and the value is another dictionary mapping colors to other items' IDs. That way, checking if two items share a color is O(1) per check.\nFor example:\n- For each item, create a dictionary where keys are colors and values are lists of other items that share that color.\nThen, for each item in the input list:\n- Check if its color is present in the dictionary. If not, add it to the pair list.\n- Then, for each item in the pair list, check if their colors are common. If yes, add them to another dictionary where keys are colors and values are lists of other items sharing that color.\nThis way, we can efficiently collect all pairs without checking every possible pair.\nNow, let's think about how to implement this in Python.\nFirst, I need to parse the input data into a structured format. The input is given as a list of items with their colors and other fields. Each item has a unique identifier (like item-alpha-00), and for each color, there's another dictionary mapping colors to other items.\nSo, for example:\nitems = [\n    {\n        \"id\": 1,\n        \"color\": \"maroon\",\n        \"other_colors\": {\"red\": \"item-alpha-00\", \"green\": \"item-beta-01\"}\n    },\n    {\n        \"id\": 2,\n        \"color\": \"blue\",\n        \"other_colors\": {\"yellow\": \"item-alpha-00\", \"orange\": \"item-beta-01\"}\n    }\n]\nThen, for each item in items:\nFor each color in the item's color field:\n- Check if the color is present in the other_colors dictionary. If not, add the pair (id, other_id) to a list of pairs.\nOnce all pairs are collected, we need to sort them by their IDs. Then output them in order.\nSo, steps:\n1. Parse the input data into a list of items with their colors and other fields.\n2. For each item, check if its color is present in the other_colors dictionary. If not, add the pair (id, other_id) to a list of pairs.\n3. Then, for each pair in the list of pairs:\n   a. Check if their IDs are unique (i.e., no other item has both colors).\n   b. If yes, add the pair to a list of pairs (id, other_id).\n4. Sort the list of pairs by ID and output them.\nNow, let's think about how to implement this in Python.\nFirst, parse the input data into a structured format. Let's assume that each item is represented as a dictionary with keys: id, color, other_colors (a dictionary mapping colors to other items). For example:\nitems = [\n    {\n        \"id\": 1,\n        \"color\": \"maroon\",\n        \"other_colors\": {\"red\": \"item-alpha-00\", \"green\": \"item-beta-01\"}\n    },\n    {\n        \"id\": 2,\n        \"color\": \"blue\",\n        \"other_colors\": {\"yellow\": \"item-alpha-\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ]
+      ],
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s1",
+      "n": 8,
+      "mean_word_gap": 587.5,
+      "seed": 1,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has an index (like 0, 1, 2) and a color (like 'red', 'orange', etc.). The key is to find all pairs where one item's color matches another's. But wait, the problem says \"list every pair of items that share a color\". So for each pair (i, j) where i < j, I need to check if their colors are the same.\nBut how do I efficiently check this? Because checking each pair directly would be O(n^2), which is not feasible for large n. So I need a way to group items by their color and then for each color, find all pairs that share it.\nHmm, maybe using a hash map where the key is the color, and the value is a list of indices where that color appears. Then, for each color in the map, I can iterate through all its indices and collect those with the same color.\nYes, that makes sense. So steps:\n1. Create a dictionary (or hash map) to store colors as keys and lists of indices as values.\n2. For each item in the input list, check if its color is in the dictionary. If yes, add all indices where it's present to the corresponding list in the dictionary.\n3. Then, for each color in the dictionary, collect all indices that have that color and output them as pairs (i, j) where i < j.\nBut wait, what about duplicates? For example, if two items share a color but are at different indices. The problem says \"list every pair of items that share a colour\". So even if two items have the same color but are at different indices, they should be included in the list. Wait, no. Because each item is unique. So for example, if item A has color red and item B has color red, then both should be added to the list of pairs where color is red.\nSo the approach is:\n- For each color in the dictionary (from 0 to len(colors)-1), collect all indices where that color appears.\n- Then, for each such index i, add all indices j where colors[i] == colors[j] to the list of pairs.\nBut wait, what if a color is present multiple times? Like in the sample input, item 0 has color red twice. So when processing color 0, we collect all indices where it's present. Then for each such index i, add j=i to the list of pairs (since i < j).\nYes. So the steps are:\n1. Create a dictionary that maps each color to a list of indices where that color appears.\n2. For each color in the dictionary, iterate through all its indices and collect those with the same color.\n3. Then, for each such index i, add j = i to the list of pairs (i, j) where colors[i] == colors[j].\nBut wait, what if a color appears multiple times? For example, if two items have color red but at different indices. Then when processing color 0, we collect all indices where it's present. Then for each such index i, add j=i to the list of pairs (since i < j). That's correct.\nSo the plan is:\n- Create a dictionary that maps each color to a list of indices where that color appears.\n- For each color in the dictionary, iterate through all its indices and collect those with the same color.\n- Then, for each such index i, add j = i to the list of pairs (i, j) where colors[i] == colors[j].\nNow, how to implement this in Python.\nFirst, read the input data. The input is a list of items. Each item is a tuple (index, color). So for example:\nitems = [\n    (0, 'red'),\n    (1, 'orange'),\n    (2, 'blue'),\n    (3, 'green'),\n    (4, 'yellow')\n]\nThen process each item:\nFor each item in items:\n   color = colors[item[0]]\n   add all indices where color == color to the dictionary.\nSo for item 0: add 0 and 1.\nitem 1: add 2.\nitem 2: add 3.\nitem 3: add 4.\nitem 4: add 5.\nThen, process each color in the dictionary. For each color, collect all indices where it's present, then for each such index i, add j = i to the list of pairs (i, j) where colors[i] == colors[j\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s2",
+      "n": 8,
+      "mean_word_gap": 506.5,
+      "seed": 2,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair should be listed once per unique color combination.\nFirst, let me understand the structure of the input. Each line has an item's name, then its color, followed by some other data. For example, in the first sample input:\nitem-alpha-00 has copper as color. Then there are two items with copper as their colors. The second item has a different color (blue), and the third has another color (green). So each pair is unique based on their colors.\nThe output should list each such pair once, separated by a comma and space. For example, in the first sample input, the pairs are:\n- copper-alpha-00\n- copper-beta-01\n- copper-beta-02\nAnd then there's another line with two items having blue colors. So the output should be each unique pair once per color.\nSo the approach is to iterate through each item and check if its color matches any of the other items' colors. If it does, add that pair to the result list.\nNow, how to implement this in Python?\nThe steps I need to take:\n1. Read all lines from input. Each line starts with an item name followed by its color (which is a string). Then there are other items with their colors and other properties.\n2. For each item, check if its color matches any of the other items' colors. If yes, add the pair to the result list.\n3. After processing all items, print each pair on a new line.\nSo first, I need to parse the input into a list of items and their colors. Then iterate through each item's color against others.\nLet me think about how to parse the input. The input is given as lines separated by spaces, with each line starting with an item name followed by its color (which is a string). So for example, the first sample input has:\nitem-alpha-00 copper\nitem-beta-01 blue\nitem-beta-02 green\nThen there are other items like copper, blue, green. The second line after the first two lines is \"value 78.03, tolerance 4.59\". Wait, looking at the sample input:\nThe first sample input's lines:\nitem-alpha-00 copper\nitem-beta-01 blue\nitem-beta-02 green\nThen there are other items with different colors and other properties. So the input is structured such that each line after the first two is a separate item, and the color is followed by some other data. So for example, in the first sample input:\nitem-alpha-00 copper\nitem-beta-01 blue\nitem-beta-02 green\nThen there are lines like \"value 78.03, tolerance 4.59\" which are part of the other items' data. So each line after the first two is a separate item with its color and other properties.\nSo the input is structured as:\nitems = [\n    (\"item-alpha-00\", \"copper\"),\n    (\"item-beta-01\", \"blue\"),\n    (\"item-beta-02\", \"green\"),\n    ... other items with their colors and other data.\n]\nThen, for each item in this list, we need to check if its color is present in the other items' colors. If yes, add the pair.\nSo the plan is:\n- Initialize an empty list to hold the pairs.\n- Iterate over each line in the input:\n   - Split the line into parts using commas as separators.\n   - The first part is the item name (after \"item-\").\n   - The second part is the color (after \"color\").\n   - Check if this color exists in the other items' colors. If yes, add this pair to the result list.\nSo for example, in the sample input:\nThe first line after \"item-alpha-00\" is \"copper\". Then there's a line with \"value 78.03, tolerance 4.59\". The second item's color is blue, so we check if \"copper\" is in the other items' colors. Yes, so add that pair.\nAnother example: the second sample input has two items with blue and green colors. So when processing the first line (item-beta-01), we check if \"blue\" is in the other items' colors. The second line's color is green, so no match. Then another line with \"green\" as color, which is not in the other items' colors. So that pair is added.\nSo the algorithm steps:\n1. Read all lines from input, split into parts by commas and spaces.\n2. For each line in the list:\n   a. Split\n",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s3",
+      "n": 8,
+      "mean_word_gap": 341.0,
+      "seed": 3,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair is separated by a comma. The output should be each pair on a new line, separated by spaces.\nFirst, I need to parse the input correctly. Let's look at the sample input given:\nSample Input:\nitem-alpha-00 has colour ochre. (reading 52: temperature 28.8C, humidity 77%, pressure 989 hPa)\n(reading 744: temperature 25.8C, humidity 63%, pressure 1014 hPa)\n(reading 600: temperature 32.3C, humidity 87%, pressure 996 hPa)\n(reading 636: temperature 15.4C, humidity 33%, pressure 1006 hPa)\n(instrument log 807: value 17.24, tolerance 3.61)\n(reading 619: temperature 22.6C, humidity 83%, pressure 995 hPa)\n(reading 633: value 29.7C, tolerance 0.79)\n(reading 858: temperature 6.9C, humidity 50%, pressure 990 hPa)\n(checksum 974: parity even, hash-suffix 508b)\n(reading 880: temperature 16.6C, humidity 51%, pressure 993 hPa)\n(checksum 983: parity even, hash-suffix 543c)\n(reading 553: temperature 6.8C, humidity 64%, pressure 992 hPa)\n(reading 735: temperature 24.2C, humidity 83%, pressure 996 hPa)\n(reading 744: temperature 12.5C, humidity 61%, pressure 1003 hPa)\n(checksum 260: parity even, hash-suffix 45ff)\n(reading 233: temperature 21.8C, humidity 81%, pressure 1020 hPa)\n(instrument log 432: value 36.29, tolerance 3.22)\n(instrument log 506: value 27.68, tolerance 4.70)\n(checksum 144: parity even, hash-suffix 201a)\n(reading 182: temperature 13.9C, humidity 52%, pressure 1006 hPa)\n(reading 177: temperature 33.2C, humidity 86%, pressure 995 hPa)\n(instrument log 833: value 91.84, tolerance 3.21)\n(reading 616: temperature 11.3C, humidity 42%, pressure 1028 hPa)\n(checksum 855: parity even, hash-suffix ce42)\n(reading 902: temperature 19.2C, humidity 81%, pressure 1015 hPa)\n(instrument log 329: value 16.25, tolerance 2.58)\n(instrument log 718: value 4.81, tolerance 3.19)\n(checksum 133: parity even, hash-suffix 345c)\n(reading 180: temperature 23.4C, humidity 52%, pressure 1020 hPa)\n(instrument log 942: value 18.90, tolerance 1.57)\n(reading 198: temperature 1.2C, humidity 67%, pressure 1015 hPa)\n(checksum 976: parity even, hash-suffix 74c5)\n(reading 904: temperature 19.0C, humidity 30%, pressure 1028 hPa)\n(instrument log 321: value 4.79, tolerance 3.14)\n(instrument log 293: value 62.04, tolerance 0.31)\n(checksum 999: parity even, hash-suffix 508b)\n(reading 190: temperature 25.2C, humidity 41%, pressure 1022 hPa)\n(reading 543: temperature 18.7C, humidity 52%, pressure 1014 hPa)\n(instrument log 735: value 9.87, tolerance 3.85)\n(reading 874: temperature 6.6C, humidity 33%, pressure 1006 hPa)\n(reading 619: temperature 25.2C, humidity 41%, pressure 1020 hPa)\n(checksum 922: parity even, hash-suffix 6281)\n(reading 458: temperature 6.9C, humidity 34%, pressure 1013 hPa)\n(instrument log 819: value 16.68, tolerance 0.45)\n(reading 728: temperature 24.0C, humidity 50%, pressure 1029 hPa)\n(checksum 190: parity even, hash-suffix 4c82)\n(reading 533: temperature 29.7C, humidity 86%, pressure 995 hPa)\n(instrument log 843: value 92.47, tolerance 4.08)\n(reading 584: temperature 26.9C, humidity 65%, pressure 996 hPa)\n(checksum 855\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s4",
+      "n": 8,
+      "mean_word_gap": 168.5,
+      "seed": 4,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has a unique identifier (checksum), a color, and some other attributes like temperature, humidity, pressure, etc. The key here is to find all pairs where one item's color matches another's.\nThe approach I can think of is to iterate through each item and check if its color matches any of the others. For each matching pair, add the two items' information to a list.\nSo, for each item in the input list, I need to loop through all other items and check if their colors match. If they do, add their information to the result list.\nLet me think about how to implement this in Python. The input is a list of dictionaries, each with 'checksum', 'color', and other attributes. So for each item in the input, I can loop through all items and check if their colors match.\nWait, but how do I handle the color? The problem says that some items have unique colors, others share a color. So for each item, I need to check all other items against it.\nSo the steps are:\n1. Initialize an empty list to store the pairs.\n2. For each item in the input list:\n   a. Iterate through all other items (excluding self) and check if their color matches.\n   b. If yes, add their information to the result list.\n3. Return the result list as a comma-separated string.\nNow, how to implement this in Python?\nLet's think about the data structures. Each item has a 'color' attribute which is a string (like 'blue', 'red', etc.). So for each item, we can loop through all other items and check if their color matches.\nIn Python, perhaps using a set to track colors would be efficient. For example, for each item, create a set of colors from the others. Then, for each item in the input list, check if its color is in the set of others. If yes, add the other items' information to the result list.\nSo here's a plan:\n- Initialize an empty list to hold the results.\n- For each item in items:\n   - Create a set of colors from all other items.\n   - Check if item's color is in this set.\n   - If yes, add the other items' information to the result list.\nBut how to get all other items? For each item, iterate through all others and collect their colors.\nSo for each item in items:\n   for other_item in items:\n       if color(other_item) == color(item):\n           add other_item's info to the result list.\nYes, that makes sense.\nNow, let's think about the data structures. For each item, we can have a dictionary or a set of colors. But since the input is a list of dictionaries with 'color' and other attributes, perhaps using a set for colors would be efficient.\nSo in Python:\nitems = [\n    {\n        \"checksum\": \"a554\",\n        \"color\": \"blue\",\n        \"other_colors\": [\"red\", \"green\"]\n    },\n    {\n        \"checksum\": \"b3ed\",\n        \"color\": \"orange\",\n        \"other_colors\": [\"yellow\"]\n    },\n    ...\n]\nThen, for each item in items:\n   for other in items:\n       if color(item) == color(other):\n           add other's info to the result list.\nSo the code would look like:\nresult = []\nfor item in items:\n    colors = set()\n    for other in items:\n        if item['color'] == other['color']:\n            colors.add(other['color'])\n    result.append(f\"{item['checksum']}, {', '.join(map(str, colors))}\")\nThen, print each result on a new line.\nPutting it all together:\nitems = [\n    {\n        \"checksum\": \"a554\",\n        \"color\": \"blue\",\n        \"other_colors\": [\"red\", \"green\"]\n    },\n    {\n        \"checksum\": \"b3ed\",\n        \"color\": \"orange\",\n        \"other_colors\": [\"yellow\"]\n    },\n    ...\n]\nfor item in items:\n    colors = set()\n    for other in items:\n        if item['color'] == other['color']:\n            colors.add(other['color'])\n    result.append(f\"{item['checksum']}, {', '.join(map(str, colors))}\")\nprint('\\n'.join(result))\nWait, but what if the input list has duplicate items? Like multiple items\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s5",
+      "n": 8,
+      "mean_word_gap": 845.0,
+      "seed": 5,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair should be listed once per unique color combination.\nFirst, let me understand the structure of the input. Each line has an item's name, then its color, followed by some other data. For example, in the sample input:\nitem-alpha-00 has crimson.\nitem-beta-01 has turquoise.\nitem-gamma-02 has beige.\netc.\nSo each line is a pair of items with their colors and other info. The output should list all such pairs, one per line, in the order they appear in the input.\nThe key challenge here is to process each line correctly and collect all unique color pairs that share a common color. Since there can be multiple items sharing the same color, I need to make sure that each pair is listed only once.\nLet me think about how to approach this. The main steps are:\n1. For each line in the input, split into item name and color (the second part).\n2. Check if the color is unique across all items in the line. If it's not unique, skip that line.\n3. Collect all pairs where both items have the same color.\n4. Output each pair on a new line, separated by a comma and space.\nSo, how to check if two items share the same color? Well, for each item in the input, I can loop through its colors and see if any other item has that color. If so, then it's a duplicate.\nBut wait, what about cases where multiple items have the same color? For example, if an item has two different colors but they share the same color with another item. But according to the problem statement, each line is a pair of items (item-X and item-Y), so each line's items are unique. So for each line, we can process all items in that line and check if any other item in that line has the same color as the first item.\nSo for each line:\n- Split into item_name and color.\n- For each color in the list of colors of this line, check if any other item in the line has that color. If yes, then this pair is a duplicate and should be added to the result list.\nBut wait, what about cases where multiple items share the same color? For example, if an item has two different colors but they are both present in another item's color list. But according to the problem statement, each line is a pair of items (item-X and item-Y), so each line's items are unique. So for each line, we can process all its items' colors and check if any other item in the line has that color. If yes, then this pair is a duplicate and should be added to the result list.\nSo the plan is:\n1. For each line in the input:\n   a. Split into item_name and color (the second part).\n   b. Iterate through all items in this line's colors list.\n   c. For each color in the item's colors, check if any other item in the line has that color. If yes, then this pair is a duplicate and should be added to the result list.\n2. Collect all such pairs into a list and output them separated by commas and spaces.\nNow, how to implement this in Python?\nFirst, read the input line by line. For each line:\n- Split into item_name and color (the second part).\n- Iterate through all items in the color list of this line.\n- For each item's colors, check if any other item has that color. If yes, then this pair is a duplicate and should be added to the result list.\nSo for example, for an item with color 'red', we loop through all items in its colors list (like ['red', 'blue', 'green'], etc.), and check if any of them has the same color as the item's color. If yes, then this pair is a duplicate and should be added to the result list.\nSo the steps for each line:\n- Split into item_name and color.\n- Iterate through all items in the color list of this line.\n- For each item in that list, check if any other item has the same color as this item's color. If yes, then this pair is a duplicate and should be added to the result list.\nSo how to implement this?\nIn Python, for each line:\nitems = line.split(', ')  # assuming each line has two items separated by commas.\ncolor_list = []\nfor item in items:\n    color_list.append(item[1])  # the second part of the color\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s6",
+      "n": 8,
+      "mean_word_gap": 509.5,
+      "seed": 6,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some metadata. The output should be each pair on a new line.\nFirst, let me understand the structure. Each item has an index (like 0, 1, 2) and a color (like 'red', 'green', etc.). The key is to find all pairs where one item's color matches another's. But wait, the problem says \"list every pair of items that share a color\". So for each pair (i, j) where i < j, check if their colors are the same.\nBut how do I efficiently check this? Because for each item, I need to compare its color with all other items and see if they match. But comparing all pairs would be O(n^2), which is not feasible for large n (like 1000 items). So there must be a smarter way.\nHmm, maybe using a hash map or a dictionary to store the colors of each item. Then, for each item, check all other items against their color. If they match, add the pair to the result list.\nWait, but how do I track which items have been seen? Because if I use a set for each item's color, then checking if another item has the same color would be O(1) per check. But storing all colors in a set might not be efficient enough. Alternatively, maybe using a hash map where the key is the index of the item and the value is a set of colors. Then, for each item, iterate through its indices and check if any other item's color matches.\nYes, that makes sense. So here's the plan:\n1. Create a dictionary (or hash map) to store each item's color as a key and a set of colors as the value. This way, checking if two items have the same color is O(1).\n2. For each item in the input list, iterate through its indices (0 to n-1). For each index i:\n   a. Check if any other item's color matches this one. If yes, add (i, j) to the result list.\n3. Return the result list sorted by index? Or just in any order? The problem says \"list every pair of items that share a color\", so perhaps in any order. But maybe we need to sort them for readability.\nWait, but the problem statement doesn't specify the order. So perhaps we can just collect all pairs and then sort them. But maybe the original order is important? The problem says \"list every pair of items that share a color\", so perhaps in any order. But in programming competitions, sometimes they expect the sorted list. Let me check the sample input.\nLooking at the sample input:\nThe first item has colors red and green. The second has magenta and yellow. The third has red and blue. The fourth has green and blue. So the pairs are (0,1), (0,2), (1,2). But in the sample output, they are listed in order of their indices. Wait, but the problem says \"list every pair of items that share a color\". So perhaps the order doesn't matter. But maybe the problem expects them sorted. Let me check the sample input again.\nSample Input:\n4\nred green blue yellow magenta yellow green red blue green red blue green red blue green red blue green red blue green red blue green red blue green\nThe output is:\nred,green,blue,yellow,magenta,yellow,green,red,blue,green\nSo the pairs are (0-1), (0-2), (1-2). So the order in the output is based on their indices. But how to handle that? The problem statement doesn't specify. So perhaps we can just collect all pairs and sort them. But maybe the problem expects the order of appearance in the input, but since it's not specified, perhaps we can just collect all pairs and then sort them.\nBut let's proceed with collecting all pairs and then sorting them.\nSo steps:\n1. Create a dictionary where each key is an index (0-based) and the value is a set of colors for that item.\n2. Iterate through each item in the input list, and for each item, check if any other item's color matches it. If yes, add (i, j) to the result list.\n3. Sort the result list in ascending order based on their indices.\nBut how to handle the indices? For example, if an item has index 0 and another with index 1, then when we check if any other item's color matches, we need to compare their indices. So for each pair (i, j), we need to check if there exists another item k such that i < k \n",
+      "expected": [
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s7",
+      "n": 8,
+      "mean_word_gap": 510.0,
+      "seed": 7,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a common color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has a unique name (like \"item-alpha-00\"), a color (like \"item-alpha-00\"), and some other attributes like humidity, temperature, etc. The key is to find all pairs where one item's color matches another's.\nHmm, how do I approach this? Maybe I can iterate through each item and check if its color matches any of the others. But checking every pair would be O(n^2), which might not be efficient for large n. But given that the problem doesn't specify constraints on n, maybe it's acceptable.\nWait, but the problem says to list every pair of items sharing a common color. So perhaps I can collect all pairs where one item's color matches another's, and then output them in order.\nSo the plan is:\n1. Iterate through each item in the list.\n2. For each item, check if its color matches any other item's color.\n3. If a match is found, add the pair to the result list.\n4. After processing all items, output each pair on a new line separated by spaces or commas.\nBut how to efficiently check for matches? Since there are multiple items, maybe we can use a set to track colors that have been seen so far. For each item, if its color is in the set, then add it to the result list.\nYes, that makes sense. So steps:\n- Initialize an empty set to keep track of colors seen so far.\n- Iterate through each item in the input list.\n- For each item, check if its color is in the set. If yes, add it to the result list and remove it from the set (to avoid duplicates).\n- After processing all items, output each item's color on a new line.\nBut wait, what about duplicate colors? Like if two items have the same color. For example, if one has color \"blue\" and another has \"blue\", then they would both be added to the set. So when checking for matches, we need to consider all possible pairs where one item's color is in the set and the other's is not.\nSo the algorithm steps:\nInitialize an empty set called seen_colors.\nFor each item in the list:\n   if item's color is in seen_colors:\n       add it to result list and remove it from seen_colors.\n   else:\n       add its color to seen_colors.\nThen, after processing all items, output each item's color on a new line.\nYes, that should work.\nNow, how to implement this in Python?\nThe input is given as a list of dictionaries. Each dictionary has keys 'name', 'color', and other attributes like humidity, temperature, etc. So for each item in the input list:\n- Check if color is in seen_colors. If yes, add to result and remove from seen_colors.\n- Else, add to seen_colors.\nSo the code structure would be something like:\nitems = [\n    {\n        'name': 'item1',\n        'color': 'blue',\n        ... other attributes\n    },\n    {\n        'name': 'item2',\n        'color': 'red',\n        ... other attributes\n    },\n    ...\n]\nseen_colors = set()\nfor item in items:\n    if item['color'] in seen_colors:\n        result.append(item['name'])\n        seen_colors.remove(item['color'])\n    else:\n        seen_colors.add(item['color'])\nThen, for each item in result, print them on a new line.\nBut wait, the problem says to output each pair of items sharing a color on a new line. So for example, if two items have the same color, they should be listed as two separate lines.\nSo the code above would do that.\nNow, considering the input format: each item is given as a dictionary with 'name', 'color', and other attributes. The problem says to list every pair of items sharing a common color. So for each item in the list, check if its color is in seen_colors. If yes, add to result and remove from seen_colors.\nSo the code would look like:\nitems = [\n    {\n        'name': 'item1',\n        'color': 'blue',\n        ... other attributes\n    },\n    {\n        'name': 'item2',\n        'color': 'red',\n        ... other attributes\n    },\n    ...\n]\nseen_colors = set()\nfor item in items:\n    if item['color'] in seen_\n",
+      "expected": [
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s8",
+      "n": 8,
+      "mean_word_gap": 852.0,
+      "seed": 8,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a common color. The input is a list of items with their colors and other properties. Each pair should be listed once per unique color combination.\nFirst, let me understand the structure of the input. Each line has an item's name, then its color, followed by some other data. For example, in the first sample input:\n- item-alpha-00 has colour auburn.\n- item-beta-01 has colour teal.\n- item-delta-03 has colour blue.\nSo each pair is (item_name1, item_name2) where both items have the same color. The output should list all such pairs in order of their first occurrence, right? Because the problem says \"list every pair of items that share a common color\". So I need to collect all unique colors and then for each unique color, collect all pairs where both items are of that color.\nThe input has multiple lines with different items. Each line starts with an item name followed by its color. The output should list each unique color once, in the order they appear in the input.\nSo the steps I need to take are:\n1. Read each line from the input, split into parts (item name and color).\n2. For each item, check if its color is present in a set of known colors. If it is, add both items to a list of pairs for that color.\n3. Once all items have their colors added to the set, collect all unique colors from the set and output them in order.\nBut how do I handle the input? The input lines are given as strings, but when reading them, I need to parse each line into parts. For example, \"item-alpha-00\" would split into [\"item-alpha-00\"], which is a string. Then split that string into parts by spaces or commas.\nSo first, I'll read each line from the input and split it into parts. Each part is either an item name (like \"item-alpha\") or a color (like \"auburn\").\nOnce I have all the items and their colors, I need to create a dictionary where the keys are the unique colors, and the values are lists of tuples (item1, item2) that share that color.\nThen, for each unique color in this dictionary, collect all pairs where both items are from that color. Then output them in order.\nSo the plan is:\n- Read all lines from input.\n- For each line:\n   - Split into parts using split() which splits on any whitespace.\n   - The first part is the item name (stripped of leading/trailing whitespace).\n   - The second part is the color (stripped of whitespace).\n   - Check if this color exists in a set of known colors. If yes, add both items to a list for that color.\n- After processing all lines, collect all unique colors from the list and output them in order.\nNow, how to implement this in Python?\nFirst, read the input line by line. For each line:\n- Split into parts using split(). The first part is the item name (stripped of whitespace), the second part is the color (stripped of whitespace).\nSo for example, \"item-alpha-00\" \u2192 [\"item-alpha\", \"\"]\nThen, check if this color exists in a set. If yes, add both items to a list.\nOnce all items are processed, collect all unique colors from the list and output them in order.\nNow, how to handle the input? The problem says that each line is given as \"item-name-color\". So for example, if the input has \"item-alpha-00\", then the first part is \"item-alpha\", and the second part is \"\".\nSo in code:\nRead lines from stdin. For each line:\nstripped_line = line.strip()\nif stripped_line == '':\n    # end of line, skip processing\n    continue\nelse:\n    parts = stripped_line.split()\n    item_name = parts[0]\n    color = parts[1]\nThen, check if color is in the set of known colors. If yes, add both items to a list for that color.\nOnce all items are processed, collect all unique colors from the list and output them in order.\nSo putting it all together:\nRead lines until EOF. For each line:\n   stripped_line = line.strip()\n   if stripped_line == '':\n       continue\n   parts = stripped_line.split()\n   item_name = parts[0]\n   color = parts[1]\n   # check if color is in the set of known colors\n   known_colors = set(color)  # assuming colors are unique, but maybe not? Wait,\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s9",
+      "n": 8,
+      "mean_word_gap": 339.0,
+      "seed": 9,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share the same color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has a unique identifier (item_id), a color (color), and some other attributes like temperature, humidity, pressure, etc. The key is to find all pairs where both items have the same color.\nThe approach here is probably to iterate through each item and check if its color matches any of the others. But how do I efficiently check for duplicates?\nHmm, maybe using a set would help. Because checking membership in a set is O(1) average case, which is much faster than checking each item individually. So for each item, I can check if its color is in the set. If it is, then add both items to the result list.\nWait, but how do I handle the data structures? The input has multiple items with different attributes. So perhaps using a dictionary to map colors to their corresponding items would be efficient. For example, a dictionary where each key is a color, and the value is another dictionary or a list of items that have that color.\nSo here's the plan:\n1. Create a set of all unique colors from the input data.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is in the set. If yes, add both items to a list (or a tuple) and add it to the result list.\n4. Return the result list sorted by item_id? Or maybe just by item_id? The problem statement doesn't specify, but since the output is ordered by item_id, perhaps we can sort them.\nWait, but in Python, when you use a set as a dictionary, the items are ordered based on their keys. So if we have two items with the same color, they will be added to the result list in order of their keys. But since the problem says \"pairs\", maybe we need to collect all pairs where both items have the same color.\nSo steps:\n- Create a set of colors from all items.\n- Iterate through each item in the input list.\n- For each item, check if its color is in the set. If yes, add both items to a list (or a tuple) and add to the result list.\nBut how to handle the order? The problem says \"pairs of items\", so perhaps we need to collect all pairs where both items have the same color. So for each item, if its color is in the set, then add both items to a list (or a tuple) and append it to the result list.\nBut how to handle the order? The problem doesn't specify, but since the input data is ordered by item_id, perhaps we can collect all pairs where both items have the same color in that order.\nSo here's the plan:\n1. Create a set of colors from all items.\n2. Iterate through each item in the input list.\n3. For each item, check if its color is in the set. If yes, add both items to a list (or a tuple) and append it to the result list.\n4. Return the result list sorted by item_id? Or maybe not, since the problem doesn't specify order. But perhaps we need to sort them so that when we process them in order, they are ordered correctly.\nWait, but the problem says \"pairs of items\", so each pair is two items with the same color. So for example, if item A has color red and item B has color blue, then (A,B) is a valid pair. But if there are multiple pairs with the same color, we need to collect all of them in order.\nSo the approach would be:\n- Create a set of colors from all items.\n- Iterate through each item in the input list.\n- For each item, check if its color is in the set. If yes, add both items to a list (or a tuple) and append it to the result list.\n- Return the result list sorted by item_id? Or maybe not, since the problem doesn't specify order. But perhaps we need to sort them so that when we process them in order, they are ordered correctly.\nWait, but how to handle that? For example, if two items have the same color, their order in the result list could be either sorted by item_id or not. The problem statement doesn't specify, so perhaps we can just sort them by item_id and then process them in that order.\nSo here's the plan:\n- Create a set of colors from all items.\n- Iterate through each item in the input list.\n- For\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s10",
+      "n": 8,
+      "mean_word_gap": 600.5,
+      "seed": 10,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some metadata. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has an index (like 0, 1, 2), a name (like \"item-alpha-00\"), and some other attributes like color, temperature, humidity, pressure, etc. The metadata includes checksums for hashing purposes.\nThe task is to find all pairs where one item's color matches another's. So for each pair (i, j) where i < j, I need to check if the colors of item i and item j are the same. If they are, then add their indices as a pair.\nBut wait, how do I check if two items have the same color? The problem says that each item has a unique color. So for each item, we can store its color as a string or maybe an integer. But since the input is given in a specific format (like hash-suffix), perhaps we need to parse the colors from the metadata.\nLooking at the sample data, some items have their colors listed with hashes like \"sienna\", \"scarlet\", etc. So perhaps each item's color is stored as a string or a hash value. But how do I parse that?\nThe problem statement says that each item has a unique color, but the metadata includes hash-suffixes. So maybe the colors are stored as strings in the metadata, and we need to extract them from the data.\nSo for each item i, we need to check if its color is present in the list of items with color sienna. If it is, then add (i, j) as a pair.\nBut how do I find all items with color sienna? The problem says that each item has a unique color. So perhaps for each item i, we can check if its color is in the list of items with color sienna. If yes, then add (i, j) as a pair.\nSo the steps would be:\n1. For each item i in 0 to n-1:\n   a. Check if its color is present in the list of items with color sienna.\n   b. If yes, add (i, j) as a pair to the result list.\nBut how do I check if an item's color is in the sienna list? The problem says that each item has a unique color, but perhaps we need to check if its hash matches any of the sienna hashes.\nSo for each item i, we can loop through all items j where sienna[j] == sienna[i]. If found, add (i, j) as a pair.\nBut how to get the sienna list? The problem says that each item has a unique color, but the metadata includes hash-suffixes. So perhaps for each item i, we can check if its hash matches any of the sienna hashes.\nSo for example, for each i in 0..n-1:\n   for j in 0..n-1:\n      if sienna[i] == sienna[j]:\n          add (i, j) as a pair.\nBut how to get the sienna list? The problem says that each item has a unique color, but the metadata includes hash-suffixes. So perhaps for each item i, we can check if its hash matches any of the sienna hashes.\nSo for each i in 0..n-1:\n   for j in 0..n-1:\n      if sienna[i] == sienna[j]:\n          add (i, j) as a pair.\nBut how to get the sienna list? The problem says that each item has a unique color, but the metadata includes hash-suffixes. So perhaps for each item i, we can check if its hash matches any of the sienna hashes.\nSo for each i in 0..n-1:\n   for j in 0..n-1:\n      if sienna[i] == sienna[j]:\n          add (i, j) as a pair.\nBut how to get the sienna list? The problem says that each item has a unique color, but the metadata includes hash-suffixes. So perhaps for each item i, we can check if its hash matches any of the sienna hashes.\nSo for each i in 0..n-1:\n   for j in 0..n-1:\n      if sienna[i] == sienna[j]:\n          add (i, j) as a pair.\nBut how to get the sienna list? The problem says that each item has a unique color, but the metadata includes\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s11",
+      "n": 8,
+      "mean_word_gap": 510.0,
+      "seed": 11,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a common color. The input is a list of items with their colors and some metadata. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has a unique identifier (checksum), a color, and other attributes like temperature, humidity, pressure, etc. The key here is to find all pairs where one item's color matches another's.\nHmm, how do I approach this? Well, maybe I can iterate through each item and check if its color matches any of the others. But checking every pair would be O(n^2), which might not be efficient for large datasets. However, given that the problem doesn't specify constraints on the number of items or their colors, perhaps there's a smarter way.\nWait, but maybe I can group items by their color and then check pairs within each group. For example, if two items have the same color, they share that color. So for each unique color in the list, I can collect all pairs where one item is from that group and the other is not. Then, for each such pair, output them separated by a space.\nThat makes sense. Because if two items have the same color, they are considered to share that color. So grouping by color would allow me to process each group once and then check all pairs within it.\nSo the steps could be:\n1. Iterate through each item in the list.\n2. For each item, check if its color is present in a set of known colors (from previous steps). If yes, add it to a list of pairs where one is from this group and the other is not.\n3. Once all items are processed, collect all these pairs into a list and print them separated by spaces.\nBut how do I efficiently check if two items have the same color? Since each item's color is unique, maybe we can store for each item a set of colors it has encountered so far. Then, when processing an item, check if its color is in any of those sets. If yes, add it to the pair list.\nYes, that makes sense. So first, create a dictionary where the keys are the unique colors from previous items and the values are sets of their colors. Then, for each item in the input list:\n- Check if its color is in this set. If yes, add it to the pair list.\nThis way, we can avoid checking all pairs for each item individually.\nSo let's outline the steps:\n1. Create a dictionary (or a set) called colors_seen where each key is an item's color, and the value is a set of colors that this item has encountered so far.\n2. For each item in the input list:\n   a. Check if its color is in colors_seen. If yes, add it to the pair list.\n   b. Add the current item to colors_seen for future checks.\n3. After processing all items, collect all pairs from colors_seen and print them separated by a space.\nThis approach would be O(n) time, where n is the number of items, which is acceptable given that the total number of unique colors across all items is manageable (since each item's color is unique).\nNow, let's think about how to implement this in Python.\nFirst, read the input. The input is a list of strings, each representing an item with its color and other attributes. So for example:\nitems = [\n    \"item-alpha-00 has colour scarlet\",\n    \"item-beta-01 has colour wine\",\n    ...\n]\nThen, create a dictionary called colors_seen where keys are the unique colors from this list, and values are sets of colors encountered so far.\ncolors_seen = {}\nfor item in items:\n    color = item[0]\n    if color in colors_seen:\n        # add to pair list\n        pair = (item[1], color)\n        print(pair)\n        # remove from the dictionary to avoid duplicates\n        colors_seen.remove(color)\n    else:\n        colors_seen.add(color)\nWait, but what if an item has a color that's not in colors_seen? Then it's considered a new pair. That's correct because we need to check all pairs where one is from the group and the other is not.\nOnce all pairs are collected, we can print them separated by spaces.\nSo putting this into code:\nRead the input line by line, split each line into item and color. For each item, check if its color is in colors_seen. If yes, add to pair list and remove from colors_seen. Then collect all pairs and print them separated by a space.\nTesting this logic with the sample input:\nSample Input:\nitems = [\n    \n",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s12",
+      "n": 8,
+      "mean_word_gap": 254.0,
+      "seed": 12,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair must be listed once, even if they share the same color but in different orders.\nFirst, let me understand the structure of the input. Each line has an item's name followed by its color. For example, \"item-alpha-00\" is a list of items with their colors. The pairs are between two items that share the same color. So for each pair (a, b), I need to check if they have the same color and then output them in order.\nThe key steps here are:\n1. For each item, check all other items to see if they share the same color.\n2. Collect all such pairs into a list of tuples (item_a, item_b) where item_a is before item_b in the input list.\n3. Output these pairs separated by commas and spaces, each on a new line.\nSo, how do I approach this?\nFirst, I need to parse the input into a list of items. Each item is a string with their name and color. For example:\nitem-alpha-00 has color vermilion. So for each item in the input, check if its color is vermilion. If yes, add it to the list of pairs.\nThen, for each pair (a, b), I need to find all other items that share the same color as a and b. But since the pairs are ordered by a before b, I can't just iterate through all items and check each one against every other item. That would be O(n^2) time, which is not efficient for large n.\nSo, the problem reduces to finding all pairs (a, b) where a comes before b in the input list. Then collect all such pairs into a list of tuples (a, b).\nBut how do I efficiently find all pairs that share the same color?\nOne approach is to iterate through each item and check if it's part of any pair with another item. But since there can be multiple items sharing the same color, this could be O(n^2) in the worst case. For example, if there are two items with the same color, then for each of them, we need to check all other items. So that's not efficient.\nSo, perhaps a better approach is to group the items by their colors and then for each color group, collect all pairs (a, b) where a comes before b in the input list.\nBut how to do that?\nLet me think. For each color group (like 'vermilion'), we can create a dictionary that maps each item's color to a list of its other items. Then, for each color group, we can iterate through all items in the group and collect those with the same color as the current item. Then, for each such pair (a, b), add them to the result list.\nThis way, we don't have to check all pairs against every other item. Instead, we can process each color group and build a dictionary of colors to their items. Then, for each color group, we can collect all items in that group and then iterate through them in order, checking if they are the same as the current item.\nThis approach would be O(n) time because for each color group, we process all items in it once.\nSo here's the plan:\n1. Parse the input into a list of items, each with their color and other properties.\n2. For each color group (like 'vermilion'), create a dictionary where the keys are colors and the values are lists of items that share that color.\n3. For each color group, iterate through all items in the group, and for each item, check if it's the same as the current item being processed. If so, add it to a list of pairs (a, b) where a comes before b in the input list.\n4. Collect all these pairs into a result list and output them.\nThis approach is O(n) time because for each color group, we process all items in that group once, and then iterate through the entire input list once. The total time complexity is O(n), which is efficient.\nNow, let's think about how to implement this in Python.\nFirst, parse the input into a list of items. Each item is a string with their name and color. For example:\nitems = [\n    \"item-alpha-00\",\n    \"item-beta-01\",\n    \"item-gamma-02\",\n    # ... more items\n]\nThen, for each item in this list, we can create a dictionary that maps colors to their items. For example:\ncolors_dict = {}\nfor item in items:\n    color\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s13",
+      "n": 8,
+      "mean_word_gap": 676.5,
+      "seed": 13,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has an alphanumeric ID, a color (like 'eggshell' or 'amber'), and some other properties like humidity, pressure, etc. The key is to find all pairs where one item's color matches another's.\nHmm, how do I approach this? Maybe I can iterate through each item and check if its color matches any of the others. But checking every pair would be O(n^2), which might not be efficient for large n. Wait, but the problem says to list every pair, so maybe there's a smarter way.\nWait, perhaps I can group items by their colors. For example, if two items have the same color, they share that color. Then for each group of items with the same color, I can collect all pairs where one is in the group and the other isn't. That might be more efficient than checking every pair individually.\nLet me think about how to structure this. For each unique color, I can create a list of items that share that color. Then, for each such group, I can collect all pairs (item1, item2) where item1 is in the group and item2 is not.\nYes, that makes sense. So first, I need to find all unique colors. Then for each color, collect all items with that color. Then for each pair in the group, add them to the result list.\nSo steps:\n1. Parse the input data into a structure where each item has its own properties (color, humidity, pressure).\n2. Group items by their color. For each group, collect all items that share that color.\n3. For each group of items with the same color, collect all pairs (item1, item2) where item1 is in the group and item2 is not.\n4. Output these pairs in order.\nNow, how to implement this in Python?\nFirst, parsing the input data:\nThe input has multiple lines. Each line starts with an ID followed by a colon and then some data. The data ends with a newline or another line break. So I need to split each line into parts and parse the ID and the rest.\nFor example, the first sample input is:\nitem-alpha-00 has colour eggshell.\nThen, after that, there's a line with humidity 561, pressure 1020 hPa. Then another line with humidity 324, pressure 1013 hPa. Then another line with humidity 831, pressure 1001 hPa. Then the next lines are instrument log values and other data.\nSo parsing each line:\nFirst, split the line into parts using colon as delimiter. The first part is the ID (like 'item-alpha-00'), then the rest of the lines are instrument log values.\nSo for each line:\nline = line.strip()  # remove leading/trailing whitespace? Or just split on any whitespace? Probably, we can split on any whitespace and take the first part as ID.\nThen, after splitting into parts, check if the ID is present in the data. If not, skip this item.\nOnce we have all items with their IDs and colors, we need to group them by color. For each group of items with the same color, collect all pairs (item1, item2) where item1 is in the group and item2 is not.\nSo for each unique color:\n- Create a dictionary that maps each color to a list of items in that color.\n- Then, iterate through all items in this dictionary. For each item, check if its color is present in the group. If yes, add it to the pair list.\nOnce all pairs are collected, we need to sort them by their ID (since they are ordered by ID). Then output each pair on a new line.\nSo steps:\n1. Parse the input data into a dictionary where keys are IDs and values are lists of items with that color.\n2. For each unique color in the dictionary:\n   a. Create a list of items with that color.\n   b. For each item in this list, check if it's present in the group (the other items).\n   c. Collect all such pairs (item1, item2) where item1 is in the group and item2 is not.\n3. Sort these pairs by their ID (since they are ordered by ID).\n4. Output each pair on a new line.\nNow, how to implement this in Python?\nFirst, parsing the input:\nRead lines until EOF. Split each line into parts using colon as delimiter. The first part is the ID (like 'item\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s14",
+      "n": 8,
+      "mean_word_gap": 680.0,
+      "seed": 14,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair should be listed once per unique color combination.\nFirst, let me understand the structure of the input. Each line has an item's name, then its color, followed by some other data. For example, in the first sample input:\nitem-alpha-00 has khaki as its color. Then there are other items with different colors and other properties like humidity and temperature readings.\nThe key is to group all items that share a common color into pairs. So for each unique color, collect all items that have that color, then output each pair separated by a comma.\nSo the steps I need to take are:\n1. Iterate through each item in the list.\n2. For each item, check if its color is present in another item's color list.\n3. If it is, add both items to a set (since sets automatically handle uniqueness).\n4. Once all items with a common color are collected, sort them by their temperature (or any other order) and then output each pair separated by a comma.\nWait, but how do I check if two items have the same color? Because the input lists each item's color as a string. So for example, if an item has khaki as its color, then when checking against another item's color list, we need to see if both items have khaki.\nSo the plan is:\n- Create a set of all unique colors from all items.\n- For each item in the input list, check if its color is in this set. If yes, add it to a list of pairs (item1, item2).\nOnce we have all such pairs, sort them by temperature (or any other order) and output each pair separated by a comma.\nSo the steps in code:\n- Read all items from the input.\n- For each item in the input list:\n   - Check if its color is present in another item's color list.\n   - If yes, add both items to a set (to avoid duplicates).\n   - Then, collect all items with that color into a list.\nOnce we have all such pairs, sort them by temperature (or any other order) and output each pair separated by a comma.\nNow, how to check if two items have the same color? For example, if an item's color is khaki and another item's color is also khaki, then they share the same color. So for each item in the input list, we can check if its color is in the set of all colors from other items.\nSo here's a plan:\n1. Create a set called unique_colors to store all unique colors from all items.\n2. For each item in the input list:\n   a. Check if its color is in unique_colors. If yes, add both items to a list of pairs (item1, item2).\n   b. Add these pairs to a set (to avoid duplicates) for later use.\n3. After processing all items, sort the pairs by temperature (or any other order) and output each pair separated by a comma.\nSo the code steps:\nRead all items from input. For each item, check if its color is in the unique_colors set. If yes, add both items to a list of pairs (item1, item2). Then sort this list by temperature (or any other order) and output each pair separated by a comma.\nNow, how to implement this in Python.\nFirst, read the input:\nRead N lines. Each line has an item's name and its color. So for each line i (starting from 1), read the item name and color, then add them to a list of pairs.\nThen process the pairs into a list of tuples (item1, item2) where both items have the same color.\nOnce we have this list, sort it by temperature (or any other order). Then output each pair separated by a comma.\nSo code steps:\nRead N from input.\nunique_colors = set()\nfor _ in range(N):\n    item1 = input().strip()\n    item2 = input().strip()\n    if item1 not in unique_colors or item2 not in unique_colors:\n        unique_colors.add(item1)\n        unique_colors.add(item2)\nThen, create a list of pairs. For each item in the input list, check if its color is in unique_colors. If yes, add both items to a list of pairs (item1, item2).\nThen sort this list by temperature (or any other order). Then output each pair separated by a comma.\nSo for example:\npairs = [pair1, pair2] where pair1 and pair\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s15",
+      "n": 8,
+      "mean_word_gap": 420.0,
+      "seed": 15,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair should be listed once, even if they share the same color but are different items.\nFirst, let me understand the structure of the input. Each line has an item's name followed by its color. For example, \"item-alpha-00\" is a list of three items: alpha (blue), beta (red), and gamma (yellow). The pairs are between these three items.\nThe output should be each pair on a separate line, separated by spaces. So for the sample input given, the pairs would be:\n(alpha, beta)\n(beta, gamma)\n(gamma, alpha)\nBut wait, in the sample output provided in the problem statement, it's written as \"item-alpha-00\" followed by \"item-beta-01\", then \"item-gamma-02\". So each pair is separated by a comma and space.\nSo the task is to generate all such pairs where each pair is a tuple of two items (the first item followed by the second). The order in which they appear in the input matters because the problem says \"list every pair of items that share a color\". So even if two items have the same color, they should be listed once.\nNow, how to approach this?\nFirst, I need to parse each line of the input. For each line, split it into parts. The first part is the item name (alpha, beta, gamma), and the second part is the color (blue, red, yellow). Then check if those two items have the same color. If they do, add them to a list of pairs.\nBut wait, what about cases where two items share a color but are different items? For example, item-alpha-00 has blue and item-beta-01 has red. They share the same color (blue), so they should be added as one pair. Similarly, item-gamma-02 has yellow and item-beta-01 has red, so they share the same color (red), so add them as one pair.\nSo the steps are:\n1. Read each line from the input.\n2. For each line, split into parts using whitespace as separators. The first part is the item name (alpha, beta, gamma). The second part is the color (blue, red, yellow).\n3. Check if these two items have the same color. If yes, add them to a list of pairs.\n4. Collect all such pairs into a list and print each pair on a separate line.\nSo how to implement this in Python?\nFirst, read the input line by line. For each line:\n- Split the line into parts using whitespace as delimiters. The first part is the item name (alpha, beta, gamma). The second part is the color (blue, red, yellow).\n- Check if the two items have the same color. If yes, add them to a list of pairs.\nThen, collect all these pairs into a list and print each pair on a separate line.\nSo for example:\nSample input lines:\nalpha-00 blue blue\nbeta-01 red red\ngamma-02 yellow yellow\nitem-alpha-00 has blue and blue \u2192 add as (alpha, beta)\nitem-beta-01 has red and red \u2192 add as (beta, gamma)\nitem-gamma-02 has yellow and yellow \u2192 add as (gamma, alpha)\nSo the pairs list would be [(alpha, beta), (beta, gamma), (gamma, alpha)].\nNow, how to implement this in Python.\nFirst, read the input line by line. For each line:\nline = input().strip()\nparts = line.split()\nif len(parts) < 3:  # maybe invalid input? but problem says valid input.\nBut according to the problem statement, each item is on a separate line with three parts. So perhaps the input is well-formed. But in practice, we should handle cases where the line has fewer than three parts. But according to the problem statement, each item is on a line with three parts, so maybe we can assume that each line has exactly three parts.\nSo code steps:\npairs = []\nfor line in input_lines:\n    parts = line.split()\n    if len(parts) < 3:\n        continue  # invalid input? but problem says valid input.\n    item_name = parts[0]\n    color1 = parts[1]\n    color2 = parts[2]\n    if color1 == color2:\n        pairs.append( (item_name, color1) )\nThen, print each pair on a separate line.\nSo putting it all together.\nNow, code:\nRead the input line by\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 0,
+      "fp": 3,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s16",
+      "n": 8,
+      "mean_word_gap": 670.0,
+      "seed": 16,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair is separated by a comma. The output should be each pair on a new line, separated by commas as well.\nFirst, I need to understand the structure of the input data. Each item has an index (like 1, 2, etc.), a color (like khaki), and some other properties like temperature, humidity, pressure, etc. The key is to find all pairs where one item's color matches another's.\nLet me think about how to approach this. For each item in the list, I need to check if its color matches any of the other items' colors. If it does, then add that pair to the output list.\nSo, for each item i, I can loop through all items j where j's color is equal to i's color. Then collect all such pairs into a list and print them separated by commas.\nBut how do I efficiently check if two items have the same color? Since the input lists are large (up to 1000 items), checking each pair directly would be O(n^2) time, which is not feasible for n=1000. So I need a way to find all pairs of items with the same color quickly.\nHmm, maybe using a hash map or a dictionary to store the colors as keys and their corresponding indices as values. Then, for each item i, iterate through all items j where j's color is equal to i's color. For each such pair (i, j), add (i, j) to the result list.\nYes, that makes sense. So the steps would be:\n1. Create a dictionary where the keys are the colors and the values are lists of indices of items with that color.\n2. Iterate through each item in the input list.\n3. For each item i, check all items j where j's color is equal to i's color.\n4. If both conditions are met, add (i, j) to the result list.\n5. After processing all items, print each pair on a new line separated by commas.\nNow, how to implement this in Python?\nFirst, I need to parse the input data into a list of dictionaries. Each dictionary will have 'index' and 'color' keys. Then, for each item in the input list, check if its color is present in the dictionary. If yes, add (i, j) as a key-value pair to the result list.\nSo, let's outline the code structure:\nRead the input data from stdin. The first line is n (number of items), then n lines each with i and j.\nThen, create a dictionary where keys are colors and values are lists of indices.\nThen, for each item in the input list:\n   if item's color is in the dictionary:\n       add (item_i, item_j) to the result list.\nFinally, print each pair on a new line.\nNow, let's think about how to implement this in Python.\nFirst, read the input:\nn = int(input())\nitems = []\nfor _ in range(n):\n    data = input().split()\n    i = int(data[0])\n    c = data[1]\n    indices = list(map(int, data[2:]))  # assuming indices are 1-based? Wait, the problem says \"list of items\", so probably each item is a tuple (index, color). So for each item in the input, we need to store their index and color.\nWait, the input lines are:\nitem-alpha-00 has colour khaki.\nSo for each line after the first, split into parts. The first part is the index (1-based), then the color. So for example, \"item-alpha-00\" would be (1, 'khaki').\nSo in code:\nitems = []\nfor _ in range(n):\n    parts = input().split()\n    i = int(parts[0])\n    c = parts[1]\n    indices = list(map(int, parts[2:]))  # assuming indices are 1-based. Wait, the problem says \"list of items\", so each item is a tuple (index, color). So for each item in the input, we need to store their index and color.\nSo code:\nitems = []\nfor _ in range(n):\n    parts = input().split()\n    i = int(parts[0])\n    c = parts[1]\n    indices = list(map(int, parts[2:]))  # assuming indices are 1-based. Wait, the problem says \"list of items\", so each item is a tuple (index, color).\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s17",
+      "n": 8,
+      "mean_word_gap": 169.5,
+      "seed": 17,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the structure of the input. Each line has an item's name followed by its color, separated by a comma. For example, \"item-alpha-00 has colour gold\". Then there are lines with instrument log values and checksums. The checksums are like \"checksum X\" where X is a number.\nThe key points here are:\n1. Each item has a unique name (like alpha-00, beta-01, etc.) and a color (like gold, indigo, etc.).\n2. Some items have their own checksums (like alpha-00's checksum is \"parity even, hash-suffix f1e4\").\n3. The instrument log values are given as strings with commas separating the values. For example, \"value 85.42\" means 85.42 in decimal.\n4. The checksums are part of the instrument log lines and need to be checked against each item's color to see if they match any of the items' colors.\nSo, the approach is:\n- For each line in the input, split into name and checksum. The name is a string like \"item-alpha-00\", and the checksum is a number like \"checksum 85\".\n- Then, for each item in the list, check if its name matches any of the items' names. If it does, check if their checksums match any of the items' checksums.\nBut how do I handle this? Let's think step by step.\nFirst, parse the input lines into a list of dictionaries or objects. Each object should have:\n- name (string)\n- color (string)\n- checksum (string)\nThen, for each item in the input list, check if its name is in the list of items' names. If yes, then check if its checksum matches any of the items' checksums. If yes, add that pair to the result list.\nBut how to do this efficiently? Because there can be many items and many checks. For example, each item could have up to 100 name entries and up to 100 checksum entries. So for each item, we need to check all possible pairs of items in the list.\nSo the plan is:\n1. Parse the input lines into a list of dictionaries or objects. Each object has name (string), color (string), and checksum (string).\n2. For each item in the input list:\n   a. Check if its name exists in the list of items' names. If yes, check all possible pairs of items in the list where one's name is the same as the item's name and the other's color matches.\n   b. For each such pair, check if their checksums match. If yes, add that pair to the result list.\nBut how to implement this efficiently?\nLet me think about possible steps:\nFirst, parse the input lines into a list of dictionaries. Each dictionary will have name (string), color (string), and checksum (string). Then, for each item in the input list:\n   For each item's name in the items list:\n      Check if the item's name exists in the items' names. If yes, then check all possible pairs of items where one has name equal to the item's name and the other has a different color. For each such pair, check if their checksums match.\nBut how to efficiently do this?\nAn alternative approach is to precompute for each item a list of all possible pairs (name1, name2) where name1 is in items' names and name2 is not. Then, for each item's name, check all pairs in that list. But this could be O(n^2) per item, which might be acceptable if n is small.\nBut given that the input can have up to 100 items and each item has up to 100 possible pairs (name1 and name2), this approach would be O(n^2 * m), where m is the number of items. For n=100, m=100, this is 1e6 operations per item, which is manageable.\nSo the steps would be:\n1. Parse each line into a dictionary or object with name (string), color (string), and checksum (string).\n2. For each item in the input list:\n   a. Check if its name exists in the items' names list. If yes, then check all possible pairs of items where one has name equal to the item's name and the other has a different color.\n   b. For each such pair, check if their checksums match.\nBut how to implement this efficiently?\nLet me think about the steps\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s18",
+      "n": 8,
+      "mean_word_gap": 591.0,
+      "seed": 18,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some metadata. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has an index (like 0, 1, 2) and a color (like 'red', 'blue', etc.). The metadata includes checksums for uniqueness and other properties like temperature, humidity, pressure, etc.\nThe task is to find all pairs of items that share the same color. So for each pair (i, j), I need to check if item i's color equals item j's color. If yes, add their indices to the list.\nBut how do I efficiently check if two items have the same color? Since there are up to 1000 items, a hash set would be efficient. So for each pair (i, j), I can compute their hash values and check if they match.\nWait, but the problem says that some items share a color. So for each item i, we need to check all other items j where their color is the same as i's.\nSo the steps are:\n1. Iterate through each item in the list.\n2. For each item, compute its hash (checksum) and compare it with all other items' hashes.\n3. If they match, add the pair (i, j) to the result list.\n4. Also, check if any two items have the same color and are not already in the result list? Wait, no. Because if two items share a color, then their indices would be different. So even if they share a color but are not in the same index, they would still be considered as having the same color. But according to the problem statement, pairs are (i, j) where i and j have the same color. So even if two items have different indices but share the same color, they should be included in the result.\nWait, no. For example, item 0 has index 0 and item 1 has index 1. They share a color (red), so they should be added to the result list as (0,1). But if two items have different indices but share the same color, like item 0 and item 2 both have red, then they should be added as (0,2) even though their indices are different.\nSo the approach is: for each pair of items (i, j) where i != j and their colors are the same, add (i,j) to the result list.\nBut how do I check if two items have the same color? For that, I can compute their hash values and compare them. If they match, then they share a color.\nSo for each item i in the list:\n   for j in items[i] (since we need to consider all pairs):\n       if hash(j) == hash(i), then add (i,j) to the result list.\nBut wait, what if two items have the same color but are not adjacent? For example, item 0 has color red and item 1 has color blue. Then they share a color but are not adjacent. So their indices are different, but they share the same color. So in this case, (0,1) is added.\nSo the algorithm is:\nInitialize an empty list to store the result pairs.\nFor each item i in items:\n   for j in items[i]:\n       if hash(j) == hash(i):\n           add (i,j) to the result list.\nBut wait, what if two items have the same color but are not adjacent? For example, item 0 has color red and item 1 has color blue. Then their indices are different, but they share the same color. So in this case, (0,1) is added even though they are not adjacent.\nSo the code would need to check all pairs of items that share the same color.\nBut how to handle this efficiently?\nThe problem says that each item has a unique index. So for each item i, we can loop through all other items j where j != i and their colors match.\nSo for each i in 0..n-1:\n   for j in 0..n-1:\n       if hash(j) == hash(i):\n           add (i,j) to the result list.\nBut how to compute the hash of a single item? Because the problem says that each item has a unique index, but their colors are part of the same item. So for example, if an item has color red and another has color blue, then they share the same color (red), so their indices are different but their colors are the same.\nSo for each item i in 0..n-1:\n   for j in 0..n-1:\n       if hash(j) == hash(\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s19",
+      "n": 8,
+      "mean_word_gap": 340.5,
+      "seed": 19,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has an index (like 0, 1, 2), a color (like aqua, indigo, etc.), and some other attributes like temperature, humidity, pressure. The key is to find all pairs where one item's color matches another's.\nHmm. So for each pair of items that share a color, I need to collect their indices and then output them in the required format.\nLet me think about how to approach this. Maybe I can iterate through each item and check if its color matches any other item's color. For each matching pair, add both indices to a list. Then, once all pairs are found, output them separated by commas.\nBut wait, what about the order? The problem says \"list every pair of items that share a color\". So the order in which they appear in the input matters. But since we're just outputting them as pairs, maybe we can process them in any order. However, the example given shows that some pairs are listed in a specific order (like item-alpha-00 before item-beta-01). So perhaps the order of processing is important here.\nBut how to handle this? Let's think. For each item, check all other items for a match. Once a match is found, add both indices to a list. Then, once we have all pairs, we need to output them in the required format.\nSo the steps could be:\n1. Iterate through each item in the input list.\n2. For each item, check all other items for a match.\n3. Collect all indices of matching pairs into a list.\n4. Once collected, output each pair separated by commas, with no spaces between them (since the example shows that some pairs are listed as \"item-alpha-00 and item-beta-01\" which are separated by commas).\nWait, looking at the example input:\nThe first line is \"item-alpha-00\". Then there's a list of items. Then another line with \"item-beta-01\". Then another line with \"item-delta-03\". Then another line with \"item-gamma-02\". Then another line with \"item-delta-04\". Then another line with \"item-delta-05\".\nSo the output is each pair separated by a comma, but the example shows that some pairs are listed in order. Wait, looking at the example input:\nThe first line is item-alpha-00. Then there's a list of items. Then another line with item-beta-01. Then another line with item-delta-03. Then another line with item-gamma-02. Then another line with item-delta-04. Then another line with item-delta-05.\nSo the output is \"item-alpha-00, item-beta-01\" followed by a comma and then the list of other items. Wait, but how are the pairs listed? The example shows that some pairs are listed in order, like item-alpha-00 before item-beta-01. So perhaps the order in which they appear in the input is important.\nWait, looking at the example input:\nThe first line is \"item-alpha-00\". Then there's a list of items. Then another line with \"item-beta-01\". Then another line with \"item-delta-03\". Then another line with \"item-gamma-02\". Then another line with \"item-delta-04\". Then another line with \"item-delta-05\".\nSo the order in which they appear in the input is important. So perhaps the pairs are listed in the order they appear in the input, but each pair is separated by a comma. Wait, no. The example shows that some pairs are listed as item-alpha-00 and item-beta-01, which are separated by a comma. But how?\nWait, looking at the example output:\nThe first line is \"item-alpha-00\". Then there's a list of items. Then another line with \"item-beta-01\". Then another line with \"item-delta-03\". Then another line with \"item-gamma-02\". Then another line with \"item-delta-04\". Then another line with \"item-delta-05\".\nSo the order in which they appear in the input is important. So perhaps the pairs are listed in the order they appear in the input, but each pair is separated by a comma. Wait, no. The example shows that some pairs are listed as item-alpha-00 and item-beta-01, which are separated by a comma. But how?\nWait,\n",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-05"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-04"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-04"
+        ],
+        [
+          "item-delta-03",
+          "item-delta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-04",
+          "item-delta-05"
+        ],
+        [
+          "item-delta-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-05",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 0,
+      "fp": 15,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s20",
+      "n": 8,
+      "mean_word_gap": 255.5,
+      "seed": 20,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has a unique identifier (item-alpha-00 to item-beta-01), a color (item-alpha-02 to item-beta-03), and some other attributes like humidity, pressure, etc. The key is that two items share a color if they have the same color attribute.\nSo, the approach is probably to iterate through each item and check if any of its attributes match another item's color. But how do I efficiently check for duplicates?\nHmm, maybe using a set would help here. Because checking membership in a set is O(1) time, which is much faster than checking each item individually. So the plan is:\n1. Create a set to store all unique items' colors.\n2. Iterate through each item in the input list.\n3. For each item, check if its color attribute exists in the set. If it does, add it to the result list and break out of the loop since we already found a match.\n4. After processing all items, print each pair on separate lines with two spaces between them.\nWait, but how do I handle the input? The input is given as a list of strings, each line representing an item's attributes. So for each item in the input list, I need to check if its color attribute exists in the set.\nLet me outline the steps:\n- Create a set called colors_set to store unique colors.\n- Iterate through each item in the input list.\n- For each item, check if its color attribute is present in colors_set.\n- If yes, add the pair (item_alpha_00, item_beta_01) to the result list.\n- After processing all items, print each pair on separate lines with two spaces between them.\nSo the code structure would be something like:\ncolors = set()\nfor item in items:\n    color = item[1]\n    if color in colors:\n        print(f\"{item[0]} {item[1]}\")\n        break  # break out of the inner loop since we already found a match\nThen, print each pair on separate lines.\nBut wait, what about the order? The problem says to list them in pairs separated by a space. So the first item's color is printed first, then the second.\nNow, considering the input format: each line has two items separated by a comma and space. So for example, if an item has attributes like \"item-alpha-00\", \"value 89.89\", etc., those are stored as strings in the input list.\nSo in Python, I can loop through each item in the items list, check if its color is present in colors_set, and collect the pairs.\nBut wait, what about duplicate colors? For example, if two items have the same color. Then they would be considered a pair even if their attributes are different. But according to the problem statement, each item has unique attributes. So each item's color is unique. So when checking for duplicates in the set, we can assume that each item's color is unique.\nSo the code should work as long as all items have unique colors.\nNow, let's think about possible edge cases. For example:\n- An item with a color that's not present in the set. Then it would be skipped.\n- An item with a color that's already present but in a different attribute (like humidity). But since the problem states that each item has unique attributes, this shouldn't happen.\nSo the code should work as intended.\nNow, let's think about how to implement this in Python.\nThe code would look something like:\ncolors = set()\nfor item in items:\n    color = item[1]\n    if color in colors:\n        print(f\"{item[0]} {color}\")\n        break  # break out of the inner loop since we already found a match\nThen, print each pair on separate lines.\nSo putting it all together.\nBut wait, the problem says that the input is given as a list of strings. So for example, if an item has attributes like \"item-alpha-00\", then those are stored in the items list. But when we process them, we need to check if their color is present in colors.\nSo the code would be:\ncolors = set()\nfor item in items:\n    color = item[1]\n    if color in colors:\n        print(f\"{item[0]} {color}\")\n        break  # break out of the inner loop since we already found a match\nThen, print each pair on separate lines.\nSo\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-alpha-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-beta-03"
+        ],
+        [
+          "item-alpha-02",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-02",
+          "item-beta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-beta-03"
+        ]
+      ],
+      "tp": 1,
+      "fp": 5,
+      "fn": 1,
+      "precision": 0.16666666666666666,
+      "recall": 0.5,
+      "f1": 0.25,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s21",
+      "n": 8,
+      "mean_word_gap": 255.5,
+      "seed": 21,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. Let's see what each item is like.\nFirst, let's look at the data provided. There are several items with different colors and some with unique colors. The task is to find all pairs where both items share the same color.\nLet me list out all the items and their colors:\n1. Item-alpha-00 has color black. So that's one pair.\n2. Item-beta-01 has color black, so another pair.\n3. Item-gamma-02 has color black, another pair.\n4. Item-delta-03 has color black, another pair.\n5. Item-epsilon-04 has color white, so another pair (since it's not the same as alpha or beta).\n6. Item-zeta-05 has color white, so another pair.\n7. Item-eta-06 has color white, so another pair.\n8. Item-theta-07 has color black, so another pair.\n9. Item-epsilon-08 has color white, so another pair (since it's not the same as alpha or beta).\n10. Item-zeta-09 has color white, so another pair (same as epsilon).\n11. Item-eta-10 has color white, so another pair (same as theta).\n12. Item-epsilon-11 has color white, so another pair (same as eta).\n13. Item-gamma-12 has color black, so another pair (same as gamma).\n14. Item-delta-13 has color black, so another pair (same as delta).\n15. Item-zeta-14 has color white, so another pair (same as zeta).\n16. Item-epsilon-15 has color white, so another pair (same as epsilon).\n17. Item-gamma-16 has color black, so another pair (same as gamma).\n18. Item-delta-17 has color black, so another pair (same as delta).\n19. Item-zeta-18 has color white, so another pair (same as zeta).\n20. Item-epsilon-19 has color white, so another pair (same as epsilon).\n21. Item-gamma-20 has color black, so another pair (same as gamma).\n22. Item-delta-21 has color black, so another pair (same as delta).\n23. Item-zeta-22 has color white, so another pair (same as zeta).\n24. Item-epsilon-23 has color white, so another pair (same as epsilon).\n25. Item-gamma-24 has color black, so another pair (same as gamma).\n26. Item-delta-25 has color black, so another pair (same as delta).\n27. Item-zeta-26 has color white, so another pair (same as zeta).\n28. Item-epsilon-27 has color white, so another pair (same as epsilon).\n29. Item-gamma-28 has black, so another pair (same as gamma).\n30. Item-delta-29 has black, so another pair (same as delta).\n31. Item-zeta-30 has white, so another pair (same as zeta).\n32. Item-epsilon-31 has white, so another pair (same as epsilon).\n33. Item-gamma-32 has black, so another pair (same as gamma).\n34. Item-delta-33 has black, so another pair (same as delta).\n35. Item-zeta-34 has white, so another pair (same as zeta).\n36. Item-epsilon-35 has white, so another pair (same as epsilon).\n37. Item-gamma-36 has black, so another pair (same as gamma).\n38. Item-delta-37 has black, so another pair (same as delta).\n39. Item-zeta-38 has white, so another pair (same as zeta).\n40. Item-epsilon-39 has white, so another pair (same as epsilon).\n41. Item-gamma-40 has black, so another pair (same as gamma).\n42. Item-delta-41 has black, so another pair (same as delta).\n43. Item-zeta-42 has white, so another pair (same as zeta).\n44. Item-epsilon-43 has white, so another pair (same as epsilon).\n45. Item-gamma-44 has black, so another pair (same as gamma).\n46. Item-delta-45 has black, so another pair (same as delta).\n47. Item-zeta-46 has white, so another pair (same as zeta).\n48. Item-epsilon-47 has white, so another pair (same as epsilon).\n49. Item\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s22",
+      "n": 8,
+      "mean_word_gap": 848.0,
+      "seed": 22,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair should be listed once per color, even if multiple items share the same color.\nFirst, let me understand the structure of the input. Each line has an item's name, then its color, followed by some other data. For example:\nitem-alpha-00 has orange as its color. Then there are other items with different colors and properties.\nThe output should list each pair once per color. So for each color in the input, I need to collect all pairs where the two items have that color, and then output them separated by a comma.\nSo the plan is:\n1. Iterate through each line in the input.\n2. For each line, split into item and color. The item can be any of the items in the list, but we need to check if it's an item (i.e., not a string or empty). Wait, but the problem says \"items\" are items with their own properties, so maybe the input is structured such that each line represents an item. But looking at the sample input:\nThe first line is \"item-alpha-00\", which is probably an item name. The rest are other items with different colors and properties. So perhaps the input lines are like:\nitem-alpha-00, item-beta-01, etc.\nBut in the sample output, each line is a pair of items (like alpha and beta), but the problem says \"pairs of items that share a color\". So maybe each line represents an item's color. Wait, but the sample input shows that for example, item-alpha-00 has orange as its color. But in the input, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nWait, looking at the sample output:\nThe first line is \"item-alpha-00\", then another line is \"item-beta-01\". So perhaps each line represents an item's color. But in the input, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut how to parse this? The problem says that each line represents a pair of items sharing a color. So perhaps each line is an item's name followed by its color. But the sample input shows that for example, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut in the sample output, each line represents a pair of items sharing a color. So perhaps each line is an item's name followed by its color. But in the input, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut looking at the sample input:\nThe first line is \"item-alpha-00\". Then subsequent lines are items with different colors and properties. So perhaps each line represents an item's color. But in the sample output, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut how to parse this? The problem says that each line represents a pair of items sharing a color. So perhaps each line is an item's name followed by its color. But in the sample input, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut looking at the sample output:\nThe first line is \"item-alpha-00\", which is probably an item name. Then subsequent lines are items with different colors and properties.\nSo perhaps each line represents an item's color. But in the input, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut how to parse this? The problem says that each line represents a pair of items sharing a color. So perhaps each line is an item's name followed by its color. But in the sample input, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut looking at the sample output:\nThe first line is \"item-alpha-00\", which is probably an item name. Then subsequent lines are items with different colors and properties.\nSo perhaps each line represents an item's color. But in the input, the first line is \"item-alpha-00\", which might be an item name. Then subsequent lines are items with different colors and properties.\nBut how to parse this? The problem says that each line represents a pair\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ]
+      ],
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s23",
+      "n": 8,
+      "mean_word_gap": 169.0,
+      "seed": 23,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other attributes. Each line has an item's name and its color, followed by some other data. The output should be each pair on a new line.\nFirst, I need to parse the input correctly. Let me look at the sample input given:\nSample Input:\nitem-alpha-00 has colour tangerine.\n(reading 595: temperature 6.4C, humidity 82%, pressure 1018 hPa)\n(instrument log 462: value 72.93, tolerance 4.63)\n(reading 445: temperature 22.6C, humidity 75%, pressure 990 hPa)\n(reading 163: temperature 31.8C, humidity 42%, pressure 999 hPa)\n(reading 519: temperature 15.0C, humidity 63%, pressure 994 hPa)\n(instrument log 358: value 80.06, tolerance 2.85)\n(reading 979: temperature 23.4C, humidity 84%, pressure 995 hPa)\n(reading 575: temperature 29.1C, humidity 43%, pressure 1021 hPa)\n(instrument log 938: value 86.71, tolerance 0.24)\n(reading 76: temperature 19.6C, humidity 85%, pressure 990 hPa)\n(reading 520: temperature 16.9C, humidity 41%, pressure 990 hPa)\n(reading 545: temperature 31.7C, humidity 62%, pressure 1025 hPa)\n(instrument log 29: value 26.21, tolerance 1.61)\n(reading 224: temperature 13.2C, humidity 45%, pressure 999 hPa)\n(reading 441: temperature 22.2C, humidity 86%, pressure 993 hPa)\n(instrument log 550: value 23.12, tolerance 3.25)\n(reading 625: temperature 19.9C, humidity 37%, pressure 1020 hPa)\n(instrument log 29: value 13.57, tolerance 2.77)\n(reading 448: temperature 28.1C, humidity 44%, pressure 1030 hPa)\n(reading 445: temperature 34.6C, humidity 90%, pressure 999 hPa)\n(instrument log 530: value 12.8C, humidity 45%, pressure 999 hPa)\n(reading 612: temperature 7.9C, humidity 65%, pressure 983 hPa)\n(instrument log 897: value 78.42, tolerance 4.24)\n(reading 766: temperature 9.9C, humidity 45%, pressure 1007 hPa)\n(instrument log 364: value 90.51, tolerance 3.73)\n(reading 852: temperature 20.6C, humidity 25%, pressure 1004 hPa)\n(instrument log 26: value 13.57, tolerance 0.45)\n(reading 616: temperature 7.9C, humidity 65%, pressure 980 hPa)\n(instrument log 357: value 90.51, tolerance 1.04)\n(reading 893: temperature 31.8C, humidity 62%, pressure 1024 hPa)\n(instrument log 445: value 76.99, tolerance 4.55)\n(reading 661: temperature 29.1C, humidity 67%, pressure 999 hPa)\n(instrument log 357: value 90.51, tolerance 1.04)\n(reading 893: temperature 31.8C, humidity 62%, pressure 1001 hPa)\n(instrument log 939: value 86.71, tolerance 0.24)\n(reading 615: temperature 7.9C, humidity 65%, pressure 980 hPa)\n(instrument log 357: value 90.51, tolerance 1.04)\n(reading 893: temperature 31.8C, humidity 62%, pressure 1001 hPa)\n(instrument log 939: value 86.71, tolerance 0.24)\n(reading 615: temperature 7.9C, humidity 65%, pressure 980 hPa)\n(instrument log 357: value 90.51, tolerance 1.04)\n(reading 893: temperature 31.8C, humidity 62%, pressure 1001 hPa)\n(instrument log 939: value 86.71, tolerance 0.24)\n(reading 615: temperature 7.9C, humidity 65%, pressure 980 hPa)\n(instrument log 357: value 90.51, tolerance 1.04)\n(reading 893: temperature 31.8C, humidity 62%, pressure 999 hPa)\n(instrument log 938: value 86.71, tolerance 0.24)\n(reading 806: temperature 27.7C, humidity\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s24",
+      "n": 8,
+      "mean_word_gap": 254.5,
+      "seed": 24,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a common color. The input is a list of items with their colors and other properties. Each pair should be listed once per unique color combination.\nFirst, let me understand the structure of the input. Each line has an item's name, then its color, followed by some other data. For example, in the sample input:\nitem-alpha-00 has colour emerald.\nitem-beta-01 has colour buff.\netc. So each item is a key with its own color and other properties. The pairs are formed by taking two items where their colors match, and then outputting those pairs separated by commas.\nThe output should be each pair on a separate line, like \"item-alpha-00, item-beta-01\".\nSo the approach is to iterate through all unique colors in the list. For each color, collect all items that share that color. Then, for each such pair, add them to the result list.\nHow do I check if two items have the same color? Well, since each item has a unique name and a unique color (assuming they are distinct), but wait, the problem statement says \"each item has a unique name and a unique color\". So each item is uniquely identified by its name and color. Wait, but in the sample input, some items have the same color. For example, item-alpha-00 has both emerald and buff. But since each item's name is unique, perhaps we can check if the two items have the same color by comparing their names.\nWait, but in the sample input, item-alpha-00 has both emerald and buff. So when checking for a pair (item1, item2), if their colors are the same, then they share that color. But how do we know which one is which? Because each item's name is unique. So perhaps for each color in the input, we can check if there exists at least one item with that color.\nSo the plan is:\n1. For each unique color in the input, collect all items that have that color.\n2. For each such pair of items (name1, name2), add their pair to the result list.\nBut how to check if two items have the same color? Because each item's name is unique, but their colors could be different. So for example, item1 has color emerald and item2 has color buff. Then they share that color.\nSo for each unique color in the input, we need to find all items that have that color. Then, for each such pair (name1, name2), add them to the result list.\nBut how to check if two items have the same color? Because each item's name is unique. So perhaps for each unique color c, we can iterate through all items and check if their names match c. But that would be O(n) per color, which could be expensive if there are many colors. However, given that the input has up to 1000 items, and each item's name is unique (since the problem says \"each item has a unique name\"), but wait, looking back at the sample input:\nThe sample input has items with names like \"item-alpha-00\", \"item-beta-01\", etc. So each item's name is unique. But when checking for a color c, we need to find all items that have c as their name. For example, if two items have the same color, then they would both be in the same pair.\nBut how to check if two items have the same color? Because each item's name is unique. So perhaps for each unique color c, we can iterate through all items and check if their names match c. But that would be O(n) per color, which could be expensive if there are many colors. However, given that the problem says \"each item has a unique name\", but the input may have multiple items with the same name. Wait, no. The problem statement says \"each item has a unique name\". So each item's name is unique. But when checking for a color c, we need to find all items that have c as their name.\nBut how to do that efficiently? For example, if there are 1000 items with color 'red', and each has a unique name, then checking for a color c would take O(n) time per color. But if the input has many colors, this could be slow. However, given that the problem says \"each item has a unique name\", perhaps the input is such that each item's name is unique. But in practice, this may not be the case. However, given that the sample input has multiple items with the same color (like 'red' and 'buff'), but each item's name is unique.\nBut for the problem, perhaps we can proceed as follows\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ]
+      ],
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s25",
+      "n": 8,
+      "mean_word_gap": 511.0,
+      "seed": 25,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has a unique ID, a color (like khaki), and some other attributes like temperature, humidity, pressure, etc. The key here is that two items share the same color. So for each item with a color c, I need to check all other items in the list if their color is c. If they do, then add their ID to the result list.\nThe input has multiple lines of data. Each line starts with an item ID followed by some attributes. Then there are more lines with other items' information. The output should be each pair on a new line, separated by spaces or commas? Wait, the example shows that each pair is on a separate line. Let me check the sample input and output again.\nLooking at the sample input:\nThe first item has color khaki. Then there's another item with color khaki, which shares it. Then another item with color khaki, which shares it again. Then there's an item with color saffron, which shares it with another item (item-beta-01). Then the next line is a list of items with their colors and other attributes.\nSo the output should be each pair on a separate line. So for each item in the input, if its color is khaki, then add all other items' IDs to the result list.\nNow, how to approach this?\nFirst, I need to parse each line of input into an item object. Each item has a unique ID and attributes like color (khaki), temperature, humidity, pressure, etc. So for each line in the input:\n- Split the line into parts. The first part is the item ID (like \"item-alpha-00\"). Then split that into attributes. For example, \"item-alpha-00\" would be the ID and then some other info.\nWait, but the problem says that each line has a unique ID and some other information. So for each line in the input, we need to split it into parts and extract the item ID and other data.\nSo for each line:\n1. Split into parts using whitespace as delimiters. The first part is the item ID (like \"item-alpha-00\").\n2. Then, split the remaining parts into attributes. For example, if the line is \"item-alpha-00\", then the attributes are [\"temperature\", \"humidity\", \"pressure\"].\n3. Then, for each attribute in the line, check if it's khaki (color). If yes, add the item ID to a list of items with that color.\nSo for each line:\n- Split into parts using whitespace as delimiters. The first part is the item ID (like \"item-alpha-00\").\n- Then split the remaining parts into attributes. For example, if the line is \"item-alpha-00\", then the attributes are [\"temperature\", \"humidity\", \"pressure\"].\nThen, for each attribute in that list, check if it's khaki. If yes, add the item ID to a list of items with that color.\nOnce all items with khaki color are collected, we need to generate pairs between them. For each pair (i, j) where i < j and their colors are the same, output \"item-X, item-Y\".\nSo the steps are:\n1. Parse each line into an item object.\n2. Collect all items with khaki color.\n3. For each such item, generate pairs with other items (i < j) and output them as \"item-X, item-Y\".\nNow, how to parse the lines? Let's think about the input format. The first line is the list of items. Then each subsequent line is an item with attributes. So for example:\nLine 1: \"item-alpha-00\" \u2192 attributes [\"temperature\", \"humidity\", \"pressure\"]\nLine 2: \"item-beta-01\" \u2192 attributes [\"temperature\", \"humidity\", \"pressure\"]\nSo the input is a list of lines, each line being a string. So for each line in the input:\nSplit into parts using whitespace as delimiters. Then, split the parts into attributes. For example, if the line is \"item-alpha-00\", then parts = [\"item-alpha-00\"].\nThen, for each attribute in parts:\nCheck if it's khaki. If yes, add item_id to a list of items with that color.\nOnce all items with khaki color are collected, generate pairs between them. For example, if there are two items with khaki color, then output \"item-X\n",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s26",
+      "n": 8,
+      "mean_word_gap": 423.5,
+      "seed": 26,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair is separated by a comma. The output should be each pair on a new line, separated by commas as well.\nFirst, I need to understand the structure of the input. Each item has an index (like 0, 1, 2) and then its color and other attributes. For example, item-alpha-00 has color turquoise and some other info. The pairs are between items that share a color.\nThe task is to process each pair in the list and collect all unique pairs where one item's color matches another's. Then output those pairs separated by commas.\nSo, the steps I need to take are:\n1. Iterate through each item in the input list.\n2. For each item, check if its color is present in another item's color list.\n3. If it is, add the pair (item_index, other_index) to a set to avoid duplicates.\n4. After processing all items, collect all unique pairs from the set and output them separated by commas.\nWait, but how do I check if two items have the same color? Because each item has a color attribute, which is a string like \"turquoise\", \"cerulean\", etc. So for each item in the list, I need to check if its color is present in another item's color list.\nSo, for example, if an item has a color of \"turquoise\" and another item has a color of \"turquoise\", then it's a pair. But what about items with different colors? Like, maybe one has \"turquoise\" and another has \"blue\". Then they don't share a color.\nSo the approach is:\n- For each item in the input list:\n   a. Check if its color is present in the other items' color lists.\n   b. If yes, add (item_index, other_index) to a set to avoid duplicates.\nOnce all pairs are collected, we need to sort them by their indices (since the problem says \"pairs\", but the output requires each pair on a new line). Wait, the problem says \"list every item that shares a color with another item\". So each pair is an item and its color. But how are they ordered? The example shows that some pairs are in order like (item-alpha-00, item-beta-01), which suggests that the pairs are ordered by their indices. Wait, but the problem statement says \"pairs of items sharing a color\". So perhaps the pairs are ordered by their indices. For example, if two items have the same color, they are listed in order of their indices. But how to handle that?\nWait, looking at the sample input:\nThe first pair is (item-alpha-00, item-beta-01). The second pair is (item-beta-01, item-gamma-02). So the pairs are ordered by their indices. So when processing each item, we need to collect all pairs where one item's color matches another's. Then, for each such pair, add the index of the first item and the index of the second item to a set. Then, sort these sets in order of their indices (since they are ordered by their indices).\nWait, but how do we know which items have which colors? Because each item has a color attribute. So for each item, we can check if its color is present in another item's color list. But since the input lists each item with a unique index, perhaps the pairs are ordered by their indices. For example, the first pair is (item-alpha-00, item-beta-01), then (item-beta-01, item-gamma-02), etc. So when processing each item, we check if its color is present in another item's color list. If yes, add the index of the first item and the index of the second to a set. Then, collect all unique pairs (sorted by their indices) and output them separated by commas.\nSo the steps are:\n1. For each item in the input list:\n   a. Check if its color is present in another item's color list.\n   b. If yes, add the index of the first item and the index of the second to a set (to avoid duplicates).\n   c. Once all pairs are collected, sort them by their indices (since they are ordered by their indices).\n2. Output each pair on a new line, separated by commas.\nSo how to implement this in Python?\nFirst, process each item in the input list. For each item:\n- Check if its color is present in another item's color list. If yes, add (item_index, other_index) to\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 1,
+      "fp": 2,
+      "fn": 1,
+      "precision": 0.3333333333333333,
+      "recall": 0.5,
+      "f1": 0.4,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s27",
+      "n": 8,
+      "mean_word_gap": 427.5,
+      "seed": 27,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has an index (like 0, 1, 2), a color (like 'alpha', 'beta', etc.), and some other attributes like humidity, pressure, temperature, etc. The key is to find all pairs where one item's color matches another's.\nHmm, how do I approach this? Maybe I can iterate through each item and check if its color matches any of the others. But checking every pair would be O(n^2), which might not be efficient for large n. However, given that the problem doesn't specify constraints on n, perhaps there's a smarter way.\nWait, but maybe there's a pattern or a way to group items by their color. For example, if two items have the same color, they share that color. So perhaps I can group items by their color and then for each group, check all pairs within the group.\nAlternatively, maybe I can precompute for each item its color and then for each possible color in the list, check all other items. But how to do that efficiently?\nAnother approach: For each item, collect all its colors. Then, for each color in the list, iterate through all other items and check if their colors match. But again, this could be O(n^2) as well.\nWait, but maybe there's a way to find pairs without checking every possible pair. Let's think: for each item, collect all its colors. Then, for each color in the list, iterate through all other items and check if their colors match. But again, this could be O(n^2) as well.\nWait, but maybe there's a way to find pairs without checking every possible pair. For example, if two items have the same color, then they share that color. So perhaps I can group items by their color and then for each group, check all other items in the group. But how?\nAlternatively, maybe I can precompute for each item a list of colors it has. Then, for each color in the list, iterate through all other items and check if they have that color. But again, this could be O(n^2) as well.\nHmm, perhaps there's a smarter way. Let's think about the problem constraints. The input is up to 1000 items, but the output can be up to 1000 pairs. So maybe the solution is to process each item and collect all its colors, then for each color in the list, check all other items and see if they share that color.\nBut how to do this efficiently?\nWait, perhaps we can group items by their color. For example, for each item's color, we can create a set of colors it has. Then, for each color in the list, iterate through all other items and check if they have that color. But again, this could be O(n^2) as well.\nAlternatively, maybe we can find pairs where one item is in the same group as another. For example, if two items have the same color, then their colors are the same. So perhaps for each color in the list, we can check all other items and see if they share that color. But again, this could be O(n^2) as well.\nWait, but maybe there's a way to find pairs where one item is in the same group as another. For example, if two items have the same color, then their colors are the same. So perhaps we can process each item and collect all its colors, then for each color in the list, check all other items and see if they share that color. But again, this could be O(n^2) as well.\nHmm, maybe there's a way to find pairs where one item is in the same group as another. For example, if two items have the same color, then their colors are the same. So perhaps we can process each item and collect all its colors, then for each color in the list, check all other items and see if they share that color. But again, this could be O(n^2) as well.\nWait, but maybe there's a way to find pairs where one item is in the same group as another. For example, if two items have the same color, then their colors are the same. So perhaps we can process each item and collect all its colors, then for each color in the list, check all other items and see if they share that color. But again, this could be O(n^2) as well.\nWait, but maybe there's a way to find pairs where one item is in the same group as another\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s28",
+      "n": 8,
+      "mean_word_gap": 501.0,
+      "seed": 28,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and other properties. Each pair must be listed once per unique color combination.\nFirst, let me understand the structure of the input. Each line has an item's name, then its color, followed by some other data. For example, item-alpha-00 has color turquoise and another item with temperature and humidity. The key is to group items by their colors and then for each color, collect all pairs where one item is in the list and the other isn't.\nSo the plan is:\n1. Iterate through each line in the input.\n2. For each line, split into parts: name, color (which could be a string or maybe a number?), and other data like temperature, humidity, pressure, etc. Wait, but the problem says that some items have color information (like turquoise), others don't. So for each item in the list, we need to check if its color is present in the input.\nWait, but how do I know which items have their colors listed? Because the input might not include all colors. For example, maybe some items have a color but it's not listed here. So first, I need to collect all unique colors from the input.\nSo steps:\n- Read each line and split into parts. The first part is the name (like item-alpha-00), then the color (like turquoise). Then, for each item in the list, check if its color is present in the input. If yes, add to a set of colors.\nWait, but maybe some items have their own color information. For example, item-beta-01 has a color of ivory and another item with that color. So when processing an item's data, I need to check if its color is present in the input.\nSo first, process each line: split into name and color (like alpha-00). Then, for each item in the list, check if its color is in the input. If yes, add to a set of colors.\nOnce all items are processed, collect all unique colors from the set.\nThen, for each pair of items (name1, name2), check if their colors are different. If so, output them as a pair separated by commas and space.\nSo the steps in code:\n1. Read all lines from input.\n2. For each line:\n   a. Split into parts: name (string), color (string or maybe number?), other data (like temperature, humidity).\n   b. Check if the color is present in the input list of colors. If yes, add to a set of colors.\n   c. Then process the item's data: name, temperature, humidity, pressure, etc.\n3. For each item in the processed items:\n   a. Check if its color is in the set of colors from step 2a.\n   b. If yes, add to a list of pairs (name1, name2).\n4. Collect all such pairs into a list and print them separated by commas and space.\nSo first, process each line:\nFor each line:\n- Split into parts: name (string), color (string or number?), other data (like temperature, humidity). So for example, \"item-alpha-00 has color turquoise\" would split into [\"item-alpha-00\", \"turquoise\"], and the other data is the rest.\nWait, but how to parse the parts? For example, in the input line like \"item-alpha-00 has color turquoise\", maybe it's a string with name and color separated by commas. So split on commas.\nSo for each line:\nparts = line.split(',')\nname = parts[0]\ncolor_str = parts[1] if len(parts) > 1 else ''\nThen, process the color_str to get the actual color (like 'turquoise' or 'ivory'). But how to handle cases where the color is not present in the input? For example, if a line has a color that's not in the input, but another item has it. So perhaps we need to check if the color is present in the input.\nSo for each line:\ncolor_str = parts[1]\nif color_str is in colors:\n   add (name, color) to a set.\nelse:\n   add (name, None) or something else? Wait, but the problem says that some items have their own data. So perhaps the input lines are structured such that each line has name and color. For example, each line is like \"item-alpha-00 has color turquoise\". So when processing, for each line:\nname = parts[0]\ncolor\n",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "h12a-d-g500-s29",
+      "n": 8,
+      "mean_word_gap": 423.0,
+      "seed": 29,
+      "variant": "dist",
+      "response": "Okay, I need to solve this problem where I have to list all pairs of items that share a color. The input is a list of items with their colors and some other information. The output should be each pair on a new line.\nFirst, let me understand the data structure. Each item has an index (like item-alpha-00), a color (like item-alpha-00), and some other attributes like humidity, pressure, etc. The problem says that items with the same color share a common attribute. So for each pair of items with the same color, I need to check if they have the same value for all their attributes except maybe one.\nWait, but how do I determine which attributes are shared? The problem statement says that some items have unique colors and others have shared ones. For example, item-alpha-00 has a color of bronze and another item with the same color (item-beta-01) has a different color. So for each pair of items with the same color, I need to check if all their attributes are the same except one.\nSo the approach would be:\n1. For each item in the list, determine its color. Since there are multiple items with the same color, we can group them by their colors and then check which pairs share a common attribute (the color) among those groups.\n2. For each group of items with the same color, collect all their attributes except one (since they have a unique color). Then, for each pair in this group, check if all their attributes are the same except one.\n3. Collect all such pairs and output them in order.\nSo first, I need to process each item's color and group them by color. Then, for each group of items with the same color, collect their attributes except one (the unique color). Then check if all those attributes are the same except one.\nLet me think about how to implement this.\nFirst, parsing the input data:\nEach line is a list of items. Each item has a color (a string) and other attributes like humidity, pressure, etc. So for each item in the input list, I need to extract its color and all other attributes.\nSo for each item in the input:\n- If it's an alpha-00 item (like bronze), then its color is 'bronze'. Otherwise, it's a lowercase letter (like 'alpha', 'beta', etc.)\nThen, for each such item, collect all its attributes except one. For example, if the item has attributes like humidity=70 and pressure=1008, then the other attribute is humidity. So for each item in the list:\n- If it's an alpha-00 (like bronze), then its color is 'bronze'. Otherwise, it's a lowercase letter.\nThen, for each such item, collect all its attributes except one. For example, if the item has attributes humidity=70 and pressure=1008, then the other attribute is humidity. So for each item in the list:\n- If it's an alpha-00 (bronze), then its color is 'bronze'. Otherwise, it's a lowercase letter.\nThen, group all items by their color. For each group of items with the same color, collect all their attributes except one.\nOnce we have all these groups, for each group:\n- Check if all the attributes in the group are unique (i.e., no two items share the same attribute). If yes, then this pair is a valid pair.\nSo for each such group:\n- For each item in the group, collect all its attributes except one.\n- Check if all these attributes are unique (no duplicates).\nIf all are unique, then this pair is valid.\nOnce we have all such pairs, we need to output them in order.\nNow, how to process the data:\nFirst, parse each line into an item object. For example:\nFor each line like \"item-alpha-00\", we can split it into parts. The first part is the color (like 'bronze'), then the rest are attributes. So for each line, we can split on whitespace and take the first part as the color, and the rest as attributes.\nSo for example:\nline = \"item-alpha-00\" \u2192 color = 'bronze'\nline = \"item-beta-01\" \u2192 color = 'beta'\nThen, for each line, we can create a dictionary that maps colors to their attributes. For example:\ncolors_dict = {}\nfor line in lines:\n    color = line[0]\n    attributes = line[1:]\n    if color in colors_dict:\n        # this is an alpha-00 item\n        # collect all attributes except one\n        all_attributes = [attr for attr in attributes if attr != 'alpha']\n        # check if all are unique\n        if len(set(all_\n",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ]
+      ],
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}
