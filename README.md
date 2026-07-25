@@ -1,148 +1,151 @@
 # noesis
 
-*Persistent Cognitive Runtime — cognitive memory of the computer, for other computers.*
+*Cognitive runtime for the machine.*
 
-noesis is **not an assistant that answers questions**. It is a **runtime**:
-a continuous cognitive process that lives on the same Linux system as the
-user, effectively as another user on the machine. Its job is not to
-remember. Its job is to *live*. Memory is a consequence of continuous
-existence, not the goal.
+The machine already sees everything on it — every keystroke, focus
+change, filesystem event, process transition flows through the kernel
+whether or not anyone reads it. noesis is the layer that starts to
+*mean* those events: absorbing the input stream into structured form,
+holding it in a state that survives across sessions, and letting the
+machine act on its own understanding. Not surveillance — the OS
+already knows. Understanding is the difference.
 
-Practically: noesis runs as a persistent local process behind Ollama and
-is usable through a Claude-Code-style CLI. Heavy tasks are delegated to
-remote Claude only when the human explicitly asks for it — noesis does
-not route to Claude on its own.
+The runtime is the point. Collectors, structured event store, zones,
+composer, tool dispatcher, extension surface, encrypted persistence,
+all running under a dedicated Linux user (`noesis` uid, own home under
+`/var/lib/noesis`). It runs continuously whether or not anyone is
+talking to it. Interfaces on top (an Ollama-compatible CLI over an
+HTTP shim, extensions in browser / IDE / game world) are how the owner
+engages with it, not the substance.
 
-The "peer Linux user" framing raises operational policy questions
-(filesystem scope, execution boundaries, credential handling,
-autonomy vs. ask). Those are open — see `docs/policies.md`.
+An RWKV-7 model sits at the centre as the active integrator of this
+runtime — the piece that continuously processes incoming events, forms
+"what is happening now" from them, and writes that into memory per the
+DSL described in `docs/dsl.md`. Reasoning lives in the model's WKV
+state, not in generated tokens; the state is where accumulated context
+and inference actually happen. Tokens are a rare emit — an
+externalisation of what the state already knows.
 
-## Quick Start (Phase-B skeleton, 2026-07-23)
+## Why a specialised model is needed
 
-**Status.** Phase-B skeleton — collectors + retention + Ollama-shape HTTP
-shim, validated 2026-07-22 (`docs/verdicts/2026-07-22-phase-b-skeleton.md`).
-No A1 fine-tune yet; runs against pre-trained RWKV-7 G1d 0.4B World via Nix.
+For the coordinator to keep the runtime coherent — to hold structure
+across long-running continuous input, connect events over hours or days,
+route the substrate's own tool surface without hallucinating — it has to
+reason in its own hidden state, not in generated tokens. Standard LLMs,
+of any architecture, degrade under continuous ambient input; Transformers
+under long uninterrupted contexts especially so.
 
-```bash
-git clone https://github.com/Vaniell0/noesis.git
-cd noesis
+noesis bets that an RWKV-7 backbone fine-tuned to keep logical
+connections alive in its state (H4b's training arm) is the architecture
+that can hold this together where others cannot. Constant-cost per-token
+inference is the price side of that bet — it makes the runtime
+economically viable to run continuously on modest hardware (GTX 1050
+target).
 
-# Weights (default variant; also noesis-model-q8_0 / q5_1 / q4_0)
-nix build .#noesis-model             # -> ./result/model.bin
+This is unproven. `HYPOTHESES.md` records every specific wager — H4b
+(state as computation), H7 (understanding in weights, not context),
+H12b (multi-slot LoRA as working memory), H16 (self-initiated
+externalisation), H17 (state absorption vs history re-injection), and
+the rest — with predictions and falsifiers. A cleanly falsified
+hypothesis is a useful signal.
 
-# Runtime workspace
-cd runtime && cargo build --release  # or: nix build .#noesis-runtime
+## What the runtime does, independent of interaction
 
-# Smoke: prompt -> tokens, prints tok/s
-cargo run --release --example smoke -p noesis-rwkv -- \
-    ../result/model.bin "Hello" 20
+- **Absorbs the machine's stream into structured zones.** input-events,
+  system-observations, personal-vault (read-only bind mount),
+  session-scratch (RAM). Collectors write structured rows; no
+  natural-language translation on the write path. See `memory/README.md`.
+- **Retains under per-zone policy.** Sizes, importance tiers, encryption.
+  See `docs/policies.md`.
+- **Composes context on demand.** The composer is the sole component that
+  renders structured rows into DSL for the model, and only for the rows
+  retrieval selected for a specific turn.
+- **Routes tool calls.** The dispatcher exposes the runtime's own
+  capabilities (memory ops, retrieval, extension-registered tools) to
+  the model.
+- **Escalates by the owner's explicit call.** When the owner escalates
+  to an external frontier model, the composer emits noesis's state as a
+  DSL handoff — not a chat log. The DSL layer is API-agnostic; the
+  composer translates to whichever target transport the owner has
+  configured. noesis never escalates on its own.
+- **Hosts user-authored extensions** as a first-class capability. Same
+  substrate, new environments. See `docs/extensions.md` (Phase-2 docs).
 
-# HTTP shim on :11435 (Ollama-compat /api/generate)
-cargo run --release -p noesis-runtime
-```
-
-**Running today:** collectors, retention sweeps, Ollama-compat HTTP
-heartbeat.
-
-**Not running yet:** composer, tool-dispatcher, A1 fine-tuned model,
-multi-slot LoRA (H12b — `training/` scaffold only), lens persistence
-(state save/load API pending in `noesis-rwkv-sys`), extension surface
-(spec in `docs/extensions.md`, Phase-2).
-
-**Interested in ideas rather than code?** `HYPOTHESES.md` lists every
-claim noesis is testing (H1..H17). Each has a prediction and a
-falsifier. Push-back welcome — see `CONTRIBUTING.md`.
-
-## Vision
-
-noesis absorbs and replaces two prior standalone daemons, `local-search` and
-`key-daemon`, by pulling their essential functions into the ecosystem of one
-small constant-cost RNN-based model. The wager: quality of reasoning and
-quality of memory policy matter more than raw parameter count, and O(1)
-per-token inference makes constant background operation economically
-feasible on modest hardware.
-
-Three long-term research threads live inside noesis:
-
-1. **Reasoning as evolution of internal state.** Whether an RNN-family model
-   (RWKV-7-G1), trained heavily on logic and reasoning traces, can serve as
-   a persistent background reasoner without paying the quadratic attention
-   cost of Transformers.
-
-2. **Inter-model state transfer protocol.** How noesis and other models
-   (remote Claude, other agents) exchange compact decodable representations
-   of task state so that continuity survives the model handoff — the
-   "cognitive memory of the computer, for other computers".
-
-3. **Unified multimodal substrate (Phase 3+).** Whether the same WKV state
-   that absorbs text can also absorb visual patches (framebuffer, video
-   frames) and audio mel-frames through the same delta-rule update — one
-   backbone for text ⊕ image ⊕ audio, not a split perception/reasoning
-   stack. Precedent: VisualRWKV. See `HYPOTHESES.md` §H13a/H13b and the
-   locked architectural note on unified vs split backends. A related
-   Phase 3+ probe (§H16) asks whether the model can self-initiate output
-   from within its own state dynamics — a continuous silent think-stream
-   with a gated externalisation head, so noesis "chooses" when to speak
-   rather than being polled by the supervisor.
+The functions that `local-search` (personal-corpus retrieval) and
+`key-daemon` (system-context surface) used to provide are becoming zones
+inside this runtime rather than standalone processes. Those daemons are
+no longer maintained; their code remains source material for the ports.
 
 ## Architecture at a glance
 
-- **Backbone.** RWKV-7-G1, starting size 2.9B. May scale to 13.3B later if
-  hardware and cloud budget permit.
-- **Runtime.** In-process rwkv.cpp via `noesis-rwkv-sys` + `noesis-rwkv`
-  wrapper crates, driven by the `noesis-runtime` supervisor. An
-  Ollama-shape HTTP shim on `:11435` (`/api/generate` NDJSON,
-  `/api/tags`, `/api/version`) exposes the model so Claude-Code-style
-  clients can talk to noesis without a bespoke harness (C0 verified
-  2026-07-23; smoke via `experiments/A0_H12a_working_memory/run_probe.py`).
-- **Memory.** External, layered, developed on a *separate* track from the
-  model. Not baked into weights.
-- **Escalation.** Human decides when to call remote Claude. Once invoked,
-  Claude reads noesis's background-agent state and continues from there.
-  noesis does not decide on its own to call Claude.
-- **Prior daemons.** `local-search` and `key-daemon` are being rebuilt as
-  modules inside noesis, not maintained as separate processes. This cuts
-  the standing footprint that made them "too demanding".
+- **Backbone.** RWKV-7-G1, 2.9B. May scale to 13.3B if hardware and
+  cloud budget permit.
+- **Supervisor.** Rust supervisor with a sandboxed Ollama child
+  (bubblewrap, unix socket only, no TCP bind). Ollama-shape HTTP shim on
+  `:11435` (`/api/generate` NDJSON, `/api/tags`, `/api/version`) so
+  standard clients talk to noesis without a bespoke harness. C0 verified
+  2026-07-23.
+- **Peer Linux user.** Own uid, own `/var/lib/noesis` home, encrypted
+  LUKS+BTRFS store, cannot see the primary user's home. systemd
+  hardening locked in `docs/policies.md`.
+- **Structured-native pipeline.** collectors → ingest queue → SQLite →
+  composer → model. Composer is the only translator to model-facing
+  text.
+
+## Status
+
+Phase-B skeleton validated 2026-07-22
+(`docs/verdicts/2026-07-22-phase-b-skeleton.md`).
+
+Running:
+- Collectors, retention sweeps, Ollama-shape HTTP heartbeat, sandbox.
+
+Not running yet:
+- Composer (spec only).
+- Tool-call dispatcher.
+- A1 fine-tune (`training/` pipeline ready, execution blocked on GPU).
+- Multi-slot LoRA (H12b — probe design pending v2 fix; see
+  `HYPOTHESES.md` §H12a).
+- Extension surface (Phase-2 docs, `docs/extensions.md`).
+- Lens persistence (pending state save/load API in `noesis-rwkv-sys`).
 
 ## Hard constraints
 
-- **Cheap.** Assume GTX 1050 for inference and small LoRA experiments.
-  Cloud burst is allowed for continued pretraining but must be budgeted,
-  not defaulted to.
-- **Open sources only** for training data. No personal corpus in weights
-  for logic-fine-tune (Phase 1) or domain-knowledge fine-tune (Phase 2
-  §H14). *Narrow carve-out*: personal chat traces may be used as
-  supervision for **persona/style SFT only** (Phase 2 §H15 — teach the
-  butler/secretary register), never as a knowledge or reasoning signal.
-  Runtime retrieval remains the unrestricted channel.
-- **Single local reasoning model.** noesis is the sole cognitive engine.
-  Small utility NNs (embedders, classifiers, etc.) are permitted where
-  they earn their keep — the ban is on additional local *reasoning*
-  models, not on any NN.
-- **Autonomous.** Standard Ollama + CLI workflow. No bespoke harness.
+- **Open sources only** for weights. Personal corpus is a runtime
+  retrieval channel, never a fine-tune signal. Narrow carve-out:
+  persona/style SFT (§H15).
+- **Cheap by construction.** GTX 1050 for inference and small LoRA.
+  Cloud burst is an explicit decision.
+- **Single local reasoning model.** Utility NNs (embedders, routers,
+  small policies) are welcome. Additional local *reasoning* models are
+  not. Heuristic (`docs/principles.md` P3): *if it emits tokens that
+  participate in a chain of thought, it is a reasoning model.*
+- **Not a Transformer.** Any switch requires empirical re-open, not
+  architectural drift.
+- **Not a SaaS.** noesis is a personal daily bot for the owner's own
+  machine. Extensions are for the owner to author, giving the runtime
+  presence in new environments.
 
-## Non-goals (explicit)
+## Who this is for
 
-- **Not a Claude replacement.** Heavy reasoning still goes to remote Claude
-  by user's explicit call.
-- **Not coupled to Compilerium.** Training corpus is isolated. Compilerium
-  may be a retrieval source at runtime, never a fine-tune signal.
-- **Not a Transformer.** RWKV is chosen deliberately for constant-cost
-  streaming inference. Any switch away from RWKV requires an explicit
-  empirical re-open, not architectural drift.
-- **Not a SaaS.** noesis is a personal daily bot, not a product.
+- **The owner's own machine.** Design target.
+- **Community push-back on the wagers.** `HYPOTHESES.md` is the point of
+  contact. A clean falsification is more valuable than a green build.
+- **Not:** a replacement for frontier reasoning models, a general
+  deployable assistant, a product.
 
 ## Repository layout
 
 ```
 noesis/
 ├── README.md          — this file
-├── ROADMAP.md         — phased plan across cognitive + memory + integration tracks
-├── CLAUDE.md          — locked decisions and constraints for future Claude sessions
-├── HYPOTHESES.md      — falsifiable claims and evaluation philosophy
-├── docs/              — design notes, research summaries, source-material refs
-├── training/          — corpora, curriculum, LoRA configs, eval sets
-├── memory/            — external memory system (schema, storage, policy)
-├── runtime/           — agent loop, ollama integration, tool adapters
-└── experiments/       — throwaway probes, benchmarks, feasibility checks
+├── ROADMAP.md         — phased plan across cognitive + memory + integration
+├── HYPOTHESES.md      — falsifiable claims (H1..H17)
+├── CONTRIBUTING.md    — how to engage (hypotheses > runtime PRs)
+├── FAILED.md          — refuted hypotheses and dead experiments
+├── docs/              — policies, principles, DSL, extensions, verdicts
+├── training/          — A1 pipeline (blocked on GPU)
+├── memory/            — external memory system spec + schema
+├── runtime/           — Rust supervisor, collectors, HTTP shim
+└── experiments/       — throwaway probes and A0.* feasibility checks
 ```

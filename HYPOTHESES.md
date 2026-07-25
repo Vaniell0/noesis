@@ -54,38 +54,120 @@ run as a persistent background reasoner on the user's stack (GTX 1050 or
 CPU-only) with resource consumption low enough not to disrupt foreground
 work.
 
-**Prediction (tightened 2026-07-22).** Under a realistic 24-hour
-background workload (event-stream ingestion + retrieval on demand +
-periodic composer/reflection bursts), CPU usage falls into one of two
-disjoint regimes and never outside them:
+**Prediction (refactored 2026-07-25 — fan-off primary, CPU% derived).**
+The single hard constraint is thermal: **fans do not spin up in ambient
+mode**. CPU% is a proxy, not the constraint — the same 5% package CPU
+may be silent on a passively-cooled machine and audible on a poorly-
+tuned laptop. Ambient behaviour is regulated by a **startup calibration
+pass** that measures the actual per-machine tokens/CPU-second and
+fan-safe headroom, then derives drip rate from that. The earlier flat
+"< 1 % CPU steady" line was a proxy for silence on i5-1235U + Ollama;
+it is dropped as a global rule.
 
-- **Steady:** < 1 % CPU. Model resident (Ollama child, `keep_alive: -1`)
-  but idle; only event collectors and the scheduler run.
-- **Burst:** up to ~20 % CPU for episodes of *tens of seconds* at
-  roughly minute-scale periodicity. Every LLM job (composer,
-  incremental digest, reflection) is a burst; long-running jobs are
-  fragmented into burst chunks, never allowed to sustain.
+**Two regimes:**
 
-Alongside this: resident RAM stays < 3 GB (backbone + memory system +
-supervisor), and battery life at idle is not measurably degraded
-beyond ~10 %.
+- **Ambient (no user signal within `interactive_window_minutes`,
+  default 5):** fan-off invariant absolutely. Drip rate =
+  `fan_safe_cpu_percent × tokens_per_cpu_second` (both from
+  calibration). On i5-1235U + Ollama pilot (2026-07-23), tolerance
+  is ~5 tok/s at 5% package CPU; on fanless hardware, may exceed
+  10 tok/s. This is what the machine spends processing the ambient
+  event stream — 0.3 tok/s was a conservative default when the
+  ceiling was unknown, not a target.
+- **Interactive (user active within `interactive_window_minutes`):**
+  thermal envelope only. May grab all P-cores, may spin fans; the
+  user is present, requested the compute, tolerates noise. Bounded
+  only by hardware limits and fairness with other user processes.
 
-**Falsification.** Sustained operation for 7 days at Gate 2 stays
-inside both regimes and inside the RAM and battery caps. If any LLM
-job exceeds tens of seconds in a burst, if steady CPU drifts above
-1 %, or if RAM crosses 3 GB, the prediction fails. Response order:
-scheduler/budget accounting, quantisation, inference framework,
-backbone.
+Alongside both: resident RAM < 3 GB (backbone + memory system +
+supervisor), battery life at idle not measurably degraded beyond
+~10 % vs no-noesis baseline.
 
-**Design note.** The two-regime rule replaces the earlier "< 10 %
-average CPU" line, which averaged over the interesting behaviour.
-Enforcement lives in the `noesis-scheduler` module (Rust runtime): a
-budget accountant caps burst duration and defers jobs that overrun
-into the next burst window.
+### Startup calibration protocol
 
-**Related.** Track C (C1, C2), Gate 2.
+Runs on supervisor start; results cached in
+`/var/lib/noesis/calibration.toml` and reused across restarts.
 
-**Status.** Untested.
+1. **Warm-up.** One 32-token burst to force kernel compile and CPU
+   frequency ramp; discard measurements.
+2. **Throughput measurement.** Three burst runs of ~20 tokens each,
+   backend-native (in-process rwkv.cpp or Ollama socket). Median
+   `CPU-s / token` across runs; record as `tokens_per_cpu_second`.
+3. **Fan-safe threshold determination.** Two paths:
+   - *Auto-detect (preferred, when available).* Read
+     `hwmon`/`asus-wmi`/`applesmc` fan RPM before and after a
+     one-minute sustained low-rate stream at ~10 %, ~20 %, ~30 %
+     package CPU. Highest CPU% at which fan RPM does not rise above
+     baseline + configured `fan_rpm_delta` (default 100 RPM) becomes
+     `fan_safe_cpu_percent`. Store baseline RPM in calibration file.
+   - *Fallback (thermal telemetry absent or ambiguous).* Prompt user
+     once at first run: `noesis calibrate --interactive` runs the
+     sweep and asks after each step whether the fan became audible.
+     User answer sets `fan_safe_cpu_percent`. Cached — not asked
+     again unless invalidated.
+4. **Persistence.** Write:
+   ```toml
+   [calibration]
+   tokens_per_cpu_second = 9.4
+   fan_safe_cpu_percent = 8.0
+   cpu_model = "12th Gen Intel(R) Core(TM) i5-1235U"
+   n_cores = 12
+   kernel = "6.11.0-9-generic"
+   backend = "ollama-0.3.14"
+   measured_at = "2026-07-25T14:32:00Z"
+   ```
+5. **Invalidation triggers.** Recalibrate on: (a) kernel version
+   change; (b) backend swap (Ollama ↔ in-process rwkv.cpp); (c)
+   `uptime > 30d` since last calibration; (d) manual
+   `noesis recalibrate`; (e) CPU frequency governor change detected.
+6. **Interactive-check refusal.** If measured CPU during calibration
+   is > 30 % occupied by other processes, defer calibration and log
+   a `system_obs` event — do not corrupt the measurement.
+
+The derived drip ceiling then feeds `drip.rate_tokens_per_sec` at
+supervisor start:
+
+```
+drip.rate_tokens_per_sec =
+    fan_safe_cpu_percent / 100 × tokens_per_cpu_second × safety_margin
+```
+
+`safety_margin` defaults to `0.6` — a `0.4` buffer below the fan
+threshold covers thermal drift from other workloads on the machine.
+
+**Falsification (revised).**
+- If **any fan-audible episode** occurs in ambient mode over 7 days
+  of sustained operation (Gate 2), the prediction fails. Response
+  order: calibration protocol design, safety_margin default,
+  scheduler duty cycle, quantisation.
+- If RAM crosses 3 GB, prediction fails independently — memory
+  budget is not thermal-derived.
+- If calibration itself cannot land a stable `fan_safe_cpu_percent`
+  across three re-runs on the same hardware (delta > 30 %), the
+  calibration protocol is under-specified — fix the protocol, do
+  not fall back to a hard-coded cap.
+
+**Design note.** The pre-2026-07-25 formulation ("< 1 % steady CPU")
+enforced a hard cap that ignored per-machine variance and forced a
+conservative default (0.3 tok/s drip) that under-utilised silent
+hardware. The new formulation makes the constraint itself
+(inaudibility) primary and lets the mechanism (drip rate) be
+derived. Enforcement lives in the `noesis-scheduler` module (Rust
+runtime): calibration on start, budget accountant on the ambient
+path, no cap on interactive.
+
+**Process-visibility invariance** (not the primary constraint,
+but nice-to-have): noesis under `top` should not stand out among
+other resident daemons. This is downstream of the fan-off ceiling —
+if drip stays under `fan_safe_cpu_percent`, process visibility is
+already low.
+
+**Related.** Track C (C1, C2), Gate 2. Plan §11 for calibration
+implementation notes and interaction with H16 drip gate.
+
+**Status.** Calibration protocol untested; needs first
+implementation to validate the auto-detect path across the user's
+hardware set.
 
 ---
 
@@ -960,30 +1042,34 @@ as *keep silent* vs *emit*, then the model self-initiates speech
 from within its own state dynamics — not from a supervisor-driven
 polling loop.
 
-**CPU-budget grounding (measured 2026-07-23).** Burst generation on
-0.4B G1d **via Ollama's llama-server** on i5-1235U measured at 18.6
-tok/s, consuming 0.106 CPU-seconds per token, ≈ 190 % of one core ≈
-15.8 % of package (12 threads). H1 caps steady-state package CPU at
-< 1 %. Continuous-burst think-stream therefore breaks H1 by ~16×.
-Analytical extrapolation (linear in R, since per-token cost is
-constant at fixed batch=1):
+**CPU-budget grounding (measured 2026-07-23; ceiling refactored
+2026-07-25).** Burst generation on 0.4B G1d **via Ollama's
+llama-server** on i5-1235U measured at 18.6 tok/s, consuming 0.106
+CPU-seconds per token, ≈ 190 % of one core ≈ 15.8 % of package
+(12 threads). Analytical extrapolation (linear in R at fixed
+batch=1):
 
-| R (tok/s) | package CPU % | one-core equiv | fits H1<1% |
-|----------:|--------------:|---------------:|:----------:|
-|      0.10 |         0.089 |          1.06  |     YES    |
-|      0.25 |         0.221 |          2.66  |     YES    |
-|      0.50 |         0.443 |          5.31  |     YES    |
-|      1.00 |         0.885 |         10.62  |     YES    |
-|      1.13 |         1.000 |         12.00  |    edge    |
-|      2.00 |         1.771 |         21.25  |     NO     |
+| R (tok/s) | package CPU % | one-core equiv |
+|----------:|--------------:|---------------:|
+|      0.10 |         0.089 |          1.06  |
+|      0.25 |         0.221 |          2.66  |
+|      0.50 |         0.443 |          5.31  |
+|      1.00 |         0.885 |         10.62  |
+|      2.00 |         1.771 |         21.25  |
+|      5.00 |         4.428 |         53.13  |
+|     10.00 |         8.855 |        106.25  |
 
-**H1 ceiling: R_max ≈ 1.13 tok/s** (single instance, current
-backend). At R_max: latency to first drip token ≈ 0.89 s. When we
-move from Ollama's llama-server to direct rwkv.cpp bindings (C0
-verified at ~30 tok/s on Q8_0), per-token cost drops ~1.6×, so
-R_max rises to ~1.8 tok/s at same H1 ceiling. The trade sits on a
-supervisor-tunable knob; guarantees are analytical, no 24 h probe
-needed to bind R to a CPU% guarantee.
+**Ceiling is per-machine, from calibration, not a fixed cap.**
+Pre-2026-07-25 H1 wagered a flat 1% package CPU steady-state, which
+yielded `R_max ≈ 1.13 tok/s` as a hardcoded ceiling. This was too
+tight for silent hardware and too loose for fanless-under-thermal-
+drift. Post-refactor: H1's calibration protocol determines
+`fan_safe_cpu_percent` per-machine; R_max is derived. If
+`fan_safe_cpu_percent = 6%` on the user's stack, R_max ≈ 6.7 tok/s
+(Ollama backend) or ~20 tok/s (in-process rwkv.cpp at 30 tok/s
+peak). The drip stream is much larger than earlier plans assumed —
+enough to actually keep up with the ambient event stream, which the
+old 0.3 tok/s default could not.
 
 **Motivation.** User framing 2026-07-23: "он в любой момент срывается
 отвечать по собственному усмотрению также из think-токенов

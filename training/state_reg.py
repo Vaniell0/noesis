@@ -4,6 +4,20 @@ Formulation locked after A0.5 verdict (see
 `experiments/A0_state_probe/results.md` §A0.5 and
 `experiments/A0_state_probe/results/a05_ext/verdict.md`).
 
+## Position vs. the RWKV / SSM community
+
+No direct prior art. RWKV-PEFT State Tuning trains an initial state
+vector under CE only; it does not shape the trajectory. The nearest
+external cousin is Slow Feature Analysis, which *minimises* squared
+state motion — this loss inverts the sign. See `docs/community-map.md`
+§1 (what ships) and §2 (noesis-specific divergences). Because there is
+no established formulation to lean on, the A1 pilot MUST instrument
+per-layer state RMS and stable-rank across training; without a
+unit-variance anchor (like SFA has) a "just make the state explode"
+solution is a real risk. Kill switch: if state RMS on {L12,L16,L20}
+diverges > 2× the base checkpoint at any A1 checkpoint, raise λ_δ
+downweight or fall back to `mode='trajectory_reg_with_sr'`.
+
 ## The signal A0.5 validated
 
 Three sub-tests, all four cells:

@@ -126,9 +126,14 @@ Nothing in that config is G1-specific.
 
 **LoRA / adapter tooling is external.** RWKV-LM README points to two
 outside repos:
-- `JL-er/RWKV-PEFT` — LoRA, QLoRA, PiSSA, Qpissa, **state tuning**
-  (last item is notable — state-tuning suggests the community already
-  operates on state trajectories as a training target).
+- `JL-er/RWKV-PEFT` — LoRA, QLoRA, PiSSA, Qpissa, **State Tuning**.
+  State Tuning is *initial-state prompt-tuning*: a single learnable
+  `[n_layer, n_head, head_size, head_size]` vector is prepended so the
+  base model starts each sequence from a trained initial WKV state.
+  The trajectory across tokens is not part of the loss — CE alone
+  drives training. See `docs/community-map.md` §1 for the full
+  landscape; noesis's `L_state` (state-motion + curvature reward) has
+  no direct prior art in the RWKV community.
 - `Blealtan/RWKV-LM-LoRA` — infinite-ctxlen training branch.
 
 For any A1 fine-tune step involving state, `RWKV-PEFT` is the
@@ -192,11 +197,15 @@ things this literature review changes about the *design* itself:
    accessibility manually before the probe session. Fallback: any
    BlinkDL G1 checkpoint (even a different sibling like G1e/G1f) is
    acceptable *if* it's native bf16.
-5. **`JL-er/RWKV-PEFT` has "state tuning"** — worth reading before we
-   design A1, because the community may already be training against
-   state trajectories, which would change what "original contribution"
-   means for the state-regularised loss branch in the plan's decision
-   gate.
+5. **`JL-er/RWKV-PEFT` "State Tuning" is initial-state prompt-tuning,
+   not a trajectory objective.** Verified 2026-07-25 — a single
+   learnable initial WKV vector, CE-only loss. The community is *not*
+   training against state trajectories. This means noesis's `L_state`
+   (state-motion reward + curvature) is an unclaimed slot in the
+   design space, not a re-invention. Landscape and adjacent work
+   catalogued in `docs/community-map.md` (§1 for what ships, §2 for
+   noesis's divergences, §4 for external claims we rejected during
+   verification).
 6. **Test-time-learning claim is per-step, not sequence-scope.** The
    paper's SGD-step framing (§2) is limited to a single delta-rule
    application. Cumulative state evolution being SGD-like is a
