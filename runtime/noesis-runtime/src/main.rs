@@ -3,7 +3,7 @@
 //! Responsibilities (skeleton, will grow):
 //!   1. Load runtime config from `$NOESIS_CONFIG` (TOML).
 //!   2. Open all four zone stores under `state_path`.
-//!   3. Spawn the inference child (rwkv-cpp or ollama) — TODO.
+//!   3. Spawn the inference child (rwkv-cpp).
 //!   4. Sit on a supervised loop, handling SIGTERM cleanly.
 //!
 //! Everything past step 2 is TODO for the Phase B skeleton; the point right
@@ -39,8 +39,6 @@ struct Config {
     calibration_path: PathBuf,
     #[serde(default)]
     rwkv_cpp: Option<RwkvCppSection>,
-    #[serde(default)]
-    ollama: Option<OllamaSection>,
 }
 
 fn default_calibration_path() -> PathBuf {
@@ -69,17 +67,6 @@ struct RwkvCppSection {
 
 fn default_rwkv_max_gen() -> usize {
     20
-}
-
-#[derive(Debug, Deserialize)]
-struct OllamaSection {
-    endpoint: String,
-    #[serde(default)]
-    model: Option<String>,
-    #[serde(default = "default_heartbeat_prompt")]
-    heartbeat_prompt: String,
-    #[serde(default = "default_heartbeat_secs")]
-    heartbeat_secs: u64,
 }
 
 fn default_heartbeat_prompt() -> String {
@@ -130,15 +117,6 @@ fn inference_config_from(cfg: &Config) -> inference::InferenceConfig {
             },
             None => inference::Backend::Unspecified,
         },
-        "ollama" => match &cfg.ollama {
-            Some(s) => inference::Backend::Ollama {
-                endpoint: s.endpoint.clone(),
-                model: s.model.clone(),
-                heartbeat_prompt: s.heartbeat_prompt.clone(),
-                heartbeat: Duration::from_secs(s.heartbeat_secs),
-            },
-            None => inference::Backend::Unspecified,
-        },
         other => {
             warn!(backend = other, "unknown inference backend name");
             inference::Backend::Unspecified
@@ -150,10 +128,9 @@ fn inference_config_from(cfg: &Config) -> inference::InferenceConfig {
     }
 }
 
-/// Backend fingerprint for calibration invalidation. Distinguishes the
-/// major choice (rwkv-cpp / ollama / unspecified) plus the model
-/// artefact — swapping GGUF quantisation levels or model families
-/// invalidates measured throughput too.
+/// Backend fingerprint for calibration invalidation. Only rwkv-cpp is
+/// supported as a model backend; swapping GGUF quantisation levels or
+/// model families invalidates measured throughput too.
 fn backend_identifier(cfg: &Config) -> String {
     match cfg.inference_backend.as_str() {
         "rwkv-cpp" => {
@@ -165,14 +142,6 @@ fn backend_identifier(cfg: &Config) -> String {
                 .map(|p| p.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string())
                 .unwrap_or_else(|| "no-model".into());
             format!("rwkv-cpp:{model}")
-        }
-        "ollama" => {
-            let model = cfg
-                .ollama
-                .as_ref()
-                .and_then(|s| s.model.as_deref())
-                .unwrap_or("no-model");
-            format!("ollama:{model}")
         }
         other => format!("unknown:{other}"),
     }

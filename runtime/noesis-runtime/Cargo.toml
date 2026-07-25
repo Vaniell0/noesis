@@ -20,7 +20,6 @@ tracing-subscriber.workspace = true
 tokio.workspace = true
 toml.workspace = true
 evdev.workspace = true
-reqwest.workspace = true
 axum.workspace = true
 
 [dev-dependencies]

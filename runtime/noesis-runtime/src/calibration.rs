@@ -23,9 +23,10 @@
 //!     result to disk + emits `calibration_result` event.
 //!
 //! Still deferred to a follow-up (spec'd in H1):
-//!   - Actual throughput measurement (needs a backend-specific
-//!     `generate_burst` hook — differs for rwkv-cpp in-process vs
-//!     Ollama HTTP). Landing in the burst-hook commit.
+//!   - Actual throughput measurement — needs the rwkv-cpp `generate_once`
+//!     path extracted so the background job can drive a shared context
+//!     for burst measurement. (The runtime supports only rwkv-cpp as a
+//!     model backend; Ollama is exposed as a client wire format only.)
 //!   - RAPL bonus signal (root-only since CVE-2020-8694; needs udev
 //!     rule + docs).
 //!   - Interactive `noesis calibrate --interactive` CLI subcommand
@@ -65,9 +66,11 @@ pub const DEFAULT_SAFETY_MARGIN: f64 = 0.6;
 /// the historical pilot fallback in H1 §"Reference numbers".
 pub const FALLBACK_FAN_SAFE_CPU_PERCENT: f64 = 1.0;
 
-/// Conservative fallback throughput. Matches i5-1235U + Ollama pilot
-/// number from H1 §"Reference numbers"; low enough to guarantee silence
-/// on any hardware, will be replaced the first time measurement runs.
+/// Conservative fallback throughput. Matches the i5-1235U pilot number
+/// from H1 §"Reference numbers" (measured historically via a small LLM
+/// heartbeat before the current rwkv-cpp path); low enough to guarantee
+/// silence on any hardware, will be replaced the first time real
+/// measurement runs against the shipped rwkv-cpp backend.
 pub const FALLBACK_TOKENS_PER_CPU_SECOND: f64 = 9.4;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -315,15 +318,11 @@ pub struct BurstSample {
 ///
 /// The closure is called with a token count and must run the backend
 /// synchronously; CPU time is captured via `/proc/self/stat` around
-/// each call. This works because `spawn_blocking`-hosted backends
-/// (rwkv-cpp in-process, or an Ollama call that pins the process
-/// waiting on socket IO) accumulate their CPU time under the caller
-/// process — the whole calibration path runs on the same PID.
-///
-/// A backend that offloads to another PID (e.g. a separately-spawned
-/// ollama serve child not in our cgroup) would NOT show up in
-/// `/proc/self/stat`; that case needs `cgroup.stat` cpu accounting
-/// instead, which is deferred until we actually need it.
+/// each call. This works because rwkv-cpp is linked in-process and runs
+/// on a `spawn_blocking` thread — its CPU time accumulates under the
+/// runtime PID. Out-of-process model backends would need `cgroup.stat`
+/// accounting instead, but the runtime does not support any (see the
+/// H1 lock: model runs only on rwkv-cpp).
 #[allow(dead_code)] // wired by the background-calibration commit
 pub fn measure_throughput<F>(
     warmup_gen_tokens: usize,
@@ -681,7 +680,7 @@ mod tests {
             cpu_model: fp().cpu_model,
             n_cores: fp().n_cores,
             kernel: fp().kernel,
-            backend: "ollama-0.3.14".into(),
+            backend: "rwkv-cpp:test.bin".into(),
             measured_at: iso8601_now(),
             defaulted: false,
         }
@@ -701,7 +700,7 @@ mod tests {
 
     #[test]
     fn fallback_is_conservative() {
-        let cal = Calibration::fallback(&fp(), "ollama-0.3.14");
+        let cal = Calibration::fallback(&fp(), "rwkv-cpp:test.bin");
         assert!(cal.defaulted);
         assert_eq!(cal.fan_safe_cpu_percent, FALLBACK_FAN_SAFE_CPU_PERCENT);
         // With 1% × 12 × 9.4 × 0.6 = 0.677 tok/s.
@@ -776,20 +775,20 @@ mod tests {
     #[test]
     fn missing_file_returns_none() {
         let path = std::path::Path::new("/nonexistent/noesis-cal-does-not-exist.toml");
-        assert!(load(path, &fp(), "ollama-0.3.14").unwrap().is_none());
+        assert!(load(path, &fp(), "rwkv-cpp:test.bin").unwrap().is_none());
     }
 
     #[test]
     fn malformed_toml_returns_none() {
         let tmp = tempfile::NamedTempFile::new().unwrap();
         std::fs::write(tmp.path(), "not [valid toml here").unwrap();
-        assert!(load(tmp.path(), &fp(), "ollama-0.3.14").unwrap().is_none());
+        assert!(load(tmp.path(), &fp(), "rwkv-cpp:test.bin").unwrap().is_none());
     }
 
     #[test]
     fn load_or_fallback_returns_fallback_when_missing() {
         let path = std::path::Path::new("/nonexistent/noesis-cal-does-not-exist.toml");
-        let cal = load_or_fallback(path, &fp(), "ollama-0.3.14");
+        let cal = load_or_fallback(path, &fp(), "rwkv-cpp:test.bin");
         assert!(cal.defaulted);
     }
 
@@ -938,7 +937,7 @@ mod tests {
             startup_grace: Duration::ZERO,
             sweep: sweep::SweepConfig::default(),
             calibration_path: cal_path.clone(),
-            backend_id: "ollama-test".into(),
+            backend_id: "rwkv-cpp:test.bin".into(),
         };
         // current = a fresh MEASURED calibration → job must skip
         let current = base_cal();
