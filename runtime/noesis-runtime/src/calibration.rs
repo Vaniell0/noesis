@@ -25,11 +25,14 @@
 //! event on startup marking the file as `defaulted` so downstream
 //! consumers know they are running against a placeholder.
 
-// The thermal probe is exercised by its own tests + live-read test.
-// Production wiring lands with the thermal-sweep commit, so the outer
-// build won't call any of its symbols yet.
+// The thermal probe + sweep are exercised by their own tests plus the
+// live-coretemp read. Production wiring (background-calibrate task)
+// lands in a follow-up commit, so the outer build won't call these
+// symbols yet.
 #[allow(dead_code)]
 pub mod thermal;
+#[allow(dead_code)]
+pub mod sweep;
 
 use std::fs;
 use std::path::Path;
