@@ -129,8 +129,17 @@ supervisor start:
 
 ```
 drip.rate_tokens_per_sec =
-    fan_safe_cpu_percent / 100 × tokens_per_cpu_second × safety_margin
+    fan_safe_cpu_percent / 100 × n_cores × tokens_per_cpu_second × safety_margin
 ```
+
+Units: `fan_safe_cpu_percent` is *package* CPU% (0–100, matches what
+`top` reports and what a user actually hears). `tokens_per_cpu_second`
+is tokens per full-core-second of CPU time (measured via `getrusage`
+or `/proc/self/stat` utime+stime — a burst that pins 4 cores for 1
+wall-second consumes 4 CPU-seconds). The `× n_cores` factor bridges
+package-percent to core-seconds. Reference numbers (i5-1235U pilot,
+12 cores, `tokens_per_cpu_second = 9.4`, `fan_safe_cpu_percent = 6`,
+`safety_margin = 0.6`): `0.06 × 12 × 9.4 × 0.6 = 4.06 tok/s`.
 
 `safety_margin` defaults to `0.6` — a `0.4` buffer below the fan
 threshold covers thermal drift from other workloads on the machine.

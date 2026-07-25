@@ -10,6 +10,7 @@
 //! now is that the systemd unit stays alive, opens the stores without error,
 //! and can be verified with `journalctl --user -u noesis-runtime`.
 
+mod calibration;
 mod collectors;
 mod inference;
 mod retention;
@@ -20,8 +21,10 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
+use noesis_schema::EventInput;
 use noesis_store::Store;
 use serde::Deserialize;
+use serde_json::json;
 use tokio::signal::unix::{signal, SignalKind};
 use tracing::{info, warn};
 
@@ -32,10 +35,16 @@ struct Config {
     model_path: Option<PathBuf>,
     #[serde(default = "default_backend")]
     inference_backend: String,
+    #[serde(default = "default_calibration_path")]
+    calibration_path: PathBuf,
     #[serde(default)]
     rwkv_cpp: Option<RwkvCppSection>,
     #[serde(default)]
     ollama: Option<OllamaSection>,
+}
+
+fn default_calibration_path() -> PathBuf {
+    PathBuf::from("/var/lib/noesis/calibration.toml")
 }
 
 #[derive(Debug, Deserialize)]
@@ -141,6 +150,34 @@ fn inference_config_from(cfg: &Config) -> inference::InferenceConfig {
     }
 }
 
+/// Backend fingerprint for calibration invalidation. Distinguishes the
+/// major choice (rwkv-cpp / ollama / unspecified) plus the model
+/// artefact — swapping GGUF quantisation levels or model families
+/// invalidates measured throughput too.
+fn backend_identifier(cfg: &Config) -> String {
+    match cfg.inference_backend.as_str() {
+        "rwkv-cpp" => {
+            let model = cfg
+                .rwkv_cpp
+                .as_ref()
+                .and_then(|s| s.model_path.as_ref())
+                .or(cfg.model_path.as_ref())
+                .map(|p| p.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string())
+                .unwrap_or_else(|| "no-model".into());
+            format!("rwkv-cpp:{model}")
+        }
+        "ollama" => {
+            let model = cfg
+                .ollama
+                .as_ref()
+                .and_then(|s| s.model.as_deref())
+                .unwrap_or("no-model");
+            format!("ollama:{model}")
+        }
+        other => format!("unknown:{other}"),
+    }
+}
+
 fn load_config() -> Result<Config> {
     let path = std::env::var("NOESIS_CONFIG")
         .context("NOESIS_CONFIG env var not set")?;
@@ -173,6 +210,37 @@ async fn main() -> Result<()> {
             .with_context(|| format!("opening store at {}", cfg.state_path.display()))?,
     );
     info!("all zone stores open");
+
+    let fingerprint = calibration::SystemFingerprint::detect();
+    let backend_id = backend_identifier(&cfg);
+    let cal = calibration::load_or_fallback(&cfg.calibration_path, &fingerprint, &backend_id);
+    let drip = cal.drip_rate_default();
+    info!(
+        source = if cal.defaulted { "fallback" } else { "measured" },
+        tokens_per_cpu_second = cal.tokens_per_cpu_second,
+        fan_safe_cpu_percent = cal.fan_safe_cpu_percent,
+        n_cores = cal.n_cores,
+        drip_tokens_per_sec = %format!("{drip:.2}"),
+        "ambient drip ceiling",
+    );
+    if let Err(e) = store.system_obs.insert(&EventInput {
+        kind: "calibration_state".into(),
+        payload: json!({
+            "source": if cal.defaulted { "fallback" } else { "measured" },
+            "tokens_per_cpu_second": cal.tokens_per_cpu_second,
+            "fan_safe_cpu_percent": cal.fan_safe_cpu_percent,
+            "n_cores": cal.n_cores,
+            "cpu_model": cal.cpu_model,
+            "kernel": cal.kernel,
+            "backend": cal.backend,
+            "measured_at": cal.measured_at,
+            "drip_tokens_per_sec": drip,
+            "safety_margin": calibration::DEFAULT_SAFETY_MARGIN,
+        }),
+        refs: vec![],
+    }) {
+        warn!(error = %e, "calibration_state insert failed");
+    }
 
     let inference_cfg = inference_config_from(&cfg);
     let shutdown_flag = Arc::clone(&inference_cfg.shutdown);
