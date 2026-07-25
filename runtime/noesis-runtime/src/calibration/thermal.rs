@@ -21,9 +21,10 @@
 //!      trigger the same interactive-fallback path as EIO fans.
 //!
 //! Deferred to follow-ups:
-//!   - RAPL package power sampler (bonus signal, needs udev/caps —
-//!     see Task 17). Would let us measure joules/token and cap on
-//!     watts instead of just temp.
+//!   - RAPL package power sampler (bonus signal). Enablement path
+//!     shipped in `contrib/udev/60-noesis-rapl.rules` +
+//!     `docs/rapl-enablement.md`; reader not yet wired. Would let us
+//!     measure joules/token and cap on watts instead of just temp.
 //!   - Apple Silicon path (macOS `powermetrics`, no coretemp file).
 //!   - Fanless thermal-throttle detection (needs `IA32_THERM_STATUS`
 //!     MSR, less accessible than coretemp).

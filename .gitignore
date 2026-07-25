@@ -47,6 +47,7 @@
 !runtime/**/*.rs
 !runtime/**/Cargo.lock
 !runtime/**/*.nix
+!runtime/**/*.rules
 
 # Runtime build artefacts (regex above would let these leak)
 runtime/**/target/

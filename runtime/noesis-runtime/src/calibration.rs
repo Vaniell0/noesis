@@ -23,8 +23,10 @@
 //!     result to disk + emits `calibration_result` event.
 //!
 //! Still deferred to a follow-up (spec'd in H1):
-//!   - RAPL bonus signal (root-only since CVE-2020-8694; needs udev
-//!     rule + docs).
+//!   - RAPL bonus signal (J/token). Enablement path shipped
+//!     (`contrib/udev/60-noesis-rapl.rules` + `docs/rapl-enablement.md`);
+//!     reader wiring not yet done — sweep continues to cap on temp
+//!     delta alone until it lands.
 //!   - Interactive `noesis calibrate --interactive` CLI subcommand
 //!     for the case where auto-sweep is unavailable (no coretemp) or
 //!     the user wants to override.

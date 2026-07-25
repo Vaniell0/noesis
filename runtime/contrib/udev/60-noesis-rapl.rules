@@ -1,0 +1,30 @@
+# Expose Intel/AMD RAPL energy counters to the `noesis` service user.
+#
+# Background: since the mitigation for CVE-2020-8694 ("Platypus"),
+# /sys/class/powercap/*/energy_uj is readable only by root, because a
+# high-rate reader can distinguish AES key material via ~65 mV energy
+# side-channel. noesis-runtime does not run as root and does not need
+# high-rate reads — it samples once per calibration burst (a few times
+# at startup) to derive J/token as a bonus signal alongside coretemp.
+#
+# Install:
+#   sudo cp 60-noesis-rapl.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger --subsystem-match=powercap
+#
+# Uninstall:
+#   sudo rm /etc/udev/rules.d/60-noesis-rapl.rules
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger --subsystem-match=powercap
+#
+# The rule matches every device on the `powercap` subsystem (Intel RAPL,
+# AMD amd_energy, and future powercap drivers) and, when the device
+# exposes an `energy_uj` attribute, chgrp's it to `noesis` and adds
+# group-read. The `if [ -e ... ]` guard skips containers/roots without
+# the attribute.
+#
+# See docs/rapl-enablement.md for the security trade-off and the
+# alternative (systemd AmbientCapabilities=CAP_SYS_RAWIO on the unit).
+
+SUBSYSTEM=="powercap", ACTION=="add|change", \
+    RUN+="/bin/sh -c 'if [ -e /sys%p/energy_uj ]; then chgrp noesis /sys%p/energy_uj && chmod g+r /sys%p/energy_uj; fi'"
