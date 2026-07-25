@@ -14,32 +14,42 @@
 //!   - Derived drip formula (`drip_rate_tokens_per_sec`).
 //!   - Safe defaults (`fallback`) when no calibration exists yet.
 //!
-//! Deferred to a follow-up (spec'd in H1 but not implemented here):
+//! What runs at startup now:
+//!   - Synchronous: `load_or_fallback` + emit `calibration_state`
+//!     event so downstream consumers know whether the drip loop is
+//!     running on measured or fallback numbers.
+//!   - Background: `run_background_job` — thermal sweep on the blocking
+//!     pool (only when the current calibration is `defaulted`), writes
+//!     result to disk + emits `calibration_result` event.
+//!
+//! Still deferred to a follow-up (spec'd in H1):
 //!   - Actual throughput measurement (needs a backend-specific
 //!     `generate_burst` hook — differs for rwkv-cpp in-process vs
-//!     Ollama HTTP).
-//!   - Auto-detect fan-safe threshold via `hwmon` fan RPM sweep.
-//!   - Interactive `noesis calibrate --interactive` CLI subcommand.
-//!
-//! Until measurement lands the supervisor emits a `calibration_state`
-//! event on startup marking the file as `defaulted` so downstream
-//! consumers know they are running against a placeholder.
+//!     Ollama HTTP). Landing in the burst-hook commit.
+//!   - RAPL bonus signal (root-only since CVE-2020-8694; needs udev
+//!     rule + docs).
+//!   - Interactive `noesis calibrate --interactive` CLI subcommand
+//!     for the case where auto-sweep is unavailable (no coretemp) or
+//!     the user wants to override.
 
-// The thermal probe + sweep are exercised by their own tests plus the
-// live-coretemp read. Production wiring (background-calibrate task)
-// lands in a follow-up commit, so the outer build won't call these
-// symbols yet.
-#[allow(dead_code)]
-pub mod thermal;
-#[allow(dead_code)]
 pub mod sweep;
+pub mod thermal;
+
+// Note: some fields (has_package_sensor, n_core_sensors) are used only
+// for logging/reporting from run_background_job; the compiler may still
+// flag them dead in release builds where the log site is optimised away.
+// Left un-`#[allow]`'d because the current usage is real.
 
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result};
+use noesis_schema::EventInput;
+use noesis_store::Store;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use tracing::{info, warn};
 
 /// Max age of a cached calibration before we treat it as stale.
@@ -220,10 +230,9 @@ struct CalibrationFile {
     calibration: Calibration,
 }
 
-/// Unused until the throughput-measurement path lands; kept public so
-/// tests can exercise round-trip and the follow-up commit that wires
-/// measurement has a place to write results.
-#[allow(dead_code)]
+/// Persist a fresh calibration to disk. Called by `run_background_job`
+/// after a successful sweep so subsequent runtime starts skip
+/// remeasurement.
 pub fn save(path: &Path, cal: &Calibration) -> Result<()> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
@@ -496,6 +505,163 @@ fn civil_from_days(z: i64) -> (i32, u32, u32) {
     (y, m, d)
 }
 
+/// Configuration for the background calibration job.
+#[derive(Debug, Clone)]
+pub struct BackgroundJobConfig {
+    /// Delay before starting the sweep so the system settles after
+    /// boot (collectors initialising, indexer catching up, etc.). Set
+    /// to 0 for tests / immediate calibration.
+    pub startup_grace: Duration,
+    pub sweep: sweep::SweepConfig,
+    /// Where to write the resulting calibration TOML.
+    pub calibration_path: PathBuf,
+    /// Backend identifier for the persisted file (matches what
+    /// `load_or_fallback` checks — a mismatch invalidates the cache).
+    pub backend_id: String,
+}
+
+/// Long-running background task: waits `startup_grace`, then runs the
+/// thermal sweep on the blocking pool and persists a new calibration.
+/// No-op when the current calibration is already measured (not
+/// `defaulted`) — spends no CPU redoing work that's already valid.
+///
+/// Emits two possible outcomes as events on `system_obs`:
+///   - `calibration_result` — sweep succeeded, includes per-step
+///     temps and the resulting `fan_safe_cpu_percent` / drip rate.
+///   - `calibration_advice` — sweep unavailable (no coretemp, sweep
+///     errored, or fallback path); text suggests interactive.
+///
+/// This task returns Ok(()) after one calibration attempt. It is
+/// **not** meant to loop — the caller may re-invoke on a schedule if
+/// long-running drift correction is wanted (not planned for now).
+pub async fn run_background_job(
+    store: Arc<Store>,
+    fingerprint: SystemFingerprint,
+    current: Calibration,
+    cfg: BackgroundJobConfig,
+) -> Result<()> {
+    if !current.defaulted {
+        info!(
+            fan_safe_cpu_percent = current.fan_safe_cpu_percent,
+            tokens_per_cpu_second = current.tokens_per_cpu_second,
+            "cached calibration valid — skipping background sweep",
+        );
+        return Ok(());
+    }
+
+    if !cfg.startup_grace.is_zero() {
+        info!(
+            grace_secs = cfg.startup_grace.as_secs(),
+            "background calibration scheduled — waiting for system to settle",
+        );
+        tokio::time::sleep(cfg.startup_grace).await;
+    }
+
+    let probe = match tokio::task::spawn_blocking(thermal::CoretempProbe::probe_default).await {
+        Ok(Ok(Some(p))) => p,
+        Ok(Ok(None)) => {
+            warn!("no coretemp probe available — auto-calibration disabled");
+            emit_advice(
+                &store,
+                "auto-calibration unavailable: no coretemp sensor. \
+                 Runtime is on conservative fallback. To raise the drip \
+                 ceiling, run `noesis-runtime calibrate --interactive` \
+                 (planned; see plan-extensions §11).",
+            );
+            return Ok(());
+        }
+        Ok(Err(e)) => {
+            warn!(error = %e, "coretemp probe errored — auto-calibration disabled");
+            emit_advice(&store, &format!("coretemp probe failed: {e}"));
+            return Ok(());
+        }
+        Err(e) => {
+            warn!(error = %e, "coretemp probe join errored");
+            return Err(e.into());
+        }
+    };
+
+    info!(
+        used_package_sensor = probe.has_package_sensor(),
+        n_core_sensors = probe.n_core_sensors(),
+        "starting thermal sweep",
+    );
+    let sweep_cfg = cfg.sweep.clone();
+    let sweep_result = match tokio::task::spawn_blocking(move || sweep::run(&probe, &sweep_cfg))
+        .await
+    {
+        Ok(Ok(r)) => r,
+        Ok(Err(e)) => {
+            warn!(error = %e, "thermal sweep errored — staying on fallback");
+            emit_advice(&store, &format!("thermal sweep failed: {e}"));
+            return Ok(());
+        }
+        Err(e) => {
+            warn!(error = %e, "thermal sweep join errored");
+            return Err(e.into());
+        }
+    };
+
+    let new_cal = Calibration {
+        // Throughput still on fallback until the burst-hook commit
+        // wires a real backend generator.
+        tokens_per_cpu_second: current.tokens_per_cpu_second,
+        fan_safe_cpu_percent: sweep_result.safe_percent as f64,
+        cpu_model: fingerprint.cpu_model.clone(),
+        n_cores: fingerprint.n_cores,
+        kernel: fingerprint.kernel.clone(),
+        backend: cfg.backend_id.clone(),
+        measured_at: iso8601_now(),
+        defaulted: false,
+    };
+    let drip = new_cal.drip_rate_default();
+
+    if let Err(e) = save(&cfg.calibration_path, &new_cal) {
+        warn!(
+            error = %e,
+            path = %cfg.calibration_path.display(),
+            "calibration save failed — result kept only in memory",
+        );
+    } else {
+        info!(
+            path = %cfg.calibration_path.display(),
+            fan_safe_cpu_percent = new_cal.fan_safe_cpu_percent,
+            drip_tokens_per_sec = %format!("{drip:.2}"),
+            "calibration persisted",
+        );
+    }
+
+    let payload = json!({
+        "backend": new_cal.backend,
+        "fan_safe_cpu_percent": new_cal.fan_safe_cpu_percent,
+        "tokens_per_cpu_second": new_cal.tokens_per_cpu_second,
+        "drip_tokens_per_sec": drip,
+        "safety_margin": DEFAULT_SAFETY_MARGIN,
+        "baseline_temp_c": sweep_result.baseline_temp_c,
+        "steps": sweep_result.steps,
+        "used_package_sensor": sweep_result.used_package_sensor,
+        "throughput_source": "fallback",
+    });
+    if let Err(e) = store.system_obs.insert(&EventInput {
+        kind: "calibration_result".into(),
+        payload,
+        refs: vec![],
+    }) {
+        warn!(error = %e, "calibration_result insert failed");
+    }
+    Ok(())
+}
+
+fn emit_advice(store: &Store, message: &str) {
+    if let Err(e) = store.system_obs.insert(&EventInput {
+        kind: "calibration_advice".into(),
+        payload: json!({ "message": message }),
+        refs: vec![],
+    }) {
+        warn!(error = %e, "calibration_advice insert failed");
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -758,5 +924,80 @@ mod tests {
             })
         });
         assert!(r.is_err());
+    }
+
+    /// Integration: background job skips the sweep when the current
+    /// calibration is already measured. Fast to run — no sweep = no
+    /// CPU load or coretemp dependency.
+    #[tokio::test]
+    async fn background_job_skips_when_cache_valid() {
+        let state_dir = tempfile::tempdir().unwrap();
+        let store = Arc::new(Store::open(state_dir.path()).unwrap());
+        let cal_path = state_dir.path().join("calibration.toml");
+        let cfg = BackgroundJobConfig {
+            startup_grace: Duration::ZERO,
+            sweep: sweep::SweepConfig::default(),
+            calibration_path: cal_path.clone(),
+            backend_id: "ollama-test".into(),
+        };
+        // current = a fresh MEASURED calibration → job must skip
+        let current = base_cal();
+        run_background_job(store, fp(), current, cfg).await.unwrap();
+        // No file written, no CPU burnt.
+        assert!(!cal_path.exists());
+    }
+
+    /// Integration: with no coretemp override the job either runs a
+    /// live sweep (on hosts with coretemp) or emits an advice event
+    /// (on hosts without). Runs against real hardware if present, so
+    /// gated by `#[ignore]` to keep CI predictable.
+    #[tokio::test]
+    #[ignore = "runs live thermal sweep or hardware probe — invoke with --ignored"]
+    async fn background_job_end_to_end_writes_file_or_advice() {
+        let state_dir = tempfile::tempdir().unwrap();
+        let store = Arc::new(Store::open(state_dir.path()).unwrap());
+        let cal_path = state_dir.path().join("calibration.toml");
+        let cfg = BackgroundJobConfig {
+            startup_grace: Duration::ZERO,
+            sweep: sweep::SweepConfig {
+                baseline_secs: 2,
+                settle_secs: 2,
+                step_secs: 4,
+                ..sweep::SweepConfig::default()
+            },
+            calibration_path: cal_path.clone(),
+            backend_id: "test-backend".into(),
+        };
+        let current = Calibration::fallback(&fp(), &cfg.backend_id);
+        run_background_job(Arc::clone(&store), fp(), current, cfg)
+            .await
+            .unwrap();
+
+        // Exactly one of: (a) file written with a valid Calibration, or
+        // (b) a calibration_advice event emitted to system_obs. Both
+        // outcomes are valid — depends on whether the host has coretemp.
+        let file_written = cal_path.exists();
+        let advice = store
+            .system_obs
+            .recent(10)
+            .unwrap()
+            .into_iter()
+            .any(|e| e.kind == "calibration_advice");
+        let result = store
+            .system_obs
+            .recent(10)
+            .unwrap()
+            .into_iter()
+            .any(|e| e.kind == "calibration_result");
+        assert!(
+            file_written || advice,
+            "expected either calibration file or advice event; \
+             file={file_written}, advice={advice}",
+        );
+        if file_written {
+            assert!(result, "file written but calibration_result event missing");
+            let loaded = load(&cal_path, &fp(), "test-backend").unwrap();
+            assert!(loaded.is_some(), "written file must round-trip through load()");
+        }
     }
 }

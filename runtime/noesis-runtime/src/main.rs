@@ -249,6 +249,21 @@ async fn main() -> Result<()> {
         Arc::clone(&store),
         retention::RetentionConfig::default(),
     ));
+    // Background thermal sweep — no-op when a valid measured
+    // calibration is already on disk; on first boot / after fingerprint
+    // invalidation, waits `startup_grace` and then runs a ~2-minute
+    // sweep on the blocking pool to derive a real fan_safe_cpu_percent.
+    let calibrate_handle = tokio::spawn(calibration::run_background_job(
+        Arc::clone(&store),
+        fingerprint.clone(),
+        cal.clone(),
+        calibration::BackgroundJobConfig {
+            startup_grace: Duration::from_secs(30),
+            sweep: calibration::sweep::SweepConfig::default(),
+            calibration_path: cfg.calibration_path.clone(),
+            backend_id: backend_id.clone(),
+        },
+    ));
     let collector_handles = vec![
         (
             "system_obs",
@@ -317,6 +332,7 @@ async fn main() -> Result<()> {
     }
     inference_handle.abort();
     retention_handle.abort();
+    calibrate_handle.abort();
     for (name, handle) in collector_handles {
         match handle.await {
             Ok(Ok(())) => {}
@@ -336,6 +352,12 @@ async fn main() -> Result<()> {
         Ok(Err(e)) => warn!(component = "retention", error = %e, "exited with error"),
         Err(e) if e.is_cancelled() => info!(component = "retention", "cancelled"),
         Err(e) => warn!(component = "retention", error = %e, "join error"),
+    }
+    match calibrate_handle.await {
+        Ok(Ok(())) => {}
+        Ok(Err(e)) => warn!(component = "calibrate", error = %e, "exited with error"),
+        Err(e) if e.is_cancelled() => info!(component = "calibrate", "cancelled"),
+        Err(e) => warn!(component = "calibrate", error = %e, "join error"),
     }
 
     info!("noesis-runtime stopped");

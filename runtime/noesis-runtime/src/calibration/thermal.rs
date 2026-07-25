@@ -93,15 +93,13 @@ impl CoretempProbe {
         best.ok_or_else(|| anyhow::anyhow!("all coretemp inputs unreadable"))
     }
 
-    /// Introspection for the calibration_state event / logging — used
-    /// by the sweep once it lands, so it can report "sweep used
-    /// Package sensor" vs "sweep used max-of-cores fallback".
-    #[allow(dead_code)] // wired by the thermal-sweep commit
+    /// Reported in `calibration_result` events so operators can tell
+    /// whether the sweep used Intel's aggregated package sensor or
+    /// the max-of-cores fallback.
     pub fn has_package_sensor(&self) -> bool {
         self.package_input.is_some()
     }
 
-    #[allow(dead_code)] // wired by the thermal-sweep commit
     pub fn n_core_sensors(&self) -> usize {
         self.core_inputs.len()
     }
