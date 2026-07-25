@@ -281,6 +281,118 @@ pub fn load_or_fallback(
     }
 }
 
+/// One measurement burst — the closure-caller runs `n_tokens_requested`
+/// tokens through the actual backend and reports what came back.
+/// `gen_tokens` may differ from the request if the backend stopped
+/// early (EOS, error). CPU time is measured by `measure_throughput`
+/// around the closure call — the callee does not need to time itself.
+pub struct BurstSample {
+    pub gen_tokens: usize,
+}
+
+/// Warm-up burst + `n_measurement_bursts` bursts of `burst_gen_tokens`
+/// each; returns the median `tokens_per_cpu_second` across the
+/// measurement bursts. Matches H1 §"Startup calibration protocol"
+/// steps 1 (warm-up) and 2 (throughput measurement).
+///
+/// The closure is called with a token count and must run the backend
+/// synchronously; CPU time is captured via `/proc/self/stat` around
+/// each call. This works because `spawn_blocking`-hosted backends
+/// (rwkv-cpp in-process, or an Ollama call that pins the process
+/// waiting on socket IO) accumulate their CPU time under the caller
+/// process — the whole calibration path runs on the same PID.
+///
+/// A backend that offloads to another PID (e.g. a separately-spawned
+/// ollama serve child not in our cgroup) would NOT show up in
+/// `/proc/self/stat`; that case needs `cgroup.stat` cpu accounting
+/// instead, which is deferred until we actually need it.
+#[allow(dead_code)] // wired by the background-calibration commit
+pub fn measure_throughput<F>(
+    warmup_gen_tokens: usize,
+    burst_gen_tokens: usize,
+    n_measurement_bursts: usize,
+    mut burst_fn: F,
+) -> Result<f64>
+where
+    F: FnMut(usize) -> Result<BurstSample>,
+{
+    if n_measurement_bursts == 0 {
+        anyhow::bail!("measure_throughput requires at least one measurement burst");
+    }
+    burst_fn(warmup_gen_tokens).context("warm-up burst failed")?;
+
+    let mut samples = Vec::with_capacity(n_measurement_bursts);
+    for i in 0..n_measurement_bursts {
+        let cpu_start = read_process_cpu_time()?;
+        let burst = burst_fn(burst_gen_tokens)
+            .with_context(|| format!("measurement burst {i} failed"))?;
+        let cpu_end = read_process_cpu_time()?;
+        let cpu_delta = cpu_end.saturating_sub(cpu_start);
+        if cpu_delta.is_zero() {
+            anyhow::bail!("burst {i} consumed no measurable CPU time");
+        }
+        if burst.gen_tokens == 0 {
+            anyhow::bail!("burst {i} produced no tokens");
+        }
+        samples.push(burst.gen_tokens as f64 / cpu_delta.as_secs_f64());
+    }
+    samples.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let mid = samples.len() / 2;
+    let median = if samples.len().is_multiple_of(2) {
+        (samples[mid - 1] + samples[mid]) / 2.0
+    } else {
+        samples[mid]
+    };
+    Ok(median)
+}
+
+/// Process-wide CPU time (utime + stime) via `/proc/self/stat`.
+/// Result is in seconds; resolution is `1/USER_HZ` (10ms on mainline
+/// Linux where `USER_HZ = 100`).
+#[allow(dead_code)] // used by measure_throughput, wired later
+fn read_process_cpu_time() -> Result<Duration> {
+    let text = fs::read_to_string("/proc/self/stat").context("reading /proc/self/stat")?;
+    parse_stat_cpu_ticks(&text).map(user_hz_ticks_to_duration)
+}
+
+/// Extracts `utime + stime` (fields 14 + 15 per proc(5)) in raw jiffies
+/// from the contents of `/proc/self/stat`. The `comm` field (index 2)
+/// is wrapped in parens and may contain whitespace/parens; we cut past
+/// the *last* `)` and index into the remainder to sidestep that.
+#[allow(dead_code)] // used by read_process_cpu_time, wired later
+fn parse_stat_cpu_ticks(text: &str) -> Result<u64> {
+    let paren_end = text
+        .rfind(')')
+        .ok_or_else(|| anyhow::anyhow!("malformed /proc/self/stat: no ')' delimiter"))?;
+    let tail = &text[paren_end + 1..];
+    let fields: Vec<&str> = tail.split_whitespace().collect();
+    // proc(5) 1-indexed fields; comm is field 2, so tail index 0 == field 3.
+    // utime is field 14 → tail index 11.
+    // stime is field 15 → tail index 12.
+    let utime: u64 = fields
+        .get(11)
+        .ok_or_else(|| anyhow::anyhow!("/proc/self/stat missing utime"))?
+        .parse()
+        .context("parsing utime")?;
+    let stime: u64 = fields
+        .get(12)
+        .ok_or_else(|| anyhow::anyhow!("/proc/self/stat missing stime"))?
+        .parse()
+        .context("parsing stime")?;
+    Ok(utime + stime)
+}
+
+/// `USER_HZ` on Linux mainline is 100 (10ms per tick). This is a
+/// user-space constant fixed by `_SC_CLK_TCK`; the kernel's `CONFIG_HZ`
+/// (100/250/1000) affects scheduling granularity, not this value.
+#[allow(dead_code)] // used by user_hz_ticks_to_duration, wired later
+const USER_HZ_TICKS_PER_SEC: u64 = 100;
+
+#[allow(dead_code)] // used by read_process_cpu_time, wired later
+fn user_hz_ticks_to_duration(ticks: u64) -> Duration {
+    Duration::from_millis(ticks * (1000 / USER_HZ_TICKS_PER_SEC))
+}
+
 fn read_cpu_model() -> Option<String> {
     let text = fs::read_to_string("/proc/cpuinfo").ok()?;
     for line in text.lines() {
@@ -534,5 +646,108 @@ mod tests {
             format_iso8601(1_700_000_000),
             "2023-11-14T22:13:20Z"
         );
+    }
+
+    #[test]
+    fn parse_stat_cpu_ticks_extracts_utime_plus_stime() {
+        // Real `/proc/self/stat` shape: pid (comm) state ppid pgrp ...
+        // Fields 14/15 are utime/stime (1-indexed per proc(5)).
+        // Below: 40 utime + 60 stime = 100 ticks.
+        let line = "1234 (noesis-runtime) S 1 1234 1234 0 -1 0 0 0 0 0 \
+                    40 60 0 0 20 0 4 0 100 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+                    0 0 0 0 0 0 0 0 0 0 0";
+        assert_eq!(parse_stat_cpu_ticks(line).unwrap(), 100);
+    }
+
+    #[test]
+    fn parse_stat_cpu_ticks_survives_parens_in_comm() {
+        // `comm` may legally contain `(` and `)`; rfind(')') skips past.
+        let line = "1 (weird ) name) S 0 1 1 0 -1 0 0 0 0 0 \
+                    5 7 0 0 20 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 \
+                    0 0 0 0 0 0 0 0 0 0 0";
+        assert_eq!(parse_stat_cpu_ticks(line).unwrap(), 12);
+    }
+
+    #[test]
+    fn parse_stat_cpu_ticks_errors_on_missing_paren() {
+        assert!(parse_stat_cpu_ticks("nothing here").is_err());
+    }
+
+    #[test]
+    fn parse_stat_cpu_ticks_errors_on_truncated_fields() {
+        // Enough to satisfy rfind(')') but not enough fields for utime.
+        let line = "1 (short) S 0 1 1";
+        assert!(parse_stat_cpu_ticks(line).is_err());
+    }
+
+    #[test]
+    fn user_hz_conversion_matches_100hz_mainline() {
+        // 100 ticks × 10ms/tick = 1s on mainline USER_HZ=100.
+        assert_eq!(user_hz_ticks_to_duration(100), Duration::from_secs(1));
+        assert_eq!(user_hz_ticks_to_duration(1), Duration::from_millis(10));
+        assert_eq!(user_hz_ticks_to_duration(0), Duration::from_millis(0));
+    }
+
+    #[test]
+    fn measure_throughput_rejects_zero_bursts() {
+        let r = measure_throughput(10, 20, 0, |_| {
+            Ok(BurstSample { gen_tokens: 20 })
+        });
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn measure_throughput_runs_warmup_then_n_bursts() {
+        // Verify: closure called `1 + n_measurement_bursts` times, and
+        // the first call receives `warmup_gen_tokens` while subsequent
+        // calls receive `burst_gen_tokens`. Each closure invocation
+        // burns a bit of CPU so `cpu_delta` clears the USER_HZ resolution
+        // (10ms) — otherwise `measure_throughput` correctly bails on the
+        // first zero-delta burst.
+        use std::cell::RefCell;
+        let calls: RefCell<Vec<usize>> = RefCell::new(Vec::new());
+        let _ = measure_throughput(7, 42, 3, |n| {
+            calls.borrow_mut().push(n);
+            burn_cpu_for(Duration::from_millis(30));
+            Ok(BurstSample { gen_tokens: n })
+        });
+        assert_eq!(*calls.borrow(), vec![7, 42, 42, 42]);
+    }
+
+    fn burn_cpu_for(d: Duration) {
+        let start = std::time::Instant::now();
+        // Sum-of-squares busy-loop; the black_box prevents the optimiser
+        // from constant-folding the whole thing away.
+        let mut acc: u64 = 0;
+        while start.elapsed() < d {
+            for i in 0..10_000u64 {
+                acc = acc.wrapping_add(i.wrapping_mul(i));
+            }
+            std::hint::black_box(acc);
+        }
+    }
+
+    #[test]
+    fn measure_throughput_propagates_burst_error() {
+        let r = measure_throughput(10, 20, 2, |_| -> Result<BurstSample> {
+            anyhow::bail!("simulated backend failure")
+        });
+        assert!(r.is_err());
+    }
+
+    #[test]
+    fn measure_throughput_errors_on_zero_token_burst() {
+        // Warm-up returns tokens (so it doesn't fail early on CPU); the
+        // first measurement burst reports zero tokens, which must fail.
+        use std::cell::Cell;
+        let call = Cell::new(0);
+        let r = measure_throughput(10, 20, 1, |_| {
+            let n = call.get();
+            call.set(n + 1);
+            Ok(BurstSample {
+                gen_tokens: if n == 0 { 20 } else { 0 },
+            })
+        });
+        assert!(r.is_err());
     }
 }
