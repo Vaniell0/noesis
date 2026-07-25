@@ -19,7 +19,7 @@
 mod rwkv_http;
 
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -30,11 +30,40 @@ use noesis_store::Store;
 use serde_json::json;
 use tracing::{info, warn};
 
-#[derive(Debug, Clone)]
+/// The loaded rwkv-cpp state — shared between the inference supervisor,
+/// the HTTP shim, and the background calibration burst hook so we open
+/// the model **once** at startup instead of paying multi-second mmap +
+/// tokenizer init on each consumer.
+///
+/// Both fields are cheap to clone: `RwkvContext` is `Clone` (refcounted
+/// C-level handle); `Arc<WorldTokenizer>` is trivially shareable.
+#[derive(Clone)]
+pub struct RwkvRuntime {
+    pub ctx: RwkvContext,
+    pub tok: Arc<WorldTokenizer>,
+    pub n_threads: u32,
+}
+
+/// Load model + tokenizer synchronously. Callers on the async runtime
+/// wrap in `spawn_blocking` — this is a multi-second mmap on real
+/// weights, so it must not block a tokio worker.
+pub fn open_rwkv(model_path: &Path, n_threads: u32) -> anyhow::Result<RwkvRuntime> {
+    let ctx = RwkvContext::open(model_path, n_threads, 0)
+        .map_err(|e| anyhow::anyhow!("rwkv open failed: {e:?}"))?;
+    let tok = WorldTokenizer::new()
+        .map_err(|e| anyhow::anyhow!("tokenizer init failed: {e}"))?;
+    Ok(RwkvRuntime {
+        ctx,
+        tok: Arc::new(tok),
+        n_threads,
+    })
+}
+
+#[derive(Clone)]
 pub enum Backend {
     RwkvCpp {
+        runtime: RwkvRuntime,
         model_path: PathBuf,
-        n_threads: u32,
         heartbeat_prompt: String,
         heartbeat: Duration,
         max_gen_tokens: usize,
@@ -63,8 +92,8 @@ impl Default for InferenceConfig {
 pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> {
     match cfg.backend {
         Backend::RwkvCpp {
+            runtime,
             model_path,
-            n_threads,
             heartbeat_prompt,
             heartbeat,
             max_gen_tokens,
@@ -72,8 +101,8 @@ pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> 
         } => {
             run_rwkv_cpp(
                 store,
+                runtime,
                 model_path,
-                n_threads,
                 heartbeat_prompt,
                 heartbeat,
                 max_gen_tokens,
@@ -89,9 +118,14 @@ pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> 
     }
 }
 
-/// rwkv-cpp: load the model in-process via `noesis-rwkv`, then run the
-/// heartbeat loop and (optionally) the Ollama-shape HTTP shim on a
-/// cloned C-level context.
+/// rwkv-cpp: spawn the heartbeat loop on the blocking pool and,
+/// optionally, the Ollama-shape HTTP shim on a `clone_for_parallel`
+/// context so external clients don't contend with the heartbeat.
+///
+/// The model is already loaded — see `open_rwkv` (main.rs calls it
+/// before spawning this task so the same `RwkvRuntime` can also be
+/// handed to `calibration::run_background_job` for the throughput
+/// burst without a second multi-second mmap).
 ///
 /// Both heartbeat and HTTP handlers do their eval work on the tokio
 /// blocking pool (rwkv.cpp is synchronous CPU work with no cooperative
@@ -101,46 +135,24 @@ pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> 
 #[allow(clippy::too_many_arguments)]
 async fn run_rwkv_cpp(
     store: Arc<Store>,
+    runtime: RwkvRuntime,
     model_path: PathBuf,
-    n_threads: u32,
     heartbeat_prompt: String,
     heartbeat: Duration,
     max_gen_tokens: usize,
     http_bind: Option<SocketAddr>,
     shutdown: Arc<AtomicBool>,
 ) -> anyhow::Result<()> {
-    // Blocking init: open ctx + build tokenizer. Neither is Send-safe
-    // to await on, so we do it inside spawn_blocking and unpack after.
-    let load_started = Instant::now();
-    let init = tokio::task::spawn_blocking({
-        let model_path = model_path.clone();
-        move || -> anyhow::Result<(RwkvContext, WorldTokenizer)> {
-            let ctx = RwkvContext::open(&model_path, n_threads, 0)
-                .map_err(|e| anyhow::anyhow!("rwkv open failed: {e:?}"))?;
-            let tok = WorldTokenizer::new()
-                .map_err(|e| anyhow::anyhow!("tokenizer init failed: {e}"))?;
-            Ok((ctx, tok))
-        }
-    })
-    .await?;
-    let (ctx, tok) = match init {
-        Ok(v) => v,
-        Err(e) => {
-            warn!(model = %model_path.display(), error = %e, "rwkv init failed — supervisor idle");
-            return Ok(());
-        }
-    };
+    let RwkvRuntime { ctx, tok, n_threads } = runtime;
     info!(
         model = %model_path.display(),
-        load_ms = load_started.elapsed().as_millis() as u64,
         n_vocab = ctx.n_vocab(),
         n_embed = ctx.n_embed(),
         n_layer = ctx.n_layer(),
         state_len = ctx.state_len(),
         n_threads,
-        "rwkv.cpp loaded",
+        "rwkv.cpp inference supervisor starting",
     );
-    let tok = Arc::new(tok);
 
     // Optional HTTP shim on a cloned rwkv_context. `clone_for_parallel`
     // gives us a second C-level context sharing the weight mmap but with
@@ -272,9 +284,9 @@ fn heartbeat_loop(
 }
 
 /// One prompt-in / response-out round on the given context. Shared by
-/// the heartbeat loop and the HTTP shim so timing/failure semantics
-/// stay identical.
-pub(super) struct GenerateResult {
+/// the heartbeat loop, the HTTP shim, and the calibration burst hook
+/// so timing/failure semantics stay identical.
+pub struct GenerateResult {
     pub prompt_tokens: usize,
     pub gen_tokens: usize,
     pub prompt_ms: u64,
@@ -286,7 +298,7 @@ pub(super) struct GenerateResult {
     pub ok: bool,
 }
 
-pub(super) fn generate_once(
+pub fn generate_once(
     ctx: &RwkvContext,
     tok: &WorldTokenizer,
     prompt: &str,

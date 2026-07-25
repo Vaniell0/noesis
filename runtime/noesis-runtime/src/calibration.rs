@@ -23,10 +23,6 @@
 //!     result to disk + emits `calibration_result` event.
 //!
 //! Still deferred to a follow-up (spec'd in H1):
-//!   - Actual throughput measurement — needs the rwkv-cpp `generate_once`
-//!     path extracted so the background job can drive a shared context
-//!     for burst measurement. (The runtime supports only rwkv-cpp as a
-//!     model backend; Ollama is exposed as a client wire format only.)
 //!   - RAPL bonus signal (root-only since CVE-2020-8694; needs udev
 //!     rule + docs).
 //!   - Interactive `noesis calibrate --interactive` CLI subcommand
@@ -311,6 +307,26 @@ pub struct BurstSample {
     pub gen_tokens: usize,
 }
 
+/// Type-erased burst closure the background calibration job uses to
+/// drive one throughput sample. Boxed so the closure — which captures
+/// an `RwkvContext` clone + tokenizer — can travel through
+/// `spawn_blocking` without pulling rwkv types into calibration's
+/// public surface.
+pub type BurstFn = Box<dyn FnMut(usize) -> Result<BurstSample> + Send>;
+
+/// Warm-up burst size — its throughput sample is discarded. Purpose is
+/// to prime CPU caches + rwkv-cpp scratch buffers before we time.
+pub const THROUGHPUT_WARMUP_TOKENS: usize = 16;
+
+/// Tokens per measurement burst. Small enough that each burst stays
+/// under a few CPU-seconds on typical hardware (at ~10 tok/CPU-s that's
+/// ~3s per burst), keeping the total calibration cost bounded.
+pub const THROUGHPUT_BURST_TOKENS: usize = 32;
+
+/// Number of measurement bursts. Median across them cancels one-off
+/// scheduler jitter; three is the smallest odd count that permits that.
+pub const THROUGHPUT_N_BURSTS: usize = 3;
+
 /// Warm-up burst + `n_measurement_bursts` bursts of `burst_gen_tokens`
 /// each; returns the median `tokens_per_cpu_second` across the
 /// measurement bursts. Matches H1 §"Startup calibration protocol"
@@ -323,7 +339,6 @@ pub struct BurstSample {
 /// runtime PID. Out-of-process model backends would need `cgroup.stat`
 /// accounting instead, but the runtime does not support any (see the
 /// H1 lock: model runs only on rwkv-cpp).
-#[allow(dead_code)] // wired by the background-calibration commit
 pub fn measure_throughput<F>(
     warmup_gen_tokens: usize,
     burst_gen_tokens: usize,
@@ -366,7 +381,6 @@ where
 /// Process-wide CPU time (utime + stime) via `/proc/self/stat`.
 /// Result is in seconds; resolution is `1/USER_HZ` (10ms on mainline
 /// Linux where `USER_HZ = 100`).
-#[allow(dead_code)] // used by measure_throughput, wired later
 fn read_process_cpu_time() -> Result<Duration> {
     let text = fs::read_to_string("/proc/self/stat").context("reading /proc/self/stat")?;
     parse_stat_cpu_ticks(&text).map(user_hz_ticks_to_duration)
@@ -376,7 +390,6 @@ fn read_process_cpu_time() -> Result<Duration> {
 /// from the contents of `/proc/self/stat`. The `comm` field (index 2)
 /// is wrapped in parens and may contain whitespace/parens; we cut past
 /// the *last* `)` and index into the remainder to sidestep that.
-#[allow(dead_code)] // used by read_process_cpu_time, wired later
 fn parse_stat_cpu_ticks(text: &str) -> Result<u64> {
     let paren_end = text
         .rfind(')')
@@ -402,10 +415,8 @@ fn parse_stat_cpu_ticks(text: &str) -> Result<u64> {
 /// `USER_HZ` on Linux mainline is 100 (10ms per tick). This is a
 /// user-space constant fixed by `_SC_CLK_TCK`; the kernel's `CONFIG_HZ`
 /// (100/250/1000) affects scheduling granularity, not this value.
-#[allow(dead_code)] // used by user_hz_ticks_to_duration, wired later
 const USER_HZ_TICKS_PER_SEC: u64 = 100;
 
-#[allow(dead_code)] // used by read_process_cpu_time, wired later
 fn user_hz_ticks_to_duration(ticks: u64) -> Duration {
     Duration::from_millis(ticks * (1000 / USER_HZ_TICKS_PER_SEC))
 }
@@ -533,11 +544,19 @@ pub struct BackgroundJobConfig {
 /// This task returns Ok(()) after one calibration attempt. It is
 /// **not** meant to loop — the caller may re-invoke on a schedule if
 /// long-running drift correction is wanted (not planned for now).
+///
+/// The `burst` parameter is a type-erased hook that the job calls to
+/// drive throughput measurement against the actual backend. Passing
+/// `None` (or a hook whose bursts fail) keeps `tokens_per_cpu_second`
+/// on the fallback value from `current` — the sweep still lands a
+/// measured `fan_safe_cpu_percent`, so the drip formula improves
+/// partially even without a live burst.
 pub async fn run_background_job(
     store: Arc<Store>,
     fingerprint: SystemFingerprint,
     current: Calibration,
     cfg: BackgroundJobConfig,
+    burst: Option<BurstFn>,
 ) -> Result<()> {
     if !current.defaulted {
         info!(
@@ -601,10 +620,35 @@ pub async fn run_background_job(
         }
     };
 
+    let (tokens_per_cpu_second, throughput_source) = match burst {
+        Some(burst_fn) => {
+            match tokio::task::spawn_blocking(move || {
+                let mut burst_fn = burst_fn;
+                measure_throughput(
+                    THROUGHPUT_WARMUP_TOKENS,
+                    THROUGHPUT_BURST_TOKENS,
+                    THROUGHPUT_N_BURSTS,
+                    &mut *burst_fn,
+                )
+            })
+            .await
+            {
+                Ok(Ok(t)) => (t, "measured"),
+                Ok(Err(e)) => {
+                    warn!(error = %e, "throughput burst failed — keeping fallback throughput");
+                    (current.tokens_per_cpu_second, "fallback")
+                }
+                Err(e) => {
+                    warn!(error = %e, "throughput burst join errored — keeping fallback throughput");
+                    (current.tokens_per_cpu_second, "fallback")
+                }
+            }
+        }
+        None => (current.tokens_per_cpu_second, "fallback"),
+    };
+
     let new_cal = Calibration {
-        // Throughput still on fallback until the burst-hook commit
-        // wires a real backend generator.
-        tokens_per_cpu_second: current.tokens_per_cpu_second,
+        tokens_per_cpu_second,
         fan_safe_cpu_percent: sweep_result.safe_percent as f64,
         cpu_model: fingerprint.cpu_model.clone(),
         n_cores: fingerprint.n_cores,
@@ -639,7 +683,7 @@ pub async fn run_background_job(
         "baseline_temp_c": sweep_result.baseline_temp_c,
         "steps": sweep_result.steps,
         "used_package_sensor": sweep_result.used_package_sensor,
-        "throughput_source": "fallback",
+        "throughput_source": throughput_source,
     });
     if let Err(e) = store.system_obs.insert(&EventInput {
         kind: "calibration_result".into(),
@@ -910,6 +954,19 @@ mod tests {
     }
 
     #[test]
+    fn measure_throughput_accepts_boxed_burst_fn() {
+        // The background job hands `measure_throughput` a boxed FnMut
+        // (see the `BurstFn` alias). Guard against the trait-object
+        // wrapper accidentally becoming incompatible.
+        let mut boxed: BurstFn = Box::new(|n| {
+            burn_cpu_for(Duration::from_millis(30));
+            Ok(BurstSample { gen_tokens: n })
+        });
+        let r = measure_throughput(4, 8, 2, &mut *boxed);
+        assert!(r.is_ok(), "boxed burst must drive measure_throughput");
+    }
+
+    #[test]
     fn measure_throughput_errors_on_zero_token_burst() {
         // Warm-up returns tokens (so it doesn't fail early on CPU); the
         // first measurement burst reports zero tokens, which must fail.
@@ -941,7 +998,7 @@ mod tests {
         };
         // current = a fresh MEASURED calibration → job must skip
         let current = base_cal();
-        run_background_job(store, fp(), current, cfg).await.unwrap();
+        run_background_job(store, fp(), current, cfg, None).await.unwrap();
         // No file written, no CPU burnt.
         assert!(!cal_path.exists());
     }
@@ -968,7 +1025,15 @@ mod tests {
             backend_id: "test-backend".into(),
         };
         let current = Calibration::fallback(&fp(), &cfg.backend_id);
-        run_background_job(Arc::clone(&store), fp(), current, cfg)
+        // Stub burst hook that burns CPU without going through rwkv —
+        // exercises the measured-throughput branch when coretemp is
+        // available on the host, so we cover both legs of the drip
+        // formula in one shot.
+        let burst: BurstFn = Box::new(|n| {
+            burn_cpu_for(Duration::from_millis(30));
+            Ok(BurstSample { gen_tokens: n })
+        });
+        run_background_job(Arc::clone(&store), fp(), current, cfg, Some(burst))
             .await
             .unwrap();
 

@@ -15,6 +15,7 @@ mod collectors;
 mod inference;
 mod retention;
 
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
@@ -81,51 +82,116 @@ fn default_backend() -> String {
     "rwkv-cpp".into()
 }
 
-fn inference_config_from(cfg: &Config) -> inference::InferenceConfig {
-    let backend = match cfg.inference_backend.as_str() {
-        "rwkv-cpp" => match &cfg.rwkv_cpp {
-            Some(s) => match s.model_path.clone().or_else(|| cfg.model_path.clone()) {
-                Some(model_path) => {
-                    let n_threads = s.threads.unwrap_or_else(|| {
-                        std::thread::available_parallelism()
-                            .map(|n| n.get().min(4) as u32)
-                            .unwrap_or(2)
-                    });
-                    let http_bind = s.http_bind.as_ref().and_then(|s| {
-                        match s.parse() {
-                            Ok(addr) => Some(addr),
-                            Err(e) => {
-                                warn!(http_bind = %s, error = %e,
-                                      "invalid rwkv_cpp.http_bind — HTTP shim disabled");
-                                None
-                            }
-                        }
-                    });
-                    inference::Backend::RwkvCpp {
-                        model_path,
-                        n_threads,
-                        heartbeat_prompt: s.heartbeat_prompt.clone(),
-                        heartbeat: Duration::from_secs(s.heartbeat_secs),
-                        max_gen_tokens: s.max_gen_tokens,
-                        http_bind,
-                    }
-                }
-                None => {
-                    warn!("rwkv-cpp backend has no model_path — supervisor idle");
-                    inference::Backend::Unspecified
-                }
-            },
-            None => inference::Backend::Unspecified,
-        },
-        other => {
-            warn!(backend = other, "unknown inference backend name");
-            inference::Backend::Unspecified
+/// Loaded rwkv-cpp state + parsed section values, produced once at
+/// startup. Kept together so we can hand the same `RwkvRuntime` to the
+/// inference supervisor (heartbeat + HTTP shim) and the calibration
+/// burst hook (throughput measurement) without paying the multi-second
+/// mmap twice.
+struct LoadedRwkv {
+    runtime: inference::RwkvRuntime,
+    model_path: PathBuf,
+    heartbeat_prompt: String,
+    heartbeat: Duration,
+    max_gen_tokens: usize,
+    http_bind: Option<SocketAddr>,
+}
+
+async fn load_rwkv_if_configured(cfg: &Config) -> Option<LoadedRwkv> {
+    if cfg.inference_backend != "rwkv-cpp" {
+        warn!(backend = %cfg.inference_backend, "unknown inference backend name");
+        return None;
+    }
+    let s = cfg.rwkv_cpp.as_ref()?;
+    let model_path = s.model_path.clone().or_else(|| cfg.model_path.clone());
+    let model_path = match model_path {
+        Some(p) => p,
+        None => {
+            warn!("rwkv-cpp backend has no model_path — supervisor idle");
+            return None;
         }
     };
-    inference::InferenceConfig {
-        backend,
-        ..inference::InferenceConfig::default()
+    let n_threads = s.threads.unwrap_or_else(|| {
+        std::thread::available_parallelism()
+            .map(|n| n.get().min(4) as u32)
+            .unwrap_or(2)
+    });
+    let http_bind = s.http_bind.as_ref().and_then(|s| match s.parse() {
+        Ok(addr) => Some(addr),
+        Err(e) => {
+            warn!(http_bind = %s, error = %e,
+                  "invalid rwkv_cpp.http_bind — HTTP shim disabled");
+            None
+        }
+    });
+
+    let model_path_open = model_path.clone();
+    let runtime = match tokio::task::spawn_blocking(move || {
+        inference::open_rwkv(&model_path_open, n_threads)
+    })
+    .await
+    {
+        Ok(Ok(r)) => r,
+        Ok(Err(e)) => {
+            warn!(error = ?e, "rwkv open failed — supervisor idle");
+            return None;
+        }
+        Err(e) => {
+            warn!(error = %e, "rwkv open join errored — supervisor idle");
+            return None;
+        }
+    };
+
+    Some(LoadedRwkv {
+        runtime,
+        model_path,
+        heartbeat_prompt: s.heartbeat_prompt.clone(),
+        heartbeat: Duration::from_secs(s.heartbeat_secs),
+        max_gen_tokens: s.max_gen_tokens,
+        http_bind,
+    })
+}
+
+fn inference_backend_from(loaded: Option<&LoadedRwkv>) -> inference::Backend {
+    match loaded {
+        Some(l) => inference::Backend::RwkvCpp {
+            runtime: l.runtime.clone(),
+            model_path: l.model_path.clone(),
+            heartbeat_prompt: l.heartbeat_prompt.clone(),
+            heartbeat: l.heartbeat,
+            max_gen_tokens: l.max_gen_tokens,
+            http_bind: l.http_bind,
+        },
+        None => inference::Backend::Unspecified,
     }
+}
+
+/// Build a burst closure the calibration job uses to measure real
+/// tokens/CPU-second. We clone the ctx via `clone_for_parallel` so
+/// the burst doesn't contend with the heartbeat loop for scratch
+/// buffers; the mmap'd weights are shared. Returns `None` when there
+/// is no runtime or the clone fails — calibration then keeps the
+/// fallback throughput number.
+fn build_burst_fn(loaded: Option<&LoadedRwkv>) -> Option<calibration::BurstFn> {
+    let l = loaded?;
+    let burst_ctx = match l.runtime.ctx.clone_for_parallel(l.runtime.n_threads) {
+        Ok(c) => c,
+        Err(e) => {
+            warn!(error = ?e,
+                  "rwkv clone_for_parallel failed — calibration on fallback throughput");
+            return None;
+        }
+    };
+    let tok = Arc::clone(&l.runtime.tok);
+    let prompt = l.heartbeat_prompt.clone();
+    Some(Box::new(move |n: usize| -> Result<calibration::BurstSample> {
+        let r = inference::generate_once(&burst_ctx, &tok, &prompt, n);
+        if r.gen_tokens == 0 {
+            anyhow::bail!("burst produced no tokens");
+        }
+        Ok(calibration::BurstSample {
+            gen_tokens: r.gen_tokens,
+        })
+    }))
 }
 
 /// Backend fingerprint for calibration invalidation. Only rwkv-cpp is
@@ -211,17 +277,24 @@ async fn main() -> Result<()> {
         warn!(error = %e, "calibration_state insert failed");
     }
 
-    let inference_cfg = inference_config_from(&cfg);
+    let loaded_rwkv = load_rwkv_if_configured(&cfg).await;
+    let burst_fn = build_burst_fn(loaded_rwkv.as_ref());
+    let inference_cfg = inference::InferenceConfig {
+        backend: inference_backend_from(loaded_rwkv.as_ref()),
+        ..inference::InferenceConfig::default()
+    };
     let shutdown_flag = Arc::clone(&inference_cfg.shutdown);
     let inference_handle = tokio::spawn(inference::run(Arc::clone(&store), inference_cfg));
     let retention_handle = tokio::spawn(retention::run(
         Arc::clone(&store),
         retention::RetentionConfig::default(),
     ));
-    // Background thermal sweep — no-op when a valid measured
-    // calibration is already on disk; on first boot / after fingerprint
-    // invalidation, waits `startup_grace` and then runs a ~2-minute
-    // sweep on the blocking pool to derive a real fan_safe_cpu_percent.
+    // Background thermal sweep + throughput measurement — no-op when
+    // a valid measured calibration is already on disk. On first boot /
+    // after fingerprint invalidation, waits `startup_grace`, runs a
+    // ~2-minute sweep on the blocking pool for `fan_safe_cpu_percent`,
+    // and (when the burst hook is available) drives a few short bursts
+    // through the parallel rwkv context for `tokens_per_cpu_second`.
     let calibrate_handle = tokio::spawn(calibration::run_background_job(
         Arc::clone(&store),
         fingerprint.clone(),
@@ -232,6 +305,7 @@ async fn main() -> Result<()> {
             calibration_path: cfg.calibration_path.clone(),
             backend_id: backend_id.clone(),
         },
+        burst_fn,
     ));
     let collector_handles = vec![
         (
