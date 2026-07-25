@@ -1,67 +1,68 @@
-# Contributing to noesis
+# Engaging with noesis
 
-Before contributing, read:
-- `CLAUDE.md` — locked decisions and hard constraints.
-- `HYPOTHESES.md` — the falsifiable claims noesis is testing.
-- `docs/principles.md` — the twelve architecture principles.
+**noesis is one person's daily bot, not an open-source product taking
+feature requests.** That is worth stating up front so nobody spends time
+in the wrong direction. That said, several kinds of engagement are
+genuinely useful.
+
+## The most useful thing you can do
+
+**Try to falsify a hypothesis.** `HYPOTHESES.md` lists every specific
+wager (H1..H17) with a stated prediction and a falsifier. A clean
+falsification on your own setup — "H7 predicts X, I ran the experiment
+with these parameters and observed Y" — is more valuable than any
+feature. `FAILED.md` is the graveyard where refuted claims land, and it
+is meant to grow.
+
+Push-back on the *framing* of a hypothesis is also welcome. Pair it with
+an empirical test proposal — no RNN-vs-Transformer mysticism.
 
 ## Non-negotiable rules
 
-**Single reasoning model.** noesis has one reasoning backbone
-(RWKV-7-G1). Additional local reasoning models will be rejected.
-Small utility NNs (embedders, classifiers, routers, tool-call
-formatters) are welcome where they earn their keep — the rule
-(CLAUDE.md verbatim): *"if it emits tokens that participate in a
-chain of thought, it is a reasoning model."*
+Read `README.md` §Hard constraints and `docs/principles.md` first. The
+load-bearing locks:
 
-**No personal data in weights.** Open sources only for fine-tune.
-Personal corpus is a runtime retrieval channel, never a training
-signal. Narrow carve-out: persona / style SFT (§H15) only.
+- **Single reasoning model.** noesis has one reasoning backbone
+  (RWKV-7-G1). Small utility NNs (embedders, classifiers, routers) are
+  welcome where they earn their keep. Additional local reasoning models
+  are not. Heuristic: *if it emits tokens that participate in a chain of
+  thought, it is a reasoning model.*
+- **No personal data in weights.** Open sources only for fine-tune.
+  Personal corpus is a runtime retrieval channel. Narrow carve-out:
+  persona/style SFT (§H15).
+- **Not a Transformer.** RWKV chosen for constant-cost streaming
+  inference. A switch requires empirical re-open, not architectural
+  drift.
+- **Cheap by construction.** GTX 1050 for inference and small LoRA.
+  Cloud burst allowed but explicit.
 
-**Not a Transformer.** RWKV chosen deliberately for constant-cost
-streaming inference. Any switch requires empirical re-open, not
-architectural drift.
+A PR pushing against any of these will bounce unless it carries
+empirical evidence, not a preference argument.
 
-**Cheap by construction.** Assume GTX 1050 for inference and small
-LoRA. Cloud burst allowed but must be explicit.
+## What kinds of PRs actually help
 
-## Interaction style
+- **A failed replication of a hypothesis.** Exact configuration and
+  observed metric. Bonus for a reproducer script.
+- **An extension spec or prototype for your own noesis.** If you build a
+  browser extension, IDE extension, or Minecraft-bot against the surface
+  in `docs/extensions.md`, sharing the manifest schema and event layout
+  helps stabilise the interface for the next builder.
+- **Bug reports against the runtime skeleton** (`runtime/`) — collectors,
+  retention, HTTP shim. Reproducer preferred.
+- **Corrections to design docs where they contradict the code.** Spot a
+  stale claim, file it.
 
-- **Punch-list style for audits.** Propose changes as a list, wait
-  for review, no stealth-fix.
-- **Any philosophical claim about RNN vs Transformer must be paired
-  with an empirical test proposal.** No architectural mysticism.
-- **Russian OK for discussion, English for code / commits / docs.**
+## What kinds of PRs don't
 
-## Where to start
+- **Features to make noesis useful for you.** noesis is one person's
+  bot; your fork is where those live.
+- **Refactors chasing prettier code** without a stated regression risk.
+- **New reasoning-model integrations** (see single-reasoning-model lock).
 
-- **Hypotheses to test.** Anything in `HYPOTHESES.md` marked
-  *Status: Untested* is fair game. Each has a stated prediction and
-  falsifier — the falsifier is the contract.
-- **Bugs / open questions.** GitHub Issues, or the open questions
-  section in `docs/policies.md`.
-- **Extension development.** `docs/extensions.md` — extension
-  surface is Phase-2 docs-only right now; contributions to the spec
-  (manifest schema, first-example embodiment) welcome.
-- **Runtime.** `runtime/` — collectors, retention, HTTP shim. Phase-B
-  skeleton validated 2026-07-22 (`docs/verdicts/`). Next blockers:
-  composer, tool-dispatcher.
-
-## Pull request conventions
+## PR conventions
 
 - One logical change per PR.
-- Include: which hypothesis it relates to (if any), what changed,
-  what test would falsify.
+- Include: which hypothesis it relates to (if any), what changed, what
+  would falsify.
+- English for code, commits, docs. Russian OK in discussion.
 - No `--no-verify` on commits.
-- Signed-off commits preferred but not required.
-
-## What noesis is NOT
-
-- Not a Claude replacement. Heavy reasoning goes to remote Claude
-  by user's explicit call.
-- Not coupled to Compilerium. Runtime retrieval OK; fine-tune
-  signal never.
-- Not a SaaS. noesis is a personal daily bot, not a product.
-
-If your PR pushes against any of these, expect push-back — bring an
-empirical argument, not a preference.

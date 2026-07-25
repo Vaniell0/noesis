@@ -1,9 +1,30 @@
 # noesis / training
 
-A1 fine-tune pipeline — **open tool-call + honesty API** target
-(post-2026-07-22 pivot; see runtime-decisions snapshot §7 "Variant A
-locked"). State-regularization hook wired in, disabled by default
-(α=0). Full design: `plans/cosmic-purring-cocke.md`.
+A1 is the fine-tune that turns a pretrained RWKV-7 checkpoint into a
+coordinator capable of running noesis's cognitive runtime. The runtime
+itself (collectors, store, composer, dispatcher) exists independently;
+the model is what makes it coherent enough to use. A1 targets three
+properties the pretrained checkpoint does not have out of the box:
+
+- **State coherence under continuous input** — via the
+  state-regularization hook (`state_reg.py`), the training-time arm of
+  H4b (reasoning as state evolution). Wired in, disabled by default
+  (α=0); sweep once the baseline holds.
+- **Tool-call surface + honesty ("I don't know → invoke tool")** — via
+  the open fixture (`fixtures/tool_call_open.jsonl`), so the model
+  learns to reach for the runtime's tool dispatcher instead of
+  hallucinating.
+- **Zero personal-corpus contamination in weights** — CLAUDE.md hard
+  constraint. Personal Claude CLI logs are runtime-retrieval material
+  only; they never enter A1 supervision.
+
+A1 is a training experiment, on the same axis as A0.* probes — not a
+release checkpoint. Its success criterion is stated in `HYPOTHESES.md`
+(§H7 and adjacent) and its runbook lives in this file. Full design:
+`plans/cosmic-purring-cocke.md`.
+
+Post-2026-07-22 pivot (Variant A locked): open-sources-only signal;
+personal corpus reclassified to retrieval-only. See §Corpus policy.
 
 **Corpus policy (locked 2026-07-22):**
 
@@ -131,7 +152,7 @@ has been replaced with the `trajectory_reg` branch:
 ### Running the pilot (bring-up plan)
 
 ```bash
-cd /home/vaniello/Desktop/projects/noesis
+cd "$(git rev-parse --show-toplevel)"
 
 # 0. Smoke test — must pass before any real training.
 ./training/.venv/bin/python training/tests/test_state_reg_hookup.py
@@ -214,7 +235,7 @@ training/
 ### A1 pilot smoke (open fixture only)
 
 ```bash
-cd /home/vaniello/Desktop/projects/noesis
+cd "$(git rev-parse --show-toplevel)"
 
 # Build the tokenised fixture (fast, CPU).
 training/.venv/bin/python training/tokenize_fixture.py
@@ -231,7 +252,7 @@ training/.venv/bin/python training/tests/test_state_reg_hookup.py
 Not training. Feeds runtime retrieval, subject to privacy gate.
 
 ```bash
-cd /home/vaniello/Desktop/projects/noesis
+cd "$(git rev-parse --show-toplevel)"
 source training/.venv/bin/activate
 
 python training/extract_traces.py --dry-run --limit 10

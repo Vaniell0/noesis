@@ -8,7 +8,6 @@
 !README.md
 !ROADMAP.md
 !HYPOTHESES.md
-!CLAUDE.md
 !CONTRIBUTING.md
 !FAILED.md
 !LICENSE
@@ -38,6 +37,7 @@
 !training/**/*.toml
 !training/**/*.yml
 !training/**/*.yaml
+!training/**/requirements*.txt
 
 # Runtime track
 !runtime/**/*.py
