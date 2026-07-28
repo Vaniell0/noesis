@@ -16,6 +16,7 @@
 //! Health signals land in `system_obs` as `inference_health`; per-round
 //! generations land in `session_scratch` as `rwkv_generation`.
 
+pub mod lens;
 mod rwkv_http;
 
 use std::net::SocketAddr;
@@ -24,7 +25,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use noesis_rwkv::{argmax, tokenizer::WorldTokenizer, RwkvContext, RwkvSession};
+use noesis_rwkv::{sample, tokenizer::WorldTokenizer, RwkvContext, RwkvSession, SamplingParams, SplitMix64};
 use noesis_schema::EventInput;
 use noesis_store::Store;
 use serde_json::json;
@@ -68,6 +69,9 @@ pub enum Backend {
         heartbeat: Duration,
         max_gen_tokens: usize,
         http_bind: Option<SocketAddr>,
+        /// Thread count for the interactive/HTTP clone context. Defaults
+        /// to `runtime.n_threads` (heartbeat count) when not set separately.
+        http_threads: u32,
     },
     Unspecified,
 }
@@ -78,6 +82,17 @@ pub struct InferenceConfig {
     /// `spawn_blocking` thread that cannot be cancelled mid-eval; main
     /// flips this on SIGTERM and the loop breaks between heartbeats.
     pub shutdown: Arc<AtomicBool>,
+    /// True while at least one interactive request is being served
+    /// through the HTTP shim. Read by ambient consumers (calibration,
+    /// future drip pacer) so they can back off during user work — see
+    /// `docs/policies.md § CPU / thermal / interactive regime`.
+    pub interactive: Arc<AtomicBool>,
+    /// Root directory for per-lens WKV snapshots (plan §5). `None` means
+    /// the shim's `/lens/*` endpoints return `HTTP 501`.
+    pub lens_root: Option<PathBuf>,
+    /// Context transform config (plan §10). Passed to the HTTP shim.
+    /// Defaults to `TransformConfig::default()` (tail_turns=4, no preamble).
+    pub transform_config: noesis_http::TransformConfig,
 }
 
 impl Default for InferenceConfig {
@@ -85,6 +100,9 @@ impl Default for InferenceConfig {
         Self {
             backend: Backend::Unspecified,
             shutdown: Arc::new(AtomicBool::new(false)),
+            interactive: Arc::new(AtomicBool::new(false)),
+            lens_root: None,
+            transform_config: noesis_http::TransformConfig::default(),
         }
     }
 }
@@ -98,6 +116,7 @@ pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> 
             heartbeat,
             max_gen_tokens,
             http_bind,
+            http_threads,
         } => {
             run_rwkv_cpp(
                 store,
@@ -107,7 +126,11 @@ pub async fn run(store: Arc<Store>, cfg: InferenceConfig) -> anyhow::Result<()> 
                 heartbeat,
                 max_gen_tokens,
                 http_bind,
+                http_threads,
                 cfg.shutdown,
+                cfg.interactive,
+                cfg.lens_root,
+                cfg.transform_config,
             )
             .await
         }
@@ -141,7 +164,11 @@ async fn run_rwkv_cpp(
     heartbeat: Duration,
     max_gen_tokens: usize,
     http_bind: Option<SocketAddr>,
+    http_threads: u32,
     shutdown: Arc<AtomicBool>,
+    interactive: Arc<AtomicBool>,
+    lens_root: Option<PathBuf>,
+    transform_config: noesis_http::TransformConfig,
 ) -> anyhow::Result<()> {
     let RwkvRuntime { ctx, tok, n_threads } = runtime;
     info!(
@@ -157,18 +184,28 @@ async fn run_rwkv_cpp(
     // Optional HTTP shim on a cloned rwkv_context. `clone_for_parallel`
     // gives us a second C-level context sharing the weight mmap but with
     // its own scratch buffers — safe to run concurrently with the
-    // heartbeat loop.
+    // heartbeat loop. Uses `http_threads` (possibly higher than the
+    // heartbeat's `n_threads`) to reduce interactive TTFT.
     let http_task = if let Some(bind) = http_bind {
-        match ctx.clone_for_parallel(n_threads) {
+        match ctx.clone_for_parallel(http_threads) {
             Ok(http_ctx) => {
                 let tok = Arc::clone(&tok);
                 let shutdown = Arc::clone(&shutdown);
+                let interactive = Arc::clone(&interactive);
+                let composer = Arc::new(noesis_composer::Composer::new(
+                    noesis_composer::ComposerConfig::default(),
+                    Arc::clone(&store),
+                ));
                 Some(tokio::spawn(rwkv_http::serve(
                     http_ctx,
                     tok,
                     bind,
                     max_gen_tokens,
                     shutdown,
+                    interactive,
+                    lens_root.clone(),
+                    transform_config,
+                    composer,
                 )))
             }
             Err(e) => {
@@ -225,7 +262,17 @@ fn heartbeat_loop(
             return;
         }
         let round_started = Instant::now();
-        let result = generate_once(&ctx, &tok, &heartbeat_prompt, max_gen_tokens);
+        // Heartbeat stays deterministic — the health probe compares tokens/s
+        // and success rate across ticks, so any sampling stochasticity would
+        // just add noise to the signal.
+        let result = generate_once(
+            &ctx,
+            &tok,
+            &heartbeat_prompt,
+            max_gen_tokens,
+            &SamplingParams::greedy(),
+            &[],
+        );
 
         let payload_health = json!({
             "backend": "rwkv-cpp",
@@ -283,6 +330,29 @@ fn heartbeat_loop(
     }
 }
 
+/// Why generation stopped. Mirrors Ollama's `done_reason` field.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum StopReason {
+    /// Hit the `max_gen` budget.
+    Length,
+    /// Matched one of the caller-supplied stop strings on the decoded
+    /// tail — the matched suffix is trimmed from `response`.
+    StopSequence,
+    /// Prompt ingestion or a mid-generation eval failed; generation
+    /// terminated early via an error path rather than a clean stop.
+    Error,
+}
+
+impl StopReason {
+    pub fn as_ollama_str(self) -> &'static str {
+        match self {
+            StopReason::Length => "length",
+            StopReason::StopSequence => "stop",
+            StopReason::Error => "error",
+        }
+    }
+}
+
 /// One prompt-in / response-out round on the given context. Shared by
 /// the heartbeat loop, the HTTP shim, and the calibration burst hook
 /// so timing/failure semantics stay identical.
@@ -292,37 +362,142 @@ pub struct GenerateResult {
     pub prompt_ms: u64,
     pub gen_ms: u64,
     pub response: String,
-    /// True iff prompt ingestion succeeded and the full `max_gen`
-    /// budget was produced (partial generation ⇒ false so the caller
-    /// can distinguish a stalled decode from a healthy round).
+    pub stop_reason: StopReason,
+    /// True iff prompt ingestion succeeded and the run terminated
+    /// cleanly (either budget filled or stop sequence matched). False
+    /// on any eval error — the caller distinguishes stalled from healthy.
     pub ok: bool,
 }
 
+/// Wrapper for the common case (no lens): fresh session, run
+/// `generate_on_session`, drop the session. Everything with a lens goes
+/// through [`generate_on_session`] directly so the caller can persist
+/// the ended session's state.
 pub fn generate_once(
     ctx: &RwkvContext,
     tok: &WorldTokenizer,
     prompt: &str,
     max_gen: usize,
+    params: &SamplingParams,
+    stops: &[String],
+) -> GenerateResult {
+    let mut session = RwkvSession::new(ctx.clone());
+    generate_on_session(&mut session, tok, prompt, max_gen, params, stops, None)
+}
+
+/// Prompt-in / response-out on a caller-owned session. Session state
+/// is mutated in place — for lens flow the caller loads state before
+/// this call and saves it after.
+///
+/// `on_delta`, when `Some`, is called after each generated token with
+/// the UTF-8 string delta since the previous call. The stop-string
+/// suffix is never included in any delta. Used by the streaming HTTP
+/// path; pass `None` for the buffered path.
+pub fn generate_on_session(
+    session: &mut RwkvSession,
+    tok: &WorldTokenizer,
+    prompt: &str,
+    max_gen: usize,
+    params: &SamplingParams,
+    stops: &[String],
+    mut on_delta: Option<&mut dyn FnMut(&str)>,
 ) -> GenerateResult {
     let prompt_ids = tok.encode(prompt);
-    let mut session = RwkvSession::new(ctx.clone());
     let t_prompt = Instant::now();
     let prompt_ok = session.eval_sequence(&prompt_ids).is_ok();
     let prompt_ms = t_prompt.elapsed().as_millis() as u64;
 
+    let seed = params
+        .seed
+        .unwrap_or_else(|| {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos() as u64)
+                .unwrap_or(0xDEADBEEF)
+        });
+    let mut rng = SplitMix64::new(seed);
+
+    // Precompute the byte window we need to keep in the rolling tail
+    // to reliably match any stop string. Any stop longer than what's
+    // been generated so far cannot match.
+    let stop_tail_bytes = stops.iter().map(|s| s.len()).max().unwrap_or(0);
+
+    let streaming = on_delta.is_some();
     let mut generated: Vec<u32> = Vec::with_capacity(max_gen);
+    let mut stop_reason = StopReason::Length;
+    let mut eval_error = false;
+    let mut trim_bytes = 0usize;
+    // Byte offset into the decoded text that has already been emitted
+    // as deltas. Only meaningful when `streaming` is true.
+    let mut emitted_bytes = 0usize;
+
     let t_gen = Instant::now();
     if prompt_ok {
         let mut last = *prompt_ids.last().unwrap_or(&0);
         for _ in 0..max_gen {
             match session.eval(last) {
                 Ok(logits) => {
-                    let next = argmax(logits);
+                    let next = sample(logits, &generated, params, &mut rng);
                     generated.push(next);
                     last = next;
+
+                    // Decode when we need to check stops or emit a delta.
+                    if !stops.is_empty() || streaming {
+                        let text = tok.decode(&generated).unwrap_or_default();
+
+                        // Stop-string check.
+                        if !stops.is_empty() {
+                            let cmp_window = if stop_tail_bytes == 0
+                                || text.len() <= stop_tail_bytes
+                            {
+                                text.as_str()
+                            } else {
+                                let cut = text.len() - stop_tail_bytes;
+                                let cut = (cut..text.len())
+                                    .find(|&i| text.is_char_boundary(i))
+                                    .unwrap_or(text.len());
+                                &text[cut..]
+                            };
+                            if let Some(hit) =
+                                stops.iter().find(|s| cmp_window.ends_with(s.as_str()))
+                            {
+                                stop_reason = StopReason::StopSequence;
+                                trim_bytes = hit.len();
+                                // Emit the pre-stop delta (without the matched suffix).
+                                if let Some(cb) = on_delta.as_mut() {
+                                    let trimmed_len = {
+                                        let n = text.len().saturating_sub(trim_bytes);
+                                        (0..=n)
+                                            .rev()
+                                            .find(|&i| text.is_char_boundary(i))
+                                            .unwrap_or(0)
+                                    };
+                                    if trimmed_len > emitted_bytes
+                                        && text.is_char_boundary(emitted_bytes)
+                                    {
+                                        let s = text[emitted_bytes..trimmed_len].replace('\x00', "");
+                                        if !s.is_empty() { cb(&s); }
+                                    }
+                                }
+                                break;
+                            }
+                        }
+
+                        // Emit any newly decoded bytes as a delta.
+                        if let Some(cb) = on_delta.as_mut() {
+                            if text.len() > emitted_bytes
+                                && text.is_char_boundary(emitted_bytes)
+                            {
+                                let s = text[emitted_bytes..].replace('\x00', "");
+                                if !s.is_empty() { cb(&s); }
+                                emitted_bytes = text.len();
+                            }
+                        }
+                    }
                 }
                 Err(e) => {
                     warn!(error = ?e, "rwkv eval failed mid-gen");
+                    eval_error = true;
                     break;
                 }
             }
@@ -331,16 +506,32 @@ pub fn generate_once(
         warn!("rwkv eval_sequence failed");
     }
     let gen_ms = t_gen.elapsed().as_millis() as u64;
-    let response = tok
+
+    let mut response = tok
         .decode(&generated)
-        .unwrap_or_else(|e| format!("[decode error: {e}]"));
-    let ok = prompt_ok && generated.len() == max_gen;
+        .unwrap_or_else(|e| format!("[decode error: {e}]"))
+        .replace('\x00', "");
+    if trim_bytes > 0 && response.len() >= trim_bytes {
+        let new_len = response.len() - trim_bytes;
+        // Cut back to the last char boundary to guarantee valid UTF-8.
+        let new_len = (0..=new_len)
+            .rev()
+            .find(|&i| response.is_char_boundary(i))
+            .unwrap_or(0);
+        response.truncate(new_len);
+    }
+
+    if !prompt_ok || eval_error {
+        stop_reason = StopReason::Error;
+    }
+    let ok = prompt_ok && !eval_error;
     GenerateResult {
         prompt_tokens: prompt_ids.len(),
         gen_tokens: generated.len(),
         prompt_ms,
         gen_ms,
         response,
+        stop_reason,
         ok,
     }
 }

@@ -2,7 +2,7 @@
   "model": "qwen2.5:1.5b",
   "backend": "ollama",
   "n_tasks": 48,
-  "elapsed_s": 383.6815459728241,
+  "elapsed_s": 407.65548396110535,
   "aggregate": {
     "n_total": 48,
     "n_correct": 18,

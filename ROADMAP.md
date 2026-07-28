@@ -17,26 +17,38 @@ serialize them.
 - Baseline eval: RWKV-7-G1 2.9B against Qwen-2.5-3B-Instruct and Phi-4-mini
   as reference points. Numbers only, no philosophy.
 
-### A0.3. Sustained-CPU idle measurement (deferred — bundled with runtime seedling)
-- 24 h idle CPU% + wake-latency measurement of the **full noesis stack**
-  (memory-store + noesis-runtime + Ollama child), not standalone Ollama.
-  This is the sustained-load half of H1; the RSS half was closed in A0.1
-  results. Deferred out of A0.1 because measuring Ollama alone answers
-  the wrong question.
-- Trigger: fires once Phase B/D of the runtime plan lands a working
-  seedling (memory-store online + noesis-runtime supervisor running).
-  **Seedling running** (verdicts/2026-07-22-phase-b-skeleton.md — 6
-  collectors + retention + Ollama HTTP heartbeat validated). 24 h
-  measurement itself still pending.
-  Runs on the target host (i5-1235U laptop) under a realistic wake
-  pattern — idle mostly, periodic ingest ticks, one daily-digest style
-  burst.
-- Deliverables: `experiments/A0_idle/results.md` with `pidstat`/`perf`
-  per-process breakdown, wall-clock energy proxy (package-power via
-  `perf stat -e power/energy-pkg/` if available), wake-latency
-  histogram. Verdict on H1 sustained-CPU threshold locked from the
-  H1 acceptance criteria.
-- Cost: 24 h wall, ~zero attention. Blocks Gate 1 completion of H1.
+### A0.3. 24 h runtime polygon (reframed 2026-07-25 — was "sustained CPU% idle")
+- Refocus: H1 retracted to `docs/policies.md` § CPU / thermal, so this is
+  no longer "does idle CPU stay under X%". It is a **polygon test of the
+  runtime as a whole** on the target host, measuring the three axes that
+  actually matter for whether the seedling is operating as intended:
+  - (a) **Store health.** Per-zone `db_bytes` trajectory over 24 h vs.
+    the `RetentionConfig` caps (200 MB input_events / 500 MB system_obs /
+    100 MB session_scratch / unbounded personal_vault). Retention sweep
+    fires on schedule, `retention_stats` events show `bytes_after` under
+    cap, no zone drifts.
+  - (b) **Model coping.** In-process rwkv-cpp handles the drip cadence
+    the calibration protocol derived. Latency/throughput of live bursts
+    matches the pilot `tokens_per_cpu_second` fallback or the measured
+    per-machine value; no thermal throttling events; fan-off invariant
+    holds outside the interactive regime.
+  - (c) **Token regulation.** The drip rate the runtime picks — from
+    `docs/policies.md` calibration protocol — actually gets served, and
+    utility-path bursts finish inside their budget without starving the
+    background stream.
+- Trigger: Phase B skeleton is running
+  (`verdicts/2026-07-22-phase-b-skeleton.md` — 6 collectors + retention +
+  HTTP heartbeat validated on the earlier Ollama backend); revalidate the
+  loop on the 2026-07-25 in-process rwkv-cpp backend before the 24 h run.
+  Runs on the i5-1235U laptop under a realistic wake pattern — idle
+  mostly, periodic ingest ticks, one daily-digest-style burst.
+- Deliverables: `experiments/A0_idle/results.md` with per-zone
+  `db_bytes` timeseries (from `retention_stats`), rwkv-cpp burst
+  latency/tok-s histogram, coretemp trace vs. `fan_safe_cpu_percent`,
+  and a pass/fail per axis. No H1 verdict — see policies.md.
+- Cost: 24 h wall, ~zero attention. Blocks nothing on the hypothesis
+  ledger; blocks confidence in the seedling as a substrate for the
+  state-work workstream (`memory: project_noesis_state_work_first_class`).
 
 ### A0.4. State-utilisation probe (weeks 2–3)
 - Instrument RWKV-7 hidden WKV state during autoregressive generation

@@ -13,14 +13,24 @@ undecided. The default for unlocked items is *ask the user*.
 
 ## Locked policies
 
-### User separation and process model (locked 2026-07-22)
+### User separation and process model (locked 2026-07-22, updated 2026-07-25)
 
 - noesis runs under a **dedicated Linux user** `noesis`, own uid, home
   directory `/var/lib/noesis`. Never as the primary user's own uid.
-- The Ollama inference backend runs as a **child process** of the Rust
-  supervisor under the same `noesis` uid (`fork` + `setsid`, own process
-  group). It is not a separate systemd service and is not reachable
-  from outside the supervisor.
+- **The model runs in-process.** `noesis-runtime` links `noesis-rwkv`
+  (rwkv-cpp bindings) directly into its address space; there is **no
+  separate model child process**, no Ollama daemon, no unix-socket
+  forwarding to a model backend. Rationale: (a) WKV state save / clone
+  / load must be reachable from lens, H14/H15/H16, and H18 code paths,
+  which requires same-address-space access to the C context; (b)
+  `/proc/self/stat` accounting for the CPU budget covers all model cost
+  without cgroup plumbing; (c) `RwkvContext::clone_for_parallel` yields
+  concurrent contexts sharing the weight mmap, which the drip loop and
+  HTTP shim use. See runtime plan §6 for the full lock rationale.
+- The Ollama-shape HTTP dialect on TCP (§`inference::rwkv_http`) is a
+  **client wire format**, not a delegation path. External clients that
+  speak Ollama's `/api/generate` reach the runtime; behind the socket,
+  generation runs in-process on rwkv-cpp.
 - Delivered as a **systemd system service** with the following
   hardening, minimum set:
   ```
@@ -58,55 +68,136 @@ undecided. The default for unlocked items is *ask the user*.
 - SSD hardware encryption alone is **not** sufficient (known firmware
   attacks; often not actually enabled). Software layer is required.
 
-### CPU budget (locked 2026-07-22, tightened 2026-07-24, mirrors HYPOTHESES §H1)
+### CPU budget and thermal (locked 2026-07-22, refactored 2026-07-25 — authoritative source, was HYPOTHESES §H1 until retracted)
 
-**Two disjoint regimes with different constraints.** Conflating them
-is the error mode.
+**This section is now the load-bearing definition** of the CPU / thermal
+policy. HYPOTHESES §H1 was retracted 2026-07-25 — it was recording an
+operating decision as a falsifiable hypothesis, which was the wrong
+shape. The policy is a decision, not a wager.
 
-**Steady mode** — no user activity for `interactive_window_minutes`
-(default 5). Bounded by:
-- `< 1 %` package CPU (H1 ceiling).
-- **Fan-off invariant** (user policy 2026-07-24): fans never
-  audible. Stricter than CPU % alone — constrains sustained thermal
-  load, not just instantaneous CPU. Default
-  `drip.rate_tokens_per_sec = 0.3` bounds package CPU at ~0.27 %
-  analytically (runtime plan §11).
-- Only collectors, scheduler, and rate-limited drip run.
-- Ollama model resident but idle (`keep_alive: -1`).
+**Single hard rule (ambient mode): fans do not spin up.** CPU% is a
+proxy, not the constraint — the same 5% package CPU can be silent on a
+passively-cooled machine and audible on a poorly-tuned laptop. The
+authoritative signal is inaudibility.
 
-**Interactive mode** — user activity within
-`interactive_window_minutes`. Bounded only by:
-- Hardware thermal limits.
-- **H1 does NOT apply. Fan-off does NOT apply.** Interactive is
-  exactly when the model is allowed to use the compute it was
-  optimised for. User is present, requested compute, tolerates fan
-  noise for responsive answers.
-- Long-running interactive jobs may be fragmented into burst chunks
-  for fairness with other user processes, but never for H1
-  compliance.
+**Two disjoint regimes.**
 
-Steady-mode jobs that overrun their CPU window are deferred to the
-next window, never extended. Interactive-mode jobs run to
-completion. Enforced by `noesis-scheduler` (Rust runtime).
+- **Ambient** — no user activity within `interactive_window_minutes`
+  (default 5). Fan-off invariant absolutely. Drip rate is *derived*
+  per-machine at supervisor startup — see calibration protocol below.
+  Only collectors, scheduler, and rate-limited drip run.
+- **Interactive** — user activity within `interactive_window_minutes`.
+  Bounded only by hardware thermal limits. Fan-off does NOT apply;
+  the user requested the compute, tolerates noise for responsive
+  answers. Long-running interactive jobs may be fragmented for
+  fairness with other user processes, never for CPU compliance.
 
-### Ollama child sandboxing (locked 2026-07-22)
+Ambient-mode jobs that overrun their CPU window are deferred to the
+next window, never extended. Interactive-mode jobs run to completion.
+Enforced by `noesis-scheduler` (Rust runtime).
+
+### Startup calibration protocol (locked 2026-07-25)
+
+Runs on supervisor start; results cached in
+`/var/lib/noesis/calibration.toml` and reused across restarts.
+
+1. **Warm-up.** One 32-token burst to force kernel compile and CPU
+   frequency ramp; discard measurements.
+2. **Throughput measurement.** Three burst runs of ~20 tokens each,
+   in-process rwkv-cpp. Median `CPU-s / token` across runs; recorded
+   as `tokens_per_cpu_second`. Until `measure_throughput` is wired to
+   a live rwkv-cpp context (runtime task pending), the conservative
+   fallback `9.4 tok/CPU-s` (i5-1235U pilot) is used.
+3. **Thermal-safe threshold determination.** Primary signal: package
+   die temperature (`coretemp` `Package id N`, falling back to
+   max-of-Cores). Rationale: fans respond to temperature; temperature
+   predicts fan response before spool-up. `coretemp` reads without
+   special privileges on any Intel/AMD Linux box. Fan-RPM sweep was
+   dropped — hwmon `fan*_input` returns EIO on ACPI laptops (confirmed
+   pilot i5-1235U), and it does not exist at all on fanless hardware.
+4. **Auto-sweep algorithm** (shipped 2026-07-25, `calibration::sweep`):
+   baseline coretemp for 10 s, then for each step in `[10%, 20%, 30%]`
+   package CPU spawn `n_cores` busy-loop threads at the given duty
+   cycle, wait 5 s settle, sample peak coretemp over 25 s. Unsafe if
+   peak > baseline + 8 °C or > 75 °C absolute (guards idle-hot
+   machines). Return highest safe step, or `1%` fallback if even the
+   smallest step failed.
+5. **Persistence.**
+   ```toml
+   [calibration]
+   tokens_per_cpu_second = 9.4
+   fan_safe_cpu_percent = 6.0
+   cpu_model = "12th Gen Intel(R) Core(TM) i5-1235U"
+   n_cores = 12
+   kernel = "6.11.0-9-generic"
+   backend = "rwkv-cpp-in-process"
+   measured_at = "2026-07-25T14:32:00Z"
+   ```
+6. **Invalidation triggers.** Recalibrate on: kernel version change,
+   backend swap, `uptime > 30 d`, manual `noesis recalibrate`, CPU
+   governor change.
+7. **Interactive fallback.** For hosts without `coretemp` (AMD Zen
+   `k10temp` — different hwmon name; future ARM boards) or where auto
+   returns `1%` because the machine idles hot: `noesis-runtime
+   calibrate --interactive` CLI planned. Not yet shipped; placeholder
+   emits `calibration_advice` event pointing at this section.
+
+**Derived drip formula:**
+```
+drip.rate_tokens_per_sec =
+    fan_safe_cpu_percent / 100 × n_cores × tokens_per_cpu_second × safety_margin
+```
+`fan_safe_cpu_percent` is package CPU% (matches `top`);
+`tokens_per_cpu_second` is per full-core-second of CPU time; the
+`× n_cores` factor bridges the two. `safety_margin` default `0.6` —
+leaves a 40 % buffer below the thermal threshold to absorb transient
+load from other workloads.
+
+**Reference numbers (i5-1235U pilot, historical, small-LLM heartbeat
+before in-process rwkv-cpp):**
+- `tokens_per_cpu_second` = 9.4 (0.106 CPU-s / token, single burst).
+  Kept as fallback until `measure_throughput` lands.
+- With `fan_safe_cpu_percent ≈ 6 %` from the shipped thermal sweep
+  and 12 cores: ambient drip ≈ 3.4 tok/s.
+- Post-in-process rwkv-cpp (~30 tok/s Q8_0, 0.033 CPU-s / token):
+  same 6 % ceiling → ~10 tok/s ambient. This is the number the
+  runtime plan §11 Task 18 will land as `tokens_per_cpu_second`.
+
+**Budget accounting invariant.** Any new background job (second
+distiller path, extension broker tick, retention sweep beyond its
+current cost) must declare its per-tick CPU cost in the same units;
+the supervisor sums to verify against `fan_safe_cpu_percent` at
+startup. No unbudgeted background work. The point of derivation-from-
+calibration is that the ceiling is knowable and enforcement is
+arithmetic, not guesswork.
+
+**Falsification of a policy has a different shape than falsification
+of a hypothesis.** A policy is not falsified — it is *found not to
+hold* by the running system, and updated. If any fan-audible episode
+occurs in ambient mode over sustained operation, the response order
+is: revisit the calibration protocol, revisit the `safety_margin`
+default, revisit the scheduler duty cycle. Failure is a
+reconfiguration signal, not a research verdict.
+
+### Model backend sandboxing (locked 2026-07-25 — supersedes Ollama child sandboxing)
 
 - Model files under `/var/lib/noesis/models` (owned by `noesis` uid,
-  mode 0700).
-- Ollama child is launched with **bubblewrap**:
-  ```
-  bwrap --unshare-all --die-with-parent \
-        --ro-bind /nix /nix \
-        --ro-bind /var/lib/noesis/models ~/.ollama \
-        --bind   /var/lib/noesis/ollama-tmp /tmp \
-        --dev /dev --proc /proc \
-        --setenv OLLAMA_HOST unix:///var/lib/noesis/ollama.sock \
-        ollama serve
-  ```
-- Ollama listens **only on a unix socket** owned by `noesis`. No TCP
-  bind, no network egress from the child.
-- Supervisor holds the socket end and forwards from an OpenAI-compatible
-  endpoint if/when one is exposed outward.
+  mode 0700). Read-only after install.
+- **No child process to sandbox.** The model runs in-process on
+  rwkv-cpp linked into `noesis-runtime`. The systemd unit hardening
+  above (`ProtectHome=yes`, `ProtectSystem=strict`, empty
+  `CapabilityBoundingSet`, `IPAddressDeny=any` + narrow whitelist)
+  applies to the whole runtime process and is the sole enforcement
+  boundary — no bubblewrap wrapper is needed because there is no
+  separate process to isolate. The earlier "Ollama child sandboxing"
+  section was removed 2026-07-25 because it referred to an
+  architecture we no longer deploy.
+- The Ollama-shape HTTP surface on TCP is served by
+  `inference::rwkv_http` — a *client wire format* on the runtime's
+  own bind, not a delegation to any external Ollama daemon. Bind
+  address is configured via `NOESIS_CONFIG`
+  (`rwkv_cpp.http_bind`). External clients that speak Ollama's
+  `/api/generate` reach the runtime directly.
 
 ### Zone-level filesystem permissions (locked 2026-07-22)
 

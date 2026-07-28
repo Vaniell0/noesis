@@ -2,7 +2,7 @@
   "model": "gemma3:4b",
   "backend": "ollama",
   "n_tasks": 48,
-  "elapsed_s": 1255.9423780441284,
+  "elapsed_s": 1415.246901512146,
   "aggregate": {
     "n_total": 48,
     "n_correct": 20,

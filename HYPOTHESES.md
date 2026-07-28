@@ -45,138 +45,103 @@ form that could be shown wrong, it does not belong here.
   Failure to report a negative result is worse than the negative result
   itself.
 
+**Companion files.**
+- `FAILED.md` — refuted hypotheses and abandoned bets, with evidence
+  and what changed as a result.
+- `PASSED.md` — verified claims and settled sub-questions, so the
+  audit trail has a positive side, not only a graveyard.
+
 ---
 
-## H1. Constant-cost background operation
+## Navigation
 
-**Claim.** An RWKV-7-G1 2.9B model, quantised for local hardware, can
-run as a persistent background reasoner on the user's stack (GTX 1050 or
-CPU-only) with resource consumption low enough not to disrupt foreground
-work.
+Grouped for orientation. Full text follows below in numeric order.
 
-**Prediction (refactored 2026-07-25 — fan-off primary, CPU% derived).**
-The single hard constraint is thermal: **fans do not spin up in ambient
-mode**. CPU% is a proxy, not the constraint — the same 5% package CPU
-may be silent on a passively-cooled machine and audible on a poorly-
-tuned laptop. Ambient behaviour is regulated by a **startup calibration
-pass** that measures the actual per-machine tokens/CPU-second and
-fan-safe headroom, then derives drip rate from that. The earlier flat
-"< 1 % CPU steady" line was a proxy for silence on i5-1235U + Ollama;
-it is dropped as a global rule.
+**Retracted to operating policy** (was a hypothesis, is now a policy
+decision in `docs/policies.md` — the numeric slot is preserved).
+- **H1** — Constant-cost background operation. *Retracted 2026-07-25;
+  body moved to `docs/policies.md` § CPU / thermal.*
 
-**Two regimes:**
+**Reasoning core — architecture and training (Track A).**
+- **H2** — Reasoning-first outperforms knowledge-first at this scale.
+- **H4a** — RWKV-7-G1 2.9B reaches parity with same-size Transformer.
+- **H4b** — State-evolution architectures are viable for reasoning *(wager)*.
+- **H7** — Understanding in weights, knowledge in context.
+- **H8** — State-as-computation in RWKV-7.
+- **H9** — G1-line training amplifies state utilisation.
+- **H10** — Test-time compute frontier — state × tokens × readout.
+- **H12** — Working-memory bottleneck vs decay-rate bottleneck in WKV.
 
-- **Ambient (no user signal within `interactive_window_minutes`,
-  default 5):** fan-off invariant absolutely. Drip rate =
-  `fan_safe_cpu_percent × tokens_per_cpu_second` (both from
-  calibration). On i5-1235U + Ollama pilot (2026-07-23), tolerance
-  is ~5 tok/s at 5% package CPU; on fanless hardware, may exceed
-  10 tok/s. This is what the machine spends processing the ambient
-  event stream — 0.3 tok/s was a conservative default when the
-  ceiling was unknown, not a target.
-- **Interactive (user active within `interactive_window_minutes`):**
-  thermal envelope only. May grab all P-cores, may spin fans; the
-  user is present, requested the compute, tolerates noise. Bounded
-  only by hardware limits and fairness with other user processes.
+**Memory system + cross-model handoff.**
+- **H3** — Learned memory policy trumps heuristic memory at small scale.
+- **H5** — Inter-model state transfer via compact structured summary.
+- **H11** — Zone-typed lenses beat monolithic text-bottleneck handoff.
 
-Alongside both: resident RAM < 3 GB (backbone + memory system +
-supervisor), battery life at idle not measurably degraded beyond
-~10 % vs no-noesis baseline.
+**State + context management (runtime state-work workstream).**
+- **H17** — State-substrate absorption substitutes for message-history
+  re-injection.
+- **H18** — Git-like branch/merge WKV for indefinite structured
+  continuation *(new 2026-07-25)*.
 
-### Startup calibration protocol
+**Multimodal substrate.**
+- **H13a** — State compresses geometry, not just token distributions *(wager)*.
+- **H13b** — Image-in-context beats text-digest for screen-content tasks.
+- *Architectural note — unified multimodal RWKV, not split backends.*
 
-Runs on supervisor start; results cached in
-`/var/lib/noesis/calibration.toml` and reused across restarts.
+**Runtime as peer (behaviour, persona, self-initiated speech).**
+- **H6** — Cognitive layer on modest hardware.
+- **H14** — Domain competence via targeted Phase-2 SFT, not Phase-1
+  weights.
+- **H15** — Persona-SFT to a dry butler/secretary register beats default
+  helpful-assistant tone.
+- **H16** — Gated externalisation from a rate-limited silent
+  think-stream.
 
-1. **Warm-up.** One 32-token burst to force kernel compile and CPU
-   frequency ramp; discard measurements.
-2. **Throughput measurement.** Three burst runs of ~20 tokens each,
-   backend-native (in-process rwkv.cpp or Ollama socket). Median
-   `CPU-s / token` across runs; record as `tokens_per_cpu_second`.
-3. **Fan-safe threshold determination.** Two paths:
-   - *Auto-detect (preferred, when available).* Read
-     `hwmon`/`asus-wmi`/`applesmc` fan RPM before and after a
-     one-minute sustained low-rate stream at ~10 %, ~20 %, ~30 %
-     package CPU. Highest CPU% at which fan RPM does not rise above
-     baseline + configured `fan_rpm_delta` (default 100 RPM) becomes
-     `fan_safe_cpu_percent`. Store baseline RPM in calibration file.
-   - *Fallback (thermal telemetry absent or ambiguous).* Prompt user
-     once at first run: `noesis calibrate --interactive` runs the
-     sweep and asks after each step whether the fan became audible.
-     User answer sets `fan_safe_cpu_percent`. Cached — not asked
-     again unless invalidated.
-4. **Persistence.** Write:
-   ```toml
-   [calibration]
-   tokens_per_cpu_second = 9.4
-   fan_safe_cpu_percent = 8.0
-   cpu_model = "12th Gen Intel(R) Core(TM) i5-1235U"
-   n_cores = 12
-   kernel = "6.11.0-9-generic"
-   backend = "ollama-0.3.14"
-   measured_at = "2026-07-25T14:32:00Z"
-   ```
-5. **Invalidation triggers.** Recalibrate on: (a) kernel version
-   change; (b) backend swap (Ollama ↔ in-process rwkv.cpp); (c)
-   `uptime > 30d` since last calibration; (d) manual
-   `noesis recalibrate`; (e) CPU frequency governor change detected.
-6. **Interactive-check refusal.** If measured CPU during calibration
-   is > 30 % occupied by other processes, defer calibration and log
-   a `system_obs` event — do not corrupt the measurement.
+---
 
-The derived drip ceiling then feeds `drip.rate_tokens_per_sec` at
-supervisor start:
+## H1. Constant-cost background operation *(retracted 2026-07-25 → operating policy)*
 
-```
-drip.rate_tokens_per_sec =
-    fan_safe_cpu_percent / 100 × n_cores × tokens_per_cpu_second × safety_margin
-```
+**Status.** *Retracted as a falsifiable hypothesis on 2026-07-25.*
+The question "does the runtime stay silent on the user's hardware" is
+not a research bet — it is an **operating-policy decision** enforced by
+per-machine calibration and the drip-rate accountant in the supervisor.
+There is no experiment whose result could refute a *policy* — there is
+only a policy that is either implemented and working, or not.
 
-Units: `fan_safe_cpu_percent` is *package* CPU% (0–100, matches what
-`top` reports and what a user actually hears). `tokens_per_cpu_second`
-is tokens per full-core-second of CPU time (measured via `getrusage`
-or `/proc/self/stat` utime+stime — a burst that pins 4 cores for 1
-wall-second consumes 4 CPU-seconds). The `× n_cores` factor bridges
-package-percent to core-seconds. Reference numbers (i5-1235U pilot,
-12 cores, `tokens_per_cpu_second = 9.4`, `fan_safe_cpu_percent = 6`,
-`safety_margin = 0.6`): `0.06 × 12 × 9.4 × 0.6 = 4.06 tok/s`.
+User rationale (2026-07-25): "почему это стало гипотезой, я честно
+сомниваюсь зачем это вообще выводили отдельно, самое важное было бы
+проверить состояние бд через 24, как модель справляется и как
+регулировать окены это скорее полигон тестов и финальных конфигураций
+чем проверка что это возможно в принципе". Correct: fan-off / CPU-budget
+is a configuration problem, not a claim about the world.
 
-`safety_margin` defaults to `0.6` — a `0.4` buffer below the fan
-threshold covers thermal drift from other workloads on the machine.
+**Where the content moved.**
+- **Fan-off invariant + calibration protocol** → `docs/policies.md`
+  §CPU / thermal (single hard rule: no audible fan spin-up in ambient
+  mode; drip rate derived per-machine at startup).
+- **Ambient vs interactive regime split** → same policies.md section.
+- **Startup calibration algorithm** → `docs/policies.md` +
+  implementation in the `calibration` module of `noesis-runtime`.
+- **Drip formula and reference numbers** → runtime plan §11 (thermal)
+  and `docs/policies.md`.
 
-**Falsification (revised).**
-- If **any fan-audible episode** occurs in ambient mode over 7 days
-  of sustained operation (Gate 2), the prediction fails. Response
-  order: calibration protocol design, safety_margin default,
-  scheduler duty cycle, quantisation.
-- If RAM crosses 3 GB, prediction fails independently — memory
-  budget is not thermal-derived.
-- If calibration itself cannot land a stable `fan_safe_cpu_percent`
-  across three re-runs on the same hardware (delta > 30 %), the
-  calibration protocol is under-specified — fix the protocol, do
-  not fall back to a hard-coded cap.
+**What is still a real research question — spun off, not carried under
+H1.** "Does the system as a whole work as intended over a real 24 h?" —
+that is the A0.3 **polygon test** (three axes: DB state after 24 h,
+model coping under sustained load, token-regulation policy actually
+landing in a workable range). Recorded in `ROADMAP.md` §A0.3 (rewrite
+pending) and in the project's active memory. It is not a falsification
+of a hypothesis; it is validation of a design.
 
-**Design note.** The pre-2026-07-25 formulation ("< 1 % steady CPU")
-enforced a hard cap that ignored per-machine variance and forced a
-conservative default (0.3 tok/s drip) that under-utilised silent
-hardware. The new formulation makes the constraint itself
-(inaudibility) primary and lets the mechanism (drip rate) be
-derived. Enforcement lives in the `noesis-scheduler` module (Rust
-runtime): calibration on start, budget accountant on the ambient
-path, no cap on interactive.
+**Numbering.** The H1 slot is preserved to avoid renumbering downstream
+references (H16 in particular cites "H1 envelope"). Future readers
+following those cross-references land here, learn it is policy now, and
+follow the pointer to policies.md. Do not re-use the H1 number for a
+new claim — if a genuinely new load-bearing claim appears, allocate
+the next free number.
 
-**Process-visibility invariance** (not the primary constraint,
-but nice-to-have): noesis under `top` should not stand out among
-other resident daemons. This is downstream of the fan-off ceiling —
-if drip stays under `fan_safe_cpu_percent`, process visibility is
-already low.
-
-**Related.** Track C (C1, C2), Gate 2. Plan §11 for calibration
-implementation notes and interaction with H16 drip gate.
-
-**Status.** Calibration protocol untested; needs first
-implementation to validate the auto-detect path across the user's
-hardware set.
+**Related.** `docs/policies.md`; H16 (drip-rate ceiling still comes from
+policy calibration, not from a re-instantiated H1 claim).
 
 ---
 
@@ -1292,9 +1257,138 @@ dispatcher landing so §10 transform can be measured against a
 baseline).
 
 **Related.** H4b (state-evolution wager) — H17 is the empirical
-arm. H1 (CPU budget) — the whole motivation for K-tail is H1
-compliance. H7 (understanding-in-weights) — H17 tests whether
-*runtime context in state* substitutes for *prompt-injected
-history*; H7 is the parallel claim about weights.
+arm. H1 (CPU budget — retracted to policy) — the K-tail transform's
+original motivation was H1 compliance; it now defers to
+`docs/policies.md` § CPU / thermal for the ceiling that makes
+prompt-length reduction worthwhile. H7 (understanding-in-weights) —
+H17 tests whether *runtime context in state* substitutes for
+*prompt-injected history*; H7 is the parallel claim about weights.
 
+---
 
+## H18. Git-like branch/merge over WKV state for indefinite structured continuation
+### *(wager, state-work workstream, added 2026-07-25)*
+
+**Claim.** With the WKV state treated as *data* — save it, clone it
+into a branch, decode further on the branch, merge branch state back
+into the trunk, resume trunk decode — an RWKV-7 substrate can generate
+an arbitrarily long structured output. Length is unbounded by design:
+the outline of the long text is *planned externally* (the runtime
+holds a section list), and the model fills each section while the
+branch/merge mechanism supplies working-memory for global coherence
+across sections that would not fit inside a single decode.
+
+**Motivation.** User framing 2026-07-25: "представь себе систему гит
+так вот с wkv там также работаем, сейчас идёт 1 запрос уточняем всё
+в другой ветке, вливаем и продолжаем генерацию. это определённая
+зарание структура очень огромного текста, и это нас также отсылает к
+работе с инпутом и стейтом из 17 и ренее". Observed limits on frontier
+LLMs (Sonnet ~8 KB / Opus ~20 KB per single output) come from single-
+decode dynamics, not from a fundamental bound on how much coherent text
+a model can produce — a branch/merge protocol should reach past those
+limits by construction.
+
+**Distinction from H17.** H17 tests whether the substrate's absorbed
+state substitutes for message-history replay on the *input* side.
+H18 tests whether that same substrate can be *manipulated as data*
+(branched, merged) on the *output* side to support indefinite
+continuation. If H17 fails (state doesn't hold context), H18 also
+fails — no merge is meaningful over a state that doesn't remember what
+was branched from. If H17 holds, H18 becomes the mechanism by which
+"one-shot decode" stops being the unit of a noesis response.
+
+**Four falsifiable sub-claims — each provable independently.**
+
+1. **Fork determinism.** `rwkv_clone_state` (or the corresponding
+   `RwkvContext::clone_for_parallel` primitive) yields a state that,
+   when fed the same continuation tokens as the parent, produces the
+   same output sequence. Falsified if clone-then-decode diverges from
+   parent-then-decode on the first token, at greedy decode, over
+   ≥ 100 runs.
+2. **Branch coherence.** A branch decoded on a side prompt ("clarify
+   X") for N tokens, then re-integrated into the trunk state, yields
+   a trunk that has *absorbed the clarification*. Test: baseline
+   trunk answers a follow-up query wrongly; branched-and-merged trunk
+   answers correctly. Merge primitive must be specified — candidates:
+   (a) replace trunk state with branch state (simplest, most
+   destructive); (b) weighted average of trunk and branch states,
+   weight tuned; (c) selective merge over layer subset (informed by
+   A0.5 causal grid). H18 does not commit to a merge primitive — the
+   experiment measures which candidate works.
+3. **Continuation stability.** After M branch/merge cycles, the
+   trunk-decode still produces coherent tokens (per LLM-judge or
+   perplexity under a reference LM), no worse than a fresh decode of
+   the same total length. Falsified if trunk-decode collapses to
+   repetition or drifts semantically after M ∈ {5, 10, 25} cycles.
+4. **Structure adherence.** Given an external section outline
+   (`[section_1_topic, section_2_topic, ...]`), the model fills each
+   section in order, with prior-section state merged in before
+   starting the next. Verdict: LLM-judge on whether each section
+   reads as (a) on-topic to its outline entry and (b) coherent with
+   the *content* (not just topic) of prior sections. Contrast with:
+   single-decode of the same total length without branch/merge —
+   which either exhausts context or collapses to repetition.
+
+**Prediction.** All four sub-claims land PASS on RWKV-7-G1 2.9B via
+in-process rwkv-cpp. Fork determinism (1) is expected to be trivially
+true given rwkv-cpp's design; branch coherence (2) is the load-bearing
+one — this is where the wager sits. If (2) fails, (3) and (4) become
+irrelevant.
+
+**Falsification cascade.**
+- (1) fails → the fork primitive is broken or misused. Diagnose
+  before drawing any H18 conclusion; likely a bindings bug, not
+  refutation of the hypothesis class.
+- (2) fails across all merge candidates → branch/merge is not a
+  usable mechanism for RWKV-7 state; H18 refuted; long structured
+  generation must go via text-level chaining (write each section as
+  a fresh decode primed by prior-section summary text). File in
+  `FAILED.md`.
+- (2) passes for one merge candidate → H18 refined to that candidate;
+  proceed to (3) and (4).
+- (3) or (4) fails after (2) passes → the primitive works locally
+  but does not compose over many cycles or does not respect external
+  structure; H18 refuted *at that scale*. Log the scale-limit and
+  register as an open sub-question — do not extrapolate.
+
+**Related work / state-portability ties.**
+- Builds on the state-work workstream now first-class (see project
+  memory `project_noesis_state_work_first_class.md` and plan §5, §6).
+- Uses the same rwkv-cpp state APIs already required by H14/H15/H16
+  and lens persistence — no new bindings needed.
+- The FAILED.md 2026-07-22 entry (WKV state is not a semantic
+  override switch) constrains H18 sub-claim 2 candidate (a): a raw
+  full-state swap "replace trunk with branch" is exactly the "state
+  dominates continuation" mode that A0.6 refuted. This raises the
+  prior on candidate (b) or (c). H18's merge experiment must respect
+  the A0.6 verdict — do not re-litigate.
+
+**Related hypotheses.**
+- H17 (state absorption vs history re-inject) — H18 is the output-
+  side twin; both stand or fall on state actually holding what
+  passed through it.
+- H8 (state-as-computation) — H18 assumes state carries computation,
+  not just rolling summary; a null H8 verdict at the substrate scale
+  weakens H18's prior significantly.
+- H10 (test-time compute frontier) — the `state_readout` mode
+  studied in H10 is a special case of one merge candidate (decode
+  from state → re-inject as text); H18 asks whether state-level
+  merge beats that text bottleneck.
+- H16 (gated externalisation) — a drip stream that fires an "emit"
+  gate mid-stream is a two-branch scenario (silent trunk + spoken
+  branch); H18's fork determinism is the pre-requisite for that
+  gate to not corrupt trunk trajectory.
+
+**Runtime consequence if PASS.** The `/api/generate` and
+`/v1/chat/completions` handlers gain a "long-form" mode where the
+composer plans an outline, the runtime allocates a branch tree, and
+the response is streamed section-by-section with merges in between.
+This becomes the mechanism for `noesis compose-report`, long
+documents, and any output whose natural length exceeds a single
+decode budget.
+
+**Status.** Untested. Sub-claim (1) is a rwkv-cpp bindings smoke
+test — cheap to run once the state-save/clone/load path is exercised
+end-to-end (which lens persistence work drives). Sub-claim (2)
+onwards is Phase-2 wager, ordering behind lens persistence but ahead
+of any Phase-3 multimodal work.

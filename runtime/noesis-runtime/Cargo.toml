@@ -12,6 +12,8 @@ path = "src/main.rs"
 noesis-schema = { path = "../noesis-schema" }
 noesis-store = { path = "../noesis-store" }
 noesis-rwkv = { path = "../noesis-rwkv" }
+noesis-http = { path = "../noesis-http" }
+noesis-composer = { path = "../noesis-composer" }
 serde.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
@@ -21,6 +23,8 @@ tokio.workspace = true
 toml.workspace = true
 evdev.workspace = true
 axum.workspace = true
+tokio-stream.workspace = true
+bytes = "1"
 
 [dev-dependencies]
 tempfile = "3"

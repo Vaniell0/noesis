@@ -75,6 +75,13 @@ impl ZoneStore {
             .unwrap_or(0);
 
         if user_version == 0 {
+            // auto_vacuum=INCREMENTAL must be set on an empty DB; combined
+            // with the `PRAGMA incremental_vacuum` call in
+            // `prune_oldest_until_below`, this is what actually shrinks the
+            // file after mass deletes. Skipped silently on pre-existing DBs
+            // (user_version != 0) — those keep NONE and only the WAL/main
+            // file boundary bounds their size.
+            conn.pragma_update(None, "auto_vacuum", "INCREMENTAL")?;
             conn.execute_batch(
                 r#"
                 CREATE TABLE IF NOT EXISTS events (
@@ -138,6 +145,72 @@ impl ZoneStore {
         let conn = self.conn.lock().expect("zone store mutex poisoned");
         let n = conn.execute("DELETE FROM events WHERE ts_us < ?1", [cutoff_us])?;
         Ok(n)
+    }
+
+    /// Logical DB size in bytes: `page_count × page_size`. Excludes WAL,
+    /// which SQLite checkpoints back into the main file. Used by the
+    /// retention loop to decide whether the size-cap needs to fire.
+    pub fn db_bytes(&self) -> Result<u64> {
+        let conn = self.conn.lock().expect("zone store mutex poisoned");
+        let pages: i64 = conn.query_row("PRAGMA page_count", [], |r| r.get(0))?;
+        let page_size: i64 = conn.query_row("PRAGMA page_size", [], |r| r.get(0))?;
+        Ok((pages.max(0) as u64) * (page_size.max(0) as u64))
+    }
+
+    /// Delete oldest-first until the *used* portion of the DB drops to
+    /// `target_bytes` or there is nothing left to delete, then run one
+    /// `VACUUM` to release the freed pages back to the OS. Returns
+    /// rows deleted.
+    ///
+    /// The loop measures `(page_count − freelist_count) × page_size`
+    /// so DELETE progress is visible before VACUUM runs — SQLite in
+    /// WAL mode never truncates on its own, and `PRAGMA
+    /// incremental_vacuum` requires `auto_vacuum=INCREMENTAL` to be
+    /// set on an empty DB, which is fragile to guarantee across
+    /// upgrades. One VACUUM at the end takes an exclusive lock and
+    /// rewrites the file; acceptable because retention runs on a
+    /// 15-minute tick, not per-request.
+    ///
+    /// Callers should have already run age-based pruning; this is the
+    /// hard-cap fallback so the disk doesn't fill regardless of clock.
+    pub fn prune_oldest_until_below(&self, target_bytes: u64) -> Result<usize> {
+        const BATCH: usize = 1024;
+        let mut total: usize = 0;
+        loop {
+            let used = self.used_bytes()?;
+            if used <= target_bytes {
+                break;
+            }
+            let n = {
+                let conn = self.conn.lock().expect("zone store mutex poisoned");
+                conn.execute(
+                    "DELETE FROM events WHERE id IN \
+                       (SELECT id FROM events ORDER BY id ASC LIMIT ?1)",
+                    [BATCH as i64],
+                )?
+            };
+            if n == 0 {
+                break;
+            }
+            total += n;
+        }
+        if total > 0 {
+            let conn = self.conn.lock().expect("zone store mutex poisoned");
+            let _ = conn.execute_batch("VACUUM");
+        }
+        Ok(total)
+    }
+
+    // Pages actually holding row data, minus the freelist. This is
+    // what the prune loop compares against `target_bytes` so DELETE
+    // progress is observable before the terminating VACUUM.
+    fn used_bytes(&self) -> Result<u64> {
+        let conn = self.conn.lock().expect("zone store mutex poisoned");
+        let pages: i64 = conn.query_row("PRAGMA page_count", [], |r| r.get(0))?;
+        let free: i64 = conn.query_row("PRAGMA freelist_count", [], |r| r.get(0))?;
+        let page_size: i64 = conn.query_row("PRAGMA page_size", [], |r| r.get(0))?;
+        let used_pages = (pages - free).max(0) as u64;
+        Ok(used_pages * (page_size.max(0) as u64))
     }
 
     fn row_to_event(zone: Zone) -> impl Fn(&rusqlite::Row<'_>) -> rusqlite::Result<Event> {
@@ -296,5 +369,81 @@ mod tests {
         let n = store.system_obs.prune_before(i64::MAX).unwrap();
         assert_eq!(n, 1);
         assert!(store.system_obs.recent(10).unwrap().is_empty());
+    }
+
+    #[test]
+    fn db_bytes_grows_with_inserts() {
+        let dir = TempDir::new().unwrap();
+        let store = Store::open(dir.path()).unwrap();
+        let empty = store.session_scratch.db_bytes().unwrap();
+        for i in 0..200 {
+            store
+                .session_scratch
+                .insert(&EventInput {
+                    kind: "bulk".into(),
+                    payload: json!({"idx": i, "blob": "x".repeat(256)}),
+                    refs: vec![],
+                })
+                .unwrap();
+        }
+        let after = store.session_scratch.db_bytes().unwrap();
+        assert!(
+            after > empty,
+            "db_bytes should grow with inserts: empty={empty} after={after}"
+        );
+    }
+
+    #[test]
+    fn prune_oldest_until_below_shrinks_and_keeps_newest() {
+        let dir = TempDir::new().unwrap();
+        let store = Store::open(dir.path()).unwrap();
+        // Big rows (~4 KiB each) so the 512-row batch does not empty the
+        // table before size drops under the target — otherwise SQLite's
+        // free-page tracking overshoots the /3 target in one step.
+        for i in 0..2000 {
+            store
+                .session_scratch
+                .insert(&EventInput {
+                    kind: "bulk".into(),
+                    payload: json!({"idx": i, "blob": "z".repeat(4096)}),
+                    refs: vec![],
+                })
+                .unwrap();
+        }
+        let before = store.session_scratch.db_bytes().unwrap();
+        assert!(before > 0);
+        let target = before * 2 / 3;
+        let pruned = store.session_scratch.prune_oldest_until_below(target).unwrap();
+        assert!(pruned > 0, "expected some rows pruned");
+        let after = store.session_scratch.db_bytes().unwrap();
+        assert!(
+            after < before,
+            "db_bytes should shrink after prune: before={before} after={after}"
+        );
+        // Newest row (idx=1999) must survive — oldest-first prune only.
+        let recent = store.session_scratch.recent(1).unwrap();
+        assert!(!recent.is_empty(), "expected at least one row to survive");
+        assert_eq!(recent[0].payload["idx"], 1999);
+    }
+
+    #[test]
+    fn prune_oldest_until_below_noop_when_under_cap() {
+        let dir = TempDir::new().unwrap();
+        let store = Store::open(dir.path()).unwrap();
+        store
+            .session_scratch
+            .insert(&EventInput {
+                kind: "k".into(),
+                payload: json!({}),
+                refs: vec![],
+            })
+            .unwrap();
+        // Target is way above current size — nothing to do.
+        let n = store
+            .session_scratch
+            .prune_oldest_until_below(u64::MAX / 2)
+            .unwrap();
+        assert_eq!(n, 0);
+        assert_eq!(store.session_scratch.recent(10).unwrap().len(), 1);
     }
 }

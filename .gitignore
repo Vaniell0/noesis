@@ -45,9 +45,11 @@
 !runtime/**/*.sh
 !runtime/**/*.toml
 !runtime/**/*.rs
+!runtime/**/*.h
 !runtime/**/Cargo.lock
 !runtime/**/*.nix
 !runtime/**/*.rules
+!runtime/**/assets/**
 
 # Runtime build artefacts (regex above would let these leak)
 runtime/**/target/

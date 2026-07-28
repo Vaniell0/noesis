@@ -10,6 +10,7 @@
 //! now is that the systemd unit stays alive, opens the stores without error,
 //! and can be verified with `journalctl --user -u noesis-runtime`.
 
+mod calibrate_interactive;
 mod calibration;
 mod collectors;
 mod inference;
@@ -38,22 +39,85 @@ struct Config {
     inference_backend: String,
     #[serde(default = "default_calibration_path")]
     calibration_path: PathBuf,
+    /// Root directory for per-lens WKV snapshots (plan §5). One
+    /// subdirectory per `lens_id` containing `wkv.snapshot` + `meta.json`.
+    /// `None` disables the `/lens/save` + `/lens/load` endpoints and the
+    /// `lens_id` field on `/api/generate` — clients get a 501.
+    #[serde(default = "default_lens_root")]
+    lens_root: Option<PathBuf>,
     #[serde(default)]
     rwkv_cpp: Option<RwkvCppSection>,
 }
 
 fn default_calibration_path() -> PathBuf {
-    PathBuf::from("/var/lib/noesis/calibration.toml")
+    // Placeholder; the real path is resolved from state_path at startup
+    // (see `resolve_calibration_path`). This default is only used when
+    // the config is parsed without a state_path override — in practice
+    // always overridden.
+    PathBuf::from("calibration.toml")
+}
+
+/// Resolve the calibration path: explicit config value wins; otherwise
+/// falls back to `{state_path}/calibration.toml` so user-scope installs
+/// (home-manager) don't need root.
+fn resolve_calibration_path(cfg: &Config) -> PathBuf {
+    // If the field looks like the default placeholder (relative, single component),
+    // anchor it under state_path.
+    if cfg.calibration_path.components().count() == 1 {
+        cfg.state_path.join("calibration.toml")
+    } else {
+        cfg.calibration_path.clone()
+    }
+}
+
+fn default_lens_root() -> Option<PathBuf> {
+    Some(PathBuf::from("/var/lib/noesis/lenses"))
 }
 
 #[derive(Debug, Deserialize)]
 struct RwkvCppSection {
-    /// Path to the rwkv.cpp .bin model. Falls back to top-level
-    /// `model_path` when omitted.
+    /// Path to the substrate model (.bin). Falls back to top-level
+    /// `model_path` when omitted. This is the reasoning substrate
+    /// (plan §8: "always resident"). Will be 2.9B G1 when weights
+    /// are available; 0.4B is used as a stand-in during development.
     #[serde(default)]
     model_path: Option<PathBuf>,
+
+    /// Thread count for the **ambient/heartbeat** context — the context
+    /// that runs the background drip loop. Fewer threads = lower
+    /// sustained CPU, lower fan noise. Default: min(n_cores, 4).
     #[serde(default)]
     threads: Option<u32>,
+
+    /// Thread count for the **interactive/HTTP** context — the
+    /// `clone_for_parallel` context that serves `/api/generate` and
+    /// `/v1/*` requests. Separate from `threads` so fast-response
+    /// latency and ambient drip can be tuned independently.
+    /// Defaults to `threads` when omitted.
+    #[serde(default)]
+    http_threads: Option<u32>,
+
+    /// Path to the utility model (0.4B or smaller). Used for
+    /// emit-gate, importance classification, tool-call formatting —
+    /// never for reasoning (plan §8 single-substrate lock). When
+    /// absent, all utility paths use heuristics or are disabled.
+    /// Lazy-loaded on first utility request; unloaded after
+    /// `utility_keep_alive_secs` of idle.
+    #[serde(default)]
+    utility_model_path: Option<PathBuf>,
+
+    /// Thread count for the utility context. Default: 2. Utility
+    /// tasks are short (classifiers, formatters) — more threads than
+    /// 2 is rarely useful at this model scale.
+    #[serde(default = "default_utility_threads")]
+    utility_threads: u32,
+
+    /// Seconds of idle before the utility model is unloaded to free
+    /// RAM. Default: 300 (5 min). Set 0 for always-resident (not
+    /// recommended for RAM-constrained hosts with 2.9B also loaded).
+    #[serde(default = "default_utility_keep_alive_secs")]
+    utility_keep_alive_secs: u64,
+
     #[serde(default = "default_heartbeat_prompt")]
     heartbeat_prompt: String,
     #[serde(default = "default_heartbeat_secs")]
@@ -68,6 +132,14 @@ struct RwkvCppSection {
 
 fn default_rwkv_max_gen() -> usize {
     20
+}
+
+fn default_utility_threads() -> u32 {
+    2
+}
+
+fn default_utility_keep_alive_secs() -> u64 {
+    300
 }
 
 fn default_heartbeat_prompt() -> String {
@@ -94,6 +166,14 @@ struct LoadedRwkv {
     heartbeat: Duration,
     max_gen_tokens: usize,
     http_bind: Option<SocketAddr>,
+    /// Thread count for the interactive/HTTP clone context. Separate
+    /// from `runtime.n_threads` (used for heartbeat) so the two regimes
+    /// can be tuned independently (e.g. 4 threads ambient, 8 interactive).
+    http_threads: u32,
+    /// Path to the utility (0.4B) model, if configured.
+    utility_model_path: Option<PathBuf>,
+    utility_threads: u32,
+    utility_keep_alive_secs: u64,
 }
 
 async fn load_rwkv_if_configured(cfg: &Config) -> Option<LoadedRwkv> {
@@ -115,6 +195,10 @@ async fn load_rwkv_if_configured(cfg: &Config) -> Option<LoadedRwkv> {
             .map(|n| n.get().min(4) as u32)
             .unwrap_or(2)
     });
+    // Interactive context threads default to the same as heartbeat threads
+    // when unset. Users tune this up (e.g. 8) to reduce interactive TTFT
+    // while keeping ambient drip conservative.
+    let http_threads = s.http_threads.unwrap_or(n_threads);
     let http_bind = s.http_bind.as_ref().and_then(|s| match s.parse() {
         Ok(addr) => Some(addr),
         Err(e) => {
@@ -148,6 +232,10 @@ async fn load_rwkv_if_configured(cfg: &Config) -> Option<LoadedRwkv> {
         heartbeat: Duration::from_secs(s.heartbeat_secs),
         max_gen_tokens: s.max_gen_tokens,
         http_bind,
+        http_threads,
+        utility_model_path: s.utility_model_path.clone(),
+        utility_threads: s.utility_threads,
+        utility_keep_alive_secs: s.utility_keep_alive_secs,
     })
 }
 
@@ -160,6 +248,7 @@ fn inference_backend_from(loaded: Option<&LoadedRwkv>) -> inference::Backend {
             heartbeat: l.heartbeat,
             max_gen_tokens: l.max_gen_tokens,
             http_bind: l.http_bind,
+            http_threads: l.http_threads,
         },
         None => inference::Backend::Unspecified,
     }
@@ -184,7 +273,16 @@ fn build_burst_fn(loaded: Option<&LoadedRwkv>) -> Option<calibration::BurstFn> {
     let tok = Arc::clone(&l.runtime.tok);
     let prompt = l.heartbeat_prompt.clone();
     Some(Box::new(move |n: usize| -> Result<calibration::BurstSample> {
-        let r = inference::generate_once(&burst_ctx, &tok, &prompt, n);
+        // Calibration burst is a throughput probe — deterministic greedy
+        // sampling matches the pilot fallback conditions.
+        let r = inference::generate_once(
+            &burst_ctx,
+            &tok,
+            &prompt,
+            n,
+            &noesis_rwkv::SamplingParams::greedy(),
+            &[],
+        );
         if r.gen_tokens == 0 {
             anyhow::bail!("burst produced no tokens");
         }
@@ -233,9 +331,27 @@ async fn main() -> Result<()> {
         .with_target(false)
         .init();
 
+    // Subcommand dispatch: `noesis-runtime calibrate [--interactive]`
+    let args: Vec<String> = std::env::args().collect();
+    if args.get(1).map(|s| s.as_str()) == Some("calibrate") {
+        let interactive = args.iter().any(|a| a == "--interactive" || a == "-i");
+        let sweep = args.iter().any(|a| a == "--thread-sweep" || a == "-s");
+        let mut cfg = load_config()?;
+        cfg.calibration_path = resolve_calibration_path(&cfg);
+        if interactive {
+            return calibrate_interactive::run(&cfg).await;
+        } else if sweep {
+            return calibrate_interactive::run_thread_sweep(&cfg).await;
+        } else {
+            eprintln!("Usage: noesis-runtime calibrate --interactive | --thread-sweep");
+            std::process::exit(1);
+        }
+    }
+
     info!("noesis-runtime starting");
 
-    let cfg = load_config()?;
+    let mut cfg = load_config()?;
+    cfg.calibration_path = resolve_calibration_path(&cfg);
     info!(state_path = %cfg.state_path.display(),
           backend = %cfg.inference_backend,
           "config loaded");
@@ -281,8 +397,17 @@ async fn main() -> Result<()> {
     let burst_fn = build_burst_fn(loaded_rwkv.as_ref());
     let inference_cfg = inference::InferenceConfig {
         backend: inference_backend_from(loaded_rwkv.as_ref()),
+        lens_root: cfg.lens_root.clone(),
         ..inference::InferenceConfig::default()
     };
+    if let Some(root) = &cfg.lens_root {
+        if let Err(e) = std::fs::create_dir_all(root) {
+            warn!(root = %root.display(), error = %e,
+                  "lens_root create failed — /lens endpoints will error");
+        } else {
+            info!(root = %root.display(), "lens_root ready");
+        }
+    }
     let shutdown_flag = Arc::clone(&inference_cfg.shutdown);
     let inference_handle = tokio::spawn(inference::run(Arc::clone(&store), inference_cfg));
     let retention_handle = tokio::spawn(retention::run(

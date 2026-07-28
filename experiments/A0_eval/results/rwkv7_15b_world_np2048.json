@@ -2,7 +2,7 @@
   "model": "rwkv7-1.5b:latest",
   "backend": "ollama",
   "n_tasks": 48,
-  "elapsed_s": 538.1206042766571,
+  "elapsed_s": 565.0961022377014,
   "aggregate": {
     "n_total": 48,
     "n_correct": 11,

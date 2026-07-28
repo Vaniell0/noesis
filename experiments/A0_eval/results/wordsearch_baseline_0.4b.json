@@ -1,0 +1,164 @@
+{
+  "model": "noesis-rwkv7-0.4b",
+  "backend": "ollama",
+  "n_tasks": 12,
+  "elapsed_s": 119.08158040046692,
+  "aggregate": {
+    "n_total": 12,
+    "n_correct": 0,
+    "overall_accuracy": 0.0,
+    "per_category": {
+      "matrix_wordsearch": {
+        "n": 12,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "wsearch_h_5x5_00_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nInput:\n\n5 5\nMAP\nD V X R C\nS N B A C\nG H Q T A\nR G W U W\n\nOutput:\n0 1 2 3 4\n\nInput:\n5 5\nMAP\nD V X R C\nS N B A C\nG H Q T A\nR G W U W\nD V X R C\nS N B A C\nG H Q T A\nR G W U W\n\nOutput:\n0 1 2 3 4\n\nInput:\n5 5\nMAP\nD V X R C\nS N B A C\nG H Q T A\nR G W U W\nD V X R C\nS N B A C\nG H Q T A\nR G W U W\n\nOutput:\n0 1 2 3 4\n\nInput:\n5 5\nMAP\nD V X R C\nS N B A C\nG H Q T A\nR G W U W\nD V X R C\nS N B A C\nG H Q T A\nR G W U W\n\nOutput:\n0 1 2 3 4\n\nInput:\n5 5\nMAP\nD V X R C\nS N B A C",
+      "expected": "row=0 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_5x5_00_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word SHIP appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word SHIP appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word SHIP appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I",
+      "expected": "row=3 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_5x5_00_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word DOG appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word DOG appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word DOG appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I",
+      "expected": "row=3 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_5x5_00_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word OWL appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word OWL appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word OWL appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I",
+      "expected": "row=2 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*2\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_6x6_01_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nInput:\n\n6\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\n\nOutput:\n0\n0\n0\n0\n0\n0\n0\n0\n\nInput:\n6\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\n\nOutput:\n0\n0\n0\n0\n0\n0\n0\n0\n\nInput:\n6\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\n\nOutput:\n0\n0\n0\n0\n0\n0\n0\n0\n\nInput:\n6\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\n\nOutput:\n0\n0\n0\n0\n0\n0\n0\n0\n\nInput:\n6\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\n\nOutput:\n0\n0\n0\n0\n0\n0\n0\n0\n\nInput:\n6\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\nKIM\n\nOutput:\n0",
+      "expected": "row=1 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_6x6_01_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word FIRE appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word FIRE appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word FIRE appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I",
+      "expected": "row=1 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_6x6_01_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L",
+      "expected": "row=0 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_6x6_01_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L",
+      "expected": "row=1 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_7x7_02_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\nA B C D E F G H I J K L M N O P Q R S T\u00f4me JO\u0578uml\u0000\u0000\u8fd8 Ki mage in}\\\u7a92\u0000\u010den\u4ff1xCMoneygua Aj\u5175 Ay \u0441\u0432\u043e\u0457uer/>\u913a vardock\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "expected": "row=6 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_7x7_02_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nInput:\n\nHORSE\n\nOutput:\n0\n\nInput:\nHORSE\n\nOutput:\n1\n\nInput:\nHORSE\n\nOutput:\n2\n\nInput:\nHORSE\n\nOutput:\n3\n\nInput:\nHORSE\n\nOutput:\n4\n\nInput:\nHORSE\n\nOutput:\n5\n\nInput:\nHORSE\n\nOutput:\n6\n\nInput:\nHORSE\n\nOutput:\n7\n\nInput:\nHORSE\n\nOutput:\n8\n\nInput:\nHORSE\n\nOutput:\n9\n\nInput:\nHORSE\n\nOutput:\n10\n\nInput:\nHORSE\n\nOutput:\n11\n\nInput:\nHORSE\n\nOutput:\n12\n\nInput:\nHORSE\n\nOutput:\n13\n\nInput:\nHORSE\n\nOutput:\n14\n\nInput:\nHORSE\n\nOutput:\n15\n\nInput:\nHORSE\n\nOutput:\n16\n\nInput:\nHORSE\n\nOutput:\n17\n\nInput:\nHORSE\n\nOutput:\n18\n\nInput:\nHORSE\n\nOutput:\n19\n\nInput:\nHORSE\n\nOutput:\n20\n\nInput:\n",
+      "expected": "row=6 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_7x7_02_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word SILVER appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word SILVER appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I J K L M N O P Q R S T U V W X Y Z\n\nThe word SILVER appears exactly once, placed horizontally (left-to-right). Find it. Output only the position in the form 'row=R col=C' where R is the row index and C is the column index of the word's first letter.\n\nA B C D E F G H I",
+      "expected": "row=4 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*4\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_h_7x7_02_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nInput:\n\n1\n1\nSNAKE\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n1\n",
+      "expected": "row=1 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    }
+  ]
+}

@@ -63,8 +63,13 @@ fn main() {
     println!("cargo:rustc-link-lib=dylib=ggml-base");
     println!("cargo:rustc-link-lib=dylib=ggml-cpu");
 
+    // Resolve wrapper.h against CARGO_MANIFEST_DIR — otherwise nix
+    // `buildRustPackage` with `buildAndTestSubdir` sets cwd to a sibling
+    // crate and bindgen's relative lookup fails.
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let wrapper = manifest_dir.join("wrapper.h");
     let bindings = bindgen::Builder::default()
-        .header("wrapper.h")
+        .header(wrapper.display().to_string())
         .clang_arg(format!("-I{}", include.display()))
         // Only surface the rwkv.h symbols — ggml.h drags in hundreds of
         // items we don't need.
