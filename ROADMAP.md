@@ -7,11 +7,16 @@ serialize them.
 ## Track A — Cognitive (model training)
 
 ### A0. Baseline (weeks 1–2)
-- Install RWKV-7-G1 2.9B via Ollama, verify inference throughput on the
-  user's hardware. **Measured 2026-07-23**: 0.4B World Q8_0 via rwkv.cpp
-  on i5-1235U (Alder Lake, 4 threads) delivers ~30 tok/s steady-state;
-  load 506 ms; RSS ~1.16 GB. 2.9B target and GTX 1050 numbers still
-  untested.
+- Install RWKV-7-G1 2.9B via **in-process rwkv-cpp** (Ollama removed as
+  backend 2026-07-25 — see `docs/policies.md` § Model backend
+  sandboxing; rwkv-cpp is required because it exposes
+  `rwkv_get_state_len` / `rwkv_eval(..., state_out)` /
+  `rwkv_clone_state`, which the state-work workstream — lens
+  persistence, H17, H18 — depends on). Verify inference throughput on
+  the user's hardware. **Measured 2026-07-23**: 0.4B World Q8_0 via
+  rwkv.cpp on i5-1235U (Alder Lake, 4 threads) delivers ~30 tok/s
+  steady-state; load 506 ms; RSS ~1.16 GB. 2.9B target and GTX 1050
+  numbers still untested.
 - Assemble a held-out eval set of 30–50 real reasoning tasks drawn from
   the user's actual workflow — not GSM8K, not MMLU.
 - Baseline eval: RWKV-7-G1 2.9B against Qwen-2.5-3B-Instruct and Phi-4-mini
@@ -72,7 +77,7 @@ serialize them.
   as pure SFT (α = 0). Currently on seed 2 of medium cells;
   narrative cells to follow (~2h remaining wall).
 
-### A0.6. Intra-model state swap (pending A0.5 verdict)
+### A0.6. Intra-model state swap (pending A0.5 verdict — infra unblocked 2026-07-25)
 - Take state after reasoning-prompt processing, transplant as initial
   state for narrative-prompt decode (and vice versa). Same model, same
   weights.
@@ -84,6 +89,15 @@ serialize them.
   next-token overlap. Baseline sanity: state_A→A and state_B→B.
 - Cost: ~3–4h wall on i5. Answers "is state a portable computational
   mode within a single model, or only fresh working memory?"
+- **Infrastructure note (2026-07-25).** State save/load/clone
+  primitives from rwkv-cpp are now the mandatory backend
+  (`docs/policies.md` § Model backend). State-work is first-class
+  (see project memory `project_noesis_state_work_first_class`), so
+  A0.6/A0.7 are no longer blocked on "if state manipulation becomes
+  supported someday" — the APIs exist and lens-persistence work is
+  wiring them. Verdict-blocking on A0.5 remains (need to know state
+  is doing work before swapping it), but tooling readiness is not
+  the bottleneck any more.
 
 ### A0.7. Inter-checkpoint state portability (pending A0.5 verdict, tier-1 only in A0)
 - **Tier 1 (in A0.7)**: same-arch, same-size, different training —
@@ -155,10 +169,19 @@ serialize them.
 
 ## Track C — Integration (runtime)
 
-### C0. Ollama + CLI wiring (weeks 1–2)
-- Verify that noesis-as-Ollama-model works cleanly inside the Claude-Code
-  CLI workflow (Ollama's OpenAI-compatible endpoint). If the integration
-  path is more involved than a config change, spec the shim explicitly.
+### C0. Runtime + CLI wiring (weeks 1–2) *(reframed 2026-07-25 — was "Ollama + CLI wiring")*
+- **Backend change.** Ollama removed as a supported backend 2026-07-25
+  (state APIs not exposed through it; see `docs/policies.md` § Model
+  backend sandboxing). The runtime now embeds rwkv-cpp in-process via
+  the `noesis-runtime` supervisor. `noesis-http` exposes an
+  OpenAI-compatible endpoint (`/v1/chat/completions`) so that
+  Claude-Code CLI, other CLI callers, and IDE integrations that speak
+  the OpenAI dialect keep working — the wire format is preserved, the
+  backend under it changed.
+- Verify that noesis-as-a-local-endpoint works cleanly inside the
+  Claude-Code CLI workflow. If the integration path is more involved
+  than a config change (`ANTHROPIC_API_URL` / equivalent pointing at
+  `localhost:<port>`), spec the shim explicitly.
 - No custom harness beyond what integration verification requires.
 
 ### C1. Event-stream ingestion (weeks 4–8)
@@ -172,11 +195,17 @@ serialize them.
   summary into Obsidian.
 - First real feedback signal for whether A1 fine-tune is actually helping.
 
-### C3. Escalation UX (weeks 10+)
+### C3. Escalation UX (weeks 10+ — infra unblocked 2026-07-25)
 - Human-triggered remote Claude call. When invoked, Claude reads noesis's
   background-agent state, aligns with it, then continues the task.
 - This is where the inter-model transfer protocol becomes practically
   required, not just theoretical.
+- **Infrastructure note (2026-07-25).** With state-work first-class
+  and rwkv-cpp state APIs in the runtime, the lens/scratch DSL that
+  H11 relies on can be generated *from actual state* (via H10's
+  `state_readout` mode or an equivalent readout head), not synthesised
+  from a message-history summary. C3 wiring is a runtime protocol
+  problem now, not a "waiting for the backend to expose state" problem.
 
 ## Milestone gates
 

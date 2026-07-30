@@ -275,3 +275,176 @@ rationale in the relevant `experiments/` writeup.
 
 **Cost.** Sometimes an irreversible change is genuinely cheaper.
 Take it — but consciously, not by default.
+
+---
+
+## P13. Reasoning happens in state, not in tokens
+
+**Statement.** In noesis, the reasoning substrate is the WKV state.
+Emitted tokens are rare output events, not the mechanism of thought.
+The model *thinks* by evolving its hidden state per input token; it
+*speaks* only when the runtime (or a gate) decides externalisation is
+warranted. Utility NNs that participate in reasoning must do so *in
+the same chain of thought*, not as external oracles the substrate
+consults.
+
+**Why.** Framing reasoning as "generate tokens that describe the
+reasoning" collapses the substrate down to a script. The wager
+behind the RWKV-7 backbone (P4, H4b, H8) is that state evolution *is*
+the computation — a claim that becomes vacuous if every step is
+externalised as text. Treating tokens as the primary evidence of
+reasoning also encourages hallucination: any pressure to produce
+readable output biases the model toward fluent continuation even
+when the state has not converged. If reasoning is state-side, the
+model can hold aporia (H20), refuse premises (H21), and drip silent
+tokens (H16) *because it does not have to emit to think*.
+
+**How to apply.**
+- Runtime and DSL treat tokens as *output events*, not as steps of
+  thought. The composer does not synthesise a "here is my reasoning"
+  paragraph and then act — it acts, and the reasoning trace, if
+  extracted, comes from a state-readout head (H10 `state_readout`)
+  or a drip stream (H16), not from a mandatory CoT prompt.
+- Utility NNs (embedders, classifiers, small policy heads) are
+  fine — see P3 — but if they enter a decision path, they enter it
+  as *state modulators* or *readout heads over state*, not as
+  separate reasoners whose output the substrate re-ingests as tokens.
+- State manipulation (save, load, clone, branch/merge — see H18) is
+  first-class runtime capability, not "someday multimodal". State is
+  the working representation; it deserves the same tooling any
+  first-class runtime data type gets.
+- H8's status is the load-bearing measurement. If H8 refutes at
+  substrate scale, this principle downgrades to a design bias, not
+  an invariant.
+
+**Cost.** Introspection into a diffuse hidden vector is genuinely
+harder than reading text. Debugging is state-inspection, not log-
+reading. Standard SFT recipes (which supervise on CoT tokens) map
+awkwardly onto this frame — noesis has to invent supervision that
+respects state-side computation (see H9, H12b.i utilisation
+regularizer). The frontier's default assumption is CoT-in-tokens,
+and every third-party tool assumes it — swimming against that
+current is real cost.
+
+**Related.** H4b (state-evolution architectures viable for
+reasoning), H8 (state does substantive computation), H10 (test-time
+compute via state refinement, not more CoT), H16 (silent drip
+stream), H17 (state absorbs context, replaces history re-injection),
+H18 (state as manipulable data), H20 (state holds contradictions),
+H21 (state carries premise-validity signal). This is the
+architectural principle behind the entire "state-work first-class"
+workstream.
+
+---
+
+## P14. Agility over omniscience — honest not-knowing is a feature
+
+**Statement.** noesis targets *agility* (working well with unfamiliar
+information under retrieval and tool observation) rather than
+*omniscience* (having internalised as much as possible). Honest
+"I don't know" is a first-class outcome, not a failure mode. Fluent
+confabulation is a bug even when the confabulated answer happens to
+be right.
+
+**Why.** The user's hard constraints — always-on (P4), cheap by
+construction (P5), private, single-substrate at ≤ 3B (P3) —
+foreclose omniscience by construction. A 2.9B model *cannot*
+internalise everything the user's real workflow needs, so the
+interesting question is not "how much can we bake in" but "how well
+can it operate when the knowledge is not baked in". This reframes
+sparse weight-side coverage from *deficiency* to *design margin*:
+P2/H7 ("understanding in weights, knowledge in context") is not a
+compromise made because knowledge does not fit — it is the desired
+shape. The wager is that emergent flexibility from a small model
+trained on reasoning traces + a strong retrieval loop + a truth-
+system that admits its own limits beats a same-size model that has
+memorised more but hedges less. Agility that cheats through
+confabulation is worse than a known limit — the failure mode is
+covert, whereas an honest refusal is a valid step in a longer chain.
+
+**How to apply.**
+- Confabulation is a bug even when the confabulation is right by
+  accident; correct-by-accident behaviour is not evidence that the
+  underlying decision was sound.
+- Runtime shape (retrieval, tools, `state_readout`, drip re-visit)
+  gets tried before "bake it into weights". Weight-baking is the
+  irreversible option (P12) and needs a stronger justification than
+  "would be handy".
+- When benchmarking against reference models, do not score
+  "knows fact X out-of-the-box" as unambiguously good — it must be
+  paired with a "does not fabricate when it does not know" reading.
+  A model that scores higher on the first and lower on the second is
+  not obviously better under this principle.
+- Truth-system probes (H19 weight-contamination, H20 aporia, H21
+  premise-validity) are the runtime enforcement of this principle;
+  they are load-bearing, not decoration. If any of them refutes at
+  the substrate scale, this principle downgrades to a training-recipe
+  target rather than a substrate property, and the corpus / SFT
+  strategy needs an explicit re-open.
+- Any capability request that resolves only by baking more domain
+  knowledge into weights needs an explicit re-open with the user —
+  agility-first is the target, and switching to knowledge-first is
+  a principle change, not a task change.
+- "I don't know", "I would need to look this up", and "this premise
+  looks malformed" are all valid runtime outputs, not conversational
+  hedges to eliminate through SFT. Supervision has to actively teach
+  when to refuse or hedge — the standard SFT reward on fluent
+  continuation pushes the wrong direction here.
+- **Unattributed collective claims are a distinct failure mode
+  (H22).** Statements of the form "usually", "it is generally
+  accepted", "most people think", "everyone knows" — well-formed
+  and stylistically fluent, but with no traceable source — should
+  be flagged, not produced. Not covered by H19 (which asks *where*
+  knowledge lives, weight vs context) or H21 (which asks whether
+  the *premise* is valid); the claim is well-formed and the premise
+  is fine, but the *provenance* is empty. Common practice in LLM
+  outputs; under P14 it is confabulation dressed in collective-
+  voice grammar. Runtime response: either attach a concrete
+  referent (named source or retrieved passage) or reformulate as
+  owned first-person observation ("in my experience", "in the
+  retrieved documents") — not "usually" without owner. Full probe
+  design in H22.
+
+**Cost.**
+- Some benchmarks — and some user interactions — reward the model
+  that guesses fluently. Agility-first loses those cleanly. Accepted.
+- Solving H19/H20/H21 well is *harder* than the equivalent
+  omniscience-first path of "throw more knowledge at the corpus";
+  those hypotheses stop being optional wagers and become required
+  infrastructure. If they fail, this principle takes real damage —
+  the honest-not-knowing story only works if the substrate can hold
+  contradiction (H20), refuse malformed premises (H21), and not
+  quietly reintroduce baked knowledge through the training-set back
+  door (H19).
+- Sets a user-facing expectation that noesis will refuse or defer
+  more often than a comparable knowledge-first model. Requires
+  user tolerance for "check yourself / look this up" outputs where
+  a bigger model would confidently answer.
+- Standard SFT recipes reward fluent continuation; supervision that
+  rewards refusal of invalid premises has no ready-made recipe in
+  the field (P13's "state-side reasoning" cost compounds here).
+
+**Related.** P2 (understanding in weights, knowledge in context) —
+same coin, focused on *where knowledge lives*; P14 is focused on
+*what shape competence takes*. P3 (one local reasoning model),
+P4 (constant cost over peak capability), P5 (cheap by construction)
+— the resource frame that forecloses omniscience. P12
+(reversibility) — retrieval is reversible, weight-baking is not;
+this principle biases toward the reversible path. P13 (reasoning in
+state, not in tokens) — provides the substrate that makes aporia and
+premise-refusal mechanically possible; without state-side
+computation, honest not-knowing collapses back to a fluent hedge.
+H2 (reasoning-first outperforms knowledge-first at this scale) —
+the training-time expression. H7 (understanding in weights,
+knowledge in context) — the corpus discipline this drives. H19
+(weight-knowledge contamination detector) — measures whether the
+boundary actually held after fine-tune. H20 (aporia — state holds
+contradictions without premature collapse) — mechanism enabling
+honest ambiguity. H21 (premise-validity readout) — mechanism
+enabling refusal of malformed queries rather than confabulated
+answers. H22 (unattributed collective claims) — mechanism enabling
+refusal of provenance-empty generalisations dressed in collective-
+voice grammar. This principle is the "why" behind the truth-system
+workstream (H19/H20/H21/H22 as a four-signal cluster) and behind
+rejecting Phase-2 domain fine-tunes as the default answer to weak
+knowledge coverage.

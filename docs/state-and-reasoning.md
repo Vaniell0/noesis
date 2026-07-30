@@ -176,6 +176,155 @@ trajectories at a level that would confound H8/H9 measurement. Paper
 should mirror that at inference for the probe (bf16 weights, fp32 WKV
 accumulator).
 
+## 4. WKV state as an Information Bottleneck channel
+
+**Framing.** RWKV-7's WKV state is a fixed-capacity, lossy compression
+channel. All input the model has ever seen `X_{1..t}` must be
+represented in the same `10.5 MB` per-layer-summed matrix; whatever
+does not fit is lost. This maps directly onto Tishby et al.'s
+Information Bottleneck (Tishby, Pereira & Bialek, *The Information
+Bottleneck Method*, 1999; arXiv 0004057), which formalises finding a
+compressed representation `Z` of an input `X` that maximally preserves
+information about a target `Y` under a fixed channel capacity:
+
+```
+    min  I(X ; Z) - β · I(Z ; Y)
+     Z
+```
+
+Here `X` = input token stream (context window content), `Z` = WKV
+state after ingesting `X`, `Y` = the downstream prediction target
+(next token, or a task-relevant readout). The Lagrangian says:
+minimise redundant information the state carries about the input,
+while maximising the information the state carries about what
+actually matters downstream. `β` is the tradeoff — under noesis's
+constraints, `β` is *not* a free hyperparameter; it is fixed by the
+architecture (state size) and the training objective (CE + any
+auxiliary `L_state`).
+
+**Why this framing is load-bearing for noesis (not just formal window
+dressing).**
+
+- **P4/P5 (constant cost, cheap by construction)** foreclose growing
+  the state to fit more input. The channel width is what the shipped
+  architecture gives us; we do not scale it away.
+- **P1 (state external, cognition internal)** does the equivalent of
+  "the state does not have to hold everything, retrieval fills gaps"
+  — an IB architecture with an *external* memory tier at hand does
+  not have to allocate its bits to storing facts, and can spend them
+  on reasoning-relevant abstractions instead. This is not a hedge
+  around the bottleneck; it is the *architectural response* to it.
+- **P14 (agility over omniscience)** is the direct pragmatic
+  consequence: the bottleneck *cannot* carry everything, so a system
+  that pretends to must be confabulating. Honest not-knowing is
+  what a well-calibrated IB channel *should* produce when the
+  requested `I(Z;Y)` cannot be supported by the channel width.
+- **P13 (reasoning in state, not in tokens)** raises the stakes:
+  if state *is* the computation, then the IB channel is not just
+  a memory allocation problem — every bit spent on redundant input
+  representation is a bit *not* spent on computation.
+
+**Practical consequences that shape design and hypotheses.**
+
+1. **Forgetting is necessary and structured, not incidental.** A
+   fixed-width channel *must* discard information about `X` to leave
+   room for information about `Y`. What gets forgotten is
+   downstream-task-dependent, not just recency-dependent. This
+   reframes "why does the model forget X" from a bug to a
+   consequence of what it is optimising `I(Z;Y)` for. The right
+   research question is not "how do we make the state remember more"
+   but "how do we make the state forget the right things".
+2. **Long-horizon planning has a hard ceiling.** Any task that
+   requires threading `> capacity` bits of state through a decision
+   sequence *cannot* be solved by state alone — it must decompose
+   into a chain of state + external-memory reads (P1) or a chain
+   of state resets keyed by retrieval. Trying to lengthen the
+   effective context by pushing more tokens through the same WKV
+   is subject to diminishing returns bounded by channel capacity,
+   not by context window length.
+3. **Uneven importance is real signal, not artifact.** If the model
+   allocates disproportionate `I(Z;Y)` bits to some inputs over
+   others, that allocation is the model's own *learned* importance
+   function — noesis can read it (a state-readout head on the
+   distribution of "what did the state retain") and use it directly
+   as an emit-gate, a retrieval-relevance signal, or a compression
+   heuristic. This is H16 and H10 seen through IB glasses.
+4. **`L_state` has a formal target.** The state-motion + curvature
+   reward sketched in the community-map (§2) is a proxy for
+   pushing `I(Z;Y)` up per unit `I(X;Z)`; making the training
+   objective explicitly IB-shaped (measure `I(Z;Y)` on a proxy
+   downstream task and reward states that carry it) is an option we
+   have not exercised. Noted for A2 planning.
+
+**Reconstruction / mutual-information probes as measurement.** IB
+gives a first-principles handle on H8 and H12b: rather than only
+measuring state *dynamics* (delta-norm, curvature, SR — §1 above),
+also measure state *content* by training a small decoder from `Z`
+to reconstruct `X` (upper-bounds `I(X;Z)`) or to predict `Y`
+(lower-bounds `I(Z;Y)`). These are standard IB estimation moves
+(cf. Alemi et al., *Deep Variational Information Bottleneck*, 2017;
+Saxe et al., *On the Information Bottleneck Theory of Deep
+Learning*, ICLR 2018 — with the caveat that Saxe et al. showed the
+IB "phase transition" narrative was tanh-nonlinearity-specific, so
+we import IB as *framing*, not as a prediction about training
+dynamics). Concretely for noesis:
+
+- **Reconstruction probe (upper bound `I(X;Z)`).** Train an MLP
+  head on frozen WKV state at position `t` to reconstruct tokens
+  at positions `t-k .. t`. Reconstruction quality vs. `k` gives a
+  practical decay curve — how many past tokens the state materially
+  preserves.
+- **Downstream probe (lower bound `I(Z;Y)`).** Same head, different
+  target: task-relevant readout (H21 premise-validity is one
+  candidate; H20 aporia-hold is another). Ratio of downstream-probe
+  quality to reconstruction quality is the *bit-efficiency* of the
+  state for that task.
+- **H12 as capacity dimensions.** Width (`n_head × head_size²`) and
+  decay `w_t` are the two independent capacity knobs — width sets
+  raw channel size, decay sets how quickly channel is freed up.
+  IB framing predicts: at fixed width, tighter decay (faster
+  forgetting) should *increase* `I(Z;Y)` for tasks whose relevant
+  horizon is short, and *decrease* it for long-horizon tasks. Direct
+  falsifier for H12b utilisation claims.
+
+**Runtime metric candidate: channel-budget accounting.** noesis
+currently accounts for compute in CPU-seconds (calibration protocol,
+policies.md § CPU and thermal governance). An IB-shaped runtime
+would *additionally* account for `I(X;Z)` bits consumed per input —
+how much of the state's channel capacity a given input burned. A
+long noisy transcript that contributed nothing measurable to
+downstream tasks would show up as a *channel-budget cost* even if
+its CPU cost was small. Not a proposal to build this now; a note
+that the accounting hook exists in principle and would give the
+truth-system another signal to work with (H16 emit-gate could
+consult it: "did the last minute of input actually change what the
+state carries?" as an emit criterion).
+
+**Retrieval scoring by info-gain (parking lot).** Once
+reconstruction/downstream probes are in place, retrieval candidates
+can be scored by *estimated `I(Z_after; Y) − I(Z_before; Y)`* — pick
+the candidate that most raises task-relevant channel content. This
+is a stronger objective than cosine similarity in embedding space
+(similarity is at best a proxy for `I(X_retrieved; X_query)`, which
+is only weakly related to what actually helps the state). Not
+scheduled — noted here so future A3/retrieval design has the
+framing to reach for.
+
+**What this framing does not claim.**
+
+- Not a claim that noesis will *train* the state via an explicit IB
+  loss (though `L_state` is a step in that direction). The state is
+  currently trained implicitly via CE on next-token prediction; IB
+  is a *description* of what that training is doing under a
+  fixed-capacity channel constraint.
+- Not a claim that RWKV-7 achieves the IB *optimum* — likely far
+  from it. IB is the frame that says the optimum *exists* and is
+  measurable; how far current weights sit from it is an empirical
+  question the reconstruction/downstream probe pair could answer.
+- Not a claim that IB dictates architecture. RWKV-7 was chosen for
+  reasons in P4/H4b/H8; IB gives a language for reasoning about the
+  consequences of that choice, not a competing justification for it.
+
 ## What this means for A0.4 design
 
 Not interpretation of the probe results (those come later) — only

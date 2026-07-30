@@ -1,0 +1,8 @@
+{"id": "v4_inv_arith_02", "category": "invalid", "invalid_type": "arithmetic", "y_true": 0, "p_valid": 0.9840127229690552, "y_pred": 1}
+{"id": "v4_inv_selfcontr_01", "category": "invalid", "invalid_type": "selfcontradiction", "y_true": 0, "p_valid": 0.011598886922001839, "y_pred": 0}
+{"id": "v4_inv_selfcontr_02", "category": "invalid", "invalid_type": "selfcontradiction", "y_true": 0, "p_valid": 0.0027178337331861258, "y_pred": 0}
+{"id": "v4_inv_selfcontr_05", "category": "invalid", "invalid_type": "selfcontradiction", "y_true": 0, "p_valid": 0.011339512653648853, "y_pred": 0}
+{"id": "v4_val_math_01", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.028832916170358658, "y_pred": 0}
+{"id": "v4_val_math_02", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.9833180904388428, "y_pred": 1}
+{"id": "v4_val_causal_01", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.9811845421791077, "y_pred": 1}
+{"id": "v4_val_causal_02", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.94377201795578, "y_pred": 1}

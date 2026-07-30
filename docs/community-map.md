@@ -34,6 +34,49 @@ BlinkDL/ChatRWKV, Ai00 server) and arXiv 2503.14456v2.
   contrast to diagonal-transition RNNs and Transformers (limited to
   TC⁰). This is the architectural gap the delta-rule closes.
 
+### RWKV-8 "Heron" + ROSA (experimental, verified 2026-07-30)
+
+- **Codename:** RWKV-v8 = **"Heron" 🪶**. The rose emoji 🌹 that
+  circulates in BlinkDL's posts is a visual marker for the ROSA
+  mechanism, **not** an alternative codename. "Rose" is not
+  used as a codename in the RWKV-LM repo or in BlinkDL's own posts.
+- **ROSA** = *Rapid Online Suffix Automaton* (per DeepWiki-generated
+  reference on `BlinkDL/RWKV-LM/3.2-rwkv-v8-with-rosa`; BlinkDL's
+  own twitter thread confirms "SA ≠ Self-Attention"). Positioned
+  as a neurosymbolic infinite-range exact-match propagator: excels
+  at digit reversal, multi-digit arithmetic, copy / count tasks
+  that pure attention or pure state-recurrence handle poorly at
+  long spans.
+- **Not a substrate swap.** RWKV-v8 uses the RWKV-v7 "Goose"
+  time-mixing block (`RWKV_Tmix_x070`) as its foundation; ROSA
+  is added as a separate block (`ROSA_QKV_B_1bit`) combining
+  time-shifting with 1-bit linear projections. Concretely: an
+  existing RWKV-7 (G1 etc.) checkpoint **cannot** be upgraded to
+  RWKV-8 by dropping in ROSA — the ROSA block is part of the
+  network graph and must be trained with the rest.
+- **Public checkpoints are toy-scale (2026-07-30).**
+  - `260123_reverse_L2.pth` — 39.6K parameters, reverse-sequence
+    task, 99.6% accuracy.
+  - `251024_rosaQKV_L4_digit40.pth` — ~1M parameters, 40-digit
+    arithmetic, 99% per-digit accuracy.
+  - `BlinkDL/rwkv-8-pile` — early-testing Pile run
+    (332B tokens; ~135 downloads/month; author states "early
+    testing versions"). No 0.4B+ production checkpoint.
+- **What ROSA does NOT do (per the same source).** No claim of
+  verbatim recall of a training corpus in weights, no claim of
+  drop-in replacement for a trained RWKV-7 model, no claim of
+  solving word-problem / semantic math. Advertised strengths are
+  algorithmic-precision tasks (exact-copy, exact-arithmetic,
+  long-range exact matches), which is orthogonal to noesis's
+  H7 "knowledge in context" wager and to H21/H22 truth-system.
+- **Implication for noesis.** If RWKV-8 matures at 0.4B+ scale it
+  is a *layer addition* over the current substrate, not a
+  substrate change. The `noesis-rwkv-sys` state-API contract
+  (WKV get/eval/clone) still applies to the Goose portion; ROSA
+  adds its own state that would need its own persistence surface
+  (unscoped, deferred until a runnable checkpoint at reasoning
+  scale exists). Do not plan A1 / A2 around ROSA.
+
 ### Training
 
 - **Objective:** next-token cross-entropy + `L2Wrap` (~10⁻⁴ scale on
@@ -270,6 +313,26 @@ misattributed. Do not re-fold them without new evidence.
 - **"State Tuning trains running-WKV trajectory"** — false. Trains
   the *initial state vector* (per-layer, fixed-length), effectively
   a numerical prompt bias. Not a trajectory objective.
+- **"RWKV-8 codename is Rose"** — false. Codename is "Heron" 🪶.
+  The rose 🌹 is a visual emoji tied to the ROSA mechanism inside
+  Heron. Verified against BlinkDL twitter and RWKV-LM repo
+  2026-07-30.
+- **"RWKV-8 Heron ships production-scale checkpoints"** — false as
+  of 2026-07-30. Public released weights are toy-scale (39.6K for
+  reverse-sequence, ~1M for 40-digit arithmetic) plus an early-
+  testing Pile run. No 0.4B+ RWKV-8 checkpoint at reasoning scale.
+- **"RWKV-8 remembers everything verbatim"** — not supported by
+  primary sources. The documented ROSA claims are around
+  *exact-sequence manipulation* (digit reversal, arithmetic per
+  digit, long-range exact matches) and "genuine infinite context"
+  as a mechanism property. Neither wording says the network stores
+  its training corpus verbatim in weights, and the toy-scale
+  checkpoints do not demonstrate that either. Community rephrasing
+  as "verbatim recall of the corpus" overshoots the source.
+- **"ROSA can be dropped into an existing RWKV-7 checkpoint"** —
+  false. `ROSA_QKV_B_1bit` is a network block sitting alongside
+  `RWKV_Tmix_x070`; upgrading requires training the ROSA block,
+  not just loading a new inference-time module.
 
 ---
 

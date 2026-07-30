@@ -1,0 +1,16 @@
+{"id": "inv_fact_006_ctx", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.6503906846046448, "y_pred": 1}
+{"id": "inv_fact_011", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.8031737208366394, "y_pred": 1}
+{"id": "inv_fact_012", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.6582250595092773, "y_pred": 1}
+{"id": "inv_fact_013_ctx", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.9995137453079224, "y_pred": 1}
+{"id": "inv_fact_016", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.23230522871017456, "y_pred": 0}
+{"id": "inv_fact_018", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.9702786207199097, "y_pred": 1}
+{"id": "inv_fact_019", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.07327209413051605, "y_pred": 0}
+{"id": "inv_fact_025_ctx", "category": "invalid", "invalid_type": "factual", "y_true": 0, "p_valid": 0.6890525221824646, "y_pred": 1}
+{"id": "val_fact_006", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.0007949694409035146, "y_pred": 0}
+{"id": "val_fact_011", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.0016408851370215416, "y_pred": 0}
+{"id": "val_fact_012_ctx", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.989180862903595, "y_pred": 1}
+{"id": "val_fact_014_ctx", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.16222408413887024, "y_pred": 0}
+{"id": "val_fact_015", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.9999934434890747, "y_pred": 1}
+{"id": "val_fact_016", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.1256718933582306, "y_pred": 0}
+{"id": "val_fact_016_ctx", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.12331264466047287, "y_pred": 0}
+{"id": "val_fact_021", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.5680080652236938, "y_pred": 1}
