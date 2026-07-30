@@ -226,13 +226,31 @@ serialize them.
 
 ## Open questions
 
-- **Cloud training budget.** Local-only or cloud burst on A100 for
-  continued pretraining? Decide before A3. Also required for H12b LoRA
-  + H12b.i utilisation regularizer (K=4 WKV slots with slot-usage
-  entropy + cross-slot dissimilarity losses, <24 GPU-hours at 0.4B)
-  if the H12a v2 verdict lands as width-bottleneck. Local GTX 1050
-  sits at the edge of feasibility; A100 burst (~24 wall-hours × ~$2/h)
-  is the realistic path.
+- **Cloud training budget.** Local-only or cloud burst for
+  continued pretraining? Decide before A3. Two distinct scales:
+  - **Micro-pilot (H7 falsifier).** QLoRA on G1d-0.4B, rank 16-32,
+    reasoning-trace subset (30-50k), 1-2 epochs — enough signal to
+    validate or refute H7 (understanding-in-weights, knowledge-in-
+    context). Fits a single-consumer-GPU spot rental: 4090 spot
+    (Vast/RunPod) ~$0.35-0.5/h × 10-14 h ≈ **$5-10** wall-cost.
+    A40 spot ~$6-9 as an alternative. This is a personally-payable
+    experiment, not a compute campaign, and is the minimum-cost
+    path to converting the SaaS §2 "correct answers without prior
+    knowledge" narrative from wager to measurement.
+  - **Full-scale A1 / H12b campaign.** Full Variant A corpus,
+    multiple epochs, ablations, plus H12b LoRA + H12b.i utilisation
+    regularizer (K=4 WKV slots with slot-usage entropy + cross-slot
+    dissimilarity losses, <24 GPU-hours at 0.4B) if the H12a v2
+    verdict lands as width-bottleneck. Local GTX 1050 sits at the
+    edge of feasibility; A100 burst (~24 wall-hours × ~$2/h) is
+    the realistic path (~$40-50). Only worth spending once the
+    micro-pilot has confirmed the direction is not going to be
+    thrown out by A0.5 or H7.
+  Prerequisite for either: an eval-suite that gives the H7-relevant
+  metrics (mixed reasoning + current-facts tasks; retrieval-parity
+  contrast) prepared and CPU-baselined on the un-tuned G1d-0.4B
+  *before* GPU time is booked, so the fine-tune → eval loop closes
+  in one rental window rather than needing a second.
 - **Model size.** Start with 2.9B for fast iteration; revisit 13.3B after
   Gate 1.
 - **Escalation semantics.** When user invokes Claude, does it replace
