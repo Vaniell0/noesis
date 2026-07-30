@@ -112,6 +112,7 @@
         LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
       };
 
-      homeModules.default = import ./nix/hm-module.nix self;
+      homeModules.default  = import ./nix/hm-module.nix self;
+      nixosModules.default = import ./nix/nixos-module.nix self;
     };
 }
