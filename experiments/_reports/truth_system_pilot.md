@@ -39,6 +39,34 @@ candidate for pre-generation aporia flag. If `p(neither)` is high, the
 state is honestly hedging and the routine can prompt for clarification
 instead of forcing a commit.
 
+**Scale-up to 100 items (2026-07-30).** Authored 70 more items (25 cf +
+25 ba + 20 ui) using the same protocol (10 samples × 20 new tokens,
+3-shard). Wall total ≈ 5 h.
+
+| category                   | n  | collapse_first | collapse_cont | p(neither) | logit_gap |
+|----------------------------|----|----------------|---------------|------------|-----------|
+| contested_facts            | 35 | 0.697          | **0.589**     | 0.760      | 3.40      |
+| bounded_ambiguity          | 35 | 0.688          | 0.478         | **0.854**  | 2.84      |
+| underdetermined_inference  | 30 | 0.624          | 0.560         | 0.603      | 2.69      |
+
+**Pilot ordering `cf > ba > ui` did NOT hold at scale.** The correct
+v100 ordering is `cf > ui ≈ ba` on `collapse_cont` — UI and BA swap
+(pilot ui=0.207, v100 ui=0.560). Two things drive this:
+(a) the pilot ui-set was hand-tuned toward genuinely-open logic
+puzzles; the 20 new ui items included several rule-application
+questions with a compelling default reading, so the state commits;
+(b) BA held the highest `p(neither)`=0.854 across both pilots and
+v100 — semantic-lexical ambiguity is where the model most reliably
+refuses to pick a branch. **Operational implication:** BA is the
+robust "keep open" signal; UI needs stricter authoring guarantees
+(genuine two-branch symmetry) to stay open under generation. CF stays
+top on `collapse_cont` and `logit_gap` on both scales — model has a
+pretraining-favoured answer on contested facts and commits fluently.
+Recommend: split UI into `ui_symmetric` (both branches equally
+supported by rule) and `ui_default_biased` (rule reads default
+plausible) in the next revision; H20 as an operational signal should
+report per-subcategory rather than pooled UI.
+
 ## H21 — premise-validity probe
 
 **Signal:** does the WKV state look categorically different when the

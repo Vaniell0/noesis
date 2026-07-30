@@ -1680,8 +1680,20 @@ underdetermined_inference 0.21. `p(neither branch)` peaks on
 bounded_ambiguity at 0.93 — model hedges most on semantic ambiguity,
 commits most on contested facts (has a pretraining-favored side).
 Aporia signal lives in continuation branching, not in pooled WKV
-features — needs actual decode to measure. Pilot passes the ordering
-prediction; scale-up to 100+ items and full-protocol run pending. See
+features — needs actual decode to measure.
+
+**Scale-up 2026-07-30** on G1d-0.4B, 100 items (35 cf / 35 ba / 30 ui)
+× 10 samples, 3 shards (wall ≈18274 s). Aggregate `collapse_cont`
+=0.541, `p(neither)`=0.746. Per-category: cf `collapse_cont`=0.589,
+ba=0.478, ui=0.560; `p(neither)` ba=**0.854** > cf=0.760 > ui=0.603.
+Pilot ordering `cf > ba > ui` did **not** hold at 100 items — new
+ordering `cf > ui ≈ ba` (ui and ba swap places). Interpretation:
+`bounded_ambiguity` stays the strongest "keep open" signal (highest
+p(neither)), but its `collapse_cont` drops because model hedges instead
+of committing; `underdetermined_inference` at v100 spans varied item
+types (missing-referent, chain-of-inference, etc.) whose branching is
+higher than pilot's tight ui sample. Recommendation for next iteration:
+split ui by inference-length subcategory and re-measure. See
 `experiments/aporia_probe/report.md`.
 
 ---
