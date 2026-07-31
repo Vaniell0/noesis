@@ -229,20 +229,54 @@ noesis's namespace. Never writable.
   in the composer's output does not leave the machine. Redaction is
   by construction (only-what-composer-emitted), not by post-filter.
 
-### A1 fine-tune corpus scope (locked 2026-07-22, Variant A)
+### A1 fine-tune corpus scope (locked 2026-07-30, Variant C hybrid)
 
-- **In A1 weights:** open reasoning traces (DeepSeek-R1 distill,
-  competition-math CoT, open code-reasoning), public Anthropic
-  tool-use documentation, open MCP tool-schema examples.
+Supersedes the earlier Variant A ("open reasoning traces only",
+locked 2026-07-22) after a conflict was surfaced between the
+policies-side spec and the corpus-side plan in
+`docs/training-data-shortlist.md`. Variant C aligns the two.
+
+- **Primary (majority of the mix): public agent / function-calling
+  traces.** Open-licensed, structured `tool_use → tool_result →
+  tool_use` rollouts. Candidate datasets and their licences:
+  - `Salesforce/xlam-function-calling-60k` — Apache-2.0.
+  - `glaive-ai/glaive-function-calling-v2` — Apache-2.0.
+  - `thunlp/ToolBench` — MIT.
+  - `THUDM/AgentInstruct` — Apache-2.0.
+  Loss target: standard next-token loss on `tool_use` tokens only;
+  `tool_result` tokens are context (inputs); assistant thinking is
+  excluded from the loss mask. Behavior-cloning on *what to do
+  next*, not *how to sound while thinking*.
+- **Secondary (adaptable open reasoning traces).** Open reasoning
+  traces (DeepSeek-R1 distill subsets, competition-math CoT, open
+  code-reasoning) may enter A1 **only if restructured** into
+  tool-shaped step sequences — reasoning steps linked to tool
+  invocations, not free-form thinking text. Untransformed
+  reasoning traces do not enter A1 weights.
 - **NOT in A1 weights:**
-  - User's personal Claude CLI logs.
-  - Any personal transcripts, correspondence, or private corpus.
+  - User's personal Claude CLI logs, any personal transcripts,
+    correspondence, or private corpus.
   - `personal-vault` (Obsidian) content.
-- **Rationale.** Matches CLAUDE.md hard constraint "open sources only,
-  no personal corpus in weights" without any reopen. The safe-first
-  baseline; may be revisited (Variant B — sanitised pattern extraction)
-  only if A1 eval shows the model cannot learn the noesis tool surface
-  from open corpora alone.
+  - Any Anthropic-derived reasoning distills (e.g. Fable-5,
+    Complete-FABLE.5-traces, other Claude-output-launderings).
+    Character-contamination + licence-hygiene both fail.
+  - Domain knowledge as such (facts; that goes through retrieval
+    per H7).
+- **Rationale.** Matches CLAUDE.md hard constraint "open sources
+  only, no personal corpus in weights" and the P11 lineage
+  requirement. Chooses action-cloning as the primary shape
+  (verifiable — τ-bench / AgentBench success rate), keeps the
+  narrow reasoning-trace door open only for structured
+  transformation, and closes the personal-data door completely.
+- **Sanitisation.** Applies to any external corpus before it
+  reaches A1 training: secret-regex filter (`detect-secrets` or
+  equivalent) followed by sampled manual audit
+  (~200 random rollouts). Documented in the eventual
+  `training/corpus/README.md`.
+- **Variant D (future).** If A1 on Variant C fails the τ-bench
+  bar, the reopen path is not "add personal data", it is
+  "expand supplementary open corpora and re-run". Personal data
+  stays out of weights across all A-track workstreams.
 
 ### Credentials-and-secrets handling (locked 2026-07-22, partial)
 

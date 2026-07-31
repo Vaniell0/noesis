@@ -59,12 +59,18 @@ def _build_argv(cfg: dict, yaml_path: Path) -> list[str]:
     data = str(REPO_ROOT / corpus["tokenized_pt"])
     run_dir = str(REPO_ROOT / logging["run_dir"] / logging["run_name"])
 
+    # G1d-0.4B architecture fixed by the checkpoint. If we ever swap
+    # backbone (1.5B, 2.9B), lift these into the YAML.
     argv = [
         str(PEFT_DIR / "train.py"),
         "--load_model", ckpt,
         "--proj_dir", run_dir,
         "--data_file", data,
         "--data_type", "sft",
+        "--vocab_size", "65536",
+        "--n_layer", "24",
+        "--n_embd", "1024",
+        "--my_testing", "x070",
         "--ctx_len", str(model["ctx_len"]),
         "--chunk_ctx", "1",  # per-token trajectory for state_reg
         "--micro_bsz", str(optim["batch_size"]),
@@ -78,12 +84,13 @@ def _build_argv(cfg: dict, yaml_path: Path) -> list[str]:
         "--precision", model["dtype"],
         "--accelerator", "gpu",
         "--devices", "1",
-        "--strategy", "auto",
+        "--strategy", "deepspeed_stage_1",
+        "--grad_cp", "1",
         "--peft", "lora",
-        "--lora_config", (
-            f'{{"lora_load":"","lora_r":{lora["rank"]},'
-            f'"lora_alpha":{lora["alpha"]},"lora_dropout":{lora["dropout"]},'
-            f'"lora_parts":"{",".join(lora["target_modules"])}"}}'
+        "--peft_config", (
+            f'{{"r":{lora["rank"]},'
+            f'"lora_alpha":{lora["alpha"]},'
+            f'"lora_dropout":{lora["dropout"]}}}'
         ),
     ]
     return argv
@@ -112,9 +119,14 @@ def main() -> int:
     status = light_rwkv_state_reg_patch.apply()
     print(f"[train_pilot] {status}")
 
+    import noesis_dataset_patch
+    ds_status = noesis_dataset_patch.apply()
+    print(f"[train_pilot] {ds_status}")
+
     train_argv = _build_argv(cfg, yaml_path)
     print(f"[train_pilot] invoking vendored train.py with {len(train_argv)-1} args")
     sys.argv = train_argv
+    os.chdir(PEFT_DIR)
     runpy.run_path(train_argv[0], run_name="__main__")
     return 0
 

@@ -132,6 +132,18 @@ serialize them.
   burst if not.
 - **Success criterion**: measurable improvement on the A0 held-out eval
   without regression on general-capability probes.
+- **Pilot Step 1 landed 2026-07-31** — see
+  `docs/verdicts/2026-07-31-a1-pilot-step1.md`. QLoRA on G1d-0.4B ×
+  glaive-function-calling-v2 (single-corpus Variant C slice) converged
+  cleanly on a spot 4090 (CE 1.70 → 0.02, 7 h wall). Held-out A0 shows
+  the expected shape effect: +33.3 pp on `scheduling`, +12.5 pp on the
+  `action_slice` eval, offset by -50 pp on `sym_alg_*` where the pilot
+  now emits tool-call JSON where the baseline emitted prose. The
+  training scaffolding, `.pt` loader shim (`training/noesis_dataset_patch.py`),
+  and merged-LoRA checkpoint pipeline are locked; Steps 2 (state_reg
+  sanity, `mode=trajectory_reg` `alpha=0`) and 3 (alpha sweep) can
+  reuse the same driver with a config swap. The H7 falsifier itself
+  (Variant A corpus + retrieval-parity contrast) remains open.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory
@@ -149,6 +161,34 @@ serialize them.
   through a hybrid? H7 in HYPOTHESES.md is the specific claim to test
   before committing to a strategy here.
 - Only starts once A1 shows the reasoning-first strategy actually works.
+
+### A4. Truth-system detector heads (sequenced after A1)
+- Purpose: convert H19 / H20 / H21 / H22 from *probes* into shipped
+  *detectors*. Current pilots read state through hand-labelled item
+  sets with no dedicated training; A4 trains small heads on top of
+  the frozen A1 backbone, one per signal, on targeted corpora.
+- **Corpora (to build during A4 prep):**
+  - **H19 provenance:** ~5k triples of `(question,
+    no-context-answer, with-retrieval-answer)`, supervision on the
+    source-of-truth signal (weights vs context).
+  - **H20 aporia:** ~5k `(ambiguous, unambiguous-control)` pairs.
+    Rebuilt after n=100 refutation of the `cf > ba > ui` monotone
+    ordering (see `experiments/aporia_probe/report.md`); target is
+    a state-variance signature, not collapse fraction.
+  - **H21 structural:** grow the 280-item TruthfulQA seed to
+    ~2-5k with balanced category / impossible / counterfactual and
+    an adversarial slice.
+  - **H22 attribution:** grow the 240-item C4 seed to ~2-5k of
+    hedge-vs-concrete-source pairs.
+- **Compute.** Cheap per head (frozen backbone; ~1-2 GPU-h at 0.4B
+  each). Total A4 compute budget ~8-15 GPU-h across all four heads.
+  Same spot-4090 economics as the A1 micro-pilot.
+- **Product surface link.** Directly upgrades SaaS §2 "truth-system"
+  claim from "four probes suggest these signals exist" to "four
+  trained detectors ship in the runtime".
+- **Blockers:** A1 backbone must be locked (heads read A1 state,
+  not un-tuned state); redesigned H20 probe design needed before
+  H20 head training starts.
 
 ## Track B — Memory (external system)
 
@@ -229,13 +269,16 @@ serialize them.
 - **Cloud training budget.** Local-only or cloud burst for
   continued pretraining? Decide before A3. Two distinct scales:
   - **Micro-pilot (H7 falsifier).** QLoRA on G1d-0.4B, rank 16-32,
-    reasoning-trace subset (30-50k), 1-2 epochs — enough signal to
-    validate or refute H7 (understanding-in-weights, knowledge-in-
-    context). Fits a single-consumer-GPU spot rental: 4090 spot
-    (Vast/RunPod) ~$0.35-0.5/h × 10-14 h ≈ **$5-10** wall-cost.
-    A40 spot ~$6-9 as an alternative. This is a personally-payable
-    experiment, not a compute campaign, and is the minimum-cost
-    path to converting the SaaS §2 "correct answers without prior
+    ~30-50k rollouts drawn from the Variant C corpus mix in
+    `docs/training-data-shortlist.md` (public agent / function-
+    calling traces + adaptable open reasoning traces restructured
+    as tool-shaped steps), 1-2 epochs — enough signal to validate
+    or refute H7 (understanding-in-weights, knowledge-in-context).
+    Fits a single-consumer-GPU spot rental: 4090 spot (Vast/RunPod)
+    ~$0.35-0.5/h × 10-14 h ≈ **$5-10** wall-cost. A40 spot ~$6-9
+    as an alternative. This is a personally-payable experiment,
+    not a compute campaign, and is the minimum-cost path to
+    converting the SaaS §2 "correct answers without prior
     knowledge" narrative from wager to measurement.
   - **Full-scale A1 / H12b campaign.** Full Variant A corpus,
     multiple epochs, ablations, plus H12b LoRA + H12b.i utilisation

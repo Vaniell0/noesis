@@ -1,99 +1,107 @@
-# Training data shortlist (Phase 2)
+# Training data shortlist (A1)
 
-Draft. This file is the noesis Phase-2 corpus plan. It is **not** a
-locked decision — it is the current best answer to "what would we
-fine-tune the RWKV-7 backbone on if we started tomorrow". Revisit
-before any actual training run.
+The noesis A1 corpus plan. Reconciled 2026-07-30 with
+`docs/policies.md § A1 fine-tune corpus scope` (Variant C hybrid).
+Both files are now the same story: this file is the operational
+detail, `policies.md` is the constraint envelope.
 
-## Framing decision (locked)
+## Framing decision (locked 2026-07-30, Variant C hybrid)
 
-**We fine-tune on action sequences, not on reasoning traces.**
+**Primary shape: action sequences. Secondary shape (limited):
+adaptable open reasoning traces restructured into tool-shaped
+steps. Personal data: excluded from weights entirely.**
 
-- "Reasoning trace" = the model's internal thinking string, subjective,
-  stylistic, prone to character contamination ("as an AI assistant…",
-  "let me think about…").
 - "Action sequence" = the objective, structured record of `tool_use →
   tool_result → tool_use`. Observable, reproducible, and cheap to
   verify (either you ran `git status` and got `X`, or you didn't).
+- "Reasoning trace" = the model's internal thinking string.
+  Subjective, stylistic, prone to character contamination
+  ("as an AI assistant…", "let me think…"). Enters A1 **only** if
+  transformed into linked step-and-tool structure; free-form
+  thinking text does not.
 
 Loss target: standard next-token loss on `tool_use` tokens only.
-`tool_result` tokens are context (inputs), assistant thinking is
-excluded from the loss mask. This is behavior-cloning on *what to do
+`tool_result` tokens are context (inputs); assistant thinking is
+excluded from the loss mask. Behavior-cloning on *what to do
 next*, not *how to sound while thinking*.
 
 Rationale:
 
 1. Actions are legally cleaner (they're structured JSON, not creative
-   text; Anthropic ToS on model outputs is specifically about
-   generative content, not tool-invocation JSON).
+   text; open agent corpora ship under Apache-2.0 / MIT with clear
+   ToS on downstream training).
 2. Character contamination avoided by construction — thinking
    tokens are never targets.
 3. Verifiable at eval time: run the trained model on an agent
    benchmark and count how many tasks it completes end-to-end.
 
+**Change from the earlier (superseded) framing.** The prior version
+of this document (through 2026-07-29) named user's local Claude
+Code traces as primary. That framing conflicted with
+`policies.md § A1 fine-tune corpus scope` and with the CLAUDE.md
+hard constraint "no personal corpus in weights". Reconciliation
+2026-07-30 removes personal traces from A1 entirely and promotes
+public agent corpora from supplementary to primary.
+
 ## Corpus (in priority order)
 
-### 1. Local Claude Code traces — **primary**
+### 1. Public agent / function-calling corpora — **primary**
 
-- **Size:** ~100M+ tokens (user's own history, growing).
-- **License:** the user's own actions on his own machine. Legally the
-  cleanest possible source.
-- **Location:** user's local Claude Code history (path TBD; the user
-  is packing into backups at the repo root).
-- **Why primary:** matches the exact target domain (how the user
-  personally uses an agent), not a generic assistant.
-
-**Preprocessing pipeline (required before any tune):**
-
-1. **Session split.** Split by `session_id` or by timestamp gap ≥ N
-   minutes. Do not let the model see one session's context while
-   trained on another — prevents context bleed.
-2. **Extract action tokens.** From each session's `history.jsonl`:
-   keep `user`, `tool_use`, `tool_result`, plus short assistant
-   preambles that connect them. Drop long conversational assistant
-   text (that is the character-contamination surface).
-3. **Sanitise secrets — non-negotiable.** LLMs memorise literal
-   strings that repeat ≥ 3-5 times. In agent traces expect:
-   API keys (`sk-…`, `xoxb-…`, `ghp_…`), `.env` contents, SSH keys,
-   private paths, hostnames, IPs, tokens in URLs. Regex filter
-   (`detect-secrets` or equivalent) followed by manual
-   sample-audit on ~200 random rollouts. **Even models that never
-   leave the user's machine should not memorise secrets** — one
-   accidental completion of `OPENAI_API_KEY=` in the terminal is
-   enough to leak the key into logs or screenshots.
-4. **Format.** Group as rollouts:
-   ```
-   <user>{prompt}</user>
-   <tool_use>{json}</tool_use>
-   <tool_result>{output_summary}</tool_result>
-   <tool_use>{next_json}</tool_use>
-   ...
-   ```
-   Truncate `tool_result` bodies at N chars — full file contents
-   from a `Read` are useless targets and inflate the corpus 10x.
-5. **Tokenise** with `rwkv_vocab_v20230424` (the vocab the World and
-   G1 checkpoints share).
-
-### 2. Public function-calling corpora — **supplementary**
-
-Only if (1) turns out too narrow (single-user domain). Provides
-breadth: different function-call styles, different APIs, different
-error-recovery patterns.
+Open-licensed action-cloning material. Aggregate to ~30-50k
+sanitised rollouts for the A1 micro-pilot; grow to ~150-200k for a
+full-scale A1 campaign.
 
 - **`Salesforce/xlam-function-calling-60k`** — Apache-2.0, 60k
-  function-call chains, clean and balanced.
+  function-call chains, clean and balanced. Recommended anchor of
+  the mix (highest quality/quantity signal-to-noise ratio).
 - **`glaive-ai/glaive-function-calling-v2`** — Apache-2.0, ~113k
-  entries, the popular baseline. Some low-quality entries; needs a
-  filter pass.
+  entries, popular baseline. Filter for low-quality entries before
+  inclusion (many single-turn low-effort rollouts).
 - **`thunlp/ToolBench`** — MIT, 16k real APIs with long ReAct-style
-  chains.
+  chains. Best for multi-step / error-recovery coverage.
 - **`THUDM/AgentInstruct`** — Apache-2.0, 6-way agent tasks
   (Alfworld, WebShop, HotpotQA, KG, OS, DB). Good for cross-domain
-  coverage.
+  coverage. Some tasks are more instruction-following than
+  tool-invocation — subset by tool-use density.
 
-Rule: use only for pre-training / mid-training warm-up. Final
-fine-tune must end on (1) so the model's final behavioural
-distribution matches the target domain.
+**Preprocessing pipeline (required before A1):**
+
+1. **Licence check.** Verify each dataset's licence on the exact
+   version we download (dataset cards get amended). Snapshot the
+   SHA + card to `training/corpus/PROVENANCE.md`.
+2. **Sanitisation.** Public corpora still contain example API keys,
+   fake-but-realistic-looking secrets in demo prompts, and stray
+   private paths. Regex filter (`detect-secrets` or equivalent) +
+   sample-audit on ~200 random rollouts. This is a safety belt,
+   not a substitute for source-selection.
+3. **Filter for tool-use density.** Drop rollouts with fewer than
+   N tool invocations or where thinking-token count dominates
+   (character-contamination surface).
+4. **Format normalisation.** All rollouts converted to the same
+   `<user>...<tool_use>...<tool_result>...` shape, regardless of
+   the source dataset's native format. Truncate `tool_result`
+   bodies at N chars.
+5. **Tokenise** with `rwkv_vocab_v20230424` (the vocab that the
+   World and G1 checkpoints share).
+
+### 2. Adaptable open reasoning traces — **secondary (limited)**
+
+Enter A1 **only if restructured** into linked step-and-tool
+sequences. Free-form thinking text does not.
+
+- **DeepSeek-R1 distill subsets** (open-licensed variants only) —
+  reasoning steps parsable into linked structure. Filter for
+  presence of clear step delimiters (`Step 1:`, numbered lists,
+  etc.); reject free-form paragraphs.
+- **Competition-math CoT (open)** — restructure "compute X, then
+  Y" into `<step>` blocks linkable to a `calculator` /
+  `python_exec` tool schema.
+- **Open code-reasoning traces** — link to `read_file` / `edit` /
+  `run` tool schemas.
+
+**Not primary:** these help only if a targeted conversion pipeline
+lands cheaply. If restructuring cost exceeds the value they add
+beyond §1, skip and stay pure action-cloning.
 
 ### 3. Explicitly rejected
 
@@ -107,15 +115,19 @@ distribution matches the target domain.
   which would make the RWKV output "sound like a stuttering Claude"
   — the opposite of what noesis wants.
 - **`Glint-Research/Fable-5-traces`** — AGPL-3.0 raw Claude Code
-  session dumps. Only viable if strictly filtered to `tool_use` /
-  `tool_result` (drop all thinking), and then it's redundant with
-  (1) since the user already has his own traces at the same scale.
-  Not worth the licence-viral risk (AGPL propagates to weights).
+  session dumps. AGPL propagates to weights and is by itself a
+  reject. Even at zero licence risk, Claude Code session dumps are
+  character-contaminated Anthropic-style text.
 - **`open-thoughts/OpenThoughts-114k`**, **`Bespoke-Stratos-17k`**,
-  **`NuminaMath-CoT`** — these are reasoning traces (thinking-CoT),
-  not action sequences. Not what we want per the framing decision
-  above. Kept as fallback if the action-cloning approach ever fails
-  the phase-2 gate.
+  **`NuminaMath-CoT`** — reasoning corpora with structured
+  step-by-step content. **Reclassified 2026-07-30:** moved from
+  outright-reject to §2 secondary candidates (adaptable reasoning).
+  Decision per-dataset at the corpus-prep stage: if step delimiters
+  are clean and each can be linked to a tool schema (calculator,
+  code-exec, retrieval), they enter A1 in restructured form. If
+  the restructuring cost exceeds their marginal value beyond the
+  public agent corpora in §1, they stay out. Check licence
+  hygiene per-dataset — some contain distilled Anthropic outputs.
 
 ### 4. Evaluation only (not for weights)
 
@@ -129,22 +141,32 @@ distribution matches the target domain.
 
 ## Fine-tune plan (sketch)
 
-- **Base:** RWKV-7 G1 (reasoning-line — starts with better inductive
-  bias for state utilisation, per H9).
-- **Method:** LoRA. Rank + target modules TBD after the A0.4 verdict
-  narrows down which layers actually carry state-work.
+- **Base:** RWKV-7 G1d 0.4B (reasoning-line — starts with better
+  inductive bias for state utilisation, per H9). 2.9B upgrade
+  deferred until GPU inventory reappears (see
+  `project_noesis_hardware_2026_07_30`).
+- **Method:** QLoRA. Rank 16-32 for the micro-pilot; target
+  modules per the A0.5 verdict (layers that empirically carry
+  state-work).
 - **Curriculum:**
-  1. Warm-up on (2), 1 epoch, LR 1e-4 → adapts to function-call
-     format.
-  2. Main tune on (1), 3-5 epochs, LR 3e-5, loss masked to
-     `tool_use` targets → learns *your* action distribution.
-  3. Optional: character-adapter on a tiny hand-written
-     mini-constitution corpus (~100 examples), extremely low LR →
-     shapes the assistant voice without contaminating action
+  1. Main tune on (1) — public agent / function-calling corpora —
+     3-5 epochs (or 1-2 for the micro-pilot), LR 3e-5, loss
+     masked to `tool_use` targets → learns the target agent-action
+     distribution.
+  2. Optional warm-up on (2) — adaptable reasoning restructured
+     into tool-shaped steps — 1 epoch, LR 1e-4, only if the
+     conversion pipeline landed cheaply per §2's "if
+     restructuring cost exceeds their marginal value" test.
+  3. Optional character-adapter on a tiny hand-written
+     mini-constitution corpus (~100 examples), extremely low LR
+     → shapes the assistant voice without contaminating action
      policy.
-- **Eval:** τ-bench / AgentBench success rate + A0.4 probe re-run
-  (does state utilisation shift after action-tuning? — a follow-up
-  test of H8 conditioned on training).
+- **Eval:** τ-bench / AgentBench success rate on the tuned
+  checkpoint versus the un-tuned G1d-0.4B baseline (already in
+  `experiments/A0_eval/results/rwkv7_g1d_04b_np2048.json`,
+  2026-07-22). Plus A0.5 probe re-run — does state utilisation
+  shift after action-tuning? (follow-up test of H8 conditioned
+  on training).
 
 ## Open questions (not to resolve here)
 

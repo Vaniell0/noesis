@@ -23,23 +23,42 @@ release checkpoint. Its success criterion is stated in `HYPOTHESES.md`
 (§H7 and adjacent) and its runbook lives in this file. Full design:
 `plans/cosmic-purring-cocke.md`.
 
-Post-2026-07-22 pivot (Variant A locked): open-sources-only signal;
-personal corpus reclassified to retrieval-only. See §Corpus policy.
+Post-2026-07-30 pivot (Variant C hybrid locked): action-cloning
+primary + adaptable reasoning restructured secondary; personal
+corpus stays reclassified to retrieval-only. See §Corpus policy
+and `docs/policies.md § A1 fine-tune corpus scope` (both files
+tell the same story after the 2026-07-30 reconciliation).
 
-**Corpus policy (locked 2026-07-22):**
+**Corpus policy (locked 2026-07-30, Variant C hybrid):**
 
-- **In weights (fine-tune signal):** open sources only. Anthropic
-  public tool-use docs, open MCP schema examples, constitutional /
-  honesty datasets, hand-crafted "I don't know → invoke tool"
-  patterns. Fixture: `training/fixtures/tool_call_open.jsonl`.
-- **NOT in weights (runtime-retrieval only):** the personal Claude
-  CLI corpus under `training/corpus/` and `training/sanitised/`.
-  Those directories carry `RECLASSIFIED.md` describing the pivot;
-  they remain useful for **runtime retrieval prep**, not training.
-- **Not supervision:** open reasoning traces (o1, DeepSeek-R1,
-  Anthropic reasoning corpora) go to **eval sets**, not fine-tune —
-  noesis has its own reasoning surface (state-based), so imitating
-  another model's CoT tokens would be counterproductive.
+- **Primary in weights (fine-tune signal, majority of the mix):**
+  open action-cloning corpora — public agent / function-calling
+  traces with clean licences (Salesforce/xlam-function-calling-60k,
+  glaive-ai/glaive-function-calling-v2, thunlp/ToolBench,
+  THUDM/AgentInstruct). Loss masked to `tool_use` tokens only.
+  Aggregate target: ~30-50k rollouts for the micro-pilot,
+  ~150-200k for full A1.
+- **Secondary in weights (limited, only if restructured):**
+  adaptable open reasoning traces (DeepSeek-R1 open distills,
+  competition-math CoT, open code-reasoning) converted into
+  linked step-and-tool structure. Free-form thinking text stays
+  out.
+- **Existing fixture** (`training/fixtures/tool_call_open.jsonl`,
+  34 turns from Anthropic public tool-use docs + open MCP schema
+  examples + hand-crafted "I don't know → invoke tool" patterns)
+  remains as **smoke-test scale**. Full corpus adds on top of it.
+- **NOT in weights (runtime-retrieval only):** the personal
+  Claude CLI corpus under `training/corpus/raw/` and
+  `training/sanitised/`. Those directories carry `RECLASSIFIED.md`;
+  they remain useful for **runtime retrieval prep**, never A1
+  supervision. This is a permanent boundary, not a Phase-1
+  workaround.
+- **NOT in weights (character-contamination or licence rot):**
+  Anthropic-derived reasoning distills (Fable-5,
+  Complete-FABLE.5-traces, other Claude-output-launderings).
+  AGPL-viral Claude Code dumps (Glint-Research/Fable-5-traces).
+  See `docs/training-data-shortlist.md § 3` for the full
+  rejected list.
 
 ## Status
 
@@ -68,8 +87,24 @@ per runtime-decisions §7:
   supervised (`<tool_use>` positions only).
 - **Step 5 — fixture tokeniser** (`tokenize_fixture.py`):
   `rwkv_vocab_v20230424` → `.pt` with `ids` / `loss_mask` / `starts`.
-  Mini-version; the fuller `tokenize_rollouts.py` for a bigger open
-  corpus is future work.
+  Mini-version for the 34-turn smoke fixture.
+- **Step 5 (full) — rollouts tokeniser** (`tokenize_rollouts.py`,
+  new 2026-07-30): same rendering + loss-mask contract as
+  `tokenize_fixture.py` (`_render_turns` imported directly, so the two
+  paths cannot drift), plus multi-file glob, deterministic hash-based
+  train/val split, and `.pt` output under `training/tokenised/`.
+  End-to-end smoke on 5 rows: `normalize_xlam.py` → JSONL →
+  `tokenize_rollouts.py --val-pct 20` → `xlam_mini_train.pt` /
+  `xlam_mini_val.pt` (verified 2026-07-30).
+- **Variant C primary normaliser** (`scripts/normalize_xlam.py`,
+  new 2026-07-30): converts `Salesforce/xlam-function-calling-60k`
+  rows (Apache-2.0) to the common rollouts JSONL shape (same as
+  `training/fixtures/tool_call_open.jsonl`). Drops empty queries,
+  zero-tool-call rows, rows matching a small secret-pattern regex
+  belt; truncates over-long JSON argument fields. `--sample N`
+  prints the first N accepted rollouts for inspection.
+  HF dataset download is triggered lazily via `huggingface_hub`
+  when `--input` is omitted and no local cache is present.
 - **Step 6 skeleton**: `JL-er/RWKV-PEFT` vendored into
   `training/rwkv-peft/` at commit
   `5704c39f8ab1d2ac63936ab392aadb6ba526e1a5` (`.git` removed).
@@ -126,10 +161,16 @@ per runtime-decisions §7:
   context instead of grepping docs). Runtime-side feature — belongs to
   A0.6/A0.7 (intra-model swap / inter-checkpoint transfer) and to the
   Rust supervisor design, not to this training pipeline.
-- **Variant B / C corpus** (sanitised pattern extraction from personal
-  corpus / reopening the constraint). Off-table for Phase 1; may be
-  reconsidered only if open-fixture A1 fails to teach the tool-call
-  surface.
+- **Personal-corpus reopening (was "Variant B / C" in the 2026-07-22
+  framing).** Superseded 2026-07-30 by Variant C hybrid (this file's
+  §Corpus policy). The personal Claude CLI corpus stays out of
+  weights permanently — not "off-table for Phase 1", but
+  off-table for A1 by CLAUDE.md hard constraint. If open action
+  corpora underperform, the answer is more open corpora
+  (§Corpus policy §Secondary — adaptable open reasoning traces
+  restructured into tool-shaped steps), not a reopening of the
+  personal corpus. See `FAILED.md` 2026-07-30 "Variant A A1-corpus
+  scope superseded" for the audit trail.
 
 ## State-reg hook — live (A0.5 PASS)
 
@@ -207,6 +248,8 @@ training/
   light_rwkv_state_reg_patch.py  Step 6 monkey-patch for vendored trainer
   train_pilot.py               Step 6 driver (patch + runpy vendored train.py)
   tokenize_fixture.py          Step 5 mini (open fixture only)
+  scripts/
+    normalize_xlam.py          Variant C primary — xlam-60k → rollouts JSONL
   tests/
     test_state_reg_hookup.py   Step 6 smoke test (mock model, 3 assertions)
     test_light_rwkv_patch.py   Step 6 patch smoke on CPU (4 assertions)

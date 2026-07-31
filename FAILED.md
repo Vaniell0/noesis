@@ -128,3 +128,147 @@ structures state, so g1d → world should transfer better than world → g1d.
 - 1.5B pair follow-up (World-1.5B ↔ G1H-1.5B) skipped — A0.7 tier-1
   landed a straight FAIL, not CAVEAT, so extra evidence wouldn't shift
   the verdict.
+
+### 2026-07-30 — H20 pilot ordering `cf > ba > ui` did not hold at scale
+
+**Was.** The 2026-07-29 aporia probe pilot report predicted (per
+HYPOTHESES.md § H20 report notes and `experiments/aporia_probe/README.md`
+category shapes): contested_facts should collapse more than
+bounded_ambiguity, which in turn collapses more than
+underdetermined_inference — a monotone `cf > ba > ui` ordering of
+`collapse_cont`. The saas.md draft §2 (pre-2026-07-30) stated this as
+"pilot confirmed" and used it as evidence for training the truth-system
+detector cluster on this substrate.
+
+**Refuted by.** `experiments/aporia_probe/report.md`, scaled to 100
+items (35 cf / 35 ba / 30 ui) × 10 samples, 3 shards, wall ≈18274 s on
+G1d-0.4B, run 2026-07-30. Aggregate `collapse_cont`=0.541,
+`p(neither)`=0.746. Per-category `collapse_cont`: cf=0.589, ba=0.478,
+ui=0.560. Ordering is **cf > ui ≈ ba** — `ba` and `ui` swap places,
+`ba` becomes the *lowest*-collapse category, not the middle one.
+`p(neither)` shows the same reversal: ba=0.854 > cf=0.760 > ui=0.603.
+
+**Learned.**
+- Pilot-sample-size claims about aporia category structure are
+  fragile. n=30 was not enough to distinguish `ba` from `ui` at this
+  substrate; the pilot's tight `ui` sample happened to land on lower
+  branching than the v100 spread.
+- `bounded_ambiguity` remains the strongest "keep open" signal by
+  `p(neither)` — the model hedges most on semantic ambiguity rather
+  than collapsing. But hedging shows up in `p(neither)`, not
+  `collapse_cont`, which is why the ordering flipped between metrics.
+- `underdetermined_inference` at v100 mixes item subtypes
+  (missing-referent, chain-of-inference, etc.) with heterogeneous
+  branching. Next iteration should split `ui` by inference-length
+  subcategory before comparing.
+- H20 as a substrate mechanism is not refuted — the collapse rates
+  are middle-of-range, `p(neither)`=0.746 is high, and the aporia
+  signal is present. What is refuted is the specific pilot ordering
+  narrative that would have shaped training data selection.
+
+**Changed.**
+- `HYPOTHESES.md` § H20 status updated with the scale-up numbers
+  (2026-07-30) and the ordering swap. Kept as an "aporia lives in
+  continuation branching, needs decode" finding — pooled-WKV feature
+  claim from the earlier pilot survives, category-ordering claim does
+  not.
+- `noesis-saas.md` §2 H20 line rewritten: "pilot confirmed cf > ba > ui"
+  replaced with a retracted-monotone-collapse note and a pointer to
+  ROADMAP A4 (targeted corpora for the H19/H20/H21/H22 detector cluster
+  as the *product* path — the pilot ordering was never load-bearing for
+  A1 corpus selection because H20 sits behind A4, not A1).
+- No file-graph changes required for A1 (Variant C hybrid) — the H20
+  ordering was informational, not a A1 selection input.
+
+### 2026-07-30 — Variant A A1-corpus scope (reasoning-first, personal-primary) superseded
+
+**Was.** `docs/policies.md § A1 fine-tune corpus scope` locked 2026-07-22
+as Variant A: A1 supervision was to be "reasoning-first" — user's local
+Claude Code traces named as the primary A1 signal in
+`docs/training-data-shortlist.md § 1`, with public function-calling
+corpora as supplementary. Design bet: rich reasoning content in
+personal traces would teach the RWKV-7 checkpoint the noesis cognitive
+runtime better than any open corpus, and privacy was tractable via the
+sanitisation pipeline (`sanitize.py`, `audit_sample.py`).
+
+**Refuted by.** Not an experiment — a hard conflict-audit on
+2026-07-30 between three canon files:
+
+- `CLAUDE.md` hard constraint: *"no personal corpus in weights"*.
+- `docs/policies.md § A1 fine-tune corpus scope` (Variant A):
+  *"personal traces are the primary A1 signal"*.
+- `docs/training-data-shortlist.md § 1` (pre-2026-07-30):
+  *"Local Claude Code traces — primary"*.
+
+The three could not simultaneously be true. Variant A's operational
+detail contradicted CLAUDE.md's hard rule. Under the rule
+"CLAUDE.md hard constraints override design bets", Variant A had to
+go. Independent secondary issues surfaced during the audit:
+- Character contamination: Anthropic-style traces would push the
+  RWKV-7 output toward "stuttering Claude" rather than a
+  distinct noesis voice.
+- Legal risk: personal Claude CLI logs are Anthropic ToS-encumbered
+  even for local use, so downstream distribution of *any* weight
+  trained on them is off the table.
+- Verifiability: private data cannot be independently audited, so
+  reproducibility of A1 verdicts is impossible without the private
+  corpus.
+
+Even ignoring the CLAUDE.md rule, the secondary issues alone would
+have collapsed Variant A within one review cycle.
+
+**Learned.**
+- A hard constraint in CLAUDE.md silently ignored by a downstream
+  design document produces a canon-conflict that only surfaces at
+  implementation time. Structural fix (2026-07-30): the reconciled
+  `docs/training-data-shortlist.md` opens with a "reconciled with
+  policies.md" pointer so future readers cannot pick one file
+  without seeing the other.
+- The "reasoning-first thesis" (H2) is a *runtime* claim about how
+  noesis composes computation from stored representations, not a
+  *training-data* claim about which content goes into weights. The
+  two got conflated for a week. Fix: H2 stays as a runtime claim
+  (reasoning as state-work, per H8/H4b); training-data selection is
+  now driven independently by legal + character + verifiability
+  filters.
+- "Sanitisation can rescue any corpus" is optimistic. Even a
+  well-scrubbed personal corpus retains stylistic fingerprints
+  (character contamination) that regex passes cannot remove.
+  Source-selection > sanitisation. Sanitisation is a safety belt,
+  not a substitute.
+
+**Changed.**
+- `docs/policies.md § A1 fine-tune corpus scope` rewritten to
+  Variant C hybrid (2026-07-30): action-cloning corpora primary,
+  adaptable open reasoning traces secondary (restructured into
+  step-and-tool linked form only), personal data excluded from
+  weights entirely, Anthropic-derived reasoning distills excluded.
+- `docs/training-data-shortlist.md` restructured: personal traces
+  demoted from §1 primary to explicit exclusion; public agent
+  corpora (Salesforce/xlam-function-calling-60k,
+  glaive-ai/glaive-function-calling-v2, thunlp/ToolBench,
+  THUDM/AgentInstruct) promoted to §1 primary. §2 "adaptable open
+  reasoning traces" added as the escape hatch for open reasoning
+  material that can be restructured into tool-linked steps.
+  OpenThoughts-114k, Bespoke-Stratos-17k, NuminaMath-CoT
+  reclassified from rejected to §2 candidates (per-dataset
+  decision at corpus-prep time).
+- `training/README.md` corpus-policy section rewritten with
+  Variant C primary/secondary/excluded categories.
+- `training/corpus/RECLASSIFIED.md` and
+  `training/sanitised/RECLASSIFIED.md` retained as-is — their
+  2026-07-22 pivot note ("personal traces reclassified to
+  retrieval-only") remains valid under Variant C. The 2026-07-22
+  reclassification was Variant A's *first-order fix* toward the
+  CLAUDE.md constraint; Variant C is the *second-order fix* that
+  fills the hole left by dropping personal traces from weights.
+- `ROADMAP.md` Cloud training budget split into micro-pilot
+  ($5-10 on 4090 spot, Variant C corpus falsifier) vs full-scale
+  A1 campaign ($40-50 on A100). H2/H7 corpus-shape now points to
+  Variant C hybrid, not Variant A "reasoning traces only".
+- Loss target unchanged: standard next-token loss on `tool_use`
+  tokens only. `tool_result` tokens stay context; thinking tokens
+  stay excluded from the loss mask. Behavior-cloning on *what to
+  do next*, not *how to sound while thinking*. This is what makes
+  the character-contamination avoidance mechanical rather than
+  hopeful.

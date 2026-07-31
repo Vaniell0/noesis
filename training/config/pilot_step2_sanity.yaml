@@ -1,0 +1,49 @@
+# Step 2 of the pilot bring-up plan: state_reg patch INSTALLED but INACTIVE.
+# mode='trajectory_reg', alpha=0.0 — CE unchanged vs Step 1, but every
+# codepath in light_rwkv_state_reg_patch.py runs (hooks, layer weighting,
+# combined loss). Verifies the patch doesn't perturb training when alpha=0.
+#
+# Corpus: dry-run slice (first 100 rollouts of glaive_v2). ~12 opt steps
+# = ~15 min wall on 4090.
+#
+# Regenerate the tokenised .pt via `python training/dry_run_100.py slice`
+# if the source corpus changes.
+
+model:
+  checkpoint: ~/.libs/models/rwkv7/rwkv7-g1d-0.4b/rwkv7-g1d-0.4b.pth
+  ctx_len: 4096
+  dtype: bf16
+lora:
+  rank: 16
+  alpha: 32
+  target_modules:
+  - receptance
+  - key
+  - value
+  dropout: 0.0
+optimizer:
+  name: adamw
+  lr: 3.0e-05
+  weight_decay: 0.01
+  warmup_steps: 10
+  grad_accum_steps: 8
+  batch_size: 1
+training:
+  epochs: 1
+  eval_every_steps: 25
+  ckpt_every_steps: 50
+  early_stop_val_no_drop_by_steps: 100
+corpus:
+  tokenized_pt: training/tokenised/glaive_v2_train_dry100.pt
+  val_tokenized_pt: training/tokenised/glaive_v2_val_dry100.pt
+  val_fraction: 0.0
+  a02_eval_path: experiments/A0_eval/tasks.jsonl
+state_reg:
+  mode: trajectory_reg
+  alpha: 0.0
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1d_glaive_v2_step2_sanity

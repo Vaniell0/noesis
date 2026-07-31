@@ -246,7 +246,7 @@ def main() -> int:
     if args.backend == "rwkv":
         sys.path.insert(0, os.path.join(here, "..", "A0_state_probe"))
         from probe import load_model
-        mdl, tok = load_model(args.model, device="cpu")
+        mdl, tok = load_model(args.model, device=os.environ.get("NOESIS_EVAL_DEVICE", "cpu"))
 
     t0 = time.time()
     results: List[Dict[str, Any]] = []

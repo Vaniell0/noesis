@@ -72,6 +72,10 @@ training/corpus/
 training/sanitised/
 training/tokenised/
 training/rwkv-peft/
+# Variant C hybrid open corpora — big raw JSON + normalised JSONL both
+# gitignored; only PROVENANCE.md + scripts stay tracked.
+training/corpus_open/*.json
+training/corpus_open/*.jsonl
 runtime/**/state/
 memory/**/store/
 models/

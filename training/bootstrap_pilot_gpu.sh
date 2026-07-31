@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 # A1 pilot GPU bootstrap — WSL2 (Ubuntu 22.04/24.04) or native Linux.
 #
-# Target hardware in scope: GTX 1050 4GB (Pascal, CC 6.1). Anything
-# newer works too — this script does not pin sm_ arch. cu121 wheel used
-# because torch 2.4/2.5 dropped cu118 for sm_61 in some builds.
+# Two supported targets, selected via TARGET env var:
+#
+#   TARGET=wsl2_1050 (default) — GTX 1050 4GB Pascal (sm_61). torch
+#       2.4.1 + cu121. No bitsandbytes (Pascal has no 8-bit optim
+#       support). Intended for local WSL2 spike / smoke.
+#
+#   TARGET=cloud_4090 — cloud-rented 4090 spot (sm_89). torch 2.5.1 +
+#       cu124. bitsandbytes 0.49.2 wheel installed from
+#       ~/.libs/python/. Intended for the actual A1 pilot fine-tune
+#       once compute is rented (Selectel Cloud / vast.ai / equivalent).
+#       Prereq: user copies bitsandbytes-0.49.2-*.whl into
+#       ~/.libs/python/ before running (curl via SOCKS5 works —
+#       see docs).
 #
 # What this script does NOT do:
 #   * Install NVIDIA driver on Windows host (WSL2) or on native Linux
@@ -20,18 +30,28 @@
 #
 # Runtime: env setup ~5-15 min (torch wheel download), pilot smoke depends
 # on config (default 3 epochs × ~2600 tokens × chunk_ctx=1 → tens of
-# minutes on GTX 1050).
+# minutes on GTX 1050; ~2-3 min for the 100-step dry-run on a 4090).
 
 set -euo pipefail
 
 NOESIS_DIR="${NOESIS_DIR:-$HOME/noesis}"
 CKPT_PATH="${CKPT_PATH:-$HOME/.libs/models/rwkv7/rwkv7-g1d-0.4b/rwkv7-g1d-0.4b.pth}"
 PY="${PY:-python3.11}"
+TARGET="${TARGET:-wsl2_1050}"
+
+case "${TARGET}" in
+    wsl2_1050|cloud_4090) ;;
+    *)
+        echo "ERROR: TARGET must be 'wsl2_1050' or 'cloud_4090' (got '${TARGET}')"
+        exit 1
+        ;;
+esac
 
 echo "=== noesis A1 pilot GPU bootstrap ==="
 echo "NOESIS_DIR = ${NOESIS_DIR}"
 echo "CKPT_PATH  = ${CKPT_PATH}"
 echo "Python     = ${PY}"
+echo "TARGET     = ${TARGET}"
 
 # --- Preflight ----------------------------------------------------------------
 
@@ -78,12 +98,24 @@ python -m pip install --upgrade pip wheel setuptools >/dev/null
 
 # --- torch + deps -------------------------------------------------------------
 
-# torch 2.4.x + cu121 is the last combo confirmed to work with sm_61
-# (GTX 1050). Newer torch dropped some Pascal fast-paths but still
-# runs. Pin conservatively.
-echo "--- installing torch cu121 (this can take 5-10 min) ---"
-python -m pip install --index-url https://download.pytorch.org/whl/cu121 \
-    "torch==2.4.1" "torchvision==0.19.1" "torchaudio==2.4.1"
+case "${TARGET}" in
+    wsl2_1050)
+        # torch 2.4.x + cu121 is the last combo confirmed to work with sm_61
+        # (GTX 1050). Newer torch dropped some Pascal fast-paths but still
+        # runs. Pin conservatively.
+        echo "--- installing torch 2.4.1 cu121 for Pascal (5-10 min) ---"
+        python -m pip install --index-url https://download.pytorch.org/whl/cu121 \
+            "torch==2.4.1" "torchvision==0.19.1" "torchaudio==2.4.1"
+        ;;
+    cloud_4090)
+        # 4090 is sm_89 (Ada). Torch 2.5.1 + cu124 is the current stable
+        # combo for RWKV-PEFT; matches the wheel bitsandbytes 0.49.2
+        # was built against.
+        echo "--- installing torch 2.5.1 cu124 for Ada (5-10 min) ---"
+        python -m pip install --index-url https://download.pytorch.org/whl/cu124 \
+            "torch==2.5.1" "torchvision==0.20.1" "torchaudio==2.5.1"
+        ;;
+esac
 
 echo "--- installing pilot deps ---"
 python -m pip install \
@@ -95,6 +127,28 @@ python -m pip install \
     "einops" \
     "packaging" \
     "peft>=0.10"
+
+if [[ "${TARGET}" == "cloud_4090" ]]; then
+    # bitsandbytes 0.49.2 supports Ada sm_89 (4090). Wheel is the safe
+    # path — the pip-index build sometimes fails to link CUDA runtime
+    # against the cu124 torch. Users pre-stage the wheel at
+    # ~/.libs/python/bitsandbytes-0.49.2-*.whl via SOCKS5 curl. If the
+    # wheel is missing, fall back to plain pip (may fail — that's OK,
+    # loud is better than silent).
+    BNB_WHEEL_DIR="${BNB_WHEEL_DIR:-$HOME/.libs/python}"
+    if compgen -G "${BNB_WHEEL_DIR}/bitsandbytes-0.49.2-"*.whl >/dev/null; then
+        echo "--- installing bitsandbytes 0.49.2 from local wheel ---"
+        python -m pip install --no-index --find-links "${BNB_WHEEL_DIR}" \
+            "bitsandbytes==0.49.2"
+    else
+        echo "WARN: no bitsandbytes wheel in ${BNB_WHEEL_DIR}, trying pip index"
+        python -m pip install "bitsandbytes==0.49.2" || {
+            echo "ERROR: bitsandbytes install failed. Stage the wheel at"
+            echo "  ${BNB_WHEEL_DIR}/bitsandbytes-0.49.2-*.whl and retry."
+            exit 1
+        }
+    fi
+fi
 
 # deepspeed is required by rwkvt.rwkv7.model at import time. On WSL2/Linux
 # with a recent kernel this installs cleanly from source; the wheel job
@@ -118,6 +172,11 @@ print("torch:", torch.__version__, "cuda:", torch.cuda.is_available(),
       "device:", torch.cuda.get_device_name(0) if torch.cuda.is_available() else "none")
 print("lightning:", lightning.__version__)
 print("deepspeed:", deepspeed.__version__)
+try:
+    import bitsandbytes as bnb
+    print("bitsandbytes:", bnb.__version__)
+except ImportError:
+    print("bitsandbytes: (not installed — expected on wsl2_1050)")
 PY
 
 echo "--- vendored trainer discovery ---"
@@ -127,15 +186,32 @@ echo "--- vendored trainer discovery ---"
     || { echo "ERROR: training/train_pilot.py not present"; exit 1; }
 
 echo ""
-echo "=== bootstrap done. next step: ==="
+echo "=== bootstrap done (TARGET=${TARGET}). next steps: ==="
 echo "  cd ${NOESIS_DIR}"
 echo "  source training/.venv-pilot/bin/activate"
 echo ""
-echo "  # 1. build tokenised fixture (fast, CPU)"
-echo "  python training/tokenize_fixture.py"
-echo ""
-echo "  # 2. baseline smoke (mode=off, alpha=0 already set in pilot.yaml)"
-echo "  python training/train_pilot.py"
-echo ""
-echo "  # 3. after baseline runs, edit pilot.yaml's state_reg block to"
-echo "  #    mode=trajectory_reg, alpha=0.0 (sanity), then alpha>0 sweep."
+if [[ "${TARGET}" == "cloud_4090" ]]; then
+    echo "  # 1. dry-run harness: slice first 100 glaive-v2 rollouts +"
+    echo "  #    generate training/config/pilot_dry100.yaml."
+    echo "  python training/dry_run_100.py slice"
+    echo ""
+    echo "  # 2. smoke the vendored trainer end-to-end (~2-3 min on 4090)."
+    echo "  python training/train_pilot.py \\"
+    echo "      --config training/config/pilot_dry100.yaml"
+    echo ""
+    echo "  # 3. verify CE trajectory monotone-decreasing. Fails loud if not."
+    echo "  python training/dry_run_100.py verify \\"
+    echo "      --run-dir training/runs/pilot_g1d_glaive_v2_dry100"
+    echo ""
+    echo "  # 4. once dry-run passes, launch the full pilot with pilot.yaml."
+    echo "  python training/train_pilot.py"
+else
+    echo "  # 1. build tokenised fixture (fast, CPU)"
+    echo "  python training/tokenize_fixture.py"
+    echo ""
+    echo "  # 2. baseline smoke (mode=off, alpha=0 already set in pilot.yaml)"
+    echo "  python training/train_pilot.py"
+    echo ""
+    echo "  # 3. after baseline runs, edit pilot.yaml's state_reg block to"
+    echo "  #    mode=trajectory_reg, alpha=0.0 (sanity), then alpha>0 sweep."
+fi
