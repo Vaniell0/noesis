@@ -189,6 +189,10 @@ def apply() -> str:
                 f"state_loss={state_loss.detach().float().item():.4f} "
                 f"total={( total_loss + cfg.alpha * state_loss).detach().float().item():.4f}"
             )
+        # NOESIS_DBG_CE_ONLY=1: return CE only (no state_reg grad).
+        # Ablation for isolating infctx+FLA NaN from state_reg contribution.
+        if os.environ.get("NOESIS_DBG_CE_ONLY") == "1":
+            return total_loss
         return total_loss + cfg.alpha * state_loss
 
     _lr.RWKV.training_step = training_step_with_state_reg
