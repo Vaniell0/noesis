@@ -121,17 +121,27 @@ def apply() -> str:
             logits, new_shift_states, new_wkv_states = self(
                 idx_c, last_shift_states, last_wkv_states
             )
-            current_token_amount = idx_c.shape[1]
-            _raw_loss = self.criterion(
-                logits.view(-1, logits.size(-1)), targets_c.reshape(-1)
-            )
+            # Count supervised tokens (targets != -100). Unsupervised chunks
+            # (all targets=-100) give CE=0/0=NaN under CrossEntropyLoss
+            # ignore_index=-100. Skip CE for those chunks and advance state
+            # only (state still updated, wkv_states returned correctly).
+            current_token_amount = int((targets_c != -100).sum().item())
+            if current_token_amount == 0:
+                _raw_loss = torch.zeros(
+                    (), dtype=prev_loss.dtype, device=idx_c.device
+                )
+            else:
+                _raw_loss = self.criterion(
+                    logits.view(-1, logits.size(-1)), targets_c.reshape(-1)
+                )
             if not _dbg_printed[0]:
                 _dbg_printed[0] = True
                 print(
                     f"[state_reg_dbg inner] step={_dbg_step} "
                     f"raw_ce={_raw_loss.detach().float().item():.4f} "
                     f"logits_nan={logits.isnan().any().item()} "
-                    f"wkv_nan={new_wkv_states.isnan().any().item()}"
+                    f"wkv_nan={new_wkv_states.isnan().any().item()} "
+                    f"supervised={current_token_amount}"
                 )
             loss = _raw_loss
             if current_token_amount != 0:
