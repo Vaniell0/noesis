@@ -76,8 +76,6 @@ metrics that will most likely carry H8/H9.
 
 `{World3, G1h} × {medium, narrative}`, N seeds/cell, 256 tokens.
 
-*Filled after sweep.*
-
 ### `delta_norm` (pooled, mean across steps × seeds)
 
 | model | medium (mean ± sd) | narrative (mean ± sd) | reasoning − narrative | Cohen d | direction |

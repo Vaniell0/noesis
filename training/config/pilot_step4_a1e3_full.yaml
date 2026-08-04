@@ -1,0 +1,40 @@
+# Step 4, alpha=1e-3, full corpus.
+# alpha=1e-4 (Step 3) was invisible against CE — ratio 1:50 at saturation.
+# 10x increase to make state_reg gradient meaningful.
+# Safeguards from Step 3 retained: per-layer clamp at -10, full corpus
+# prevents fast CE saturation, chunk_ctx=512 for speed.
+#
+# Intermediate saves every 500 opt-steps (~1.4h at 0.82 it/s).
+# state_loss logged every 100 opt-steps to state_loss.jsonl.
+
+model:
+  checkpoint: ~/.libs/models/rwkv7/rwkv7-g1d-0.4b/rwkv7-g1d-0.4b.pth
+  ctx_len: 2048
+  dtype: bf16
+lora:
+  rank: 16
+  alpha: 32
+  target_modules: [receptance, key, value]
+  dropout: 0.0
+optimizer:
+  name: adamw
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_steps: 200
+  grad_accum_steps: 8
+  batch_size: 1
+training:
+  epochs: 1
+  chunk_ctx: 512
+corpus:
+  tokenized_pt: training/tokenised/glaive_v2_train.pt
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1d_glaive_v2_step4_a1e3
+  save_steps: 500

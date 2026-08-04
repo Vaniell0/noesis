@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import os
 import runpy
+import signal
 import sys
 from pathlib import Path
 
@@ -45,6 +46,20 @@ def _load_yaml(path: Path) -> dict:
     import yaml
     with open(path) as f:
         return yaml.safe_load(f)
+
+
+def _install_sigterm_handler(run_dir: Path) -> None:
+    """Write .noesis_stop sentinel on SIGTERM so the training loop saves and exits."""
+    sentinel = run_dir / ".noesis_stop"
+
+    def _handler(signum, frame):
+        print(f"\n[train_pilot] SIGTERM received — writing {sentinel}", flush=True)
+        try:
+            sentinel.touch()
+        except Exception as e:
+            print(f"[train_pilot] sentinel write failed: {e}", flush=True)
+
+    signal.signal(signal.SIGTERM, _handler)
 
 
 def _build_argv(cfg: dict, yaml_path: Path) -> list[str]:
@@ -139,6 +154,16 @@ def main() -> int:
     os.environ.setdefault("FUSED_KERNEL", "0")
     os.environ["NOESIS_STATE_REG_YAML"] = str(yaml_path)
 
+    # Intermediate checkpoint interval (0 = disabled).
+    save_steps = cfg.get("logging", {}).get("save_steps", 0)
+    if save_steps:
+        os.environ["NOESIS_SAVE_STEPS"] = str(save_steps)
+
+    # Dataset resume: skip first N rollouts (for manual restart after interruption).
+    skip_rollouts = cfg.get("training", {}).get("skip_rollouts", 0)
+    if skip_rollouts:
+        os.environ["NOESIS_SKIP_ROLLOUTS"] = str(skip_rollouts)
+
     sys.path.insert(0, str(TRAINING_DIR))
     sys.path.insert(0, str(PEFT_DIR))
 
@@ -147,6 +172,11 @@ def main() -> int:
     # and loads CUDA kernels via relative paths (`cuda/wkv7_op.cpp` etc.). Those
     # paths only resolve from PEFT_DIR.
     os.chdir(PEFT_DIR)
+
+    # SIGTERM handler must be installed after run_dir is known.
+    run_dir = REPO_ROOT / cfg["logging"]["run_dir"] / cfg["logging"]["run_name"]
+    run_dir.mkdir(parents=True, exist_ok=True)
+    _install_sigterm_handler(run_dir)
 
     import light_rwkv_state_reg_patch
     status = light_rwkv_state_reg_patch.apply()

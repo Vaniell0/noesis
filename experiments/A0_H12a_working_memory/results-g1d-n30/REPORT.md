@@ -104,7 +104,7 @@ justified by this data.
 
 ## Follow-ups actively planned
 
-1. **Adaptive-budget variant** (in flight next): rerun with
+1. **Adaptive-budget variant** (deferred): rerun with
    `--num-predict-per-n 128` — smaller N gets less rope (may reduce
    code-mode), larger N gets more test-time compute (may induce
    damped-search degradation rather than divergence). Tests the H10

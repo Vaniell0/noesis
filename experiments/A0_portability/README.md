@@ -27,8 +27,8 @@ left open:
 | `a06_run.py`            | Intra-model runner. 3 pairs × 2 prompt directions × 3 injection depths × 2 swap modes (full vs A0.5-hotspot); ``before_B × hotspot`` skipped as undefined. Emits one JSON per (pair, direction, depth, mode) cell. |
 | `a07_tier1_run.py`      | Cross-checkpoint runner. Same directional matrix as A0.6 plus a checkpoint-direction axis; state transfer is WKV-only via ``load_wkv_into_state`` because donor and recipient are different models. Supports the ``0.4b`` (World↔G1d) and ``1.5b`` (World↔G1H) same-size pairs. |
 | `verdict_a06.py`        | Aggregator over ``results/a06/*.json`` → per-cell + per-pair PASS/FAIL/CAVEAT summary, ready to paste into ``results_a06.md``. |
-| `results_a06.md`        | *(pending)* Human-readable verdict for A0.6. |
-| `results_a07.md`        | *(pending)* Human-readable verdict for A0.7. |
+| `results_a06.md`        | Human-readable verdict for A0.6 (complete — 2026-07-22). |
+| `results_a07.md`        | Human-readable verdict for A0.7 tier-1 (complete — 2026-07-22). |
 | `results/`              | JSON dumps of every run (populated by the runners). |
 
 ## Reused from `../A0_state_probe/`

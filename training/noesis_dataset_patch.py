@@ -21,6 +21,7 @@ Apply from ``train_pilot.py`` before ``runpy.run_path`` invokes ``train.py``.
 
 from __future__ import annotations
 
+import os
 import torch
 
 
@@ -60,8 +61,18 @@ def _load_noesis_pt(path: str, ctx_len: int):
         print(
             f"[noesis_dataset_patch] {truncated}/{n} rollouts truncated to ctx_len={ctx_len}"
         )
+
+    skip = int(os.environ.get("NOESIS_SKIP_ROLLOUTS", "0"))
+    if skip > 0:
+        inputs = inputs[skip:]
+        labels = labels[skip:]
+        attn_mask = attn_mask[skip:]
+        print(f"[noesis_dataset_patch] skipping first {skip} rollouts (resume)")
+
+    remaining = inputs.shape[0]
     print(
-        f"[noesis_dataset_patch] loaded {n} rollouts, "
+        f"[noesis_dataset_patch] loaded {n} rollouts "
+        f"({remaining} after skip), "
         f"{total_tokens} tokens, {supervised_tokens} supervised "
         f"({100.0 * supervised_tokens / max(total_tokens, 1):.1f}%)"
     )

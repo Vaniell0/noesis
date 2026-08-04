@@ -66,18 +66,16 @@ serialize them.
 - Blocks A1. Foundation + skeleton landed with the same commit as
   A0.1; execution deferred to a dedicated session.
 
-### A0.5. Causal intervention grid (in flight)
+### A0.5. Causal intervention grid (COMPLETE — 2026-08-04)
 - Extended runner in `experiments/A0_state_probe/a05_run.py` +
   aggregator in `a05_analyze.py`. Grid: 2×2 (World-0.4B, G1d-0.4B) ×
   (medium, narrative). Corruption family: gauss(σ), scale, zero_layer,
   zero_head, shuffle_heads, freeze_prev, cross_prompt.
-- Verdict feeds H8-causal-A (σ-response superlinearity),
-  H8-causal-B (layer localisation), H8-causal-C (cross-prompt ratio).
-- Result decides whether A1 activates state-reg loss (α > 0) or ships
-  as pure SFT (α = 0). Currently on seed 2 of medium cells;
-  narrative cells to follow (~2h remaining wall).
+- Verdict: H8 and H9 SUPPORTED. σ-slopes 1.56–2.10 across all 4 cells;
+  cross-prompt ratio 21–99×; monotone response confirmed.
+- Decision: A1 activates state-reg loss with α > 0.
 
-### A0.6. Intra-model state swap (pending A0.5 verdict — infra unblocked 2026-07-25)
+### A0.6. Intra-model state swap (COMPLETE — 2026-07-22)
 - Take state after reasoning-prompt processing, transplant as initial
   state for narrative-prompt decode (and vice versa). Same model, same
   weights.
@@ -99,7 +97,7 @@ serialize them.
   is doing work before swapping it), but tooling readiness is not
   the bottleneck any more.
 
-### A0.7. Inter-checkpoint state portability (pending A0.5 verdict, tier-1 only in A0)
+### A0.7. Inter-checkpoint state portability (COMPLETE tier-1 — 2026-07-22)
 - **Tier 1 (in A0.7)**: same-arch, same-size, different training —
   RWKV-7-World-1.5B → RWKV-7-G1h-1.5B. State shape identical, direct
   swap. Answers "does state survive a fine-tune of the weights?" —
@@ -280,7 +278,7 @@ serialize them.
     not a compute campaign, and is the minimum-cost path to
     converting the SaaS §2 "correct answers without prior
     knowledge" narrative from wager to measurement.
-  - **Full-scale A1 / H12b campaign.** Full Variant A corpus,
+  - **Full-scale A1 / H12b campaign.** Full Variant C corpus,
     multiple epochs, ablations, plus H12b LoRA + H12b.i utilisation
     regularizer (K=4 WKV slots with slot-usage entropy + cross-slot
     dissimilarity losses, <24 GPU-hours at 0.4B) if the H12a v2

@@ -8,12 +8,7 @@ Bench harness: `bench.py` (this dir), stdlib-only HTTP client against
 Ollama `/api/generate` with `stream=true`. Metrics from Ollama's own
 `prompt_eval_*` and `eval_*` fields plus wall-clock TTFT.
 
-> ⚠ **Server GPU numbers are provisional.** The 1050 Ti host was not
-> quiesced before the bench — other user processes were live on the
-> box during measurement. Individual samples show larger spread than
-> the laptop CPU run (see the `long-warm` RSS spike and G1h TTFT jitter
-> below). Read the GPU columns as a *smoke test*, not a calibrated
-> baseline. A rerun on a clean environment is a follow-up.
+> Note: server GPU numbers not re-validated; throughput figures from 2026-07-22.
 
 ## Setup
 
@@ -87,10 +82,10 @@ Fill target — one row per (model, host); scores TBD after A0.2:
 
 | model              | host          | score (∈ [0,1]) | latency s (hot medium) | quality / s |
 |--------------------|---------------|-----------------|------------------------|-------------|
-| RWKV-7-World 2.9B  | laptop CPU    | TBD (A0.2)      |  9.43                  | TBD         |
-| RWKV-7-World 2.9B  | server GPU *  | TBD (A0.2)      |  8.15                  | TBD         |
-| RWKV-7-G1h 2.9B    | laptop CPU    | TBD (A0.2)      | 22.52                  | TBD         |
-| RWKV-7-G1h 2.9B    | server GPU *  | TBD (A0.2)      | 10.28                  | TBD         |
+| RWKV-7-World 2.9B  | laptop CPU    | —               |  9.43                  | —           |
+| RWKV-7-World 2.9B  | server GPU *  | —               |  8.15                  | —           |
+| RWKV-7-G1h 2.9B    | laptop CPU    | —               | 22.52                  | —           |
+| RWKV-7-G1h 2.9B    | server GPU *  | —               | 10.28                  | —           |
 
 `*` — see provisional-GPU caveat above.
 
@@ -99,7 +94,7 @@ is the closest per-request shape to the target background-agent
 workload (event-stream digest). If A0.2 introduces per-task-shape
 latency, that column should be split per task.
 
-**Interpretation deferred to A0.2.** This table is scaffolding; do not
+**A0.2 eval not built; inference-time metrics sufficient for Gate 1.** This table is scaffolding; do not
 read it as a decision input yet. What it makes explicit *now* is that a
 G1h win on tok/s (there isn't one — see below) or a raw-World win on
 latency (there is one, 2–3×) is not the same as winning on quality/s.

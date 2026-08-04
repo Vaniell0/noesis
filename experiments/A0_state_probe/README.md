@@ -1,9 +1,8 @@
 # A0.4 — state-utilisation probe
 
-**Status: skeleton — not yet run.** This directory currently contains a
-scaffolded probe with unimplemented function bodies. Execution is
-scheduled for a dedicated session. Do not read results here — there
-are none.
+**Status: COMPLETE.** Pilot ran 2026-07-21 (3 seeds × 128 tokens, World-0.4B × medium).
+Full A0.5 causal grid ran 2026-08-04: 2×2 model/prompt grid, 7 corruption families.
+Results in `results/pilot/` and `results/a05_ext/`. H8 and H9 SUPPORTED.
 
 ## Purpose
 

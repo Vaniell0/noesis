@@ -37,3 +37,4 @@ state_reg:
 logging:
   run_dir: training/runs
   run_name: pilot_g1d_glaive_v2_step3_a1e4
+  save_steps: 500  # intermediate LoRA adapter checkpoint every N opt-steps

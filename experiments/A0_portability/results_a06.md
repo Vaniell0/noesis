@@ -112,7 +112,7 @@ substantive, not a threshold artefact.
 
 ## Follow-ups
 
-- **A0.7 tier-1** (in flight) — does the same thin-portability picture
+- **A0.7 tier-1** (complete — see `results_a07.md`) — does the same thin-portability picture
   survive a checkpoint swap? If world→g1d and g1d→world both stay
   weakly-below-a-06 baseline, cross-checkpoint transfer is not a runtime
   substrate. If asymmetric, one model's WKV format is closer to the

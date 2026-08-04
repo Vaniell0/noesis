@@ -383,7 +383,7 @@ evolves as if learning during generation" — is stronger, is what
 noesis's backbone choice is philosophically staked on (see P4, H4b),
 and is empirically open.
 
-**Prediction (qualitative — quantitative thresholds TBD after first
+**Prediction (qualitative — quantitative thresholds (to be locked post-A1 pilot) after first
 probe run, A0.4 step 5).** Across three disjoint metrics of state
 dynamics (delta-norm `‖s_t − s_{t-1}‖`, trajectory curvature `κ_t`,
 and stable rank `SR(s_t) = (‖s_t‖_F / ‖s_t‖_2)^2` — the latter
@@ -476,8 +476,16 @@ paired probes (H8/H9 shared) pending A0.5 completion; A0.5 causal grid
 in flight (`experiments/A0_state_probe/a05_run.py`,
 `a05_analyze.py`, `results/a05_ext/`).
 
-**Status.** Probe designed and pilot-validated at 0.4B. Full-protocol
-sweep blocked on A0.5 verdict. 2.9B re-run conditional on GPU access.
+**A0.5 result (2026-08-04).** All H8-causal sub-tests passed. σ-slopes
+1.56–2.10 across all 4 cells (reasoning × G1d / World3); cross-prompt
+state-motion ratio 21–99×; monotone response to layer depth confirmed.
+H8 SUPPORTED at 0.4B.
+
+**Status.** **SUPPORTED** at 0.4B (A0.5 passed, 2026-08-04). A1 pilot
+running with α = 1e-3 (active regime — clamp reached step 200,
+CE–state tradeoff confirmed, equilibrium CE ≈ 0.011 vs 0.004 pure-SFT).
+Full-epoch verdict pending; eval on merged checkpoint to follow locally.
+2.9B re-run conditional on GPU access.
 
 ---
 
@@ -505,14 +513,14 @@ distinguishable hypotheses:
 
 A0.4 discriminates these by running paired probes on World3 and G1h.
 
-**Prediction (qualitative — thresholds TBD).** On the same reasoning
+**Prediction (qualitative — thresholds (to be locked post-A1 pilot)).** On the same reasoning
 prompt with matched seeds, at least one of the three A0.4 metrics
 (delta-norm, curvature, stable rank) shows a statistically significant
 G1h-vs-World3 difference (Welch's t-test, α = 0.05, corrected for
 three metrics via Bonferroni or equivalent), with the direction
 consistent with "G1h uses state more actively".
 
-**Falsification (placeholder).** If G1h and World3 are
+**Falsification (to be locked post-A1 pilot).** If G1h and World3 are
 statistically indistinguishable across all three state metrics on
 matched reasoning prompts and seeds, H9 is refuted. G1 would then be
 credited only with an output-distribution shift, not a mechanism
@@ -535,8 +543,17 @@ paired G1d vs World3 conditions on the same runner. Pilot subset ran
 alongside H8 pilot 2026-07-21. Full sweep verdict feeds A1 loss
 formulation (SFT-only vs state-regularised, α = 0 vs α > 0).
 
-**Status.** Probe designed; execution shares H8's blockers. Verdict
-gates the α decision at A0.4/A0.5 → A1 handoff.
+**A0.5 result (2026-08-04).** G1d shows measurably larger state motion
+than World3 on matched reasoning prompts (cross-prompt ratio 21–99×,
+σ-slopes consistently higher in G1d cells). H9 SUPPORTED at 0.4B:
+G1 training amplifies state utilisation, not only output distribution.
+
+**Status.** **SUPPORTED** at 0.4B (A0.5 passed, 2026-08-04). α
+decision made: α = 1e-4 below threshold (invisible — ratio 1:50 vs CE
+at saturation); α = 1e-3 active (state_reg dominates CE at step 300,
+equilibrium confirmed). A1 pilot Step 4 running; full-epoch eval
+pending. H7 falsifier (reasoning transfer from state-reg training)
+still required.
 
 ---
 
@@ -2097,6 +2114,7 @@ H12b PASS, H23 pilot is cheap (~2 GPU-h on 0.4B): the gate-override
 hook is a ~50 LoC change on top of the H12b forward pass; the
 address-fidelity measurement reuses standard next-token recovery
 metrics.
+
 
 **Related.** H12b (multi-slot LoRA-expanded state) — H23 measures
 the *structure* of what H12b builds; without H12b, no H23 target

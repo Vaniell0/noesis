@@ -1,0 +1,43 @@
+# Step 3, alpha=1e-3, 3000-rollout subset (~18h at 0.047 it/s).
+# Same as pilot_step3_a1e3.yaml but corpus truncated to 3k rollouts
+# so the epoch fits within the ~23h VM rental window.
+# Full corpus run deferred to next rental.
+
+model:
+  checkpoint: ~/.libs/models/rwkv7/rwkv7-g1d-0.4b/rwkv7-g1d-0.4b.pth
+  ctx_len: 4096
+  dtype: bf16
+lora:
+  rank: 16
+  alpha: 32
+  target_modules:
+  - receptance
+  - key
+  - value
+  dropout: 0.0
+optimizer:
+  name: adamw
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_steps: 50
+  grad_accum_steps: 8
+  batch_size: 1
+training:
+  epochs: 1
+  eval_every_steps: 1000
+  ckpt_every_steps: 500
+  early_stop_val_no_drop_by_steps: 500
+corpus:
+  tokenized_pt: training/tokenised/glaive_v2_train_3k.pt
+  val_tokenized_pt: training/tokenised/glaive_v2_val.pt
+  val_fraction: 0.0
+  a02_eval_path: experiments/A0_eval/tasks.jsonl
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1d_glaive_v2_step3_a1e3_3k
