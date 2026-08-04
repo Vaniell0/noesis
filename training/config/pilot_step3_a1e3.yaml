@@ -1,0 +1,55 @@
+# Step 3 of the pilot bring-up plan: state_reg trajectory_reg,
+# alpha=1e-3, full glaive_v2 corpus, 1 epoch. First real activation
+# of the state_reg objective — hooks fire, loss = CE + 1e-3 * L_state.
+#
+# Kill switch (from state_reg.py docstring): if state RMS on
+# {L12, L16, L20} diverges > 2× baseline at any checkpoint, downweight
+# λ_δ or fall back to `mode='trajectory_reg_with_sr'`. Baseline RMS
+# from Step 1 loss trajectory is not captured directly — verify
+# post-hoc via `probe.load_model` + one-shot state snapshot.
+#
+# Wall estimate: state_reg adds O(state_ops) per step, so budget
+# 20-40% overhead vs Step 1's 7 h → expect 8.5–10 h at 43 RUB/h ≈
+# ~370-430 RUB.
+#
+# Compare Step 3 CE curve to Step 1 (loss_data.jsonl matched by
+# opt-step) — the delta is the state_reg tax on CE at alpha=1e-3.
+
+model:
+  checkpoint: ~/.libs/models/rwkv7/rwkv7-g1d-0.4b/rwkv7-g1d-0.4b.pth
+  ctx_len: 4096
+  dtype: bf16
+lora:
+  rank: 16
+  alpha: 32
+  target_modules:
+  - receptance
+  - key
+  - value
+  dropout: 0.0
+optimizer:
+  name: adamw
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_steps: 200
+  grad_accum_steps: 8
+  batch_size: 1
+training:
+  epochs: 1
+  eval_every_steps: 1000
+  ckpt_every_steps: 500
+  early_stop_val_no_drop_by_steps: 500
+corpus:
+  tokenized_pt: training/tokenised/glaive_v2_train.pt
+  val_tokenized_pt: training/tokenised/glaive_v2_val.pt
+  val_fraction: 0.0
+  a02_eval_path: experiments/A0_eval/tasks.jsonl
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1d_glaive_v2_step3_a1e3

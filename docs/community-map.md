@@ -77,6 +77,46 @@ BlinkDL/ChatRWKV, Ai00 server) and arXiv 2503.14456v2.
   (unscoped, deferred until a runnable checkpoint at reasoning
   scale exists). Do not plan A1 / A2 around ROSA.
 
+### Community ROSA training stack (reported 2026-08-04)
+
+Third-party toolchain that has grown around ROSA between the toy
+checkpoints and any production-scale run. Not directly re-verified
+against source; treat as pointers, not endorsement.
+
+- **`johanwind/wind_rosa`** — CUDA kernels for ROSA with **exact
+  gradients via finite differences**. Solves the "discrete
+  operations are hard to differentiate" problem head-on. Reference
+  point for anyone writing their own kernel.
+- **`wjie98/rosa_soft`** — production-shape package (pip-installable)
+  with **soft-surrogate gradient**, dropout, `mismatch_scale`,
+  variable-length sequences. If we ever wire ROSA into a noesis
+  training run we do not need to write kernels from scratch — this
+  is the drop-in building block.
+- **`zyaaa-ux/ROSA-Tuning`** — third training-track project;
+  positioning vs the two above is unclear without a direct read.
+- **`bcml-ai/rosa-plus`** — pure-statistics ROSA (no NN backbone).
+  Ships coherent "Shakespeare-like" text at the surface level but
+  characters drift and rhythm breaks. **Negative-result reference:**
+  ROSA-only is a surface-pattern engine, not an understanding
+  engine.
+- **`x-0D/RASP`** — adds syntactic structure on top of ROSA; still
+  bottlenecks on lack of semantic depth. Complements the ROSA+
+  negative result.
+
+**Framing for noesis Variant C (hybrid).** The rosa-plus and RASP
+projects are the *positive* evidence for the Variant C wager: pure
+suffix-automaton statistics is provably strong on surface patterns
+and provably weak on understanding. We are not betting on ROSA as
+the reasoning engine — we bet on **WKV for understanding + ROSA
+(if/when it matures at scale) for exact-precision operations**
+(arithmetic, verbatim copy, factual lookup). This mirrors the
+RWKV-8 "Heron" architectural split, not competes with it.
+
+**A1 / A2 impact: none.** Same as the parent section — do not plan
+A1 or A2 around ROSA. These are runway pointers for the A2 /
+H12b / eventual reasoning-scale RWKV-8 window, so we do not
+re-discover the training stack from zero when the moment comes.
+
 ### Training
 
 - **Objective:** next-token cross-entropy + `L2Wrap` (~10⁻⁴ scale on

@@ -13,10 +13,11 @@ module **before** Lightning constructs the ``RWKV`` module and the
 If ``mode='off'`` or ``alpha==0.0``, the wrapper degrades to a straight
 delegation of the original method (no state capture, zero overhead).
 
-Contract: state trajectory is *per-chunk* state, not per-token. Set
-``chunk_ctx=1`` in the args to get per-token trajectory; larger chunks
-yield a sparser trajectory (still valid for ``compute_state_reg`` — it
-treats the time axis as opaque).
+Contract: state trajectory is *per-chunk* state, not per-token. Larger
+``chunk_ctx`` yields a sparser trajectory (still valid for
+``compute_state_reg`` — it treats the time axis as opaque). Do NOT set
+``chunk_ctx=1`` — it causes OOM on 4096-ctx sequences (4096 outer
+iterations × 24 gradient checkpoints each).
 
 Env vars (set by driver script before importing this module):
   ``RWKV_TRAIN_TYPE``        — must be ``infctx`` (else the patch no-ops).
@@ -95,7 +96,12 @@ def apply() -> str:
     def training_step_with_state_reg(self, batch, batch_idx):  # type: ignore[no-redef]
         args = self.args
         T_train = args.chunk_ctx
-        idx, targets = batch
+        # noesis_dataset_patch yields sft 3-tuples (inputs, labels, attn_mask).
+        # The vendored infctx path only expects (idx, targets). Accept both.
+        if isinstance(batch, (tuple, list)) and len(batch) == 3:
+            idx, targets, _mask = batch
+        else:
+            idx, targets = batch
         B, T = idx.shape
         C = args.n_embd
         H = args.dim_att // args.head_size_a
