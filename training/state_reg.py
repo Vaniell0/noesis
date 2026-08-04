@@ -240,23 +240,22 @@ def compute_state_reg(
     first_layer = config.work_layers[0]
     first_state = wkv_per_layer[first_layer]
     device = first_state.device
-    dtype = first_state.dtype
     if first_state.shape[1] < 3:
-        # Empty summation range → 0. Returning float32 loses grad edge
-        # cases; but T<3 means no state trajectory exists to
-        # differentiate, so a detached zero is correct.
-        return torch.zeros((), device=device, dtype=dtype)
+        return torch.zeros((), device=device, dtype=torch.float32)
 
-    total = torch.zeros((), device=device, dtype=dtype)
+    # Always compute in float32: wkv_states are bf16 (BlockStateList.empty
+    # hardcodes bfloat16), and vector_norm over small deltas is numerically
+    # fragile in bf16. Cast does not affect CE loss.
+    total = torch.zeros((), device=device, dtype=torch.float32)
 
     for L in config.work_layers:
         w_L = config.layer_weights[L]
-        s = wkv_per_layer[L]                    # [B, T, H, h, h]
+        s = wkv_per_layer[L].float()            # [B, T, H, h, h] → fp32
         s_pp = s[:, :-2]
         s_p = s[:, 1:-1]
         s_c = s[:, 2:]
 
-        layer_loss = torch.zeros((), device=device, dtype=dtype)
+        layer_loss = torch.zeros((), device=device, dtype=torch.float32)
         if config.lambda_delta != 0.0:
             # NB: only the last-1 vs last-2 slice for delta (T-1 pairs
             # exist, but for shape parity with curvature we use T-2).

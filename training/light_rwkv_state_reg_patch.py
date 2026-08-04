@@ -112,6 +112,9 @@ def apply() -> str:
 
         from rwkvt.lightning_train.light_rwkv import L2Wrap
 
+        _dbg_step = self.global_step
+        _dbg_printed = [False]
+
         def checkpointed_step(idx_c, targets_c, prev_loss,
                               last_shift_states, last_wkv_states,
                               prev_token_amount):
@@ -119,9 +122,18 @@ def apply() -> str:
                 idx_c, last_shift_states, last_wkv_states
             )
             current_token_amount = idx_c.shape[1]
-            loss = self.criterion(
+            _raw_loss = self.criterion(
                 logits.view(-1, logits.size(-1)), targets_c.reshape(-1)
             )
+            if not _dbg_printed[0]:
+                _dbg_printed[0] = True
+                print(
+                    f"[state_reg_dbg inner] step={_dbg_step} "
+                    f"raw_ce={_raw_loss.detach().float().item():.4f} "
+                    f"logits_nan={logits.isnan().any().item()} "
+                    f"wkv_nan={new_wkv_states.isnan().any().item()}"
+                )
+            loss = _raw_loss
             if current_token_amount != 0:
                 loss = L2Wrap.apply(loss, logits, current_token_amount)
             new_token_amount = prev_token_amount + current_token_amount
@@ -149,6 +161,16 @@ def apply() -> str:
                 token_amount,
                 use_reentrant=False,
             )
+            # NaN probe: detach for cheap scalar check (does not affect grad).
+            if batch_idx == 0 and i == 0:
+                _ce_val = total_loss.detach().float().item()
+                _wkv_nan = new_wkv_states.isnan().any().item()
+                print(
+                    f"[state_reg_dbg] step={self.global_step} "
+                    f"ce_loss={_ce_val:.4f} "
+                    f"wkv_nan={_wkv_nan} "
+                    f"wkv_max={new_wkv_states.detach().float().abs().max().item():.3e}"
+                )
             # Capture per-chunk wkv_state for state_reg BEFORE detach.
             # new_wkv_states shape: [N_layer, B, H, h, h]. Grab work layers.
             for L in cfg.work_layers:
@@ -161,6 +183,12 @@ def apply() -> str:
         # Concatenate per-layer trajectories: dict[int -> [B, T_chunks, H, h, h]].
         lookup = {L: torch.cat(traj_per_L[L], dim=1) for L in cfg.work_layers}
         state_loss = compute_state_reg(lookup, cfg)
+        if batch_idx == 0:
+            print(
+                f"[state_reg_dbg] step={self.global_step} "
+                f"state_loss={state_loss.detach().float().item():.4f} "
+                f"total={( total_loss + cfg.alpha * state_loss).detach().float().item():.4f}"
+            )
         return total_loss + cfg.alpha * state_loss
 
     _lr.RWKV.training_step = training_step_with_state_reg
