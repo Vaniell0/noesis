@@ -37,4 +37,4 @@ state_reg:
 logging:
   run_dir: training/runs
   run_name: pilot_g1d_glaive_v2_step4_a1e3
-  save_steps: 500
+  save_steps: 250
