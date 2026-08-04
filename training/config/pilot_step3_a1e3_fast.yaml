@@ -1,0 +1,36 @@
+# Step 3, alpha=1e-3, fast variant.
+# chunk_ctx=512, ctx_len=2048 → 4 outer chunks per sequence instead of 64.
+# ~8-16x faster than chunk_ctx=64/ctx_len=4096.
+# State_reg trajectory: T_chunks=4 points/layer (curvature needs ≥3 → OK).
+# Corpus: first 7000 rollouts from glaive_v2_train (fits ~23h budget).
+
+model:
+  checkpoint: ~/.libs/models/rwkv7/rwkv7-g1d-0.4b/rwkv7-g1d-0.4b.pth
+  ctx_len: 2048
+  dtype: bf16
+lora:
+  rank: 16
+  alpha: 32
+  target_modules: [receptance, key, value]
+  dropout: 0.0
+optimizer:
+  name: adamw
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_steps: 50
+  grad_accum_steps: 8
+  batch_size: 1
+training:
+  epochs: 1
+  chunk_ctx: 512
+corpus:
+  tokenized_pt: training/tokenised/glaive_v2_train_7k.pt
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1d_glaive_v2_step3_a1e3_fast

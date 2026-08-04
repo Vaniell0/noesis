@@ -72,7 +72,7 @@ def _build_argv(cfg: dict, yaml_path: Path) -> list[str]:
         "--n_embd", "1024",
         "--my_testing", "x070",
         "--ctx_len", str(model["ctx_len"]),
-        "--chunk_ctx", "64",  # 64-token chunks → 64 traj points/layer; chunk_ctx=1 OOM'd
+        "--chunk_ctx", str(train.get("chunk_ctx", 512)),
         # vendored train.py:191 does os.environ["RWKV_TRAIN_TYPE"] = args.train_type,
         # so we must pass infctx explicitly — otherwise the default 'none' resets the
         # env after our patch already captured the infctx training_step, and model
