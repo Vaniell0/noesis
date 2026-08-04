@@ -269,6 +269,13 @@ def compute_state_reg(
             sr_std = _layer_stable_rank_std(s)
             layer_loss = layer_loss - config.lambda_stable_rank * sr_std
 
+        # Soft cap per-layer loss: prevents unbounded state explosion where
+        # model learns to maximise ‖Δs‖ without limit. Cap at -10 (≈ 2×
+        # the typical pretrained-model baseline of ~5 per layer) so the
+        # kill-switch in state_reg.py docstring fires before alpha * loss
+        # overwhelms CE. Gradient still flows (clamp has grad for values
+        # above the floor).
+        layer_loss = layer_loss.clamp(min=-10.0)
         total = total + w_L * layer_loss
 
     return total
