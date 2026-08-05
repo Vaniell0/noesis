@@ -33,8 +33,8 @@ load-bearing locks:
 - **Not a Transformer.** RWKV chosen for constant-cost streaming
   inference. A switch requires empirical re-open, not architectural
   drift.
-- **Cheap by construction.** GTX 1050 for inference and small LoRA.
-  Cloud burst allowed but explicit.
+- **Cheap by construction.** Laptop i5-1235U for inference (CPU-only).
+  Cloud burst for training allowed but explicit.
 
 A PR pushing against any of these will bounce unless it carries
 empirical evidence, not a preference argument.

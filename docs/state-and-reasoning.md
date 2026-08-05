@@ -342,10 +342,10 @@ things this literature review changes about the *design* itself:
 3. **State layout is well-defined** — `state[3i+1]` is WKV per layer,
    shape `[n_head, head_size, head_size]`. Direct hook on RWKV block
    forward, no monkey-patching required.
-4. **G1h weight availability is unresolved** — must verify HF
-   accessibility manually before the probe session. Fallback: any
-   BlinkDL G1 checkpoint (even a different sibling like G1e/G1f) is
-   acceptable *if* it's native bf16.
+4. **G1h weights resolved (2026-08-05).** `rwkv7-g1h-2.9b-20260710-ctx10240.pth`
+   is available at `~/.libs/models/rwkv7/` locally and at `/root/.libs/models/rwkv7/`
+   on the VM. H8 and H9 have been run and SUPPORTED at both 0.4B and 2.9B scale.
+   See `experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md` for numerical results.
 5. **`JL-er/RWKV-PEFT` "State Tuning" is initial-state prompt-tuning,
    not a trajectory objective.** Verified 2026-07-25 — a single
    learnable initial WKV vector, CE-only loss. The community is *not*

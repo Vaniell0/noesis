@@ -1,14 +1,13 @@
 # noesis DSL — grammar (draft 1)
 
-The surface language the model reads and writes. Owned by the future
-`noesis-schema` crate. This file is the reference spec; `noesis-composer`
-implements the render side and `noesis-runtime` implements the tool-call
-parse side.
+The surface language the model reads and writes. This file is the
+reference spec; `noesis-composer` implements the render side and
+`noesis-runtime` implements the tool-call parse side.
 
-*Draft 2026-07-22. Design-only, no impl. Task #6 in the tracker. Written
-in chunks — this first chunk covers scope, lexical basis, and event
-rendering. Insight/vault rendering, tool-call surface, and result
-wrapping land in follow-up chunks.*
+**Implementation status (2026-08-05).**
+- Render side (preamble + keyword retrieval over SQLite): implemented in `noesis-composer`. 5 tests pass.
+- Tool-call dispatcher (parse + dispatch `tool_call` blocks): spec only — `noesis-runtime` skeleton exists but dispatch is not wired.
+- Grammar, block shapes, and normalisation rules below: canonical spec regardless of impl state.
 
 ---
 
@@ -520,21 +519,4 @@ identifier before `{`, object otherwise."
 
 ---
 
-*Draft 1 complete 2026-07-22. Next revision when A1 pilot data tells
-us what shapes the model actually parses well vs badly.*
-
-## Open questions (for later chunks / user)
-
-- Does the DSL need a versioned envelope (e.g. `noesis/v1 { … }`) so
-  the runtime can reject prompts fed to the wrong parser? Cheap
-  insurance; costs one line per prompt.
-- Do we want positional shorthand for very common blocks? E.g.
-  `event keystrokes(134582 1721606712345 17 28 "Return" 1)` —
-  compresses further but couples DSL to column order in `schema.sql`.
-  Prefer named fields for the draft; revisit if the input-tricks
-  backlog (Fable/MyTHOS) makes positional cheap enough.
-- How does the composer render arrays of events (a search returning
-  20 window-focus rows)? One block per row is verbose; a `events
-  window_focus [ { … }, { … } ]` array-of-objects shape is compact
-  but doubles the parser rules. TBD after we measure the token cost
-  on a real prompt.
+*Revision pending A1 pilot data on what shapes the model actually parses well vs badly.*

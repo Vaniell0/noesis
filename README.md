@@ -39,8 +39,8 @@ noesis bets that an RWKV-7 backbone fine-tuned to keep logical
 connections alive in its state (H4b's training arm) is the architecture
 that can hold this together where others cannot. Constant-cost per-token
 inference is the price side of that bet — it makes the runtime
-economically viable to run continuously on modest hardware (GTX 1050
-target).
+economically viable to run continuously on the laptop i5-1235U without
+cloud dependency for the everyday loop.
 
 This is unproven. `HYPOTHESES.md` records every specific wager — H4b
 (state as computation), H7 (understanding in weights, not context),
@@ -80,11 +80,12 @@ no longer maintained; their code remains source material for the ports.
 
 - **Backbone.** RWKV-7-G1, 2.9B. May scale to 13.3B if hardware and
   cloud budget permit.
-- **Supervisor.** Rust supervisor with a sandboxed Ollama child
-  (bubblewrap, unix socket only, no TCP bind). Ollama-shape HTTP shim on
+- **Supervisor.** Rust supervisor (`noesis-runtime`) with rwkv-cpp
+  in-process inference (`noesis-assistant`). Ollama-compatible HTTP shim on
   `:11435` (`/api/generate` NDJSON, `/api/tags`, `/api/version`) so
-  standard clients talk to noesis without a bespoke harness. C0 verified
-  2026-07-23.
+  standard clients talk to noesis without a bespoke harness. Ollama
+  removed 2026-07-25 — it does not expose WKV state APIs (`rwkv_get_state_len`,
+  `rwkv_eval(..., state_out)`, `rwkv_clone_state`) needed by H17/H18/lens persistence.
 - **Peer Linux user.** Own uid, own `/var/lib/noesis` home, encrypted
   LUKS+BTRFS store, cannot see the primary user's home. systemd
   hardening locked in `docs/policies.md`.
@@ -98,24 +99,29 @@ Phase-B skeleton validated 2026-07-22
 (`docs/verdicts/2026-07-22-phase-b-skeleton.md`).
 
 Running:
-- Collectors, retention sweeps, Ollama-shape HTTP heartbeat, sandbox.
+- Collectors (6: file-events, terminal, clipboard, process, browser-tabs, active-window).
+- noesis-store: SQLite insert/get/prune/vacuum for all zones.
+- noesis-runtime: orchestrator, zone-permissions, retention scheduler.
+- noesis-composer: preamble rendering + keyword retrieval over SQLite (5 tests pass).
+- noesis-shim: 8 HTTP endpoints live.
+- A1 fine-tune: Step 5 training (16007/33933 steps, 47%) on cloud VM.
 
-Not running yet:
-- Composer (spec only).
-- Tool-call dispatcher.
-- A1 fine-tune (`training/` pipeline ready, execution blocked on GPU).
-- Multi-slot LoRA (H12b — probe design pending v2 fix; see
-  `HYPOTHESES.md` §H12a).
+Not running yet (stubs):
+- Calibration CLI (thermal/RAPL reader is a stub; udev rule exists).
+- Lens scratch (design in `docs/memory-lenses.md`, H11 falsifier).
+- Utility model lazy-load.
+- Tool-call dispatcher (design in `docs/dsl.md`).
 - Extension surface (Phase-2 docs, `docs/extensions.md`).
 - Lens persistence (pending state save/load API in `noesis-rwkv-sys`).
+- Multi-slot LoRA H12b (blocked on H12a v2 verdict).
 
 ## Hard constraints
 
 - **Open sources only** for weights. Personal corpus is a runtime
   retrieval channel, never a fine-tune signal. Narrow carve-out:
   persona/style SFT (§H15).
-- **Cheap by construction.** GTX 1050 for inference and small LoRA.
-  Cloud burst is an explicit decision.
+- **Cheap by construction.** Laptop i5-1235U for inference (CPU-only).
+  Cloud burst for training is an explicit decision, not a default.
 - **Single local reasoning model.** Utility NNs (embedders, routers,
   small policies) are welcome. Additional local *reasoning* models are
   not. Heuristic (`docs/principles.md` P3): *if it emits tokens that

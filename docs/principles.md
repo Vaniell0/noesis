@@ -110,7 +110,7 @@ have cleared. That is what remote Claude is for.
 ## P5. Cheap by construction
 
 **Statement.** The everyday loop must run indefinitely on the user's
-current hardware — GTX 1050 + laptop CPU — without cloud dependency.
+current hardware — laptop i5-1235U (CPU-only) — without cloud dependency.
 Cloud is permitted only for occasional training bursts, and each burst
 is an explicit budget decision, not a default.
 

@@ -309,7 +309,7 @@ trivial, the protocol design must be reconsidered.
 
 **Claim.** The full noesis stack (backbone inference + memory system +
 event ingestion + summary generation) runs sustainably on the user's
-current hardware — GTX 1050 + laptop CPU — without cloud dependency
+current hardware — laptop i5-1235U (CPU-only) — without cloud dependency
 for the everyday loop. Cloud is required only for occasional training
 bursts.
 
@@ -481,11 +481,16 @@ in flight (`experiments/A0_state_probe/a05_run.py`,
 state-motion ratio 21–99×; monotone response to layer depth confirmed.
 H8 SUPPORTED at 0.4B.
 
-**Status.** **SUPPORTED** at 0.4B (A0.5 passed, 2026-08-04). A1 pilot
-running with α = 1e-3 (active regime — clamp reached step 200,
-CE–state tradeoff confirmed, equilibrium CE ≈ 0.011 vs 0.004 pure-SFT).
-Full-epoch verdict pending; eval on merged checkpoint to follow locally.
-2.9B re-run conditional on GPU access.
+**A0.5 result 2.9B (2026-08-05).** G1h-2.9B, medium+narrative cells, CUDA.
+σ-slopes 1.58–1.67 (superlinear, monotone); cross/base ratio 34–36×;
+argmax_flip 0.833 in both directions; layer hotspots L4/L16/L20.
+All three H8-causal sub-tests pass. Results in
+`experiments/A0_state_probe/results/a05_g1h_2.9b/verdict.md`.
+H8 SUPPORTED at 2.9B.
+
+**Status.** **SUPPORTED** at 0.4B and 2.9B (A0.5 passed both scales,
+2026-08-04/05). A1 state_reg sweep findings in
+`docs/verdicts/2026-08-04-a1-pilot-step3-step4.md`.
 
 ---
 
@@ -548,12 +553,21 @@ than World3 on matched reasoning prompts (cross-prompt ratio 21–99×,
 σ-slopes consistently higher in G1d cells). H9 SUPPORTED at 0.4B:
 G1 training amplifies state utilisation, not only output distribution.
 
-**Status.** **SUPPORTED** at 0.4B (A0.5 passed, 2026-08-04). α
-decision made: α = 1e-4 below threshold (invisible — ratio 1:50 vs CE
-at saturation); α = 1e-3 active (state_reg dominates CE at step 300,
-equilibrium confirmed). A1 pilot Step 4 running; full-epoch eval
-pending. H7 falsifier (reasoning transfer from state-reg training)
-still required.
+**A0.5 result 2.9B (2026-08-05).** World3 vs G1h, both directions, CUDA.
+σ-slopes G1h (1.67, 1.58) > World3 (1.19, 1.13); World3 medium
+non-monotone (monot=False). G1h gauss@σ=0.1 KL ≈ 40× higher than
+World3 (0.23 vs 0.0055) — G1h routes more computation through state.
+Counterintuitively, World3 has higher raw cross_KL (9.64 vs 7.92)
+and argmax_flip (100% vs 83%): base model stores prompt-identity in
+state very tightly but routes less computation through it. G1 training
+loosens the prompt-identity lock while amplifying state-computation
+activity. H9 SUPPORTED at 2.9B by σ-slope criterion.
+Results: `experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md`.
+
+**Status.** **SUPPORTED** at 0.4B and 2.9B (A0.5 passed both scales,
+2026-08-04/05). α locked: 1e-4 invisible (ratio 1:50 at CE saturation),
+1e-3 active regime (equilibrium CE ≈ 0.011). H7 falsifier requires
+A1 full-epoch eval.
 
 ---
 
@@ -626,8 +640,13 @@ runner design + eval rubric pending. Blocked on A0.6/A0.7 verdict
 (if state does not survive re-feed at N > 1, the readout-mode axis
 collapses and the matrix reduces to K × mode with N=0/1).
 
-**Status.** Untested. Scheduled after A0.6/A0.7 for design-space
-narrowing.
+**Status.** PILOT (2026-08-05). K-sweep run on step4_merged_step3500.pth
+(45% epoch, α=1e-3): K∈{0,128,512,2048}, mode=prompt_cot, N=1.
+Results: K=0 → 0%, K=128 → 8.3% (sched 33%), K=512 = K=2048 = 8.3%.
+**Frontier flat**: more tokens give no gain. Confound: format-bleeding at
+45% epoch inflates tool_use overhead. N-axis and state_readout mode
+untested. Re-run needed after Step5 (full epoch). Data:
+`/tmp/effort_sweep_step4_vm/effort_np{0,128,512,2048}.json`.
 
 ---
 
@@ -861,8 +880,17 @@ copies.
 
 **Status.** H12a v1: decay axis PROVEN (recall 0.40 → 0.02 across
 gap 14–229), width axis BLOCKED by v1 probe confound (N grows with
-gap). H12a v2 = diagnostic follow-up (not a blocker on H12b). H12b
-= runnable treatment (independent of H12a v2 verdict); needs H12b.i
+gap). H12a v2 = diagnostic follow-up (not a blocker on H12b).
+
+**H12a v2 PILOT (2026-08-05, base G1d-0.4B Q8 via Ollama, think=false).**
+Fixed tail-gap=50w, N∈{4,8,16,32,64}×10 seeds. Width gradient confirmed:
+F1 4→8→16→32→64 = 0.15→0.07→0.02→0.01→0.01, recall 0.30→0.40→0.15→0.15→0.05.
+F1 and recall both drop with N. Caveat: base model can't format output
+correctly (lists all items on one line → recall>0 but precision near 0).
+Run needed on A1 fine-tuned model for conclusive verdict. Data:
+`/tmp/h12a_v2_results_vm/N{04,08,16,32,64}.json`.
+
+H12b = runnable treatment (independent of H12a v2 verdict); needs H12b.i
 regularizer regardless. Phase 2 architectural probe.
 
 ---

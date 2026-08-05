@@ -15,8 +15,7 @@ serialize them.
   persistence, H17, H18 — depends on). Verify inference throughput on
   the user's hardware. **Measured 2026-07-23**: 0.4B World Q8_0 via
   rwkv.cpp on i5-1235U (Alder Lake, 4 threads) delivers ~30 tok/s
-  steady-state; load 506 ms; RSS ~1.16 GB. 2.9B target and GTX 1050
-  numbers still untested.
+  steady-state; load 506 ms; RSS ~1.16 GB. 2.9B numbers measured on cloud VM (RTX 4090).
 - Assemble a held-out eval set of 30–50 real reasoning tasks drawn from
   the user's actual workflow — not GSM8K, not MMLU.
 - Baseline eval: RWKV-7-G1 2.9B against Qwen-2.5-3B-Instruct and Phi-4-mini
@@ -53,7 +52,7 @@ serialize them.
   and a pass/fail per axis. No H1 verdict — see policies.md.
 - Cost: 24 h wall, ~zero attention. Blocks nothing on the hypothesis
   ledger; blocks confidence in the seedling as a substrate for the
-  state-work workstream (`memory: project_noesis_state_work_first_class`).
+  state-work workstream (lens persistence, H17, H18).
 
 ### A0.4. State-utilisation probe (weeks 2–3)
 - Instrument RWKV-7 hidden WKV state during autoregressive generation
@@ -126,22 +125,22 @@ serialize them.
   call syntax, step separators) is *not* locked here — decide during
   A1 based on what the base G1 already expects and what the eval set
   best discriminates.
-- **Method**: QLoRA on the 1050 for the 2.9B base if VRAM allows; cloud
-  burst if not.
+- **Method**: QLoRA on cloud VM (RTX 4090). Local machine is CPU-only.
 - **Success criterion**: measurable improvement on the A0 held-out eval
   without regression on general-capability probes.
-- **Pilot Step 1 landed 2026-07-31** — see
-  `docs/verdicts/2026-07-31-a1-pilot-step1.md`. QLoRA on G1d-0.4B ×
-  glaive-function-calling-v2 (single-corpus Variant C slice) converged
-  cleanly on a spot 4090 (CE 1.70 → 0.02, 7 h wall). Held-out A0 shows
-  the expected shape effect: +33.3 pp on `scheduling`, +12.5 pp on the
-  `action_slice` eval, offset by -50 pp on `sym_alg_*` where the pilot
-  now emits tool-call JSON where the baseline emitted prose. The
-  training scaffolding, `.pt` loader shim (`training/noesis_dataset_patch.py`),
-  and merged-LoRA checkpoint pipeline are locked; Steps 2 (state_reg
-  sanity, `mode=trajectory_reg` `alpha=0`) and 3 (alpha sweep) can
-  reuse the same driver with a config swap. The H7 falsifier itself
-  (Variant A corpus + retrieval-parity contrast) remains open.
+- **Corpus (Variant C, locked 2026-07-30).** Primary: glaive-v2 (61k
+  rollouts). Secondary: xlam-60k, ToolBench, AgentInstruct. DeepSeek-R1
+  traces and Variant A open-reasoning scope superseded.
+- **Steps 1–5 results** — see `docs/verdicts/`.
+  - Step 1: PASS (CE 1.70→0.02, +33.3 pp scheduling, −50 pp symbolic).
+  - Step 3 (α=1e-4): state_reg invisible (ratio 1:50 vs CE). Lower bound.
+  - Step 4 (α=1e-3): active regime confirmed. Interrupted at step 3500
+    (45% epoch); checkpoint at `/tmp/noesis_vm_backup/step4_merged_step3500.pth`.
+    Eval at step3500 was invalid (tool_use wrapper bug — fixed 2026-08-05).
+  - **Step 5: RUNNING** (2026-08-05). Resume from step4_merged, 45%→full
+    epoch. VM root@161.104.49.78 (RTX 4090). Progress 47%, sum_loss≈0.562.
+    Config: `training/config/pilot_step5_from3500.yaml`.
+- H7 falsifier (retrieval-parity contrast on merged Step5) remains open.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory
@@ -282,11 +281,8 @@ serialize them.
     multiple epochs, ablations, plus H12b LoRA + H12b.i utilisation
     regularizer (K=4 WKV slots with slot-usage entropy + cross-slot
     dissimilarity losses, <24 GPU-hours at 0.4B) if the H12a v2
-    verdict lands as width-bottleneck. Local GTX 1050 sits at the
-    edge of feasibility; A100 burst (~24 wall-hours × ~$2/h) is
-    the realistic path (~$40-50). Only worth spending once the
-    micro-pilot has confirmed the direction is not going to be
-    thrown out by A0.5 or H7.
+    verdict lands as width-bottleneck. Cloud VM (RTX 4090) is the training platform; local machine is CPU-only.
+    Only worth spending once the pilot confirms the direction holds.
   Prerequisite for either: an eval-suite that gives the H7-relevant
   metrics (mixed reasoning + current-facts tasks; retrieval-parity
   contrast) prepared and CPU-baselined on the un-tuned G1d-0.4B

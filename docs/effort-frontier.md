@@ -1,21 +1,26 @@
 # Effort frontier — noesis-specific test-time compute knobs
 
-> **Status.** Design draft, 2026-07-22. Not implemented. Blocked on
-> A0.6/A0.7 verdicts + A1 checkpoint. Registered here to freeze the
-> framing before A0.8 runner design lands. Falsifier + prediction are
-> locked as **H10** in `HYPOTHESES.md` (expanded from N-only sweep to
-> 3D matrix on 2026-07-22).
+> **Status.** PILOT (2026-08-05). K-axis swept at N=1, mode=prompt_cot.
+> Result: flat frontier (8.3% variance across K ∈ {0, 128, 512, 2048}).
+> N-axis and state_readout mode are still untested. Model used:
+> step4_merged_step3500.pth (A1 Step 4, 45% epoch). Full sweep on
+> Step 5 checkpoint pending. H10 falsifier and sweep design in `HYPOTHESES.md`.
 >
-> **First data point (2026-07-23).** Adaptive per-N budget variant
-> of H12a on G1d-0.4B (see
+> **K-sweep pilot (2026-08-05, step4_merged).** K ∈ {0, 128, 512, 2048},
+> N=1, mode=prompt_cot on the A0.2 rubric task set.
+> Result: frontier is essentially flat — highest K did not improve
+> rubric score meaningfully (Δ = 8.3%). Interpretation: either
+> (a) prompt_cot CoT does not add much at 45% epoch, or (b) the model
+> is not yet trained well enough to leverage extra tokens. Full
+> verdict pending Step 5 checkpoint (45%→full epoch).
+>
+> **First design-time data point (2026-07-23).** Adaptive per-N budget
+> variant of H12a on G1d-0.4B (see
 > `experiments/A0_H12a_working_memory/results-g1d-n30-adaptive/REPORT.md`)
-> gives a *partial* K-axis frontier hint: at N ≤ 8, budget → recall is
-> monotone-positive (cutting budget from 2048 to 512 dropped recall
-> 0.50 → 0.28); at N ≥ 32, +952 tokens above 2048 did not move recall
+> gave a *partial* K-axis frontier hint: at N ≤ 8, budget → recall is
+> monotone-positive; at N ≥ 32, +952 tokens above 2048 did not move recall
 > from floor. Frontier looks monotone-positive with a plateau, not
-> inverted-U. Only one data point on the H10 grid — a real sweep
-> needs the full (N, K, mode) matrix + `state_readout` which has not
-> been implemented yet.
+> inverted-U. Still needs full (N, K, mode) matrix to conclude.
 
 ## Problem
 
@@ -184,9 +189,82 @@ Non-goals for the registry:
   model — still fine for the effort registry, but the memory-lens
   handoff protocol falls back to text-only.
 
+## Extended sweep plan (post-Step-5)
+
+The K-pilot revealed that K-axis alone, at N=1 with prompt_cot, is
+flat. The informative next cuts:
+
+### N-axis (highest priority)
+
+Run the K=0 baseline at N ∈ {0, 1, 2, 3, 5} on the Step5 model.
+N=0 (no re-feed) is the single-pass baseline; N>1 re-feeds the prompt
+through the backbone multiple times before decoding, updating WKV without
+emitting tokens. If state is doing real computation (H8 SUPPORTED), N
+should matter. Cost per extra pass: `L × hidden × n_layer` FLOPs —
+constant-time relative to the prompt, no token decode.
+
+Command (after Step5 eval passes):
+```bash
+NOESIS_EVAL_DEVICE=cuda bash experiments/A0_eval/run_effort_sweep.sh \
+  --model /tmp/step5_merged.pth --n-values 0,1,2,3,5 --k-values 0 \
+  --out /tmp/effort_n_sweep_step5
+```
+
+### state_readout vs prompt_cot cross-test
+
+Once `state_readout` mode is implemented (reads CoT tokens directly from
+the state, no scaffold prompt), compare:
+- `(N=1, K=128, mode=prompt_cot)` — traditional CoT
+- `(N=1, K=128, mode=state_readout)` — state self-report, then answer
+- `(N=3, K=0,   mode=silent)` — same compute budget, no tokens
+
+The claim (H10, readout-load-bearing sub-hypothesis): state_readout ≥ silent
+at same N by ≥ +0.02 rubric. Failure collapses the mode axis — only
+N and K remain.
+
+### Cross-task comparison
+
+Run the full (N, K) grid on each task *category* separately:
+`bit_decoding`, `arithmetic_chain`, `scheduling`. Different cognitive
+loads should produce different frontier shapes:
+- Scheduling (sequential planning) is hypothesised to benefit more from N
+  (state re-feed builds the plan) than from K (CoT adds overhead).
+- Arithmetic may benefit from K (step-by-step CoT) but not from N.
+- If both are flat, the frontier is degenerate for all current tasks —
+  that tells us the task set needs harder examples for H10 to be
+  falsifiable.
+
+### Cross-model comparison
+
+Once A1 verdict is in, compare:
+1. `G1d-0.4B base` — no A1 SFT, world knowledge only
+2. `step4_merged (A1 @45%)` — partial SFT, format-bleeding phase
+3. `step5_merged (A1 full)` — target checkpoint
+
+Prediction (H2, reasoning-first): A1-SFT model should show a *different*
+N-response than the base model. If H7 (understanding in weights)
+contributes, the base model's N-plateau should be at a lower rubric
+ceiling than the SFT model's.
+
+### Parameters not yet explored
+
+| Parameter | Current value | Why to vary |
+|-----------|---------------|-------------|
+| Prompt length L | ~100–300 tokens | N×L is the state-work budget; short L may underestimate N benefit |
+| CoT temperature | greedy | Low-temp sampling during readout may expose more state content |
+| Number of tasks | A0.2 rubric set (~30) | Need ≥ 50 for reliable Pareto shape, especially for per-category |
+| Task difficulty | current held-out set | Ceiling effect: if tasks are easy, K and N both plateau early |
+
+### Verdict hierarchy (H10 sub-claims)
+
+1. **K-axis flat at full epoch?** — K-pilot was at 45% epoch; wait for Step5 verdict.
+2. **N-axis non-trivial?** — if yes, frontier has real content; if no, only one dial matters.
+3. **state_readout load-bearing?** — distinguishes architecture-specific dial from mode cosmetics.
+4. **Cross-task shape variation?** — determines whether effort registry needs per-task presets.
+
+Only after (1) and (2) are settled does the effort registry design have values to fill in.
+
 ## Not on the critical path
 
-This document exists to freeze the framing. Real testing runs after
-A1 + A0.6/A0.7. Failure of any of those preconditions narrows or
-opens the design space; register the impact in a status update here
-rather than re-litigating the framing every time.
+This document exists to freeze the framing. Update the status block and add
+verdict results here rather than re-litigating the framing each session.

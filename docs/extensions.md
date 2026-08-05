@@ -5,8 +5,6 @@ freezes the shape so future changes can be evaluated against a
 stable target.
 
 **Reading order.**
-- `~/.claude/plans/noesis-runtime-extensions-and-frontends.md` §3
-  — the reasoning that led here.
 - This file — spec.
 - `docs/policies.md` §Policy engine — capability enforcement.
 

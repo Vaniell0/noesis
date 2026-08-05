@@ -20,8 +20,8 @@ properties the pretrained checkpoint does not have out of the box:
 
 A1 is a training experiment, on the same axis as A0.* probes — not a
 release checkpoint. Its success criterion is stated in `HYPOTHESES.md`
-(§H7 and adjacent) and its runbook lives in this file. Full design:
-`plans/cosmic-purring-cocke.md`.
+(§H7 and adjacent) and its runbook lives in this file. Configs in
+`training/config/`; verdicts in `docs/verdicts/`.
 
 Post-2026-07-30 pivot (Variant C hybrid locked): action-cloning
 primary + adaptable reasoning restructured secondary; personal
@@ -62,9 +62,7 @@ tell the same story after the 2026-07-30 reconciliation).
 
 ## Status
 
-Built in the 2026-07-21 parallel scaffolding session (brief:
-`~/.claude/plans/parallel_a1_scaffolding.md`), pivoted 2026-07-22
-per runtime-decisions §7:
+Scaffolded 2026-07-21, pivoted 2026-07-22 per runtime-decisions §7:
 
 - **Step 1 — env**: `.venv/` (system-site-packages), `peft 0.19.1`,
   `detect-secrets 1.5.0`, and `rwkv 0.8.32` installed from local
@@ -115,42 +113,50 @@ per runtime-decisions §7:
   — the vendored tree stays untouched, patched on top when the real
   train run happens on CUDA.
 
-## Pending (main-session work)
+## Pilot runs completed (2026-07-31 – 2026-08-05)
 
-- **Step 2 — A0.2 held-out eval** (upstream). Blocks any verdict on
-  the pilot: without A0.2 numbers we cannot claim "beats pretrained by
-  ≥ 5 pp". A0.2 is a fixed public task set — reasoning traces from
-  o1/R1/Anthropic open corpora enter here as **task/probe material**,
-  not fine-tune supervision.
-- **Step 6 real train — hookup DONE, execution BLOCKED on compute.**
-  As of 2026-07-22 the monkey-patch on `light_rwkv.RWKV.training_step`
-  is implemented in `training/light_rwkv_state_reg_patch.py` and
-  wired through `training/train_pilot.py` (which sets env, applies
-  the patch, then `runpy`'s the vendored `train.py`). CPU-runnable
-  smoke `tests/test_light_rwkv_patch.py` verifies the INACTIVE
-  (mode=off) path without loading deepspeed/CUDA. Actual execution
-  needs a GPU: BlinkDL `rwkv 0.8.32` is `torch.no_grad`-only (no
-  autograd on CPU), and the RWKV-PEFT trainer requires deepspeed +
-  CUDA kernels. **Adjacent progress (2026-07-23):** the
-  serving-side quantisation pipeline is now green — `nix/noesis-model.nix`
-  produces Q8_0 through `rwkv-quantize` from `rwkv.cpp` in a two-stage
-  build (FP16 intermediate → Q8_0), and the CPU-served model runs at
-  ~30 tok/s on Alder Lake through the in-process rwkv.cpp bindings.
-  This closes the serving loop but does *not* unblock training —
-  training still needs a real backward pass. **Compute path options**:
-  (a) local GTX 1050 4GB via WSL2 using
-  `training/bootstrap_pilot_gpu.sh`; (b) cloud burst (explicit
-  decision per CLAUDE.md "cheap by construction"). H12b LoRA sits
-  behind the same gate.
-- **Step 7 — pilot smoke run** on the open fixture, 0.4B, one α
-  (α=0 baseline). Goal: verify convergence direction, not final
-  metrics. Post-smoke eval on A0.2 subset (bit_book + arithmetic)
-  to gauge whether tuned 0.4B closes any gap toward g1h (2.9B).
-  Baseline substrate already measured: 0.4B pre-tune scores 14.6 %
-  overall on A0.2 (see `experiments/A0_eval/results.md` §6).
-- **Step 8 — A0.5 verdict integration** (already done). `state_reg.py`
-  runs the `trajectory_reg` branch with A0.5-derived layer weights.
-  Re-pilot with α > 0 and compare pending Step 7 baseline.
+Training is now running on cloud VM (RTX 4090, Selectel). Steps 1–4
+are done; Step 5 is live. See `docs/verdicts/` for full writeups.
+
+| Step | α | Result |
+|------|---|--------|
+| Step 1 | 1e-4 | PASS (narrow): CE 1.70→0.02, scheduling +33.3pp, symbolic −50pp |
+| Step 3 | 1e-4 | state_reg invisible (1:50 vs CE). Lower bound established. |
+| Step 4 | 1e-3 | Active regime. Interrupted at step 3500 (45% epoch). Checkpoint at `/tmp/noesis_vm_backup/step4_merged_step3500.pth`. |
+| **Step 5** | 1e-3 | **RUNNING** (2026-08-05). Resume from step4_merged_step3500.pth. VM root@161.104.49.78. Progress 47%, sum_loss≈0.562. |
+
+**Bugs fixed during runs (eval.py must use these):**
+- `eval.py`: added `_strip_tool_use()` — step3500 eval was invalid without it (all answers wrapped in `<tool_use>` tags at 45% epoch, parser scored 0).
+- `peft_loading.py`: added `NOESIS_RESUME_LORA` env var for LoRA-only checkpoint resume.
+- FLA/Triton conflict on VM: replaced `fla/ops/__init__.py` with rwkv-only stub.
+- deepspeed fused_adam: patched `light_rwkv.py` to use `torch.optim.AdamW`.
+- `run_effort_sweep.sh`: fixed wrong JSON keys for H10 sweep.
+
+## Pending (post-Step-5)
+
+1. **Merge final LoRA** → `step5_merged.pth`:
+   ```bash
+   python training/merge_lora.py \
+     --base ~/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth \
+     --lora training/runs/<step5_run>-adapter-step<N>/lora_weights.pth \
+     --out /tmp/step5_merged.pth --rank 16 --lora-alpha 32
+   ```
+
+2. **Eval on merged** (fixed eval.py, strips tool_use wrapper):
+   ```bash
+   NOESIS_EVAL_DEVICE=cuda python experiments/A0_eval/eval.py \
+     --backend rwkv --model /tmp/step5_merged.pth --out /tmp/eval_step5.json
+   ```
+
+3. **Effort sweep** (H10 full data, Step5 model):
+   ```bash
+   NOESIS_EVAL_DEVICE=cuda bash experiments/A0_eval/run_effort_sweep.sh \
+     --model /tmp/step5_merged.pth --out /tmp/effort_sweep_step5
+   ```
+
+4. **A4 heads** (H21/H22) — if A1 PASS: train small MLP heads on frozen Step5 backbone (~1h each).
+
+5. **H7 falsifier** — retrieval-parity contrast on merged Step5 model (still open).
 
 ## Deferred (not-in-pilot)
 

@@ -45,6 +45,21 @@ from typing import Any, Dict, List, Optional
 # Rubric scoring
 # --------------------------------------------------------------------------- #
 
+def _strip_tool_use(text: str) -> str:
+    """Strip <tool_use>...</tool_use> wrappers injected by glaive-SFT format bleeding.
+
+    Returns surrounding free text if any; otherwise the inner JSON as-is so
+    json_subset rubrics can still fire on the wrapped payload.
+    """
+    inner = re.findall(r'<tool_use>(.*?)</tool_use>', text, flags=re.DOTALL)
+    outer = re.sub(r'<tool_use>.*?</tool_use>', '', text, flags=re.DOTALL).strip()
+    if outer:
+        return outer
+    if inner:
+        return inner[-1].strip()
+    return text
+
+
 def _norm(s: str) -> str:
     return s.strip().lower()
 
@@ -90,6 +105,7 @@ def _first_json_object(text: str) -> Optional[Any]:
 
 
 def score_task(task: Dict[str, Any], response: str) -> Dict[str, Any]:
+    response = _strip_tool_use(response)
     rubric = task["rubric"]
     rt = rubric["type"]
     rv = rubric["value"]
@@ -145,18 +161,25 @@ def call_ollama(host: str, model: str, prompt: str,
 
 
 def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
-              num_predict: int) -> str:
-    """Greedy decode via BlinkDL rwkv package."""
+              num_predict: int, n_passes: int = 1) -> str:
+    """Greedy decode via BlinkDL rwkv package.
+
+    n_passes > 1: re-feed the prompt through the backbone N times before
+    decoding, accumulating WKV state each pass. Each pass starts from the
+    state left by the previous pass (not a reset). This is the H10 N-axis.
+    """
     import torch
     enc = tokenizer(prompt, return_tensors="pt")
     ids = enc["input_ids"][0].tolist()
     logits, state = model.forward(ids, None)
+    for _ in range(n_passes - 1):
+        logits, state = model.forward(ids, state)
     out_ids: List[int] = []
     for _ in range(num_predict):
         if logits.dim() > 1:
             logits = logits.reshape(-1)
         nxt = int(torch.argmax(logits).item())
-        # Basic EOS handling: stop on token 0 (rwkv_vocab_v20230424 uses 0 as end-ish)
+        # Stop on token 0 (rwkv_vocab_v20230424 uses 0 as end marker)
         if nxt == 0:
             break
         out_ids.append(nxt)
@@ -220,12 +243,11 @@ def main() -> int:
     ap.add_argument("--model", required=True,
                     help="Ollama model name or path to .pth for rwkv backend.")
     ap.add_argument("--num-predict", type=int, default=2048,
-                    help="Max tokens per response. Bumped from 256 after "
-                         "mollysama/rwkv-7-g1h:2.9b diagnostic (2026-07-21): "
-                         "at bf16 the model insists on full CoT even for "
-                         "short-answer tasks, and Ollama returns an empty "
-                         "response when done_reason=length. 2048 covers the "
-                         "observed 873-token CoT with headroom.")
+                    help="Max output tokens per response (K axis in H10).")
+    ap.add_argument("--n-passes", type=int, default=1,
+                    help="State-refinement passes before decoding (N axis in H10). "
+                         "rwkv backend only: re-feeds the prompt through the backbone "
+                         "N times, accumulating WKV state. Ignored for ollama backend.")
     ap.add_argument("--timeout", type=int, default=120,
                     help="Per-request timeout (seconds).")
     ap.add_argument("--out", required=True, help="Path to output JSON.")
@@ -253,11 +275,14 @@ def main() -> int:
     for i, task in enumerate(tasks):
         try:
             if args.backend == "ollama":
+                if args.n_passes > 1:
+                    print(f"[eval] warning: --n-passes ignored for ollama backend",
+                          file=sys.stderr)
                 resp = call_ollama(args.host, args.model, task["prompt"],
                                    args.num_predict, args.timeout)
             else:
                 resp = call_rwkv(args.model, tok, mdl, task["prompt"],
-                                 args.num_predict)
+                                 args.num_predict, args.n_passes)
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
             resp = ""
             print(f"[eval]   task {i} ({task['id']}) request failed: {e}",
@@ -283,6 +308,8 @@ def main() -> int:
     payload = {
         "model": args.model,
         "backend": args.backend,
+        "num_predict": args.num_predict,
+        "n_passes": args.n_passes,
         "n_tasks": len(tasks),
         "elapsed_s": elapsed,
         "aggregate": agg,
