@@ -17,6 +17,8 @@ model:
   checkpoint: /root/noesis/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth
   ctx_len: 2048
   dtype: bf16
+  n_layer: 32
+  n_embd: 2560
 
 lora:
   rank: 16

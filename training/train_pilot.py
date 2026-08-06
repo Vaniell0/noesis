@@ -74,8 +74,8 @@ def _build_argv(cfg: dict, yaml_path: Path) -> list[str]:
     data = str(REPO_ROOT / corpus["tokenized_pt"])
     run_dir = str(REPO_ROOT / logging["run_dir"] / logging["run_name"])
 
-    # G1d-0.4B architecture fixed by the checkpoint. If we ever swap
-    # backbone (1.5B, 2.9B), lift these into the YAML.
+    n_layer = str(model.get("n_layer", 24))
+    n_embd = str(model.get("n_embd", 1024))
     argv = [
         str(PEFT_DIR / "train.py"),
         "--load_model", ckpt,
@@ -83,8 +83,8 @@ def _build_argv(cfg: dict, yaml_path: Path) -> list[str]:
         "--data_file", data,
         "--data_type", "sft",
         "--vocab_size", "65536",
-        "--n_layer", "24",
-        "--n_embd", "1024",
+        "--n_layer", n_layer,
+        "--n_embd", n_embd,
         "--my_testing", "x070",
         "--ctx_len", str(model["ctx_len"]),
         "--chunk_ctx", str(train.get("chunk_ctx", 512)),
