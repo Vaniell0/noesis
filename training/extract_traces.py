@@ -34,6 +34,7 @@ from typing import Any, Iterable
 DEFAULT_ROOTS = [
     Path.home() / ".claude" / "projects",
     Path.home() / ".claude" / "history.jsonl",
+    Path.home() / ".claude" / "archive",
 ]
 SKIP_DIR_NAMES = {"session-env", "cache", "paste-cache"}
 SKIP_FILE_NAMES = {".credentials.json"}
@@ -104,6 +105,7 @@ def build_chain(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], di
     n_tool_result = 0
     first_ts: str | None = None
     last_ts: str | None = None
+    models: set[str] = set()
 
     for rec in records:
         ts = rec.get("timestamp") or rec.get("time")
@@ -118,6 +120,9 @@ def build_chain(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], di
         msg = rec.get("message") or {}
         role = msg.get("role") or rtype
         items = _content_items(msg.get("content"))
+        m = msg.get("model")
+        if isinstance(m, str) and m:
+            models.add(m)
 
         if role == "user":
             user_texts: list[str] = []
@@ -156,6 +161,7 @@ def build_chain(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], di
         "n_tool_result": n_tool_result,
         "first_ts": first_ts,
         "last_ts": last_ts,
+        "models": sorted(models),
     }
 
 
@@ -210,6 +216,9 @@ def parse_args() -> argparse.Namespace:
                    help="stop after processing N jsonl files")
     p.add_argument("--dry-run", action="store_true",
                    help="do not write files; print rollout summaries to stdout")
+    p.add_argument("--model-filter", type=str, default=None,
+                   help="keep only sessions where at least one model name contains this substring "
+                        "(e.g. 'opus', 'sonnet'). Case-insensitive.")
     return p.parse_args()
 
 
@@ -235,6 +244,12 @@ def main() -> int:
         if rollout is None:
             dropped += 1
             continue
+        if args.model_filter:
+            filt = args.model_filter.lower()
+            session_models = rollout["meta"].get("models", [])
+            if not any(filt in m.lower() for m in session_models):
+                dropped += 1
+                continue
         kept += 1
         rid = rollout_hash(rollout["session_id"], path)
         if args.dry_run:
