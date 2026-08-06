@@ -1,13 +1,17 @@
-# Step 6 — Claude action-chains corpus (reflexive, multi-step)
+# Step 6 — mixed reflexive corpus (action chains + ToolBench ReAct)
 #
-# Corpus: 1134 Opus sessions, 64M supervised tokens (tool_use only).
+# Corpus: step6_mixed_train.pt
+#   - Claude Opus action chains: 1134 sessions, 63M supervised tokens (78%)
+#   - ToolBench G123-DFS: 183k rollouts, 23M supervised tokens (13%)
+#   - Combined: 253M total, 86M supervised (34.1%)
 # Loss mask: tool_use tokens only — behavior cloning on action decisions.
-# Base: G1h 2.9B (strongest base, 10.4% A0 genuine vs 8.3% for G1d base).
+# Base: G1h 2.9B (10.4% A0 genuine baseline, best available).
 #
 # Key differences vs Steps 1-5 (glaive-v2):
 #   - Reflexive corpus: 10-70 tool_use per session, causal dependencies
 #   - Correct architectural class for RWKV WKV state accumulation
 #   - H2 first valid test: reasoning-first on multi-step sequences
+#   - ToolBench adds API-domain diversity to action-chain backbone
 
 model:
   checkpoint: /root/noesis/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth
@@ -33,7 +37,7 @@ training:
   chunk_ctx: 512
 
 corpus:
-  tokenized_pt: training/tokenised/action_chains_train.pt
+  tokenized_pt: training/tokenised/step6_mixed_train.pt
 
 state_reg:
   mode: trajectory_reg
@@ -44,5 +48,5 @@ state_reg:
 
 logging:
   run_dir: training/runs
-  run_name: pilot_g1h_step6_action_chains
+  run_name: pilot_g1h_step6_mixed
   save_steps: 250
