@@ -1,0 +1,48 @@
+# Step 6 — Claude action-chains corpus (reflexive, multi-step)
+#
+# Corpus: 1134 Opus sessions, 64M supervised tokens (tool_use only).
+# Loss mask: tool_use tokens only — behavior cloning on action decisions.
+# Base: G1h 2.9B (strongest base, 10.4% A0 genuine vs 8.3% for G1d base).
+#
+# Key differences vs Steps 1-5 (glaive-v2):
+#   - Reflexive corpus: 10-70 tool_use per session, causal dependencies
+#   - Correct architectural class for RWKV WKV state accumulation
+#   - H2 first valid test: reasoning-first on multi-step sequences
+
+model:
+  checkpoint: /root/noesis/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth
+  ctx_len: 2048
+  dtype: bf16
+
+lora:
+  rank: 16
+  alpha: 32
+  target_modules: [receptance, key, value]
+  dropout: 0.0
+
+optimizer:
+  name: adamw
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_steps: 100
+  grad_accum_steps: 8
+  batch_size: 1
+
+training:
+  epochs: 1
+  chunk_ctx: 512
+
+corpus:
+  tokenized_pt: training/tokenised/action_chains_train.pt
+
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]
+
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1h_step6_action_chains
+  save_steps: 250
