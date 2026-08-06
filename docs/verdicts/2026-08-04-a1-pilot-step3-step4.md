@@ -1,7 +1,10 @@
-# A1 pilot Step 3 / Step 4 — interim verdict, 2026-08-04
+# A1 pilot Step 3 / Step 4 — verdict, 2026-08-04
 
 **Step 3 (α=1e-4): COMPLETE. Finding: alpha too small — state_reg invisible at SFT scale.**
-**Step 4 (α=1e-3): IN PROGRESS. Early finding: clamp-bounded equilibrium reached; CE-state tradeoff confirmed.**
+**Step 4 (α=1e-3): INTERRUPTED at step 3500 (45% epoch). Checkpoint merged and saved locally.**
+**Eval at step 3500 rescored (2026-08-06): 4/48 = 8.3% (fixed `_strip_tool_use` in eval.py).
+Step 5 (full epoch) rescored: 3/48 = 6.2% — regression. Format bleeding persists at 100% epoch.
+Theory "washes out at 80%+ epoch" refuted. See `docs/verdicts/2026-08-06-a1-pilot-step5.md`.**
 
 ---
 
@@ -130,14 +133,8 @@ If RMS > 2× baseline, raise λ_δ downweight or fall back to
 
 ---
 
-## Next
+## Open
 
-1. Wait for Step 4 full epoch (ETA ≈ 22 h from launch, within VM window).
-2. Merge LoRA adapter: base model + epoch-end adapter → `step4_merged.pth`.
-3. Run `experiments/A0_state_probe/probe.py` on merged model (CPU, local).
-4. Run `experiments/A0_eval/eval.py` on merged model (via Ollama, local).
-5. Compare against Step 1 baseline (`rwkv-0.pth`, A0 eval 14.6 % overall).
-6. Write final Step 4 verdict; update HYPOTHESES H8/H9 status.
-7. Plan Step 5 if needed: α = 1e-2 (would require reducing clamp or
-   accepting larger CE sacrifice), or accept α = 1e-3 as optimal and
-   move to H7 falsifier run.
+Step 4 requires continuation from step 3500 to 80%+ epoch (resume config at
+`training/config/pilot_step5_from3500.yaml`). Final eval runs after that
+with the fixed `eval.py`. H7 falsifier is the subsequent milestone.

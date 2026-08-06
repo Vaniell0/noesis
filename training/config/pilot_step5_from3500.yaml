@@ -1,0 +1,39 @@
+# Step 5 — resume Step 4 from step-3500 checkpoint (45% epoch → 80%+).
+#
+# Base model is the merged checkpoint from Step 4 at step 3500.
+# skip_rollouts=28000 skips the first ~45% of the corpus so we continue
+# from where the interrupted run left off.
+# state_reg config unchanged from Step 4 (α=1e-3, trajectory_reg).
+
+model:
+  checkpoint: /tmp/noesis_vm_backup/step4_merged_step3500.pth
+  ctx_len: 2048
+  dtype: bf16
+lora:
+  rank: 16
+  alpha: 32
+  target_modules: [receptance, key, value]
+  dropout: 0.0
+optimizer:
+  name: adamw
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_steps: 0
+  grad_accum_steps: 8
+  batch_size: 1
+training:
+  epochs: 1
+  chunk_ctx: 512
+  skip_rollouts: 28000
+corpus:
+  tokenized_pt: training/tokenised/glaive_v2_train.pt
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1d_step5_from3500
+  save_steps: 250

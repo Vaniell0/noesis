@@ -46,17 +46,46 @@ from typing import Any, Dict, List, Optional
 # --------------------------------------------------------------------------- #
 
 def _strip_tool_use(text: str) -> str:
-    """Strip <tool_use>...</tool_use> wrappers injected by glaive-SFT format bleeding.
+    """Strip <tool_use> wrappers injected by glaive-SFT format bleeding.
 
-    Returns surrounding free text if any; otherwise the inner JSON as-is so
-    json_subset rubrics can still fire on the wrapped payload.
+    Handles both well-formed <tool_use>...</tool_use> and the unclosed
+    <tool_use>{...} variant the Step-5 model produces.
+
+    Priority:
+      1. Free text outside all <tool_use> blocks → return that.
+      2. Tool-call JSON with "name"+"input" keys → return json.dumps(input)
+         so json_subset rubrics fire against the extracted payload.
+      3. Raw inner JSON (non-tool-call) → return as-is.
+      4. No <tool_use> found → return original text.
     """
-    inner = re.findall(r'<tool_use>(.*?)</tool_use>', text, flags=re.DOTALL)
-    outer = re.sub(r'<tool_use>.*?</tool_use>', '', text, flags=re.DOTALL).strip()
-    if outer:
-        return outer
-    if inner:
-        return inner[-1].strip()
+    chunks = re.split(r'<tool_use>', text)
+    if len(chunks) <= 1:
+        return text
+
+    outer_text = chunks[0].strip()
+    if outer_text:
+        return outer_text
+
+    # Try to parse the first well-formed tool_use block
+    for chunk in chunks[1:]:
+        chunk = re.sub(r'</tool_use>.*', '', chunk, flags=re.DOTALL).strip()
+        start = chunk.find("{")
+        if start == -1:
+            continue
+        depth = 0
+        for i in range(start, len(chunk)):
+            if chunk[i] == "{":
+                depth += 1
+            elif chunk[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        obj = json.loads(chunk[start : i + 1])
+                        if isinstance(obj, dict) and "name" in obj and "input" in obj:
+                            return json.dumps(obj["input"])
+                        return chunk[start : i + 1]
+                    except json.JSONDecodeError:
+                        break
     return text
 
 

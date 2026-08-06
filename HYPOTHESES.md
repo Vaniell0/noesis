@@ -640,13 +640,16 @@ runner design + eval rubric pending. Blocked on A0.6/A0.7 verdict
 (if state does not survive re-feed at N > 1, the readout-mode axis
 collapses and the matrix reduces to K × mode with N=0/1).
 
-**Status.** PILOT (2026-08-05). K-sweep run on step4_merged_step3500.pth
+**Status.** PILOT (2026-08-05/06). K-sweep on step4_merged_step3500.pth
 (45% epoch, α=1e-3): K∈{0,128,512,2048}, mode=prompt_cot, N=1.
-Results: K=0 → 0%, K=128 → 8.3% (sched 33%), K=512 = K=2048 = 8.3%.
-**Frontier flat**: more tokens give no gain. Confound: format-bleeding at
-45% epoch inflates tool_use overhead. N-axis and state_readout mode
-untested. Re-run needed after Step5 (full epoch). Data:
-`/tmp/effort_sweep_step4_vm/effort_np{0,128,512,2048}.json`.
+Results (fixed scorer): K=0 → 0%, K=128 → 8.3% (sched 33%), K=512 = K=2048 = 8.3%.
+Step5 (full epoch) rescored: 6.2% — **regression vs 45% checkpoint**.
+**Frontier flat and dominated by corpus artifact**: format bleeding from
+glaive-v2 persists at 100% epoch; all responses are tool-dispatch, not
+direct answers. N-axis and state_readout mode untested; blocked on
+corpus fix (Step 6 with filtered/replaced corpus). Eval data:
+`/tmp/noesis_vm_backup/eval_step{4,5}.json`. Verdict:
+`docs/verdicts/2026-08-06-a1-pilot-step5.md`.
 
 ---
 
