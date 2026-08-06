@@ -640,16 +640,15 @@ runner design + eval rubric pending. Blocked on A0.6/A0.7 verdict
 (if state does not survive re-feed at N > 1, the readout-mode axis
 collapses and the matrix reduces to K × mode with N=0/1).
 
-**Status.** PILOT (2026-08-05/06). K-sweep on step4_merged_step3500.pth
-(45% epoch, α=1e-3): K∈{0,128,512,2048}, mode=prompt_cot, N=1.
-Results (fixed scorer): K=0 → 0%, K=128 → 8.3% (sched 33%), K=512 = K=2048 = 8.3%.
-Step5 (full epoch) rescored: 6.2% — **regression vs 45% checkpoint**.
-**Frontier flat and dominated by corpus artifact**: format bleeding from
-glaive-v2 persists at 100% epoch; all responses are tool-dispatch, not
-direct answers. N-axis and state_readout mode untested; blocked on
-corpus fix (Step 6 with filtered/replaced corpus). Eval data:
-`/tmp/noesis_vm_backup/eval_step{4,5}.json`. Verdict:
-`docs/verdicts/2026-08-06-a1-pilot-step5.md`.
+**Status.** BLOCKED on corpus fix. K-sweep on step4 (45% epoch):
+K∈{0,128,512,2048}, N=1, mode=prompt_cot. Results: K=0 → 0%, K≥128 → 8.3%.
+Frontier flat — but all data is confounded: glaive-v2 trains first-turn
+tool_call; eval expects first-turn direct answer. Model is doing exactly what
+the corpus trained it to do. The sweep measures tool-dispatch overhead, not
+reasoning frontier. H10 measurements are only valid after Step 6 (corpus
+replacement). N-axis and state_readout mode untested; defer until valid
+baseline exists. Eval data: `/tmp/noesis_vm_backup/eval_step{4,5}.json`.
+Verdict: `docs/verdicts/2026-08-06-a1-pilot-step5.md`.
 
 ---
 
