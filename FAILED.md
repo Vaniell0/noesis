@@ -237,6 +237,17 @@ have collapsed Variant A within one review cycle.
   Source-selection > sanitisation. Sanitisation is a safety belt,
   not a substitute.
 
+**Revision note (2026-08-06).** The Variant A exclusion applied to
+Claude's *reasoning text* as training targets. Step 5 analysis
+established that `extract_traces.py` action chains have a different
+structure: `tool_use` decisions as loss targets, personal user queries
+as context only. Character contamination cannot occur when loss is
+restricted to `tool_use` tokens (no Claude text in the gradient). The
+revised position (see `training/corpus/RECLASSIFIED.md §Revision
+2026-08-06`) admits action chains under the §2 step-and-tool category.
+This does not reopen Variant A — it sharpens what "personal corpus"
+meant and excludes the action-chain case from that scope.
+
 **Changed.**
 - `docs/policies.md § A1 fine-tune corpus scope` rewritten to
   Variant C hybrid (2026-07-30): action-cloning corpora primary,
@@ -272,3 +283,61 @@ have collapsed Variant A within one review cycle.
   do next*, not *how to sound while thinking*. This is what makes
   the character-contamination avoidance mechanical rather than
   hopeful.
+
+### 2026-08-06 — glaive-v2 assumed to train direct-answer reasoning
+
+**Was.** A1 pilot Steps 1–5 used glaive-function-calling-v2 as the
+primary A1 corpus (Variant C §Primary, "action-cloning corpora"). The
+working assumption was: (a) glaive-v2 provides tool-use + reasoning
+training data, (b) at ≥ 80% epoch the model would generalise to
+direct-answer tasks as well as tool-dispatch tasks, (c) declining eval
+scores were attributable to "format bleeding" that would wash out with
+more training.
+
+**Refuted by.** `docs/verdicts/2026-08-06-a1-pilot-step5.md` and the
+corpus analysis run on 2026-08-06 (63,218 rollouts inspected):
+
+- 100% of rollouts have `assistant: tool_use` as the first turn.
+  The eval format (`User: …\nAssistant:`) asks for a first-turn direct
+  answer. The model's first-turn tool_call is *correct behaviour per
+  its training*, not format bleeding.
+- 25,451 rollouts (40%) have a first-turn `content` field — but every
+  sampled instance was a pre-tool-call phrase ("Of course, let me
+  calculate that for you"), not a reasoned computation.
+- glaive-v2 is a pure *reactive* tool-dispatch corpus: 1–2 tool_use
+  calls per session, no causal chaining, no multi-step inference.
+  It contains zero direct-reasoning examples regardless of epoch count.
+- G1h 2.9B base (no SFT) scored 5/48 = 10.4% on A0 eval.
+  G1d 0.4B SFT'd on glaive-v2 at Step 4 scored 4/48 = 8.3%;
+  at Step 5 (full epoch) scored 3/48 = 6.2%. SFT on glaive-v2
+  actively hurts direct-answer capability.
+
+**Learned.**
+1. *Reactive corpora cannot be used to test reasoning-first thesis.*
+   glaive-v2 trains lookup reflexes, not reasoning state. All Step
+   4/5 eval data is confounded and cannot contribute evidence to H2
+   or H10.
+2. *Format bleeding is the wrong mental model for this failure.* The
+   first-turn tool_use is the model's correctly learned behaviour, not
+   residual SFT formatting. More epochs deepen the problem, not fix it.
+3. *Corpus-architecture fit is a first-class constraint, not a
+   parameter.* RWKV's WKV state accumulation advantage is only
+   exercised by multi-step reflexive sequences (10+ tool_use calls,
+   causal dependencies across many steps). Purely reactive corpora
+   (1–2 calls per session) do not engage this mechanism. Training on
+   them is architecturally neutral at best, actively harmful at worst
+   (overspecialisation to reactive behaviour). Corpus class must be
+   chosen before architecture, not after.
+
+**Changed.**
+- `HYPOTHESES.md` H2: added "Corpus selection constraint" block —
+  reactive corpora cannot test H2; corpus must be reflexive-first.
+- `HYPOTHESES.md` H10: status updated to BLOCKED on corpus fix;
+  K-sweep data from Steps 4–5 excluded as confounded.
+- `docs/verdicts/2026-08-06-a1-pilot-step5.md` written with root cause,
+  structural mismatch analysis, and Step 6 corpus options.
+- `docs/verdicts/2026-08-04-a1-pilot-step3-step4.md` updated with
+  rescored numbers and cross-link to Step 5 verdict.
+- `training/corpus/RECLASSIFIED.md`: revised to admit Claude action
+  chains as eligible §2 training data (reflexive-first, tool_use loss
+  only — the architectural class that was missing from glaive-v2).

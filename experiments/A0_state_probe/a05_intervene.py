@@ -50,7 +50,7 @@ def corrupt_gauss(
         t = out[pos]
         norm = float(t.to(torch.float32).norm().item())
         dim = t.numel()
-        noise = torch.randn(t.shape, generator=generator, dtype=torch.float32)
+        noise = torch.randn(t.shape, generator=generator, dtype=torch.float32, device=t.device)
         out[pos] = (t.to(torch.float32) + (sigma * norm / (dim ** 0.5)) * noise).to(t.dtype)
     return out
 
@@ -87,7 +87,10 @@ def corrupt_shuffle_heads(
     pos = 3 * layer_idx + 1
     t = out[pos]
     n_head = t.shape[0]
-    perm = torch.randperm(n_head, generator=generator)
+    cpu_gen = torch.Generator(device="cpu")
+    if generator is not None:
+        cpu_gen.manual_seed(int(generator.initial_seed()))
+    perm = torch.randperm(n_head, generator=cpu_gen, device="cpu").to(t.device)
     out[pos] = t[perm].contiguous()
     return out
 

@@ -178,7 +178,25 @@ falsifies, the "reasoning-first small model matches knowledge-first
 same-size" wager fails and P14 has to survive on substrate
 properties (H19/H20/H21) alone.
 
-**Status.** Untested.
+**Corpus selection constraint (derived 2026-08-06 from Step 5 analysis).**
+H2 is untestable by any purely *reactive* corpus. A reactive corpus
+(e.g. glaive-v2: 1–2 tool_use calls per session, user → tool_call →
+result → answer) treats each turn as an independent lookup; it does not
+require the model to accumulate context across many steps. RWKV's
+architectural advantage — WKV state as an explicit working memory that
+compounds across token positions — is only exercised by *reflexive*
+multi-step sequences: ReAct-style think→act chains, ToolBench rollouts
+(10–50 steps), or Claude CLI action chains (10–70 tool_use calls per
+session, stripped to tool_use targets + user/result context).
+
+Training on reactive corpora cannot refute or support H2 because the
+corpus does not load the mechanism (state accumulation) that H2 depends
+on. All Step 4/5 A1 measurements on glaive-v2 are architecturally
+confounded and must be excluded from H2 evidence. Step 6 corpus must be
+reflexive-first; the corpus-architecture fit is a prerequisite for any
+valid H2 test, not a post-hoc tuning parameter.
+
+**Status.** Untested. Blocked on corpus replacement (Step 6).
 
 ---
 

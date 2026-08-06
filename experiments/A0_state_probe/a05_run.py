@@ -172,7 +172,9 @@ def _corruptions_at_checkpoint(
     """Every corruption for one checkpoint. Layer-scale corruptions
     (zero_layer, shuffle_heads) skip the expensive continuation by default
     since ``layer_indices`` may be large (full profile of 24 layers)."""
-    gen = torch.Generator().manual_seed(corrupt_seed)
+    _state_device = cp["state"][0].device if cp["state"] else torch.device("cpu")
+    _gen_device = _state_device if str(_state_device) != "cpu" else torch.device("cpu")
+    gen = torch.Generator(device=_gen_device).manual_seed(corrupt_seed)
     clean = cp["state"]
     next_id = cp["next_id"]
     out: List[Dict[str, Any]] = []

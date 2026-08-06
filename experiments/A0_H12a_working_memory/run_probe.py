@@ -37,13 +37,26 @@ from typing import Any, Dict, List, Set, Tuple
 
 ITEM_RE = re.compile(r"item-[a-z0-9]+-\d{2}")
 
+_ITEM_PREFIXES = [
+    "alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta",
+    "theta", "iota", "kappa", "lambda", "mu", "nu", "xi", "omicron",
+    "pi", "rho", "sigma", "tau", "upsilon", "phi", "chi", "psi",
+    "omega", "north", "south", "east", "west", "solar", "lunar",
+    "polar", "arctic", "boreal", "austral", "tropic", "coastal",
+]
+
+def _item_name(idx: int) -> str:
+    return f"item-{_ITEM_PREFIXES[idx % len(_ITEM_PREFIXES)]}-{idx:02d}"
+
+
+
 
 def call_ollama(host: str, model: str, prompt: str, num_predict: int,
                 timeout_s: int) -> str:
     payload = {
         "model": model,
         "prompt": prompt,
-        "stream": False,
+        "stream": False, "think": False,
         "options": {"temperature": 0.0, "num_predict": num_predict},
     }
     req = urllib.request.Request(
@@ -89,7 +102,11 @@ def extract_pairs(text: str) -> Set[Tuple[str, str]]:
 
 
 def score_task(task: Dict[str, Any], response: str) -> Dict[str, Any]:
-    expected: Set[Tuple[str, str]] = {tuple(sorted(p)) for p in task["expected_pairs"]}
+    raw = task["expected_pairs"]
+    if raw and isinstance(raw[0][0], int):
+        expected: Set[Tuple[str, str]] = {tuple(sorted((_item_name(a), _item_name(b)))) for a, b in raw}
+    else:
+        expected: Set[Tuple[str, str]] = {tuple(sorted(p)) for p in raw}
     predicted = extract_pairs(response)
     tp = len(expected & predicted)
     fp = len(predicted - expected)
@@ -118,7 +135,7 @@ def _aggregate(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
         "mean_f1": statistics.fmean(f1),
         "mean_precision": statistics.fmean(r["precision"] for r in rows),
         "mean_recall": statistics.fmean(r["recall"] for r in rows),
-        "mean_word_gap": statistics.fmean(r["mean_word_gap"] for r in rows),
+        "mean_word_gap": statistics.fmean(r.get("mean_word_gap", 0) for r in rows),
     }
 
 
@@ -150,7 +167,7 @@ def run_one_file(host: str, model: str, num_predict: int, timeout_s: int,
         rows.append({
             "id": task["id"],
             "n": task["n"],
-            "mean_word_gap": task["mean_word_gap"],
+            "mean_word_gap": task.get("mean_word_gap", 0),
             "seed": task["seed"],
             "variant": task["variant"],
             "response": resp,
