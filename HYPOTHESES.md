@@ -1842,13 +1842,16 @@ Base vs step7 comparison — collapse_cont and p(neither) per category:
 
 | Category | base collapse_cont | step7 collapse_cont | base p(neither) | step7 p(neither) |
 |----------|--------------------|---------------------|-----------------|------------------|
-| cf       | [TBD]              | [TBD]               | [TBD]           | [TBD]            |
-| ba       | [TBD]              | [TBD]               | [TBD]           | [TBD]            |
-| ui       | [TBD]              | [TBD]               | [TBD]           | [TBD]            |
-| aggregate| [TBD]              | [TBD]               | [TBD]           | [TBD]            |
+| cf       | 0.737              | 0.662               | 0.476           | 0.539            |
+| ba       | 0.684              | 0.654               | 0.799           | 0.876            |
+| ui       | 0.558              | 0.596               | 0.542           | 0.640            |
+| aggregate| 0.665              | 0.639               | 0.609           | 0.687            |
 
-Files: `experiments/aporia_probe/results/h20_29b_base/`, `h20_29b_step7/`.
-[Numbers pending — probes running 2026-08-07]
+All values above threshold (> 0.55 collapse, > 0.47 p-neither). Step7 slightly lower
+collapse_cont on cf+ba but higher p(neither) on ba+ui; differences < 0.08. No clear
+SFT effect — consistent with step7 not being aporia-specific training.
+
+Files: `/tmp/ts_results/h20_g1h_base/`, `h20_g1h_step7/` (G1h 2.9B, 2026-08-07).
 
 ---
 
@@ -2044,11 +2047,15 @@ in a cycling-stable subspace.
 
 | Model | N=1 F1 | N=2 F1 |
 |-------|--------|--------|
-| G1h 2.9B base  | [TBD]  | [TBD]  |
-| G1h 2.9B step7 | [TBD]  | [TBD]  |
+| G1h 2.9B base  | 0.889  | 0.889  |
+| G1h 2.9B step7 | 0.889  | 0.889  |
 
-Files: `experiments/premise_validator/results/h21_29b_*/`.
-[Numbers pending — probes running 2026-08-07]
+Both base and step7 identical. Acc=0.875 (TP=4, FP=1, TN=3, FN=0) on 8-item
+held-out split. Arithmetic invalid (arith_02) is the consistent FP across all
+runs — likely requires knowing the arithmetic is wrong, not just state shape.
+Feature dim 2560 (per-layer per-head mean+std). Pilot target 0.75 ✓.
+
+Files: `/tmp/ts_results/h21_g1h_{base,step7}_p{1,2}/` (G1h 2.9B, seed=13, 2026-08-07).
 
 ---
 
@@ -2197,14 +2204,18 @@ pending shared-labelled overlap items. See
 
 | Model | LOO F1 | LOO acc |
 |-------|--------|---------|
-| G1h 2.9B base  | [TBD]  | [TBD]   |
-| G1h 2.9B step7 | [TBD]  | [TBD]   |
+| G1h 2.9B base  | 0.929  | 0.929   |
+| G1h 2.9B step7 | 0.929  | 0.929   |
 
-**Distinctness H21 vs H22** (items_overlap.jsonl, 32 items, G1h 2.9B step7):
-ρ(p_valid, p_attributable) = [TBD]. Target: ρ < 0.4.
+Both base and step7 identical. Confusion: TP=111, FP=8, TN=112, FN=9 (out of 240
+labelled). Feature dim 2560. Pilot target 0.75 ✓. Step7 training does not degrade
+attribution signal — WKV state holds provenance structure independent of action-chain
+SFT fine-tuning.
 
-Files: `experiments/attribution_probe/results/h22_29b_*/`, `h22_distinctness/`.
-[Numbers pending — probes running 2026-08-07]
+**Distinctness H21 vs H22** (items_overlap.jsonl, 32 items, G1h 2.9B):
+ρ(p_valid, p_attributable) = [TBD — distinctness probe running 2026-08-07]. Target: ρ < 0.4.
+
+Files: `/tmp/ts_results/h22_g1h_{base,step7}/`, `h22_distinctness/` (G1h 2.9B, 2026-08-07).
 
 ---
 
