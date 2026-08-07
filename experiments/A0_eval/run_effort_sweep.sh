@@ -1,35 +1,51 @@
 #!/bin/bash
 # H10 effort-frontier sweep.
-# Sweeps K (output token budget) at a fixed N (state-refinement passes).
-# Produces one result JSON per K value, then prints a comparison table
-# covering all task categories found in the results.
+#
+# Two sweep modes:
+#   N-sweep (primary): vary WKV cycling passes at fixed K=0 (silent).
+#     Tests raw WKV accumulation — no training required.
+#   K-sweep (secondary): vary intermediate token budget (readout_k) at fixed N.
+#     Only meaningful after model is trained with state-quality objective —
+#     NOT on trace-imitation SFT. K tokens are invisible, WKV-internal.
 #
 # Usage:
+#   # N-sweep (recommended first):
 #   bash experiments/A0_eval/run_effort_sweep.sh \
-#       --model /tmp/step5_merged.pth \
-#       --out   /tmp/effort_sweep_step5
+#       --model /tmp/step7_merged.pth \
+#       --sweep n \
+#       --n-values "1 2 3 5" \
+#       --out /tmp/effort_n_sweep_step7
 #
-#   # N-axis: run with N=3 state-refinement passes
+#   # K-sweep at fixed N:
 #   bash experiments/A0_eval/run_effort_sweep.sh \
-#       --model /tmp/step5_merged.pth \
-#       --out   /tmp/effort_sweep_n3 \
-#       --n-passes 3
+#       --model /tmp/step7_merged.pth \
+#       --sweep k \
+#       --k-values "0 32 128 512" \
+#       --n-passes 1 \
+#       --out /tmp/effort_k_sweep_step7
 #
 # Requirements: rwkv backend (BlinkDL rwkv package in active venv).
 set -eu
 
 PYTHON=${PYTHON:-python3}
 EVAL=experiments/A0_eval/eval.py
-BUDGETS=(0 128 512 2048)
 MODEL=""
 OUT_DIR=""
+SWEEP="n"
+N_VALUES="1 2 3 5"
+K_VALUES="0 32 128 512"
 N_PASSES=1
+NUM_PREDICT=64
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --model)    MODEL="$2";    shift 2;;
-        --out)      OUT_DIR="$2";  shift 2;;
-        --n-passes) N_PASSES="$2"; shift 2;;
+        --model)       MODEL="$2";       shift 2;;
+        --out)         OUT_DIR="$2";     shift 2;;
+        --sweep)       SWEEP="$2";       shift 2;;
+        --n-values)    N_VALUES="$2";    shift 2;;
+        --k-values)    K_VALUES="$2";    shift 2;;
+        --n-passes)    N_PASSES="$2";    shift 2;;
+        --num-predict) NUM_PREDICT="$2"; shift 2;;
         *) echo "Unknown arg: $1"; exit 1;;
     esac
 done
@@ -38,17 +54,36 @@ done
 [[ -z "$OUT_DIR" ]] && { echo "--out required"; exit 1; }
 mkdir -p "$OUT_DIR"
 
-echo "=== H10 effort sweep: model=$MODEL n_passes=$N_PASSES ==="
-for B in "${BUDGETS[@]}"; do
-    OUT="$OUT_DIR/effort_np${B}_n${N_PASSES}.json"
-    echo "--- K=$B tokens, N=$N_PASSES passes ---"
-    $PYTHON "$EVAL" \
-        --backend rwkv \
-        --model "$MODEL" \
-        --num-predict "$B" \
-        --n-passes "$N_PASSES" \
-        --out "$OUT"
-done
+if [[ "$SWEEP" == "n" ]]; then
+    echo "=== H10 N-sweep: model=$MODEL k=0 silent ==="
+    for N in $N_VALUES; do
+        OUT="$OUT_DIR/effort_n${N}_k0.json"
+        echo "--- N=$N passes ---"
+        $PYTHON "$EVAL" \
+            --backend rwkv \
+            --model "$MODEL" \
+            --num-predict "$NUM_PREDICT" \
+            --n-passes "$N" \
+            --readout-mode silent \
+            --out "$OUT"
+    done
+else
+    echo "=== H10 K-sweep: model=$MODEL n_passes=$N_PASSES ==="
+    for K in $K_VALUES; do
+        MODE="state_readout"
+        [[ "$K" == "0" ]] && MODE="silent"
+        OUT="$OUT_DIR/effort_k${K}_n${N_PASSES}.json"
+        echo "--- K=$K tokens, N=$N_PASSES passes, mode=$MODE ---"
+        $PYTHON "$EVAL" \
+            --backend rwkv \
+            --model "$MODEL" \
+            --num-predict "$NUM_PREDICT" \
+            --n-passes "$N_PASSES" \
+            --readout-mode "$MODE" \
+            --readout-k "$K" \
+            --out "$OUT"
+    done
+fi
 
 echo ""
 echo "=== Summary (N=$N_PASSES) ==="

@@ -29,6 +29,7 @@
 !experiments/**/*.toml
 !experiments/**/*.yml
 !experiments/**/*.yaml
+!experiments/**/*.txt
 
 # Training track
 !training/**/*.py
@@ -69,6 +70,7 @@ training/**/checkpoints/
 training/**/runs/
 training/**/wandb/
 training/corpus/
+!training/corpus/*.py
 training/sanitised/
 training/tokenised/
 training/rwkv-peft/

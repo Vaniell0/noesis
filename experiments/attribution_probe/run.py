@@ -243,7 +243,7 @@ def _write_report(
     lines.append("  the borderline cases sit tells us where the classifier decision surface")
     lines.append("  actually cuts.\n")
 
-    with open(os.path.join(out_dir, "report.md"), "w") as f:
+    with open(os.path.join(out_dir, "report.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
 
@@ -275,9 +275,10 @@ def main() -> int:
         X, y, cats = d["X"], d["y"], list(d["cats"])
         print(f"[H22] reused {features_path} X={X.shape}", file=sys.stderr)
     else:
-        print(f"[H22] loading model {args.model}", file=sys.stderr, flush=True)
+        device = os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
+        print(f"[H22] loading model {args.model} on {device}", file=sys.stderr, flush=True)
         t0 = time.time()
-        model, tokenizer = load_model(args.model, device="cpu")
+        model, tokenizer = load_model(args.model, device=device)
         print(f"[H22] loaded in {time.time()-t0:.1f}s", file=sys.stderr, flush=True)
         print(f"[H22] extracting features for {len(items)} items", file=sys.stderr, flush=True)
         X, y, cats = _extract_features(model, tokenizer, items)

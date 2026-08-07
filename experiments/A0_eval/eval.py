@@ -190,12 +190,27 @@ def call_ollama(host: str, model: str, prompt: str,
 
 
 def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
-              num_predict: int, n_passes: int = 1) -> str:
+              num_predict: int, n_passes: int = 1,
+              readout_mode: str = "silent", readout_k: int = 64) -> str:
     """Greedy decode via BlinkDL rwkv package.
 
-    n_passes > 1: re-feed the prompt through the backbone N times before
-    decoding, accumulating WKV state each pass. Each pass starts from the
-    state left by the previous pass (not a reset). This is the H10 N-axis.
+    H10 three axes:
+      n_passes (N): cycle the same prompt through WKV N times, accumulating
+        state on top of previous pass. Tests raw WKV convergence property —
+        no token emission, no training required.
+      readout_k (K): intermediate token budget. K tokens are decoded and fed
+        back into WKV one by one, updating state. These tokens are invisible
+        (not in the returned answer) — their value is entirely in how they
+        shift the WKV state. Not human-readable CoT; structure should be
+        WKV-optimal, not legible.
+      num_predict: answer token budget (separate from readout_k).
+
+    readout_mode — source of the K intermediate tokens:
+      "silent"       : readout_k=0 forced; answer decoded directly after N passes.
+      "prompt_cot"   : K tokens decoded as text continuation (constrained by
+                       prompt's linguistic context), then answer decoded.
+      "state_readout": K tokens decoded freely from post-N state (no scaffold);
+                       same mechanics as prompt_cot, less constrained token space.
     """
     import torch
     enc = tokenizer(prompt, return_tensors="pt")
@@ -203,16 +218,30 @@ def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
     logits, state = model.forward(ids, None)
     for _ in range(n_passes - 1):
         logits, state = model.forward(ids, state)
-    out_ids: List[int] = []
-    for _ in range(num_predict):
-        if logits.dim() > 1:
-            logits = logits.reshape(-1)
-        nxt = int(torch.argmax(logits).item())
-        # Stop on token 0 (rwkv_vocab_v20230424 uses 0 as end marker)
-        if nxt == 0:
-            break
-        out_ids.append(nxt)
-        logits, state = model.forward([nxt], state)
+
+    def _greedy(budget: int) -> List[int]:
+        nonlocal logits, state
+        out: List[int] = []
+        for _ in range(budget):
+            if logits.dim() > 1:
+                logits = logits.reshape(-1)
+            nxt = int(torch.argmax(logits).item())
+            if nxt == 0:
+                break
+            out.append(nxt)
+            logits, state = model.forward([nxt], state)
+        return out
+
+    if readout_mode == "silent":
+        out_ids = _greedy(num_predict)
+    elif readout_mode in ("prompt_cot", "state_readout"):
+        # Intermediate tokens update WKV state, are not returned.
+        # prompt_cot: continuation constrained by prompt context.
+        # state_readout: same mechanics, state drives token choice freely.
+        _greedy(readout_k)
+        out_ids = _greedy(num_predict)
+    else:
+        raise ValueError(f"Unknown readout_mode: {readout_mode!r}")
     return tokenizer.decode(out_ids)
 
 
@@ -271,12 +300,24 @@ def main() -> int:
                     help="Ollama host (ollama backend).")
     ap.add_argument("--model", required=True,
                     help="Ollama model name or path to .pth for rwkv backend.")
-    ap.add_argument("--num-predict", type=int, default=2048,
-                    help="Max output tokens per response (K axis in H10).")
+    ap.add_argument("--num-predict", type=int, default=64,
+                    help="Answer token budget (separate from --readout-k).")
     ap.add_argument("--n-passes", type=int, default=1,
-                    help="State-refinement passes before decoding (N axis in H10). "
-                         "rwkv backend only: re-feeds the prompt through the backbone "
-                         "N times, accumulating WKV state. Ignored for ollama backend.")
+                    help="WKV cycling passes before decoding (N axis in H10). "
+                         "Each pass re-feeds the prompt through WKV accumulating "
+                         "state. rwkv backend only.")
+    ap.add_argument("--readout-mode",
+                    choices=["prompt_cot", "silent", "state_readout"],
+                    default="silent",
+                    help="H10 readout mode (rwkv backend only). "
+                         "silent: answer directly from state after N passes (default). "
+                         "prompt_cot: decode --readout-k invisible tokens first (WKV update), "
+                         "then answer. Tokens are not human-readable CoT — they are "
+                         "WKV-internal state updates. "
+                         "state_readout: same mechanics as prompt_cot, less prompt-constrained.
+                         "(not scored), then answer.")
+    ap.add_argument("--readout-k", type=int, default=64,
+                    help="Intermediate (invisible) token budget for prompt_cot/state_readout modes.")
     ap.add_argument("--timeout", type=int, default=120,
                     help="Per-request timeout (seconds).")
     ap.add_argument("--out", required=True, help="Path to output JSON.")
@@ -311,7 +352,8 @@ def main() -> int:
                                    args.num_predict, args.timeout)
             else:
                 resp = call_rwkv(args.model, tok, mdl, task["prompt"],
-                                 args.num_predict, args.n_passes)
+                                 args.num_predict, args.n_passes,
+                                 args.readout_mode, args.readout_k)
         except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError) as e:
             resp = ""
             print(f"[eval]   task {i} ({task['id']}) request failed: {e}",
@@ -339,6 +381,8 @@ def main() -> int:
         "backend": args.backend,
         "num_predict": args.num_predict,
         "n_passes": args.n_passes,
+        "readout_mode": args.readout_mode,
+        "readout_k": args.readout_k,
         "n_tasks": len(tasks),
         "elapsed_s": elapsed,
         "aggregate": agg,

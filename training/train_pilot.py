@@ -70,7 +70,8 @@ def _build_argv(cfg: dict, yaml_path: Path) -> list[str]:
     corpus = cfg["corpus"]
     logging = cfg["logging"]
 
-    ckpt = os.path.expanduser(model["checkpoint"])
+    raw_ckpt = os.path.expanduser(model["checkpoint"])
+    ckpt = raw_ckpt if os.path.isabs(raw_ckpt) else str(REPO_ROOT / raw_ckpt)
     data = str(REPO_ROOT / corpus["tokenized_pt"])
     run_dir = str(REPO_ROOT / logging["run_dir"] / logging["run_name"])
 

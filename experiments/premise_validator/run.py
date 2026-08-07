@@ -63,8 +63,13 @@ def _pool_state(wkv_per_layer: List[torch.Tensor]) -> np.ndarray:
     return np.asarray(feats, dtype=np.float32)
 
 
-def _extract_features(model, tokenizer, items: List[Dict]) -> Tuple[np.ndarray, np.ndarray, List[str]]:
-    """Prefill each item and pool its final WKV state."""
+def _extract_features(model, tokenizer, items: List[Dict],
+                      n_passes: int = 1) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    """Prefill each item and pool its final WKV state.
+
+    n_passes > 1: re-feed the same prompt through WKV n_passes times,
+    accumulating state on top of each previous pass (H10 N-axis test).
+    """
     feats: List[np.ndarray] = []
     labels: List[int] = []
     cats: List[str] = []
@@ -73,18 +78,18 @@ def _extract_features(model, tokenizer, items: List[Dict]) -> Tuple[np.ndarray, 
         prompt_ids = enc["input_ids"][0].tolist()
         t0 = time.time()
         _logits, state = model.forward(prompt_ids, None)
+        for _ in range(n_passes - 1):
+            _logits, state = model.forward(prompt_ids, state)
         wkv = _extract_wkv_per_layer(state)
         v = _pool_state(wkv)
         feats.append(v)
         labels.append(1 if it["category"] == "valid" else 0)
-        # For H21, category is valid/invalid; invalid_type gives finer detail.
         cats.append(it.get("invalid_type") or it["category"])
         print(
             f"[H21] feat {i+1}/{len(items)} {it['id']} "
-            f"y={it['category']} dim={len(v)} wall={time.time()-t0:.2f}s",
+            f"y={it['category']} n_passes={n_passes} dim={len(v)} wall={time.time()-t0:.2f}s",
             file=sys.stderr, flush=True,
         )
-        # Drop state reference.
         del state
     return np.stack(feats), np.asarray(labels, dtype=np.int64), cats
 
@@ -110,45 +115,62 @@ def _train_head(
     X_train: np.ndarray, y_train: np.ndarray,
     X_test: np.ndarray, y_test: np.ndarray,
     epochs: int, lr: float, weight_decay: float, seed: int,
-) -> Tuple[np.ndarray, np.ndarray, float]:
-    """Train MLP head; return test probs, test labels, best test-F1."""
-    # probe.load_model() globally disables grad — re-enable for head training.
+) -> Tuple[np.ndarray, np.ndarray, float, "_MLPHead", torch.Tensor, torch.Tensor]:
+    """Train MLP head; return (probs, labels, best_f1, head, mu, sd)."""
     torch.set_grad_enabled(True)
     torch.manual_seed(seed)
     Xt = torch.from_numpy(X_train).float()
     yt = torch.from_numpy(y_train).float()
     Xv = torch.from_numpy(X_test).float()
-    yv = torch.from_numpy(y_test).float()
 
-    # Feature normalisation on train stats.
     mu = Xt.mean(dim=0, keepdim=True)
     sd = Xt.std(dim=0, keepdim=True).clamp_min(1e-6)
     Xt = (Xt - mu) / sd
     Xv = (Xv - mu) / sd
 
-    model = _MLPHead(in_dim=Xt.shape[1])
-    opt = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    head = _MLPHead(in_dim=Xt.shape[1])
+    opt = torch.optim.Adam(head.parameters(), lr=lr, weight_decay=weight_decay)
     lossf = nn.BCEWithLogitsLoss()
 
     best_f1 = 0.0
     best_probs = None
+    best_state = None
     for ep in range(epochs):
-        model.train()
+        head.train()
         opt.zero_grad()
-        logits = model(Xt)
+        logits = head(Xt)
         loss = lossf(logits, yt)
         loss.backward()
         opt.step()
         if (ep + 1) % 50 == 0 or ep == epochs - 1:
-            model.eval()
+            head.eval()
             with torch.no_grad():
-                pv = torch.sigmoid(model(Xv)).cpu().numpy()
+                pv = torch.sigmoid(head(Xv)).cpu().numpy()
             preds = (pv >= 0.5).astype(int)
             f1 = _f1(y_test, preds)
             if f1 >= best_f1:
                 best_f1 = f1
                 best_probs = pv
-    return best_probs, y_test, best_f1
+                best_state = {k: v.clone() for k, v in head.state_dict().items()}
+    head.load_state_dict(best_state)
+    return best_probs, y_test, best_f1, head, mu, sd
+
+
+def _apply_head(head_path: str, X: np.ndarray, y: np.ndarray,
+                test_idx: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
+    """Apply a saved head (variant A: cross-N transfer)."""
+    ckpt = torch.load(head_path, map_location="cpu")
+    mu, sd = ckpt["mu"], ckpt["sd"]
+    head = _MLPHead(in_dim=X.shape[1])
+    head.load_state_dict(ckpt["head"])
+    head.eval()
+    Xv = (torch.from_numpy(X[test_idx]).float() - mu) / sd
+    with torch.no_grad():
+        probs = torch.sigmoid(head(Xv)).cpu().numpy()
+    y_test = y[test_idx]
+    preds = (probs >= 0.5).astype(int)
+    f1 = _f1(y_test, preds)
+    return probs, y_test, f1
 
 
 def _f1(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -248,7 +270,7 @@ def _write_report(
     lines.append("- False positives on the valid set (`fp`) are the operational cost:")
     lines.append("  flagging a well-formed query as suspicious causes needless aporia.\n")
 
-    with open(os.path.join(out_dir, "report.md"), "w") as f:
+    with open(os.path.join(out_dir, "report.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
 
@@ -262,6 +284,12 @@ def main() -> int:
     ap.add_argument("--weight-decay", type=float, default=1e-3)
     ap.add_argument("--test-frac", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=13)
+    ap.add_argument("--n-passes", type=int, default=1,
+                    help="WKV cycling passes before state extraction (H10 N-axis).")
+    ap.add_argument("--save-head", default=None,
+                    help="Save trained head + norm stats to this .pt path.")
+    ap.add_argument("--load-head", default=None,
+                    help="Variant A: skip training, apply saved head to new features.")
     ap.add_argument("--from-features", action="store_true",
                     help="Skip model load + extraction; reuse features.npz in --out.")
     args = ap.parse_args()
@@ -281,20 +309,29 @@ def main() -> int:
         X, y, cats = d["X"], d["y"], list(d["cats"])
         print(f"[H21] reused {features_path} X={X.shape}", file=sys.stderr)
     else:
-        print(f"[H21] loading model {args.model}", file=sys.stderr, flush=True)
+        device = os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
+        print(f"[H21] loading model {args.model} on {device}", file=sys.stderr, flush=True)
         t0 = time.time()
-        model, tokenizer = load_model(args.model, device="cpu")
+        model, tokenizer = load_model(args.model, device=device)
         print(f"[H21] loaded in {time.time()-t0:.1f}s", file=sys.stderr, flush=True)
         print(f"[H21] extracting features for {len(items)} items", file=sys.stderr, flush=True)
-        X, y, cats = _extract_features(model, tokenizer, items)
+        X, y, cats = _extract_features(model, tokenizer, items, n_passes=args.n_passes)
         np.savez(features_path, X=X, y=y, cats=np.asarray(cats, dtype=object))
         print(f"[H21] features: X.shape={X.shape} y.shape={y.shape}", file=sys.stderr)
 
     train_idx, test_idx = _stratified_split(y, test_frac=args.test_frac, seed=args.seed)
-    probs, y_test, best_f1 = _train_head(
-        X[train_idx], y[train_idx], X[test_idx], y[test_idx],
-        epochs=args.epochs, lr=args.lr, weight_decay=args.weight_decay, seed=args.seed,
-    )
+
+    if args.load_head:
+        probs, y_test, best_f1 = _apply_head(args.load_head, X, y, test_idx)
+        print(f"[H21] variant-A (load-head) F1={best_f1:.3f}", file=sys.stderr)
+    else:
+        probs, y_test, best_f1, head, mu, sd = _train_head(
+            X[train_idx], y[train_idx], X[test_idx], y[test_idx],
+            epochs=args.epochs, lr=args.lr, weight_decay=args.weight_decay, seed=args.seed,
+        )
+        if args.save_head:
+            torch.save({"head": head.state_dict(), "mu": mu, "sd": sd}, args.save_head)
+            print(f"[H21] head saved → {args.save_head}", file=sys.stderr)
 
     results_path = os.path.join(args.out, "results.jsonl")
     with open(results_path, "w") as fout:

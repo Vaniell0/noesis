@@ -278,7 +278,7 @@ def _write_report(rows: List[Dict], out_dir: str, meta: Dict) -> None:
     lines.append("  bounded_ambiguity (semantic ambiguity has no pretraining preference), which in")
     lines.append("  turn collapses more than underdetermined_inference (task ambiguity is deeper).\n")
 
-    with open(os.path.join(out_dir, "report.md"), "w") as f:
+    with open(os.path.join(out_dir, "report.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
 
@@ -297,9 +297,10 @@ def main() -> int:
     ap.add_argument("--no-report", action="store_true", help="Skip report.md write (for shards).")
     args = ap.parse_args()
 
-    print(f"[H20] loading model {args.model}", file=sys.stderr, flush=True)
+    device = os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
+    print(f"[H20] loading model {args.model} on {device}", file=sys.stderr, flush=True)
     t0 = time.time()
-    model, tokenizer = load_model(args.model, device="cpu")
+    model, tokenizer = load_model(args.model, device=device)
     print(f"[H20] loaded in {time.time()-t0:.1f}s", file=sys.stderr, flush=True)
     _init_sentence_end_tokens(tokenizer)
 

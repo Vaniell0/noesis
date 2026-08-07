@@ -121,8 +121,9 @@ def main():
         z = np.load(features_path)
         X, y_v, y_a = z["X"], z["y_valid"], z["y_attr"]
     else:
-        print(f"[dist] loading model {args.model}", file=sys.stderr)
-        model, tokenizer = load_model(args.model, device="cpu")
+        device = os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
+        print(f"[dist] loading model {args.model} on {device}", file=sys.stderr)
+        model, tokenizer = load_model(args.model, device=device)
         X, y_v, y_a = _extract(model, tokenizer, items)
         np.savez(features_path, X=X, y_valid=y_v, y_attr=y_a)
         print(f"[dist] features saved {features_path}", file=sys.stderr)

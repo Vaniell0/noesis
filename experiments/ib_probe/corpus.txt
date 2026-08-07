@@ -1,0 +1,1157 @@
+
+Reference notes assembled before designing the `A0.4` state-utilisation
+probe (see `experiments/A0_state_probe/`). Flat facts + citations, no
+interpretation. Interpretation lives in the probe writeup, once
+measurements exist.
+
+Sources: arXiv 2503.14456v2 (Peng et al., "RWKV-7 'Goose' with
+Expressive Dynamic State Evolution", March 2025); BlinkDL/RWKV-LM
+GitHub repo at commit `846b08c1` (2025-03-17); Ollama registry entry
+for `mollysama/rwkv-7-g1h`.
+**State update rule (paper §3, Architecture, p. 5).** RWKV-7 replaces
+the diagonal-only state transition of RWKV-6 with a rank-one
+input-dependent perturbation:
+
+    S_t = S_{t-1} · (diag(w_t) + z_t^T b_t) + v_t^T k_t
+    with z_t = −κ̂_t,  b_t = κ̂_t ⊙ a_t,  a_t ∈ (0, 1)^d
+
+Contrast (paper §3): RWKV-6 was `S_t = S_{t-1} · diag(w_t) + v_t^T k_t`
+— transitions were diagonal, so each channel of the state evolved
+independently. RWKV-7's `z_t^T b_t` term couples channels through an
+input-dependent low-rank update; this is what the paper calls
+"generalized delta rule with vector-valued gating and in-context
+learning rates" (abstract).
+
+An alternative parametrisation RWKV-7a (paper Appendix I) admits full
+negative eigenvalues; used by authors for board-game modelling. Not
+the default; not shipped in the World3 checkpoints we use.
+
+**Explicit test-time-learning claim (paper §2, Background, p. 4).**
+The state update is described verbatim as "equivalent to a single step
+of stochastic gradient descent, training the state S_t at test time to
+output the desired values v_t for the keys k_t as inputs". This is the
+formal statement of the philosophy we're interested in probing: state
+evolution = compute, not just memory.
+
+Note on scope of that claim: it is stated for the *delta rule step*,
+not for the sequence as a whole. Whether cumulative multi-token
+evolution actually behaves like an ongoing SGD trajectory is a
+question the paper does not answer directly and A0.4 partly targets.
+
+**Expressivity results (paper §3 p. 5; Appendix D.1–D.2, pp. 33–36).**
+
+- "RWKV-7 possesses expressive power surpassing that of TC^0 under
+  standard complexity conjectures and can recognize all regular
+  languages" (§3).
+- Theorem 2 (Appendix D.1): RWKV-7 solves an NC^1-complete problem
+  under AC^0 reductions.
+- Corollary via Lemma 2: RWKV-7 can track swaps on 5 elements.
+- Main result (Appendix D.2): recognizes all regular languages with a
+  constant number of layers.
+- Explicit contrast (paper §3, citing Merrill et al. 2024):
+  Transformers and RNNs with diagonal transition matrices are limited
+  to functions in TC^0. This is presented as the concrete
+  architectural gap RWKV-7 closes.
+
+**State dimensions for 2.9B World3** (paper Appendix E, Table of model
+architectures, p. 38):
+
+| quantity        | value |
+|-----------------|-------|
+| n_layer         | 32    |
+| model dim (D)   | 2560  |
+| head_size (d_h) | 64    |
+| n_head          | 40    |
+| WKV state per layer | `n_head × d_h × d_h` = `40 × 64 × 64` = 163 840 elements |
+| WKV state per layer (bf16) | ~320 kB |
+| Full parameter count | 2 947 735 040 |
+
+Per-token snapshot of the *whole* WKV state (all layers, bf16) is
+therefore `32 × 163 840 × 2` B ≈ **10.5 MB** — not the 13 MB × 32 that
+the plan's back-of-envelope assumed. Correcting: 256 tokens × 10.5 MB
+= 2.7 GB per sequence. Still too large for full retention across all
+seeds × models × prompts, so online metric computation remains the
+right call, but the state per step is genuinely tractable to hold in
+RAM briefly.
+
+**Context extrapolation (paper §7.5, Long Context, p. 13).** RWKV-7
+2.9B reliably retrieves passkeys up to 30k tokens; degrades near 50k.
+Trained on ≤128k. Not directly relevant to the probe but bounds the
+lengths at which state dynamics can be honestly measured.
+
+**Authors' own state instrumentation (paper Appendix J, State
+Inspections, p. 50).** Authors themselves examine WKV state matrices:
+
+- Metrics used: root-mean-square of matrix elements (RMS) and stable
+  rank `SR(A) = (‖A‖_F / ‖A‖_2)^2`.
+- Corpus: 10 PG19 validation samples, each ≥ 8192 tokens.
+- Comparison across RWKV-5 / RWKV-6 / RWKV-7 at 1.5B.
+- Reported example: "Layer 0 Head 4, SR: 2.03, RMS: 96.74".
+
+**Implication for A0.4**: authors provide a *specific* pair of metrics
+(RMS, SR) they consider meaningful. Adopting SR as one of A0.4's three
+metrics has the added benefit of direct comparability to the paper.
+The plan's original three metrics (delta norm, layer entropy,
+curvature) do not overlap with SR — recommend adding SR as a fourth
+metric or replacing layer-entropy with SR. Decision pending A0.4
+design.
+**No G1 documentation in RWKV-LM repo** (commit `846b08c1`). Grep for
+`G1`, `g1_`, `reasoning`, `<think>` in the repo returns nothing
+substantive. G1 training code and configuration are *not* in the main
+BlinkDL/RWKV-LM repository as of this commit. The G1 corpus, curriculum
+and reasoning-markup scheme are documented only in external artifacts
+(BlinkDL blog, HF/Ollama model cards, mollysama's registry). This is a
+material gap — we cannot reproduce G1 training from RWKV-LM alone.
+
+**Standard World3 training config visible in the repo** (`RWKV-v7/README.md`
++ `RWKV-v5/train.py`, lines 14–122):
+
+- Training entry: use `RWKV-v5/train.py` with `--my_testing "x070"`
+  and `head_size_a=64`. Same script as v5, versioned by flag.
+- Tokenizer: RWKV World (vocab 65 536).
+- Data: RWKV World v3 corpus, 3.1 T tokens, multilingual, open.
+- Framework: PyTorch Lightning + DeepSpeed.
+- Precision: bf16 activations + fp32 kernel for WKV (paper §8, p. 15).
+
+Nothing in that config is G1-specific.
+
+**LoRA / adapter tooling is external.** RWKV-LM README points to two
+outside repos:
+- `JL-er/RWKV-PEFT` — LoRA, QLoRA, PiSSA, Qpissa, **State Tuning**.
+  State Tuning is *initial-state prompt-tuning*: a single learnable
+  `[n_layer, n_head, head_size, head_size]` vector is prepended so the
+  base model starts each sequence from a trained initial WKV state.
+  The trajectory across tokens is not part of the loss — CE alone
+  drives training. See `docs/community-map.md` §1 for the full
+  landscape; noesis's `L_state` (state-motion + curvature reward) has
+  no direct prior art in the RWKV community.
+- `Blealtan/RWKV-LM-LoRA` — infinite-ctxlen training branch.
+
+For any A1 fine-tune step involving state, `RWKV-PEFT` is the
+reference implementation to check first, not RWKV-LM proper.
+
+**No built-in state-inspection utilities in RWKV-LM.** State variables
+are accessed only in RNN-mode inference demo:
+- File: `RWKV-v7/rwkv_v7_demo_rnn.py`, lines 92–102 (forward pass
+  access) and 284–288 (initialisation).
+- Layout of state list: `state[3·i + 0]` = attention `x_prev` (shape
+  `[D]`), `state[3·i + 1]` = **WKV state** (shape
+  `[n_head, head_size, head_size]`), `state[3·i + 2]` = channel-mixing
+  `x_prev` (shape `[D]`).
+- No visualisation, no probing helpers — the probe writes these itself.
+**Native bf16/fp16 weights.** Attempts to fetch model cards from
+`huggingface.co/mollysama/RWKV-7-G1h` and `huggingface.co/BlinkDL/rwkv-7-g1`
+returned 401 during the literature scan. HuggingFace public model
+cards should not require auth for read; suspect this is a scan-side
+rate-limit / redirect issue rather than genuine gating. **Manual
+verification required before the probe session**; if native bf16
+weights are actually gated, we fall back to (a) BlinkDL's non-G1
+World3 weights (public, native) as the only World-side data point,
+paired with (b) a G1 checkpoint from BlinkDL's release page — likely
+`RWKV-x070-Goose-World3-2.9B-*.pth` on HF `RWKV/` org, which paper §6
+(Pre-Trained Models, p. 9) lists as the released set.
+
+**Available public sizes** (paper §6, p. 9): RWKV-7 World v3 at 0.19B,
+0.4B, 1.5B, 2.9B. Training tokens 1.6–5.6 T depending on size.
+Official release channel: `https://huggingface.co/RWKV`.
+
+**Ollama registry (`mollysama/rwkv-7-g1h`).** Weights are GGUF (Q4_K_M
+for our pulled 2.9 GB tag). Quantisation method disclosed only as
+GGUF, no specific Q level for the base card. **Not suitable for the
+probe** — Q4 quantisation of weights is expected to distort state
+trajectories at a level that would confound H8/H9 measurement. Paper
+§8 (p. 15) explicitly uses fp32 kernel for WKV during training; we
+should mirror that at inference for the probe (bf16 weights, fp32 WKV
+accumulator).
+**Framing.** RWKV-7's WKV state is a fixed-capacity, lossy compression
+channel. All input the model has ever seen `X_{1..t}` must be
+represented in the same `10.5 MB` per-layer-summed matrix; whatever
+does not fit is lost. This maps directly onto Tishby et al.'s
+Information Bottleneck (Tishby, Pereira & Bialek, *The Information
+Bottleneck Method*, 1999; arXiv 0004057), which formalises finding a
+compressed representation `Z` of an input `X` that maximally preserves
+information about a target `Y` under a fixed channel capacity:
+
+    min  I(X ; Z) - β · I(Z ; Y)
+     Z
+
+Here `X` = input token stream (context window content), `Z` = WKV
+state after ingesting `X`, `Y` = the downstream prediction target
+(next token, or a task-relevant readout). The Lagrangian says:
+minimise redundant information the state carries about the input,
+while maximising the information the state carries about what
+actually matters downstream. `β` is the tradeoff — under noesis's
+constraints, `β` is *not* a free hyperparameter; it is fixed by the
+architecture (state size) and the training objective (CE + any
+auxiliary `L_state`).
+
+**Why this framing is load-bearing for noesis (not just formal window
+dressing).**
+
+- **P4/P5 (constant cost, cheap by construction)** foreclose growing
+  the state to fit more input. The channel width is what the shipped
+  architecture gives us; we do not scale it away.
+- **P1 (state external, cognition internal)** does the equivalent of
+  "the state does not have to hold everything, retrieval fills gaps"
+  — an IB architecture with an *external* memory tier at hand does
+  not have to allocate its bits to storing facts, and can spend them
+  on reasoning-relevant abstractions instead. This is not a hedge
+  around the bottleneck; it is the *architectural response* to it.
+- **P14 (agility over omniscience)** is the direct pragmatic
+  consequence: the bottleneck *cannot* carry everything, so a system
+  that pretends to must be confabulating. Honest not-knowing is
+  what a well-calibrated IB channel *should* produce when the
+  requested `I(Z;Y)` cannot be supported by the channel width.
+- **P13 (reasoning in state, not in tokens)** raises the stakes:
+  if state *is* the computation, then the IB channel is not just
+  a memory allocation problem — every bit spent on redundant input
+  representation is a bit *not* spent on computation.
+
+**Practical consequences that shape design and hypotheses.**
+
+1. **Forgetting is necessary and structured, not incidental.** A
+   fixed-width channel *must* discard information about `X` to leave
+   room for information about `Y`. What gets forgotten is
+   downstream-task-dependent, not just recency-dependent. This
+   reframes "why does the model forget X" from a bug to a
+   consequence of what it is optimising `I(Z;Y)` for. The right
+   research question is not "how do we make the state remember more"
+   but "how do we make the state forget the right things".
+2. **Long-horizon planning has a hard ceiling.** Any task that
+   requires threading `> capacity` bits of state through a decision
+   sequence *cannot* be solved by state alone — it must decompose
+   into a chain of state + external-memory reads (P1) or a chain
+   of state resets keyed by retrieval. Trying to lengthen the
+   effective context by pushing more tokens through the same WKV
+   is subject to diminishing returns bounded by channel capacity,
+   not by context window length.
+3. **Uneven importance is real signal, not artifact.** If the model
+   allocates disproportionate `I(Z;Y)` bits to some inputs over
+   others, that allocation is the model's own *learned* importance
+   function — noesis can read it (a state-readout head on the
+   distribution of "what did the state retain") and use it directly
+   as an emit-gate, a retrieval-relevance signal, or a compression
+   heuristic. This is H16 and H10 seen through IB glasses.
+4. **`L_state` has a formal target.** The state-motion + curvature
+   reward sketched in the community-map (§2) is a proxy for
+   pushing `I(Z;Y)` up per unit `I(X;Z)`; making the training
+   objective explicitly IB-shaped (measure `I(Z;Y)` on a proxy
+   downstream task and reward states that carry it) is an option we
+   have not exercised. Noted for A2 planning.
+
+**Reconstruction / mutual-information probes as measurement.** IB
+gives a first-principles handle on H8 and H12b: rather than only
+measuring state *dynamics* (delta-norm, curvature, SR — §1 above),
+also measure state *content* by training a small decoder from `Z`
+to reconstruct `X` (upper-bounds `I(X;Z)`) or to predict `Y`
+(lower-bounds `I(Z;Y)`). These are standard IB estimation moves
+(cf. Alemi et al., *Deep Variational Information Bottleneck*, 2017;
+Saxe et al., *On the Information Bottleneck Theory of Deep
+Learning*, ICLR 2018 — with the caveat that Saxe et al. showed the
+IB "phase transition" narrative was tanh-nonlinearity-specific, so
+we import IB as *framing*, not as a prediction about training
+dynamics). Concretely for noesis:
+
+- **Reconstruction probe (upper bound `I(X;Z)`).** Train an MLP
+  head on frozen WKV state at position `t` to reconstruct tokens
+  at positions `t-k .. t`. Reconstruction quality vs. `k` gives a
+  practical decay curve — how many past tokens the state materially
+  preserves.
+- **Downstream probe (lower bound `I(Z;Y)`).** Same head, different
+  target: task-relevant readout (H21 premise-validity is one
+  candidate; H20 aporia-hold is another). Ratio of downstream-probe
+  quality to reconstruction quality is the *bit-efficiency* of the
+  state for that task.
+- **H12 as capacity dimensions.** Width (`n_head × head_size²`) and
+  decay `w_t` are the two independent capacity knobs — width sets
+  raw channel size, decay sets how quickly channel is freed up.
+  IB framing predicts: at fixed width, tighter decay (faster
+  forgetting) should *increase* `I(Z;Y)` for tasks whose relevant
+  horizon is short, and *decrease* it for long-horizon tasks. Direct
+  falsifier for H12b utilisation claims.
+
+**Runtime metric candidate: channel-budget accounting.** noesis
+currently accounts for compute in CPU-seconds (calibration protocol,
+policies.md § CPU and thermal governance). An IB-shaped runtime
+would *additionally* account for `I(X;Z)` bits consumed per input —
+how much of the state's channel capacity a given input burned. A
+long noisy transcript that contributed nothing measurable to
+downstream tasks would show up as a *channel-budget cost* even if
+its CPU cost was small. Not a proposal to build this now; a note
+that the accounting hook exists in principle and would give the
+truth-system another signal to work with (H16 emit-gate could
+consult it: "did the last minute of input actually change what the
+state carries?" as an emit criterion).
+
+**Retrieval scoring by info-gain (parking lot).** Once
+reconstruction/downstream probes are in place, retrieval candidates
+can be scored by *estimated `I(Z_after; Y) − I(Z_before; Y)`* — pick
+the candidate that most raises task-relevant channel content. This
+is a stronger objective than cosine similarity in embedding space
+(similarity is at best a proxy for `I(X_retrieved; X_query)`, which
+is only weakly related to what actually helps the state). Not
+scheduled — noted here so future A3/retrieval design has the
+framing to reach for.
+
+**What this framing does not claim.**
+
+- Not a claim that noesis will *train* the state via an explicit IB
+  loss (though `L_state` is a step in that direction). The state is
+  currently trained implicitly via CE on next-token prediction; IB
+  is a *description* of what that training is doing under a
+  fixed-capacity channel constraint.
+- Not a claim that RWKV-7 achieves the IB *optimum* — likely far
+  from it. IB is the frame that says the optimum *exists* and is
+  measurable; how far current weights sit from it is an empirical
+  question the reconstruction/downstream probe pair could answer.
+- Not a claim that IB dictates architecture. RWKV-7 was chosen for
+  reasons in P4/H4b/H8; IB gives a language for reasoning about the
+  consequences of that choice, not a competing justification for it.
+Not interpretation of the probe results (those come later) — only
+things this literature review changes about the *design* itself:
+
+1. **Adopt SR as one of the state metrics.** Authors use it; direct
+   comparability to Appendix J of the paper is worth more than the
+   layer-entropy metric I originally sketched. Keep delta-norm and
+   curvature; add SR; drop layer-entropy (or keep as fourth if it
+   fits).
+2. **Per-token state snapshot is 10.5 MB, not ~420 MB.** The plan's
+   volume estimate was wrong (I over-multiplied). Full sequence
+   (256 tokens) = 2.7 GB. Still online-metric territory for the full
+   experiment budget, but individual sequences can be held in RAM.
+3. **State layout is well-defined** — `state[3i+1]` is WKV per layer,
+   shape `[n_head, head_size, head_size]`. Direct hook on RWKV block
+   forward, no monkey-patching required.
+4. **G1h weights resolved (2026-08-05).** `rwkv7-g1h-2.9b-20260710-ctx10240.pth`
+   is available at `~/.libs/models/rwkv7/` locally and at `/root/.libs/models/rwkv7/`
+   on the VM. H8 and H9 have been run and SUPPORTED at both 0.4B and 2.9B scale.
+   See `experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md` for numerical results.
+5. **`JL-er/RWKV-PEFT` "State Tuning" is initial-state prompt-tuning,
+   not a trajectory objective.** Verified 2026-07-25 — a single
+   learnable initial WKV vector, CE-only loss. The community is *not*
+   training against state trajectories. This means noesis's `L_state`
+   (state-motion reward + curvature) is an unclaimed slot in the
+   design space, not a re-invention. Landscape and adjacent work
+   catalogued in `docs/community-map.md` (§1 for what ships, §2 for
+   noesis's divergences, §4 for external claims we rejected during
+   verification).
+6. **Test-time-learning claim is per-step, not sequence-scope.** The
+   paper's SGD-step framing (§2) is limited to a single delta-rule
+   application. Cumulative state evolution being SGD-like is a
+   *stronger* claim the paper does not make; H8's falsification bar
+   must account for this — a single non-linear step is trivially
+   SGD-like; we're really testing whether the sequence-length dynamics
+   accumulate meaningfully.
+
+Principles are the invariants that outlive tasks, gates, and phases.
+They exist to give future design choices a stable substrate — when in
+doubt, consult these first, not the roadmap.
+
+Each principle has a name, a statement, the reason it exists, what it
+implies in practice, and the cost it imposes. A principle without an
+honest cost is a slogan. Slogans do not belong here.
+
+If a principle here conflicts with a task or a plan, the principle
+wins. If a principle here proves wrong, do not silently abandon it —
+open the conflict and rewrite the principle explicitly.
+
+**Statement.** Persistent state — facts, events, history, user context —
+lives in an external, durable store. The model provides reasoning
+competence and momentary working state.
+
+**Why.** Weights are expensive to update, external stores are cheap and
+inspectable. Facts change; reasoning does not. RNN hidden state is a
+lossy rolling summary, not episodic memory — expecting weeks of
+continuity from it is a category error.
+
+**How to apply.** Facts get written to the memory system, not to model
+weights. The model never becomes the source of truth for something a
+database can hold. Working state (the current task, the current
+context) lives in the model's context window and hidden state; nothing
+that must survive a restart lives there.
+
+**Cost.** Coordinating two systems is more complex than one. Retrieval
+quality becomes load-bearing.
+
+**Statement.** The model's weights encode general reasoning competence.
+Domain knowledge, current facts, and personal context enter through the
+runtime context window via retrieval and tool observations — not
+through fine-tune.
+
+**Why.** Weights outlive knowledge. A model that reasons well over
+given facts generalises to new facts. A model that memorised facts
+does not automatically reason about them. See H2 and H7 in
+HYPOTHESES.md.
+
+**How to apply.** Training corpora contain reasoning traces, not
+domain knowledge. Anything that could be retrieved from a document is
+retrieved, not baked. Corpus choices for A1 must be defensible under
+this principle.
+
+**Cost.** Retrieval quality becomes critical — a weak retrieval story
+makes this principle fail in practice. The model's baseline knowledge
+is whatever the base G1 shipped with; noesis does not top it up.
+
+**Statement.** There is exactly one local reasoning model in the
+noesis runtime: noesis itself. Small task-specific NNs — embedders,
+classifiers, and *decision policies* (e.g. a ~50M scheduler that
+routes tasks between subsystems) — are permitted where they earn
+their keep. The ban is on additional local *reasoning* models
+specifically; not on any NN without reasoning capacity.
+
+**Why.** Managing multiple reasoning models multiplies context,
+memory, coordination, and failure modes. The stack becomes a small
+zoo. noesis absorbs prior daemons for precisely this reason. But a
+50M scheduler is not reasoning — it is plumbing, and forbidding
+plumbing on principle is silly.
+
+**How to apply.** Before adding any new NN component, classify: is it
+a utility (embedding, extraction), a policy (routing, ranking, small
+decisions), or a reasoning model? Utilities and policies are fine;
+a reasoning model needs an explicit re-open of this principle with
+the user. The load-bearing heuristic: if the component emits tokens
+that participate in a chain of thought, it is a reasoning model.
+
+**Cost.** The single model becomes the bottleneck for any single-task
+capability ceiling. When a heavier reasoner is required, escalation
+to remote Claude is the answer, not a second local model.
+
+**Statement.** Where a design choice trades peak performance for a
+lower, predictable, sustained cost floor, prefer the floor. noesis
+must be usable *all the time*, not just when convenient.
+
+**Why.** A smart tool the user turns off is worse than a modest tool
+the user keeps running. This is Bellard's ts_zip argument (RWKV
+chosen for constant-cost streaming) generalised.
+
+**How to apply.** Prefer architectures with O(1) per-token inference.
+Prefer batch sizes and context windows that fit steady-state usage.
+Do not optimise for a single benchmark peak at the cost of the
+standing resource envelope.
+
+**Cost.** Sometimes a task will hit a ceiling a heavier system would
+have cleared. That is what remote Claude is for.
+
+**Statement.** The everyday loop must run indefinitely on the user's
+current hardware — laptop i5-1235U (CPU-only) — without cloud dependency.
+Cloud is permitted only for occasional training bursts, and each burst
+is an explicit budget decision, not a default.
+
+**Why.** noesis is a personal daily bot, not a hosted service. If it
+requires infrastructure the user cannot afford to keep running, it
+will not survive as a daily habit — and this whole project fails on
+adoption, not on capability.
+
+**How to apply.** Any design that assumes cloud, dedicated hardware,
+or continuous training compute for the *runtime* is off the table.
+Model size, quantisation, and framework choices are constrained by
+this. Cloud spend is written down explicitly, not blurred into "as
+needed".
+
+**Cost.** Constrains model size, technique sophistication, and
+throughput ceilings. Some things the field is doing at 70B+ are
+simply not possible here.
+
+**Statement.** noesis never routes to remote Claude on its own. The
+user decides when heavy reasoning is worth the token cost and the
+data egress. noesis surfaces context; the human presses the button.
+
+**Why.** Automatic escalation destroys the cost model, the privacy
+model, and the trust boundary. It also lets the local model quietly
+outsource its own capability development, undermining every
+hypothesis about small-model competence.
+
+**How to apply.** noesis may prepare a handoff summary (H5). It may
+say "this looks like something you would escalate". It does not call
+the Anthropic API on its own. Any workflow that implies implicit
+escalation must be re-opened with the user.
+
+**Cost.** noesis will sometimes be worse than it would be with auto-
+escalation. Accepted tradeoff.
+
+**Statement.** noesis absorbs prior standalone daemons (`local-search`,
+`key-daemon`) as internal modules rather than co-existing with them.
+New capabilities either become noesis modules or get discarded — the
+system does not accumulate a zoo of parallel services.
+
+**Why.** The "too demanding" problem the user reported about the
+existing daemons is fundamentally about process proliferation and
+coordination cost, not raw computation. Fixing it requires
+consolidation, not addition.
+
+**How to apply.** For each capability considered, ask: can this live
+as a noesis module reusing the same event loop, storage, and memory
+system? If yes, do that. If no, either the capability is out of
+scope, or noesis's process model needs an explicit reconsideration.
+
+**Cost.** Each absorbed module must be re-designed within the noesis
+runtime; the original daemon's design assumptions may not survive
+the migration.
+
+**Statement.** Any architectural claim (RNN vs Transformer, reasoning-
+first, memory-policy) is settled by measurement on the user's real
+held-out eval set, not by argument. Beautiful arguments that fail
+on the eval set lose.
+
+**Why.** This whole project is a wager. Wagers pay off on outcomes,
+not on reasoning quality. The temptation to preserve elegant frames
+after the numbers reject them is exactly the failure mode
+HYPOTHESES.md's evaluation philosophy exists to prevent.
+
+**How to apply.** Every philosophical claim in this project must be
+paired with a falsifiable hypothesis and a cheap test. Refutation
+outweighs elegance. Silence on evidence is not a valid response —
+neither is post-hoc reframing.
+
+**Cost.** Some beautiful ideas will die. That is the point.
+
+**Statement.** Every non-trivial design bet is paired with a
+falsifiable hypothesis in HYPOTHESES.md and a cheap probe *before*
+significant build effort is committed.
+
+**Why.** Sunk-cost bias then rescues bad decisions. Cheap experiments
+protect against months of misdirected work. Gate 1 exists exactly
+for this reason.
+
+**How to apply.** Before starting a phase in ROADMAP.md, verify: is
+there a hypothesis in HYPOTHESES.md this phase advances or tests? Is
+there a cheap probe that could refute the assumption before the
+expensive work begins? If not, add one — and do the probe first.
+
+**Cost.** Some bets look silly to test upfront and are actually cheap
+to validate — the discipline says test anyway. That is not overhead;
+that is the method.
+
+**Statement.** Any experiment that fails is written up with the same
+care as one that succeeds. Silence on failure is worse than the
+failure itself.
+
+**Why.** Without negatives, HYPOTHESES.md drifts toward a wishlist.
+Failure is signal — often more informative than success — and the
+audit trail is worthless without it.
+
+**How to apply.** Each gate produces a short honest write-up
+regardless of outcome. Failed experiments are logged in the
+`experiments/` folder with the same rigour as successful ones.
+"Did not work" is a valid conclusion; "did not report" is not.
+
+**Cost.** Emotional and temporal. Writing up a failure takes work
+and feels bad. Do it anyway.
+
+**Statement.** Every training source has, at minimum: origin, licence,
+role (weights vs retrieval), and reason for inclusion. Sources
+without lineage are not training candidates.
+
+**Why.** Reproducibility, licence hygiene, and the discipline of P2 /
+H7 all depend on knowing what went where. This is also how the
+"open sources only" hard constraint stays enforceable rather than
+aspirational.
+
+**How to apply.** For each corpus file added, write a short metadata
+record: where it came from, its licence, whether it feeds weights or
+retrieval, and why it was included over alternatives. No metadata,
+no training.
+
+**Cost.** Bookkeeping overhead. Accepted.
+
+**Statement.** Prefer choices that can be undone: LoRA over full-tune,
+adapters over rewrites, config over code, retrieval over weight-bake.
+When irreversible is required, name it explicitly.
+
+**Why.** noesis is a research project. The cost of a reversible
+mistake is small; the cost of an irreversible one compounds.
+Reversibility is the enabling condition for the falsify-and-iterate
+loop of P8 / P9.
+
+**How to apply.** When two paths achieve the same outcome and one is
+reversible, take the reversible one — even if it is slightly more
+work. When an irreversible path is chosen, log the choice and its
+rationale in the relevant `experiments/` writeup.
+
+**Cost.** Sometimes an irreversible change is genuinely cheaper.
+Take it — but consciously, not by default.
+
+**Statement.** In noesis, the reasoning substrate is the WKV state.
+Emitted tokens are rare output events, not the mechanism of thought.
+The model *thinks* by evolving its hidden state per input token; it
+*speaks* only when the runtime (or a gate) decides externalisation is
+warranted. Utility NNs that participate in reasoning must do so *in
+the same chain of thought*, not as external oracles the substrate
+consults.
+
+**Why.** Framing reasoning as "generate tokens that describe the
+reasoning" collapses the substrate down to a script. The wager
+behind the RWKV-7 backbone (P4, H4b, H8) is that state evolution *is*
+the computation — a claim that becomes vacuous if every step is
+externalised as text. Treating tokens as the primary evidence of
+reasoning also encourages hallucination: any pressure to produce
+readable output biases the model toward fluent continuation even
+when the state has not converged. If reasoning is state-side, the
+model can hold aporia (H20), refuse premises (H21), and drip silent
+tokens (H16) *because it does not have to emit to think*.
+
+**How to apply.**
+- Runtime and DSL treat tokens as *output events*, not as steps of
+  thought. The composer does not synthesise a "here is my reasoning"
+  paragraph and then act — it acts, and the reasoning trace, if
+  extracted, comes from a state-readout head (H10 `state_readout`)
+  or a drip stream (H16), not from a mandatory CoT prompt.
+- Utility NNs (embedders, classifiers, small policy heads) are
+  fine — see P3 — but if they enter a decision path, they enter it
+  as *state modulators* or *readout heads over state*, not as
+  separate reasoners whose output the substrate re-ingests as tokens.
+- State manipulation (save, load, clone, branch/merge — see H18) is
+  first-class runtime capability, not "someday multimodal". State is
+  the working representation; it deserves the same tooling any
+  first-class runtime data type gets.
+- H8's status is the load-bearing measurement. If H8 refutes at
+  substrate scale, this principle downgrades to a design bias, not
+  an invariant.
+
+**Cost.** Introspection into a diffuse hidden vector is genuinely
+harder than reading text. Debugging is state-inspection, not log-
+reading. Standard SFT recipes (which supervise on CoT tokens) map
+awkwardly onto this frame — noesis has to invent supervision that
+respects state-side computation (see H9, H12b.i utilisation
+regularizer). The frontier's default assumption is CoT-in-tokens,
+and every third-party tool assumes it — swimming against that
+current is real cost.
+
+**Related.** H4b (state-evolution architectures viable for
+reasoning), H8 (state does substantive computation), H10 (test-time
+compute via state refinement, not more CoT), H16 (silent drip
+stream), H17 (state absorbs context, replaces history re-injection),
+H18 (state as manipulable data), H20 (state holds contradictions),
+H21 (state carries premise-validity signal). This is the
+architectural principle behind the entire "state-work first-class"
+workstream.
+
+**Statement.** noesis targets *agility* (working well with unfamiliar
+information under retrieval and tool observation) rather than
+*omniscience* (having internalised as much as possible). Honest
+"I don't know" is a first-class outcome, not a failure mode. Fluent
+confabulation is a bug even when the confabulated answer happens to
+be right.
+
+**Why.** The user's hard constraints — always-on (P4), cheap by
+construction (P5), private, single-substrate at ≤ 3B (P3) —
+foreclose omniscience by construction. A 2.9B model *cannot*
+internalise everything the user's real workflow needs, so the
+interesting question is not "how much can we bake in" but "how well
+can it operate when the knowledge is not baked in". This reframes
+sparse weight-side coverage from *deficiency* to *design margin*:
+P2/H7 ("understanding in weights, knowledge in context") is not a
+compromise made because knowledge does not fit — it is the desired
+shape. The wager is that emergent flexibility from a small model
+trained on reasoning traces + a strong retrieval loop + a truth-
+system that admits its own limits beats a same-size model that has
+memorised more but hedges less. Agility that cheats through
+confabulation is worse than a known limit — the failure mode is
+covert, whereas an honest refusal is a valid step in a longer chain.
+
+**How to apply.**
+- Confabulation is a bug even when the confabulation is right by
+  accident; correct-by-accident behaviour is not evidence that the
+  underlying decision was sound.
+- Runtime shape (retrieval, tools, `state_readout`, drip re-visit)
+  gets tried before "bake it into weights". Weight-baking is the
+  irreversible option (P12) and needs a stronger justification than
+  "would be handy".
+- When benchmarking against reference models, do not score
+  "knows fact X out-of-the-box" as unambiguously good — it must be
+  paired with a "does not fabricate when it does not know" reading.
+  A model that scores higher on the first and lower on the second is
+  not obviously better under this principle.
+- Truth-system probes (H19 weight-contamination, H20 aporia, H21
+  premise-validity) are the runtime enforcement of this principle;
+  they are load-bearing, not decoration. If any of them refutes at
+  the substrate scale, this principle downgrades to a training-recipe
+  target rather than a substrate property, and the corpus / SFT
+  strategy needs an explicit re-open.
+- Any capability request that resolves only by baking more domain
+  knowledge into weights needs an explicit re-open with the user —
+  agility-first is the target, and switching to knowledge-first is
+  a principle change, not a task change.
+- "I don't know", "I would need to look this up", and "this premise
+  looks malformed" are all valid runtime outputs, not conversational
+  hedges to eliminate through SFT. Supervision has to actively teach
+  when to refuse or hedge — the standard SFT reward on fluent
+  continuation pushes the wrong direction here.
+- **Unattributed collective claims are a distinct failure mode
+  (H22).** Statements of the form "usually", "it is generally
+  accepted", "most people think", "everyone knows" — well-formed
+  and stylistically fluent, but with no traceable source — should
+  be flagged, not produced. Not covered by H19 (which asks *where*
+  knowledge lives, weight vs context) or H21 (which asks whether
+  the *premise* is valid); the claim is well-formed and the premise
+  is fine, but the *provenance* is empty. Common practice in LLM
+  outputs; under P14 it is confabulation dressed in collective-
+  voice grammar. Runtime response: either attach a concrete
+  referent (named source or retrieved passage) or reformulate as
+  owned first-person observation ("in my experience", "in the
+  retrieved documents") — not "usually" without owner. Full probe
+  design in H22.
+
+**Cost.**
+- Some benchmarks — and some user interactions — reward the model
+  that guesses fluently. Agility-first loses those cleanly. Accepted.
+- Solving H19/H20/H21 well is *harder* than the equivalent
+  omniscience-first path of "throw more knowledge at the corpus";
+  those hypotheses stop being optional wagers and become required
+  infrastructure. If they fail, this principle takes real damage —
+  the honest-not-knowing story only works if the substrate can hold
+  contradiction (H20), refuse malformed premises (H21), and not
+  quietly reintroduce baked knowledge through the training-set back
+  door (H19).
+- Sets a user-facing expectation that noesis will refuse or defer
+  more often than a comparable knowledge-first model. Requires
+  user tolerance for "check yourself / look this up" outputs where
+  a bigger model would confidently answer.
+- Standard SFT recipes reward fluent continuation; supervision that
+  rewards refusal of invalid premises has no ready-made recipe in
+  the field (P13's "state-side reasoning" cost compounds here).
+
+**Related.** P2 (understanding in weights, knowledge in context) —
+same coin, focused on *where knowledge lives*; P14 is focused on
+*what shape competence takes*. P3 (one local reasoning model),
+P4 (constant cost over peak capability), P5 (cheap by construction)
+— the resource frame that forecloses omniscience. P12
+(reversibility) — retrieval is reversible, weight-baking is not;
+this principle biases toward the reversible path. P13 (reasoning in
+state, not in tokens) — provides the substrate that makes aporia and
+premise-refusal mechanically possible; without state-side
+computation, honest not-knowing collapses back to a fluent hedge.
+H2 (reasoning-first outperforms knowledge-first at this scale) —
+the training-time expression. H7 (understanding in weights,
+knowledge in context) — the corpus discipline this drives. H19
+(weight-knowledge contamination detector) — measures whether the
+boundary actually held after fine-tune. H20 (aporia — state holds
+contradictions without premature collapse) — mechanism enabling
+honest ambiguity. H21 (premise-validity readout) — mechanism
+enabling refusal of malformed queries rather than confabulated
+answers. H22 (unattributed collective claims) — mechanism enabling
+refusal of provenance-empty generalisations dressed in collective-
+voice grammar. This principle is the "why" behind the truth-system
+workstream (H19/H20/H21/H22 as a four-signal cluster) and behind
+rejecting Phase-2 domain fine-tunes as the default answer to weak
+knowledge coverage.
+
+The surface language the model reads and writes. This file is the
+reference spec; `noesis-composer` implements the render side and
+`noesis-runtime` implements the tool-call parse side.
+
+**Implementation status (2026-08-05).**
+- Render side (preamble + keyword retrieval over SQLite): implemented in `noesis-composer`. 5 tests pass.
+- Tool-call dispatcher (parse + dispatch `tool_call` blocks): spec only — `noesis-runtime` skeleton exists but dispatch is not wired.
+- Grammar, block shapes, and normalisation rules below: canonical spec regardless of impl state.
+
+The DSL has three jobs:
+
+1. **Render.** Present SQLite rows and vault content to the model in a
+   compact, uniform shape (so the model does not need to know that
+   memory is SQL).
+2. **Command.** Let the model issue memory-op tool calls
+   (`search / add_insight / update_insight / delete_insight /
+   mark_important`) without JSON boilerplate on the input side.
+3. **Return.** Wrap tool-call results back in the same DSL so the
+   read/write loop uses one language end-to-end.
+
+The DSL is **not**:
+
+- A programming language. No control flow, no expressions, no user
+  functions. Every construct is either a block or a directive.
+- A transport format. Ollama's OpenAI-compatible endpoint speaks JSON;
+  the composer translates DSL ↔ JSON at the boundary.
+- A stable public API. Draft 1 is expected to churn until A1 pilot
+  data confirms what the model actually parses well. See §Open
+  questions.
+- **Cheap on input tokens.** Every extra character on the input side
+  pays H1 tax on every turn. Prefer compact literals, no quoted keys
+  where unambiguous, no redundant type tags.
+- **Trivially machine-parseable.** LL(1) or LALR(1) with a hand-written
+  or PEG parser; no lookahead beyond one block header. The runtime
+  cannot afford a slow parser.
+- **Trivially model-writeable.** Uniform block shape, minimal escape
+  rules, no positional-vs-named-arg mixes. The model should be able to
+  emit the DSL from a short exemplar without invoking a mental JSON
+  serialiser.
+- **Round-trippable through the composer.** Same shape reading and
+  writing. If the composer renders an insight as `insight { … }`, the
+  model updates it via a tool call whose arguments use the same field
+  names.
+Only line comments. Block comments would let the model hide reasoning
+inside `/* … */` on the write path — undesirable for audit (P10).
+- **Identifiers:** `[a-zA-Z_][a-zA-Z0-9_]*`. Used for block kinds and
+  field keys.
+- **Integers:** `-?[0-9]+`. Decimal only. No hex, no underscores in
+  literals (simplifies parser; if the user's data needs hex, the
+  composer renders a hex-tagged string).
+- **Floats:** `-?[0-9]+\.[0-9]+`, optionally with `e[-+]?[0-9]+`.
+- **Booleans:** `true`, `false`.
+- **Null:** `null`. Rendered by the composer for SQL NULL columns
+  when the field is present in the shape but has no value.
+- **Timestamps:** integer milliseconds since Unix epoch, unadorned.
+  Rationale: same as `schema.sql`. If human-readable dates are needed
+  in prompts, that is a composer decision (e.g. adding a
+  `ts_human="2026-07-22T00:35"` sibling field), not a DSL type.
+- **Strings:** `"…"` with backslash escapes: `\\`, `\"`, `\n`, `\t`.
+  No triple-quoted strings; embedded newlines allowed via `\n`. The
+  composer prefers unescaped short strings whenever the token
+  budget permits — see §Composer normalisation (TBD in later chunk).
+- **Arrays:** `[v1, v2, v3]`. Trailing comma allowed; the parser
+  ignores it.
+- **Nested objects:** `{ key = value, key = value }`. See §Block
+  syntax below — a nested object is a value, a block is
+  header-prefixed.
+- Whitespace between tokens is optional and insignificant.
+- Fields inside a block or object are separated by either whitespace
+  or comma. Both are accepted; the composer renders with newlines
+  (one field per line) for readability but the parser tolerates
+  either.
+- No trailing punctuation required at end of block.
+Everything the composer renders is a **block**. A block has three
+parts:
+
+<kind> [<qualifier>] { field = value  field = value  ... }
+
+- `<kind>` — required identifier. Examples: `event`, `insight`,
+  `vault_ref`, `tool_call`, `tool_result`.
+- `<qualifier>` — optional identifier. For events it is the source
+  table without the `ep_` prefix (`keystrokes`, `window_focus`,
+  `git_events`, `tool_calls`). For insights it is the `kind` column
+  value (`reflection`, `fact`, `skill`, `preference`). For results
+  it is the tool name.
+- Body is a set of `key = value` bindings inside braces.
+
+Rationale for `<kind> <qualifier>` over `<kind>.<qualifier>`: the dot
+introduces an operator the parser now has to distinguish from a
+decimal (in `1.5`) and from a path (in `foo.bar` strings). A space
+is unambiguous.
+The composer renders `ep_*` rows into `event <table>` blocks. Field
+names in the DSL match the SQL column names *minus* the redundant
+prefixes (`ts_` → `ts` when unambiguous inside a block, `is_` kept as
+a bool marker). `id` and `session_id` are included; the model needs
+`id` to reference an event in a follow-up tool call, and
+`session_id` grounds the timeline.
+| SQL column        | DSL field     | Notes                                       |
+| ----------------- | ------------- | ------------------------------------------- |
+| `id`              | `id`          | integer                                     |
+| `ts`, `ts_start`  | `ts`          | ms since epoch                              |
+| `ts_end`          | `ts_end`      | omitted if NULL (still open)                |
+| `session_id`      | `session`     | integer                                     |
+| `importance`      | `imp`         | integer 0-10 — short name because it's noisy |
+
+Every event block that carries `importance = 0` at render time has
+that field **omitted** (the default). The composer only emits the key
+when it carries signal.
+Below, one example per kind. The full field set for each kind mirrors
+`schema.sql`; the composer's job is to drop NULL columns and rename
+per the table above.
+
+event keystrokes { id=134582 ts=1721606712345 session=17
+                   keycode=28 key="Return" state=1 window_id=88213
+                   modifiers=4 imp=3 }
+
+event mouse_clicks { id=99101 ts=1721606712112 session=17
+                     button=1 x=812 y=440 window_id=88213 }
+
+event mouse_movement { id=44120 ts=1721606712500 session=17
+                       distance_px=1874 scroll_events=2 }
+
+event window_focus { id=88213 ts=1721606710000 ts_end=1721606712900
+                     session=17 window_class="kitty"
+                     window_title="claude — noesis"
+                     workspace=2 pid=4184001 imp=6 }
+
+event window_events { id=88401 ts=1721606712910 session=17
+                      event="close" window_class="kitty"
+                      window_title="claude — noesis"
+                      workspace=2 }
+
+event idle_periods { id=550 ts=1721603000000 ts_end=1721606100000
+                     session=17 }
+
+event session_events { id=12 ts=1721606700000 session=17
+                       event="unlock" imp=5 }
+
+event system_stats { id=8801 ts=1721606712000 session=17
+                     cpu_percent=4.7 ram_used_mb=6180 ram_total_mb=16384
+                     battery_percent=63 battery_charging=false
+                     net_rx_bytes=12093 net_tx_bytes=884 }
+
+event file_events { id=7712 ts=1721606712611 session=17
+                    op="modify" path="/home/vaniello/Desktop/projects/noesis/memory/schema.sql"
+                    size_bytes=15463
+                    content_hash="sha256:d1e4…"
+                    imp=7 }
+
+event git_events { id=331 ts=1721606750000 session=17
+                   repo_path="/home/vaniello/Desktop/projects/noesis"
+                   op="commit" rev="a1b2c3d4"
+                   summary="B0 rewrite: zones as primary axis"
+                   imp=8 }
+
+event tool_calls { id=4402 ts=1721606712100 session=17
+                   tool="search"
+                   args={ zone="insights" query="B0 pivot" limit=8 }
+                   result={ rows_returned=3 }
+                   latency_ms=142 ok=true }
+
+Notes on the `tool_calls` event block:
+
+- `args` and `result` are rendered as **nested objects**, not string
+  blobs. The composer parses the stored JSON and re-emits it in DSL
+  so the model reads uniform syntax across the whole prompt.
+- `result` is folded to a small summary shape when the full result
+  would blow the token budget (e.g. `{ rows_returned=3 }` instead of
+  each row). The full result is retrievable via a new `search` call
+  by `id`.
+- `error` is included only when `ok=false`.
+- Aggregate rows the retrieval policy did not pick. A turn typically
+  shows 5-20 event blocks total across all kinds, not the full stream.
+- Content-hash and size fields on events the model does not need
+  them for. `file_events` gets `content_hash` when the model is
+  reasoning about content change; it does not get it when the model
+  is only reasoning about a modification timeline.
+- Any event under the credentials skip-list (see
+  `docs/policies.md` §Credentials). Redaction is by construction —
+  the row never reaches the composer.
+
+The composer renders `insights` rows as `insight <kind>` blocks. Body
+uses the same key=value shape as events; `text_form` carries the
+model-authored body verbatim.
+| SQL column       | DSL field     | Notes                                                    |
+| ---------------- | ------------- | -------------------------------------------------------- |
+| `id`             | `id`          | integer; needed for tool-call reference                  |
+| `kind`           | *qualifier*   | `reflection` / `fact` / `skill` / `preference`           |
+| `text_form`      | `text`        | required; model's own body                                |
+| `tags_json`      | `tags`        | array of strings; omitted if empty                       |
+| `importance`     | `imp`         | 0-10; omitted when 0                                     |
+| `confidence`     | `conf`        | 0.0-1.0                                                  |
+| `source`         | `src`         | `agent` / `tool_call` / `user`                           |
+| `ts_created`     | `ts`          | ms since epoch                                            |
+| `ts_last_seen`   | `ts_seen`     | omitted when equal to `ts_created`                       |
+| `ts_last_used`   | `ts_used`     | omitted if never used                                    |
+| `status`         | —             | never rendered; `superseded` / `deleted` rows are filtered by policy |
+
+Provenance is rendered inline only when the retrieval policy asked for
+it (default: hidden — the model does not need the audit graph on every
+turn). When shown, provenance is a nested array of tiny objects:
+
+insight fact { id=8812 ts=1721606712340 conf=0.9 src="agent"
+               tags=["b0","memory","pivot"] imp=7
+               text="B0 rewrite dropped the working-in-SQLite layer; \
+                     session-scratch is RAM only."
+               provenance=[ { ref="ep_tool_calls" id=4402 },
+                            { ref="insights"      id=8790 },
+                            { ref="external"      uri="https://…" } ] }
+
+insight skill { id=1201 ts=1721600000000 conf=0.8 src="agent"
+                tags=["shell","git"] imp=6
+                text="Prefer `git switch` to `git checkout` for branch \
+                      moves; `checkout` is overloaded and less safe." }
+
+insight preference { id=15 ts=1721000000000 conf=1.0 src="user" imp=9
+                     tags=["style"]
+                     text="Russian for conversation, English for code, \
+                           commits, docs." }
+- `status='superseded'` or `status='deleted'` rows. Retrieval filters
+  them out. If the model asks for the audit graph explicitly (via a
+  future introspection tool), those rows may surface with the status
+  visible.
+- Vector labels / embedding metadata.
+- `confidence` when the retrieval score already dominates the ranking
+  (composer's call; keeps prompts terser).
+Personal-vault content is external. What lives in the DSL is a
+pointer plus, under an active retrieval grant, a bounded snippet.
+
+vault_ref { id=7712 path="/home/vaniello/Documents/notes/rwkv-notes.md"
+            mtime=1721600000000 size_bytes=8412
+            snippet="… The G1 line differs from World in that it \
+                     also trains on step-by-step reasoning traces \
+                     from R1-distill …"
+            snippet_range=[1240, 1408]  # byte offsets into the file
+            score=0.71 }
+
+- `snippet` is present only when the retrieval policy granted
+  vault-read scope for this turn (see `docs/policies.md` §Zone
+  permissions). Without a grant, the composer emits `vault_ref` with
+  path/mtime/size/score and no body — the model knows the file
+  matched but not what it says.
+- Whole-file rendering is not supported at the DSL layer; snippets
+  are always bounded. If the model needs more, it issues another
+  `search` with a tighter query and higher `limit`.
+- `snippet_range` gives byte offsets so the model can ask for
+  adjacent context in a follow-up call. Off-by-one is on the
+  composer, not the model.
+The model emits a `tool_call <name>` block per operation. One block
+per turn is the norm; multi-call turns are allowed and dispatched in
+emission order (the runtime does not reorder).
+tool_call <name> { <arg_key> = <value>  ... }
+
+The `<name>` matches one of the five ops in `memory/tool_calls.md`.
+Argument keys match that file's shape verbatim — same field names,
+same types. The runtime rejects unknown keys with a `tool_result`
+error block (see next section); it does not silently drop.
+tool_call search { zone="insights" query="B0 pivot rationale"
+                   filters={ kind="reflection" tags_any=["b0","pivot"] }
+                   limit=8 min_conf=0.5 }
+
+tool_call add_insight { kind="reflection"
+                        text="The composer is the only NL translator; \
+                              write-path stays structured."
+                        tags=["b0","architecture","composer"]
+                        importance=7 confidence=0.85
+                        provenance=[ { ref_table="ep_tool_calls" ref_id=4402 } ] }
+
+tool_call update_insight { id=8790
+                           new_text="B0 rewrite dropped the working-in-SQLite \
+                                     layer; session-scratch is RAM only."
+                           rationale="clarified per structured-native pivot" }
+
+tool_call delete_insight { id=1099
+                           rationale="superseded by policy — vault snippets \
+                                      not stored in insights" }
+
+tool_call mark_important { id=15 importance=10
+                           rationale="user-authored preference; never decay" }
+Rules the tool dispatcher applies before writing anything:
+
+- Unknown `<name>` → immediate `tool_result` error, no `ep_tool_calls`
+  row (the call never happened).
+- Known `<name>` but unknown argument key → error, no
+  `ep_tool_calls` row. Prevents typos silently landing wrong fields.
+- Missing required argument → error, no `ep_tool_calls` row. Required
+  set per op is authoritative in `memory/tool_calls.md`.
+- Type mismatch (e.g. `importance="high"` instead of int) → error.
+- Empty `rationale` on `update_insight` / `delete_insight` → error.
+  Rationale is P10 audit; empty is not acceptable.
+- `add_insight` with zero provenance edges → error.
+- `search` with `zone="personal-vault"` when the current turn has no
+  vault grant → *not* an error — the call is recorded to
+  `ep_tool_calls` with `ok=true`, `result_json` carrying an empty
+  rows array plus `refused="zone"`. This matches the graceful-refuse
+  policy in `memory/tool_calls.md`.
+
+A validated call is recorded to `ep_tool_calls` with `ok=NULL,
+result_json=NULL` before dispatch, and updated on return. See
+`memory/tool_calls.md` §Failure and safety.
+Every dispatched `tool_call` produces a matching `tool_result <name>`
+block in the next turn's context. Shape mirrors the `.result` shapes
+in `memory/tool_calls.md`.
+tool_result search { call_id=4402 ok=true latency_ms=142
+                     rows=[
+                       insight reflection { id=8812 ts=… conf=0.9 src="agent"
+                                            tags=["b0","memory","pivot"] imp=7
+                                            text="…" score=0.87 },
+                       insight fact       { id=8790 ts=… conf=0.85 src="agent"
+                                            tags=["b0","pivot"] imp=6
+                                            text="…" score=0.71 } ] }
+
+tool_result add_insight    { call_id=4405 ok=true id=8820 embedded=false }
+tool_result update_insight { call_id=4406 ok=true old_id=8790 new_id=8821 }
+tool_result delete_insight { call_id=4407 ok=true id=1099 }
+tool_result mark_important { call_id=4408 ok=true id=15 old_importance=9 new_importance=10 }
+
+- `call_id` is the `ep_tool_calls.id` of the originating call. Lets
+  the model correlate result to call across turns without positional
+  matching.
+- `search` results are rendered as inline `insight <kind>` blocks
+  (or, for non-insights zones, as inline `event <table>` /
+  `vault_ref` blocks). This is the round-trip guarantee — the model
+  reads results in the same shape as passively-rendered rows.
+- `score` inside a result-row block is the retrieval-merged rank;
+  the composer includes it only in tool_result contexts.
+tool_result <name> { call_id=<int> ok=false
+                     error="<short human message>"
+                     code="<stable machine code>" }
+
+Stable error codes (small enumeration; the model can learn to react):
+
+| Code                    | Meaning                                                    |
+| ----------------------- | ---------------------------------------------------------- |
+| `unknown_tool`          | `<name>` did not match any op                              |
+| `unknown_arg`           | argument key not in the op's schema                        |
+| `missing_arg`           | required argument absent                                   |
+| `type_mismatch`         | value type wrong for the argument                          |
+| `empty_rationale`       | update/delete without rationale                            |
+| `no_provenance`         | `add_insight` with empty `provenance` array                |
+| `not_found`             | `id` referenced by update/delete/mark_important does not exist |
+| `already_superseded`    | target insight is not `status='active'`                    |
+| `internal`              | dispatcher / storage failure; details in `error`            |
+
+Errors with codes `unknown_tool`/`unknown_arg`/`missing_arg`/
+`type_mismatch`/`empty_rationale`/`no_provenance` are validation
+failures and never touch `ep_tool_calls`. Errors with
+`not_found`/`already_superseded`/`internal` reflect a call that
+reached dispatch — the `ep_tool_calls` row exists with `ok=false`
+and the error string.
+Rules the composer applies when emitting DSL, so the model sees
+predictable shapes and can learn faster:
+
+- **Field order.** Fixed per block kind. For events: `id ts [ts_end]
+  session <kind-specific fields> imp`. For insights: `id ts [ts_seen]
+  [ts_used] conf src [tags] [imp] text [provenance]`. Order is
+  documentation and helps the parser too (one-pass shape check).
+- **Omit-when-default.** `imp=0`, empty tag lists, `ts_seen ==
+  ts_created`, `ts_used = NULL`, provenance without a grant — all
+  omitted. Reduces token load; makes each visible field carry signal.
+- **String rendering.** Prefer `"..."` unescaped when the body has no
+  `\n`, `"`, `\`. Use `\n`-escaped multi-line for insight `text` when
+  the body exceeds ~80 chars. Never truncate insight `text` at the
+  composer; if it does not fit the turn budget, the row is dropped
+  from the result set entirely (better a missing row than a lying
+  one).
+- **Timestamps.** Always ms-since-epoch integers in the DSL. If a
+  human-readable version is worth the tokens for a specific block,
+  the composer adds a sibling `ts_human="2026-07-22T00:35"` string —
+  never replaces the integer.
+- **Nested objects.** Rendered on one line when small; broken across
+  lines with two-space indent when they exceed ~80 chars.
+- **Deterministic ordering.** Within a result set of multiple rows,
+  ordering is by retrieval score descending, ties broken by
+  `ts_last_seen` descending, ties broken by `id` ascending. Stable
+  ordering lets the model refer to "the first result" reliably across
+  a turn.
+document       ::= { block } ;
+block          ::= kind [ qualifier ] "{" fields "}" ;
+kind           ::= identifier ;
+qualifier      ::= identifier ;
+fields         ::= { field [ separator ] } ;
+field          ::= identifier "=" value ;
+separator      ::= "," | whitespace ;
+value          ::= literal
+                 | array
+                 | object
+                 | block ;                # inline block-as-value in results
+literal        ::= integer | float | string | boolean | "null" ;
+array          ::= "[" [ value { "," value } [ "," ] ] "]" ;
+object         ::= "{" fields "}" ;
+identifier     ::= /[a-zA-Z_][a-zA-Z0-9_]*/ ;
+integer        ::= /-?[0-9]+/ ;
+float          ::= /-?[0-9]+\.[0-9]+([eE][-+]?[0-9]+)?/ ;
+string         ::= /"([^"\\]|\\["\\nt])*"/ ;
+boolean        ::= "true" | "false" ;
+comment        ::= /#[^\n]*/ ;
+
+This is intentionally simple: one-pass parseable, no context
+sensitivity. Every ambiguity is resolved by "block if it has a header
+identifier before `{`, object otherwise."
+- **Versioned envelope.** Cheap insurance (`noesis/v1 { … }`) vs one
+  more required line per prompt. Lean: skip in draft 1, add if we
+  ever ship a v2 that breaks parses.
+- **Positional shorthand** for very common blocks. Skipped in draft 1
+  (couples DSL to `schema.sql` column order). Revisit when the
+  input-tricks backlog acts.
+- **Array-of-events wrapping** vs one-block-per-row. Skipped in draft
+  1 (per-row is uniform and cheaper to parse). Revisit when we
+  measure token cost on real prompts.
+- **Escape strategy for embedded DSL in insight `text`.** If a model
+  writes an insight whose body is itself DSL (e.g. quoting an
+  earlier tool call), the current single-level backslash escape
+  works but is ugly. Backtick-delimited raw strings are one option;
+  deferred until we see the pattern.
+- **Streaming.** If the model emits multi-KB `text` for an insight,
+  should the runtime process incrementally? Ollama's SSE stream
+  could be parsed as it lands. Deferred; not on the critical path.
+*Revision pending A1 pilot data on what shapes the model actually parses well vs badly.*

@@ -1,0 +1,61 @@
+# Step 8 — DSL-in-think format + L_state span-mask
+#
+# Corpus: action_chains_dsl_{train,val}.pt
+#   - 1154 sessions converted from action chains to noesis DSL format
+#   - Supervised: <think>tool_call …\ntool_result …</think> spans only
+#   - loss_mask = state_mask = 1 inside <think>…</think>
+#   - ctx_len=32768: full sessions, no truncation (step7 16k limit dropped)
+#
+# Objective change vs step 7:
+#   - L_CE_SFT: supervised only on <think> DSL tokens (not JSON tool_use)
+#   - L_state: span-masked to <think> spans via state_mask in .pt file
+#     → apply state_mask in light_rwkv.py training_step (see lora_train.py §patch)
+#
+# Base: G1h 2.9B step7 checkpoint (already knows action-chain reflexes)
+# Goal: teach DSL format for tool_call/tool_result inside <think> blocks
+# Expected: 2 epochs sufficient for format learning (DSL simpler than JSON)
+
+model:
+  checkpoint: training/runs/pilot_g1h_step7_action/rwkv-0.pth
+  ctx_len: 32768
+  dtype: bf16
+  n_layer: 32
+  n_embd: 2560
+
+lora:
+  rank: 16
+  alpha: 32
+  target_modules: [receptance, key, value]
+  dropout: 0.0
+
+optimizer:
+  name: adamw
+  lr: 5.0e-5
+  weight_decay: 0.01
+  warmup_steps: 20
+  grad_accum_steps: 8
+  batch_size: 1
+
+training:
+  epochs: 2
+  chunk_ctx: 512
+
+corpus:
+  tokenized_pt: training/tokenised/action_chains_dsl_step8_train.pt
+  val_tokenized_pt: training/tokenised/action_chains_dsl_step8_val.pt
+
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [4, 16, 20]
+  # STEP 8: multiply L_state by state_mask before compute_state_reg
+  # Patch: light_rwkv.py::training_step, after StateCapture, apply:
+  #   state_loss = compute_state_reg(capture.per_layer() * state_mask, cfg)
+  # state_mask is loaded from .pt file alongside loss_mask.
+
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1h_step8_dsl
+  save_steps: 20  # ~125 opt-steps/epoch → saves ~6x per epoch; overwrites single file

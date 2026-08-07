@@ -341,3 +341,54 @@ corpus analysis run on 2026-08-06 (63,218 rollouts inspected):
 - `training/corpus/RECLASSIFIED.md`: revised to admit Claude action
   chains as eligible §2 training data (reflexive-first, tool_use loss
   only — the architectural class that was missing from glaive-v2).
+
+### 2026-08-07 — Action-chain training (step7) does not improve multi-slot state retention
+
+**Was.** H12b behavioral baseline probe (quick run 2026-08-07, P=1 only):
+G1h-2.9B step7-action at K=8,P=1 scored 51% vs base 53% — interpreted as
+"NO CONTAMINATION" and "action-chain training appears to have improved
+multi-track state stability independently of the LoRA intervention H12b
+predicts" (HYPOTHESES.md §H12b, same-day entry).
+
+**Refuted by.** Full-depth probe 2026-08-07, 420 cells: K∈{2,4,8},
+P∈{1,2,4}, n=10 per cell, G1d-0.4B + G1h-2.9B base + G1h-2.9B step7.
+Results (`experiments/A0_H12b_multislot/results/report_2026-08-07.md`):
+
+| Model          | K=2,P=1 | K=4,P=1 | K=8,P=1 | K=8,P=2 | K=8,P=4 |
+|----------------|---------|---------|---------|---------|---------|
+| G1h 2.9B base  | 65%     | 67%     | 53%     | 21%     | 5%      |
+| G1h 2.9B step7 | 25%     | 45%     | 51%     | 11%     | 8%      |
+
+Step7 is worse on 7 of 9 cells. The "NO CONTAMINATION" result was a P=1
+artefact: at P=1 shallow retrieval, step7 ≈ base at K=8; at P=2+ depth,
+step7 degrades faster. G1d-0.4B aggregate: K=2: 18%, K=4: 15%, K=8: 7%.
+
+**Learned.**
+1. *P=1 probes are insufficient for multi-slot claims.* A single retrieval
+   pass only tests whether a slot can be addressed at all; multi-pass (P=2+)
+   tests whether retention holds across sequential access. Quick-runs with
+   P=1 will always under-report degradation at depth.
+2. *Architecture (G1h vs G1d) is the dominant factor, not fine-tuning.*
+   G1h 2.9B base at K=8,P=1 = 53%; G1d 0.4B = ~11%. The 2.9B step7 model
+   under-performs its own base at K=2 and K=4, meaning action-chain SFT
+   actively traded off multi-slot depth retention for shallow-retrieval
+   gains that match the one-fact-per-turn structure of its training data.
+3. *Step7 specialised toward one-shot slot access.* The corpus taught the
+   model "retrieve once from recent context" — exactly the action-chain
+   pattern. Multi-round slot cycling (P=2+) is not represented in
+   action chains, so it regressed. This is a corpus-architecture fit
+   failure, not a weight-capacity failure.
+4. *H12b architectural treatment is still unrun and unrefuted.* This
+   entry covers only the behavioral baseline (vanilla models, no LoRA
+   expansion). The claim "LoRA-expanded multi-slot state with utilisation
+   regularizer improves multi-slot retention" is not addressed by this
+   probe. H12b + H12b.i remains a live Phase 2 hypothesis.
+
+**Changed.**
+- `HYPOTHESES.md` §H12b: "NO CONTAMINATION" qualifier added: "P=1 only, K=8";
+  the "action-chain training improved stability" sentence struck and replaced
+  with the full 9-cell table and "step7 < base on 7/9 cells" verdict.
+- H12b status updated: behavioral baseline = MIXED (architecture helps,
+  SFT hurt multi-slot depth); architectural treatment pending.
+- H12b.i (utilisation regularizer): mandatory confirmed — training did not
+  spontaneously produce balanced slot utilisation even at 2.9B.

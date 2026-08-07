@@ -6,6 +6,8 @@ Usage:
         --lora  /tmp/step4_lora_step3500.pth \
         --out   /tmp/step4_merged_step3500.pth \
         --rank  16 --lora-alpha 32
+
+Note: output is always saved in bfloat16 to halve disk usage vs. fp32 base models.
 """
 import argparse, torch
 from pathlib import Path
@@ -34,11 +36,16 @@ def merge(base_path, lora_path, out_path, rank, lora_alpha):
         if base_key not in base:
             print(f"  [warn] {base_key} not in base — skipping")
             continue
-        delta = (B @ A).to(base[base_key].dtype) * scale
-        base[base_key] = base[base_key] + delta
+        delta = (B.float() @ A.float()) * scale
+        base[base_key] = (base[base_key].float() + delta).to(torch.bfloat16)
         merged += 1
 
-    print(f"Merged {merged} LoRA pairs (scale={scale})")
+    # Cast all remaining fp32 tensors to bf16 (embedding, head, ln weights, etc.)
+    for k in base:
+        if base[k].dtype == torch.float32:
+            base[k] = base[k].to(torch.bfloat16)
+
+    print(f"Merged {merged} LoRA pairs (scale={scale}), output dtype=bfloat16")
     print(f"Saving to {out_path} ...")
     torch.save(base, out_path)
     print("Done.")

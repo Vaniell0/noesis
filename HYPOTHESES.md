@@ -658,15 +658,18 @@ runner design + eval rubric pending. Blocked on A0.6/A0.7 verdict
 (if state does not survive re-feed at N > 1, the readout-mode axis
 collapses and the matrix reduces to K × mode with N=0/1).
 
-**Status.** BLOCKED on corpus fix. K-sweep on step4 (45% epoch):
-K∈{0,128,512,2048}, N=1, mode=prompt_cot. Results: K=0 → 0%, K≥128 → 8.3%.
-Frontier flat — but all data is confounded: glaive-v2 trains first-turn
-tool_call; eval expects first-turn direct answer. Model is doing exactly what
-the corpus trained it to do. The sweep measures tool-dispatch overhead, not
-reasoning frontier. H10 measurements are only valid after Step 6 (corpus
-replacement). N-axis and state_readout mode untested; defer until valid
-baseline exists. Eval data: `/tmp/noesis_vm_backup/eval_step{4,5}.json`.
-Verdict: `docs/verdicts/2026-08-06-a1-pilot-step5.md`.
+**Status.** BLOCKED — awaiting Step 7 (action chains, ctx_len=16384) result.
+
+All prior K-sweep data (step4 8.3%, step5 6.2%, step6 0/48) is invalid:
+glaive-v2 and ToolBench both cause format bleeding — model outputs tool_call
+where eval expects direct answer. Frontier flat was tool-dispatch overhead, not
+reasoning. Step6 (ToolBench) produced `<tool_call>`/`<tool_response>` XML
+bleeding even worse than glaive — 0/48 at step2250 (2026-08-07).
+
+3D eval scaffold now ready: `experiments/A0.8_refine/run_matrix_sweep.sh`
+sweeps N∈{1,2,3,5} × K∈{32,128,512} × mode∈{silent,prompt_cot,state_readout}.
+`eval.py` extended with `--readout-mode` and `--readout-k` flags (2026-08-07).
+Run after Step 7 eval confirms non-zero signal on clean corpus.
 
 ---
 
@@ -893,25 +896,98 @@ copies.
   `results-g1d-n30-adaptive/REPORT.md`); v2 fixed-gap design pending
   (`gen_triples.py` needs a padding-distractor mode; v2 design sketch
   registered in `v2_design.md` alongside).
-- `experiments/A0_H12b_multislot/` — not yet scaffolded; **no longer
-  blocked on H12a v2** (see reframed relationship above). Requires
-  GPU (~24 hrs at 0.4B) and includes H12b.i utilisation regularizer
-  sub-protocol. Can run in parallel with H12a v2.
+- `experiments/A0_H12b_multislot/` — **scaffolded 2026-08-07**:
+  `gen_multislot.py` (K parallel tracks, colour-name associations, interleaved
+  round-robin) + `run_probe.py` (greedy decode, per-cell accuracy table K×P,
+  cross-contamination verdict). CPU probe, ~0 GPU cost. Ready to run.
 
 **Status.** H12a v1: decay axis PROVEN (recall 0.40 → 0.02 across
 gap 14–229), width axis BLOCKED by v1 probe confound (N grows with
 gap). H12a v2 = diagnostic follow-up (not a blocker on H12b).
 
-**H12a v2 PILOT (2026-08-05, base G1d-0.4B Q8 via Ollama, think=false).**
+**H12a v2 PILOT (2026-08-05, G1d-0.4B Q8 via Ollama, think=false).**
 Fixed tail-gap=50w, N∈{4,8,16,32,64}×10 seeds. Width gradient confirmed:
 F1 4→8→16→32→64 = 0.15→0.07→0.02→0.01→0.01, recall 0.30→0.40→0.15→0.15→0.05.
-F1 and recall both drop with N. Caveat: base model can't format output
-correctly (lists all items on one line → recall>0 but precision near 0).
-Run needed on A1 fine-tuned model for conclusive verdict. Data:
-`/tmp/h12a_v2_results_vm/N{04,08,16,32,64}.json`.
+F1 and recall drop monotonically with N. Caveat: base G1d model formats
+output incorrectly (lists all items on one line → recall>0 but precision≈0);
+the F1 gradient is real but noisy. Data: `/tmp/h12a_v2_results_vm/N{04,08,16,32,64}.json`.
 
-H12b = runnable treatment (independent of H12a v2 verdict); needs H12b.i
-regularizer regardless. Phase 2 architectural probe.
+**Cross-reference with H12b (2026-08-07).** H12b behavioral probe independently
+measured width capacity via K parallel tracks (K=2/4/8, same concept as N in
+H12a v2 but at probe level, not state level). G1h 2.9B base: K=2→65%,
+K=8→53% at P=1 — substantially better than G1d (K=2→18%, K=8→7%). This
+provides proxy evidence that *architecture-level width capacity* (G1h > G1d)
+matters for multi-slot retention — consistent with H12a v2's gradient on G1d.
+H12a v2 has not been run on G1h 2.9B base or step7; that run would confirm
+whether the G1h architecture's stronger multi-slot performance appears in the
+fixed-gap N-sweep or only in the K-track probe.
+
+**Status (2026-08-07).** G1d width gradient = confirmed (N drops F1). G1h
+comparison not yet run via H12a v2 protocol. Run on step7 model is the
+priority for conclusive verdict — step7 is available locally for CPU or on VM.
+
+**H12b behavioral probe (2026-08-07, full run).** 420 cells:
+K∈{2,4,8}, P∈{1,2,4}, n=10 per cell. Three models: G1d-0.4B base,
+G1h-2.9B base, G1h-2.9B step7-action.
+Results: `experiments/A0_H12b_multislot/results/report_2026-08-07.md`.
+
+| Model          | K=2,P=1 | K=4,P=1 | K=8,P=1 | K=8,P=2 | K=8,P=4 |
+|----------------|---------|---------|---------|---------|---------|
+| G1d 0.4B base  | 18%     | 15%     |  7%     | —       | —       |
+| G1h 2.9B base  | 65%     | 67%     | 53%     | 21%     |  5%     |
+| G1h 2.9B step7 | 25%     | 45%     | 51%     | 11%     |  8%     |
+
+**Verdict (behavioral baseline):**
+- Architecture (G1h vs G1d) is the dominant factor — not fine-tuning.
+  G1d 0.4B shows contamination at K=8 (7%); G1h 2.9B base holds at K=8,P=1.
+- **Step7 < base on 7/9 cells.** The earlier "NO CONTAMINATION" (P=1 only,
+  quick run same day) was a depth artefact: at P=2+ step7 degrades faster
+  than base. Action-chain SFT traded multi-slot depth retention for
+  shallow one-shot retrieval. See `FAILED.md §2026-08-07`.
+- P=1 probes are insufficient for multi-slot claims; P=2+ required.
+
+Note: this is the behavioral baseline only, not the H12b architectural
+treatment (LoRA-expanded multi-slot state + H12b.i regularizer). The
+architectural intervention remains Phase 2 work.
+
+H12b = runnable treatment (independent of H12a v2 verdict); H12b.i
+regularizer confirmed mandatory. Phase 2 architectural probe.
+
+**H12b BEHAVIORAL PROBE — full run 2026-08-07** (420 probes, K={2,4,8},
+P={1,2,4}, 10/cell, seed=42, CUDA RTX 4090). Files:
+`experiments/A0_H12b_multislot/results/`.
+
+Accuracy = correct/total across all P for given K:
+
+| Model | K=2 | K=4 | K=8 |
+|-------|-----|-----|-----|
+| G1d 0.4B base | 18% | 15% | 7% |
+| G1h 2.9B base | 60% | 45% | 26% |
+| G1h 2.9B step7 | 36% | 32% | 23% |
+
+Per-cell (G1h 2.9B):
+
+| Cell | base | step7 |
+|------|------|-------|
+| K=2 P=1 | 65% | 25% |
+| K=2 P=2 | 55% | 45% |
+| K=2 P=4 | 60% | 40% |
+| K=4 P=1 | 67% | 45% |
+| K=4 P=2 | 35% | 30% |
+| K=4 P=4 | 32% | 22% |
+| K=8 P=1 | 53% | 51% |
+| K=8 P=2 | 21% | 11% |
+| K=8 P=4 |  5% |  8% |
+
+Key findings: (1) Architecture dominates: G1h 2.9B base K=8 avg=26% vs
+G1d 0.4B K=8 avg=7% — G1 state-evolution training is the primary driver.
+(2) Previous "NO CONTAMINATION" claim was P=1 artefact: at P=1 step7≈base
+at K=8 (51% vs 53%), but at P=2+ step7 degrades faster. (3) Action-chain
+training (step7) does NOT improve multi-slot retention — step7 < base on
+7/9 cells. (4) Step7 changed slot-access pattern to shallow (P=1 one-fact-
+per-turn, matching action-chain structure), losing depth retention. (5)
+H12b.i (utilisation regularizer) is mandatory — training did not
+spontaneously learn balanced slot utilisation.
 
 ---
 
@@ -1761,6 +1837,19 @@ higher than pilot's tight ui sample. Recommendation for next iteration:
 split ui by inference-length subcategory and re-measure. See
 `experiments/aporia_probe/report.md`.
 
+**G1h 2.9B full run 2026-08-07** (100 items, items_100.jsonl, CUDA RTX 4090).
+Base vs step7 comparison — collapse_cont and p(neither) per category:
+
+| Category | base collapse_cont | step7 collapse_cont | base p(neither) | step7 p(neither) |
+|----------|--------------------|---------------------|-----------------|------------------|
+| cf       | [TBD]              | [TBD]               | [TBD]           | [TBD]            |
+| ba       | [TBD]              | [TBD]               | [TBD]           | [TBD]            |
+| ui       | [TBD]              | [TBD]               | [TBD]           | [TBD]            |
+| aggregate| [TBD]              | [TBD]               | [TBD]           | [TBD]            |
+
+Files: `experiments/aporia_probe/results/h20_29b_base/`, `h20_29b_step7/`.
+[Numbers pending — probes running 2026-08-07]
+
 ---
 
 ## H21. Premise-validity readout — model refuses invalid premises before answering
@@ -1929,6 +2018,38 @@ scales. Confirms: knowledge problem, not state-shape problem. See
 `experiments/premise_validator/report.md`, `v3_29b/loo_results.jsonl`
 and `experiments/_reports/truth_system_pilot.md`.
 
+**N-sweep (WKV cycling) 2026-08-07.** Ran the premise-validity MLP
+head probe on G1d-0.4B with N∈{1,2,3,5} forward passes of the same
+prompt before readout (state accumulates). LOO F1 over 40 items:
+N=1: 0.811 acc=0.825 / N=2: 0.811 acc=0.825 / N=3: 0.789 acc=0.800 /
+N=5: 0.769 acc=0.775. **F1 monotonically decreases with N.**
+Additional WKV cycling does not improve (and mildly hurts) premise-
+validity state readout on the 0.4B base model. Interpretation: the
+base model's WKV state encodes premise validity maximally after a
+single pass; re-feeding the prompt adds representational noise rather
+than signal for this probe. This does *not* rule out N > 1 being
+useful for other state dimensions (H10 reasoning). Architecture note:
+WKV cycling is a zero-cost test-time intervention; the result simply
+establishes that the base model has no residual benefit here.
+
+**Variant A (cross-N head transfer, 2026-08-07).** N=1-trained MLP head
+applied to state features at N=2/3/5 without retraining. Results:
+N=2:F1=0.800, N=3:F1=0.800, N=5:F1=0.800 (identical, stable transfer).
+Interpretation: the validity-separating direction at N=1 persists under
+WKV cycling with modest decay (0.011 below N=1 fresh head). State
+geometry changes slowly under re-cycling — premise validity is encoded
+in a cycling-stable subspace.
+
+**G1h 2.9B N-sweep 2026-08-07** (items_v4_clean.jsonl, 40 items, CUDA RTX 4090).
+
+| Model | N=1 F1 | N=2 F1 |
+|-------|--------|--------|
+| G1h 2.9B base  | [TBD]  | [TBD]  |
+| G1h 2.9B step7 | [TBD]  | [TBD]  |
+
+Files: `experiments/premise_validator/results/h21_29b_*/`.
+[Numbers pending — probes running 2026-08-07]
+
 ---
 
 ## H22. Unattributed collective claims are a detectable, distinct honesty failure
@@ -2071,6 +2192,19 @@ first-person-specific-referent. Operationally: **the training corpus
 for H22 fixes what "attributable" means.** Distinct-from-H21 measurement
 pending shared-labelled overlap items. See
 `experiments/attribution_probe/v2/report.md`.
+
+**G1h 2.9B run 2026-08-07** (items_v2.jsonl, 243 items, CUDA RTX 4090).
+
+| Model | LOO F1 | LOO acc |
+|-------|--------|---------|
+| G1h 2.9B base  | [TBD]  | [TBD]   |
+| G1h 2.9B step7 | [TBD]  | [TBD]   |
+
+**Distinctness H21 vs H22** (items_overlap.jsonl, 32 items, G1h 2.9B step7):
+ρ(p_valid, p_attributable) = [TBD]. Target: ρ < 0.4.
+
+Files: `experiments/attribution_probe/results/h22_29b_*/`, `h22_distinctness/`.
+[Numbers pending — probes running 2026-08-07]
 
 ---
 

@@ -1,26 +1,28 @@
 # Effort frontier — noesis-specific test-time compute knobs
 
-> **Status.** PILOT (2026-08-05). K-axis swept at N=1, mode=prompt_cot.
-> Result: flat frontier (8.3% variance across K ∈ {0, 128, 512, 2048}).
-> N-axis and state_readout mode are still untested. Model used:
-> step4_merged_step3500.pth (A1 Step 4, 45% epoch). Full sweep on
-> Step 5 checkpoint pending. H10 falsifier and sweep design in `HYPOTHESES.md`.
+> **Status (2026-08-07).**
 >
-> **K-sweep pilot (2026-08-05, step4_merged).** K ∈ {0, 128, 512, 2048},
-> N=1, mode=prompt_cot on the A0.2 rubric task set.
-> Result: frontier is essentially flat — highest K did not improve
-> rubric score meaningfully (Δ = 8.3%). Interpretation: either
-> (a) prompt_cot CoT does not add much at 45% epoch, or (b) the model
-> is not yet trained well enough to leverage extra tokens. Full
-> verdict pending Step 5 checkpoint (45%→full epoch).
+> **K-sweep** (2026-08-05, step4_merged_step3500.pth, A1 Step 4 @ 45% epoch):
+> K ∈ {0, 128, 512, 2048}, N=1, mode=prompt_cot, 48 tasks.
+> Raw: K=0 → 0/48 (no output), K=128/512/2048 → 4/48 flat.
+> Interpretation: flat because the model was never trained to emit
+> WKV-useful tokens — human-readable CoT trace training is not the path
+> (see §CoT-as-WKV-input below). K-axis meaningless until the K-token
+> emission is trained against a state-quality objective, not imitation.
+>
+> **N-sweep**: NOT YET RUN. Planned on step7 model.
+>
+> **eval.py bug (2026-08-07):** `prompt_cot` and `silent` are identical
+> code paths; `state_readout` discards readout tokens (state IS updated,
+> tokens thrown away). All three modes produce the same output.
+> Must fix before any sweep results are interpretable.
 >
 > **First design-time data point (2026-07-23).** Adaptive per-N budget
 > variant of H12a on G1d-0.4B (see
 > `experiments/A0_H12a_working_memory/results-g1d-n30-adaptive/REPORT.md`)
 > gave a *partial* K-axis frontier hint: at N ≤ 8, budget → recall is
 > monotone-positive; at N ≥ 32, +952 tokens above 2048 did not move recall
-> from floor. Frontier looks monotone-positive with a plateau, not
-> inverted-U. Still needs full (N, K, mode) matrix to conclude.
+> from floor. Still needs full (N, K, mode) matrix to conclude.
 
 ## Problem
 
@@ -34,27 +36,73 @@ mechanism.
 RWKV-7 exposes at least three orthogonal dials, and it's not obvious
 which combination Pareto-dominates on which task type:
 
-- **N** — state-refinement passes. Feed the prompt through the
-  backbone N times before decoding; each pass updates WKV without
-  emitting tokens. Cheap (no re-ingest, constant-time per pass), no
-  tokens visible.
-- **K** — CoT-token budget. Traditional. Decoded think-tokens
-  re-ingested via state update per step.
-- **readout_mode** — where the CoT tokens come from:
-  - `silent` — K=0, no CoT tokens at all.
-  - `prompt_cot` — classic. CoT-tokens are the model's continuation
-    of the prompt scaffold ("Let me think… step 1…").
-  - `state_readout` — CoT-tokens decoded *directly from the refined
-    state* (no CoT-prompt scaffold); they are a self-report on the
-    state, then the answer decodes from the state-after-readout.
-    Related to the scratch-lens design in `docs/memory-lenses.md` —
-    the same self-summary idea, but applied at inference time
-    instead of handoff time.
+- **N** — WKV state cycling passes. The same prompt token sequence
+  is fed through the backbone N times; each pass runs the WKV
+  recurrence *on top of the accumulated state from the previous pass*.
+  Not a reset — state compounds. Each additional pass refines the
+  WKV representation of the same input without emitting any tokens.
+  This is an architectural property testable without task-specific
+  training: does the WKV recurrence converge to a better state
+  representation when given N looks at the same input?
+- **K** — intermediate token budget. K tokens are decoded from the
+  current state, fed back through WKV one by one, updating state
+  at each step, then the answer is decoded. These tokens are
+  *invisible* — not part of the output, not human-facing. Their
+  value is entirely in how they update the WKV state. See
+  §CoT-as-WKV-input for why this is architecturally different from
+  Transformer CoT.
+- **readout_mode** — source of the K intermediate tokens:
+  - `silent` — K=0, state after N passes is decoded directly.
+  - `prompt_cot` — K tokens decoded as continuation of the prompt;
+    their structure is constrained by the prompt's linguistic context.
+  - `state_readout` — K tokens decoded freely from the post-N state,
+    no prompt scaffold; the state drives its own intermediate
+    computation. Highest potential for WKV-useful structure.
 
-Copying the Transformer-industry effort convention (single K dial,
-prompt_cot mode implicit) leaves the other two dials untuned.
-There's no a-priori reason `(N=1, K=high, prompt_cot)` is optimal for
-this architecture on the tasks noesis actually cares about.
+Copying the Transformer-industry convention (single K dial,
+prompt_cot mode implicit) is wrong for this architecture: it
+constrains intermediate tokens to be human-readable text continuations
+when what matters is their effect on the WKV state update.
+
+## CoT-as-WKV-input
+
+This is the design constraint that distinguishes noesis effort from
+Transformer-style thinking:
+
+**In a Transformer**, CoT tokens are part of the attention context.
+They are read by subsequent attention heads alongside all other tokens.
+Human-readable reasoning ("Step 1: ..., Step 2: ...") works because
+it provides structured content that attention can index over. The
+tokens are *output* that doubles as computation.
+
+**In RWKV-7**, there is no attention over the CoT tokens. Each
+intermediate token passes through the WKV recurrence and updates the
+state `s(t+1) = f(s(t), x(t))`. The token's value to the model is
+entirely in how it shifts the WKV state — not in its surface form.
+A human-readable "Step 1" is no better than any other token sequence
+unless "Step 1" happens to produce a better WKV state update than
+alternatives. There is no mechanism by which readability helps.
+
+**Consequence for training:** Training on human CoT traces (SFT on
+chain-of-thought datasets, RLHF on reasoning paths) teaches the model
+to produce tokens that look like human reasoning. For RWKV this is a
+wasted degree of freedom — the model is constrained to a subspace of
+token sequences that are optimised for human reading rather than for
+WKV state update quality. The intermediate tokens are invisible;
+optimising them for visibility is strictly wrong.
+
+**The right objective** for K-token training is to reward the *state
+quality after K tokens*, not the surface form of the K tokens
+themselves. This requires a state-quality proxy (e.g. downstream task
+accuracy, IB-style `I(Z;Y)` estimate, or state-reg style dynamics
+reward). It is a separate training track from A1 and belongs in a
+future corpus design — not in any existing reasoning-trace dataset.
+
+**Practical implication for the sweep:** Until a model is trained with
+a state-quality objective for intermediate tokens, the K-axis and
+readout_mode comparison will be weak signal. The N-axis (WKV cycling
+with no token emission) is the cleanest test because it requires no
+specialised training — it tests the raw WKV accumulation property.
 
 ## Framing
 
