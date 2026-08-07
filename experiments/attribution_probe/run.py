@@ -104,6 +104,29 @@ class _MLPHead(nn.Module):
         return self.net(x).squeeze(-1)
 
 
+def _train_head_full(
+    X_train: np.ndarray, y_train: np.ndarray,
+    epochs: int, lr: float, weight_decay: float, seed: int,
+) -> Tuple["_MLPHead", "torch.Tensor", "torch.Tensor"]:
+    """Train MLP on full dataset; return (head, mu, sd) for serialisation."""
+    torch.set_grad_enabled(True)
+    torch.manual_seed(seed)
+    Xt = torch.from_numpy(X_train).float()
+    yt = torch.from_numpy(y_train).float()
+    mu = Xt.mean(dim=0, keepdim=True)
+    sd = Xt.std(dim=0, keepdim=True).clamp_min(1e-6)
+    Xt = (Xt - mu) / sd
+    m = _MLPHead(in_dim=Xt.shape[1])
+    opt = torch.optim.Adam(m.parameters(), lr=lr, weight_decay=weight_decay)
+    lossf = nn.BCEWithLogitsLoss()
+    for _ in range(epochs):
+        m.train(); opt.zero_grad()
+        loss = lossf(m(Xt), yt); loss.backward(); opt.step()
+    m.eval()
+    torch.set_grad_enabled(False)
+    return m, mu, sd
+
+
 def _train_and_predict_one(
     X_train: np.ndarray, y_train: np.ndarray,
     X_test: np.ndarray,
@@ -303,6 +326,15 @@ def main() -> int:
         )
         for j, i in enumerate(amb_idx.tolist()):
             ambiguous_scores.append((items[i]["id"], float(pv[j])))
+
+    # Full-fit head on all labelled data — saved as runtime gate.
+    head_full, mu_full, sd_full = _train_head_full(
+        X[labelled_idx], y[labelled_idx].astype(np.float32),
+        epochs=args.epochs, lr=args.lr, weight_decay=args.weight_decay, seed=args.seed,
+    )
+    head_path = os.path.join(args.out, "head.pt")
+    torch.save({"head": head_full.state_dict(), "mu": mu_full, "sd": sd_full}, head_path)
+    print(f"[H22] full-fit head saved → {head_path}", file=sys.stderr)
 
     results_path = os.path.join(args.out, "results.jsonl")
     with open(results_path, "w") as fout:
