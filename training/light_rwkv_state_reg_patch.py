@@ -71,8 +71,14 @@ def apply() -> str:
 
     from lora_train import load_state_reg_config
     from state_reg import compute_state_reg
+    import yaml as _yaml
 
     cfg = load_state_reg_config(yaml_path)
+    # ε-mask params (step 9): read outside_epsilon from yaml
+    _raw_cfg = _yaml.safe_load(open(yaml_path))
+    _sr_raw = _raw_cfg.get("state_reg", {})
+    _eps_out = float(_sr_raw.get("outside_epsilon", 0.0))
+    _eps_in  = float(_sr_raw.get("inside_epsilon",  1.0))
 
     if cfg.mode == "off" or cfg.alpha == 0.0:
         _PATCH_APPLIED = True
@@ -97,10 +103,15 @@ def apply() -> str:
     def training_step_with_state_reg(self, batch, batch_idx):  # type: ignore[no-redef]
         args = self.args
         T_train = args.chunk_ctx
-        if isinstance(batch, (tuple, list)) and len(batch) == 3:
+        if isinstance(batch, (tuple, list)) and len(batch) == 4:
+            idx, targets, _mask, _state_mask = batch
+        elif isinstance(batch, (tuple, list)) and len(batch) == 3:
             idx, targets, _mask = batch
+            _state_mask = None
         else:
             idx, targets = batch
+            _mask = None
+            _state_mask = None
         B, T = idx.shape
         C = args.n_embd
         H = args.dim_att // args.head_size_a
@@ -153,12 +164,15 @@ def apply() -> str:
         ).requires_grad_()
         token_amount = 0
         traj_per_L: dict[int, list[torch.Tensor]] = {L: [] for L in cfg.work_layers}
+        # ε-mask: per-chunk alpha scalar based on <think> token fraction
+        chunk_alphas: list[float] = []
 
         for i in range(math.ceil(T / T_train)):
+            chunk_slice = slice(i * T_train, (i + 1) * T_train)
             total_loss, new_shift_states, new_wkv_states, token_amount = torch_checkpoint(
                 checkpointed_step,
-                idx[:, i * T_train:(i + 1) * T_train],
-                targets[:, i * T_train:(i + 1) * T_train],
+                idx[:, chunk_slice],
+                targets[:, chunk_slice],
                 total_loss,
                 states.shift_states,
                 states.wkv_states,
@@ -171,27 +185,41 @@ def apply() -> str:
                 new_shift_states.clone().detach(),
                 new_wkv_states.clone().detach(),
             )
+            # Compute ε-scaled alpha for this chunk
+            if _eps_out > 0.0 and _state_mask is not None:
+                chunk_sm = _state_mask[:, chunk_slice].float()
+                think_frac = chunk_sm.mean().item()
+                # effective_mask formula: span * (1 - ε_out) + ε_out
+                chunk_alpha = cfg.alpha * (think_frac * (1.0 - _eps_out) + _eps_out)
+            else:
+                chunk_alpha = cfg.alpha
+            chunk_alphas.append(chunk_alpha)
 
         lookup = {L: torch.cat(traj_per_L[L], dim=1) for L in cfg.work_layers}
         state_loss = compute_state_reg(lookup, cfg)
+        # Apply mean ε-scaled alpha across chunks (approximation: one alpha per seq)
+        mean_alpha = sum(chunk_alphas) / max(len(chunk_alphas), 1)
 
         # Periodic state_loss logging — written once per opt-step (not per micro-batch).
         _step = self.global_step
         if _log_steps > 0 and _step % _log_steps == 0 and _step != _last_logged[0]:
             _last_logged[0] = _step
             _sl = state_loss.detach().float().item()
-            _tl = (total_loss + cfg.alpha * state_loss).detach().float().item()
+            _tl = (total_loss + mean_alpha * state_loss).detach().float().item()
             _ce = total_loss.detach().float().item()
             print(
                 f"[state_reg] step={_step} "
-                f"ce={_ce:.4f} state_loss={_sl:.4f} total={_tl:.4f}"
+                f"ce={_ce:.4f} state_loss={_sl:.4f} alpha={mean_alpha:.4f} total={_tl:.4f}"
             )
             _log_path = os.path.join(args.proj_dir, "state_loss.jsonl")
             with open(_log_path, "a") as _f:
-                json.dump({"step": _step, "ce": _ce, "state_loss": _sl, "total": _tl}, _f)
+                json.dump({
+                    "step": _step, "ce": _ce, "state_loss": _sl,
+                    "alpha": mean_alpha, "total": _tl,
+                }, _f)
                 _f.write("\n")
 
-        return total_loss + cfg.alpha * state_loss
+        return total_loss + mean_alpha * state_loss
 
     _lr.RWKV.training_step = training_step_with_state_reg
     _PATCH_APPLIED = True
