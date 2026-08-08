@@ -1,0 +1,8 @@
+{"id": "inv_cat_02", "category": "invalid", "invalid_type": "category", "y_true": 0, "p_valid": 0.0006319544045254588, "y_pred": 0}
+{"id": "inv_imp_01", "category": "invalid", "invalid_type": "impossible", "y_true": 0, "p_valid": 0.00016857140872161835, "y_pred": 0}
+{"id": "inv_imp_02", "category": "invalid", "invalid_type": "impossible", "y_true": 0, "p_valid": 0.11161825060844421, "y_pred": 0}
+{"id": "inv_imp_05", "category": "invalid", "invalid_type": "impossible", "y_true": 0, "p_valid": 0.010012360289692879, "y_pred": 0}
+{"id": "val_reason_01", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.9719207286834717, "y_pred": 1}
+{"id": "val_reason_02", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.9575092196464539, "y_pred": 1}
+{"id": "val_open_01", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.990623414516449, "y_pred": 1}
+{"id": "val_open_02", "category": "valid", "invalid_type": null, "y_true": 1, "p_valid": 0.9990655779838562, "y_pred": 1}

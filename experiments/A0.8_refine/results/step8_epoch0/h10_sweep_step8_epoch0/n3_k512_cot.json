@@ -1,0 +1,661 @@
+{
+  "model": "training/runs/pilot_g1h_step8_dsl/rwkv-0.pth",
+  "backend": "rwkv",
+  "num_predict": 512,
+  "n_passes": 3,
+  "readout_mode": "prompt_cot",
+  "readout_k": 64,
+  "n_tasks": 48,
+  "elapsed_s": 496.5292730331421,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 3,
+    "overall_accuracy": 0.0625,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 1,
+        "accuracy": 0.125
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 1,
+        "accuracy": 0.16666666666666666
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 1,
+        "accuracy": 0.16666666666666666
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": " one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII text encoded as 8-bit binary, one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode it. Output only the decoded text.The following is ASCII",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": " 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100Decode this ASCII-binary sequence (8 bits per character, MSB first): 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "6572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "IHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode this base64 string: cmVhc29uaW5nIHdpbnM=. Output only the decoded text.Decode",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": " text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": " 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English word. Find N (1 <= N <= 25) that makes it decode to a real word, and output the decoded word only.The text",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text: 47 4f 4f 5e 0a 47 4fThe bytes below (hex) are ASCII text XORed byte-wise with the single-byte key 0x2A. Decode to text:",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": "n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens\\ntokens = text.split()\\n# Tokenize the text into tokens",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode the following: \u03b3\u03b1\u03b7\u03b5. Output only the decoded word.Given the substitution table \u03b1=a, \u03b2=b, \u03b3=c, \u03b4=d, \u03b5=e, \u03b6=f, \u03b7=g, \u03b8=h, \u03b9=i, \u03ba=j, decode",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": " 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.Solve for x: 3x + 7 = 22. Give only the numeric value.",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": " only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.Sol",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": " expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify: (2a + 3b) - (a - b). Give the simplified expression.Simplify:",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": " to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kilograms. Answer with the number and unit.Convert 2500 grams to kil",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [kg*m/s, kg*m^2/s^2, kg/",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": " of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force per area and area has units of length squared, what are the base SI units of pressure in terms of kg, m, s? Answer as an expression.If pressure has units of force",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": "Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.Given f(x) = 2x + 3 and g(x) = x^2, compute f(g(2)). Answer numerically only.",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": ", city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name, age, occupation, city. Output only valid JSON.",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": " 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_price. Text: 'Please ship 12 units of the Model-B widget at $4.50 each.' Output only JSON.Extract the order details from this text into JSON with keys product, quantity, unit_",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": ".' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From: 'The meeting on 2026-08-14 at 15:30 UTC will cover topic: budget review.' Extract into JSON with keys date, time, timezone, topic. Output only JSON.From:",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": ".168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status, latency_ms. JSON only.Extract from: 'Server logs: request from 192.168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint, status,",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": ".com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug #4712 (severity: high) reported by rina@example.com; blocks release 2",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": ", 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity, unit}), temperature_c, duration_min. JSON only.From: 'Recipe: 300g flour, 2 eggs, 150ml milk, mix and bake at 180\u00b0C for",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire_date, annual_salary_usd. JSON only.From: 'Employee: Yuki Tanaka; department: Data Science; hired 2024-01-15; salary 8200",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "73) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.From: 'GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": " takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do 1 task at a time. What is the minimum total time to complete all three tasks? Answer numerically in minutes.Three tasks: A takes 20 min, B takes 30 min, C takes 15 min. B depends on A. C has no dependencies. You have 2 workers who can each do",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": " X must end before Z starts. Find the start time of X.\nWe need to compute the latest possible start time for X such that Y ends before X starts, and Z ends before X starts.\nLet\u2019s denote start time of X as S. Then X ends at S+1 hour = S+60 minutes.\nY must end before X starts, so Y's end time \u2264 S. Y duration 30 minutes, so Y start time = S - 30 minutes.\nZ must end before X starts, so Z's end time \u2264 S. Z duration 1.5 hours = 90 minutes. So Z start time = S - 90 minutes.\nNow we need to ensure that the intervals do not overlap. The intervals are:\n- X: [S, S+60]\n- Y: [S-30, S]\n- Z: [S-90, S]\nWe need to check that these intervals do not overlap. The condition for non-overlap is that the end of one interval is \u2264 the start of the next interval.\nCheck Y and Z: Y ends at S, Z starts at S-90. Since S \u2265 90 (because Z must start before X starts, and X starts at S, Z cannot start before S). So S \u2265 90. Then Z's end = S \u2264 S, so Z ends before X starts. Good.\nCheck Y and X: Y ends at S, X starts at S. Since Y ends at S, and X starts at S, they touch at the boundary. The problem says \"cannot overlap\" \u2014 typically overlapping means sharing a time point is allowed? Usually overlapping means they share a time point, but the problem says \"cannot overlap\" \u2014 likely means they cannot share a time point. So Y's end must be strictly before X's start. So we need S > 30 minutes. So Y's end = S-30 < S. Good.\nCheck X and Z: Z ends at S, X starts at S. Same issue. So Z's end = S \u2264 S, so they touch. The problem says \"cannot overlap\" \u2014 likely means they cannot share a time point. So Z's end must be strictly before X's start. So S > 90 minutes. So Z's end = S \u2264 S, so they touch. The problem says \"cannot overlap\" \u2014 likely means they cannot share a time point. So Z's end must be strictly before X's start. So S > 90 minutes. So Z",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": " D1\n- Carol = D1 (fixed)\nWe need to assign desks to Alice, Bob, Carol such that:\n1. Each desk is assigned to exactly one person.\n2. The assignments are distinct.\n3. Alice cannot use D3.\n4. Bob cannot use D1.\n5. Carol must use D1.\nSince Carol is fixed at D1, we have:\n- D1 is taken by Carol.\n- Bob cannot use D1 \u2192 Bob cannot use D1 (already taken by Carol). So Bob must use D2 or D3.\n- Alice cannot use D3 \u2192 Alice cannot use D3. So Alice must use D1 or D2.\nBut note: Carol is already using D1, so D1 is taken. Therefore, Alice cannot use D1 (already taken by Carol). So Alice must use D2.\nNow, Bob cannot use D1 (already taken by Carol) and cannot use D3 (because Bob refuses D1). So Bob must use D2.\nBut wait: we have three desks and three people. We have:\n- Carol \u2192 D1\n- Bob \u2192 D2 (because D1 is taken by Carol and Bob cannot use D1)\n- Alice \u2192 D3 (because D1 and D2 are taken, so Alice must use D3)\nBut wait, the problem says: \"Alice cannot use desk D3\" \u2014 so she cannot use D3. But we have three desks and three people. The desks are distinct. So the assignment is:\n- Alice \u2192 D3\n- Bob \u2192 D2\n- Carol \u2192 D1\nHowever, note that the problem says: \"Bob refuses desk D1\" \u2014 so Bob cannot use D1. And Carol wants D1. So D1 is taken by Carol. Then Bob cannot use D1 (already taken) and cannot use D3 (because he refuses D1). So Bob must use D2.\nThen Alice cannot use D3 (because Bob uses D2) and cannot use D1 (because Carol uses D1). So Alice uses D3.\nBut wait, the problem says: \"Alice cannot use desk D3\" \u2014 so she cannot use D3. So she must use D2? But D2 is taken by Bob. So that's impossible.\nWait, let's re-read: \"Alice cannot use desk D3\" \u2014 meaning she cannot use",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": " total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.A worker takes 4 hours per widget. There are 3 workers and 20 widgets to make. If they can all work in parallel, how many total hours are needed? Round up.",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups is minimum. What is that minimum difference?You have 5 boxes of weights 3, 5, 7, 8, 12 kg. Split them into two groups so the total-weight difference between groups",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": " 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3, 4, 5, 6 into bins of capacity 8. Minimum number of bins needed?You have to pack 4 items with sizes 3",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": ": Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a palindrome.\\n\\nUser: Write a Python function to check if a number is a",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": " case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.Take",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": " letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only the resulting string.Given 'engineering', remove every letter that appears more than once. Preserve original order of the letters that stay. Output only",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": " letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule to 'abcabcabc': double each letter and separate original triples by a slash. Output only the result.Apply the following rule",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": " only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string 'the quick brown fox', how many words have exactly 3 letters? Answer numerically only.In the string '",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": " both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.Given 'planet' and 'planed', how many positions (0-indexed, aligned from the left) have the SAME letter in both words? Answer numerically only.",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.Convert 173 (base 10) to binary. Output only the binary string.",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": " (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex) to decimal. Answer only the number.Convert 0xFA (hex",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": " no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 01001110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 01001110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 01001110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 01001110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 01001110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 01001110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 01001110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": " spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 010011100110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 010011100110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 010011100110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 010011100110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 010011100110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 010011100110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 010011100110. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: a=00, b=01, c=10, d=11. Decode the following bits",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "0001010011. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011. Output only the decoded letters concatenated, no",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": "0001010011101100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011101100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011101100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011101100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011101100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 000001010011101100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: r=000, e=001, a=010, d=011, y=100, s=101. Decode the following bitstring by splitting it into 3-bit chunks from left to right and mapping each chunk with the codebook.",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": " no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10, a=110, n=111. Decode the following bitstring by reading it left to right and consuming the shortest matching code at each position. Bitstring: 01011010. Output only the decoded letters concatenated, no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10, a=110, n=111. Decode the following bitstring by reading it left to right and consuming the shortest matching code at each position. Bitstring: 01011010. Output only the decoded letters concatenated, no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10, a=110, n=111. Decode the following bitstring by reading it left to right and consuming the shortest matching code at each position. Bitstring: 01011010. Output only the decoded letters concatenated, no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10, a=110, n=111. Decode the following bitstring by reading it left to right and consuming the shortest matching code at each position. Bitstring: 01011010. Output only the decoded letters concatenated, no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10, a=110, n=111. Decode the following bitstring by reading it left to right and consuming the shortest matching code at each position. Bitstring: 01011010. Output only the decoded letters concatenated, no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10, a=110, n=111. Decode the following bitstring by reading it left to right and consuming the shortest matching code at each position. Bitstring: 01011010. Output only the decoded letters concatenated, no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10, a=110, n=111. Decode the following bitstring by reading it left to right and consuming the shortest matching code at each position. Bitstring: 01011010. Output only the decoded letters concatenated, no spaces, no explanation.Codebook (variable-length prefix code): e=0, t=10",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": " no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 10110100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 10110100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 10110100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 10110100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 10110100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 10110100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each chunk with the codebook. Bitstring: 10110100. Output only the decoded letters concatenated, no spaces, no explanation.Codebook: c=00, d=01, a=10, b=11. Decode the following bitstring by splitting it into 2-bit chunks from left to right and mapping each",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}

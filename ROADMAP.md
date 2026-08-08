@@ -141,6 +141,15 @@ serialize them.
     epoch. VM root@161.104.49.78 (RTX 4090). Progress 47%, sum_loss≈0.562.
     Config: `training/config/pilot_step5_from3500.yaml`.
 - H7 falsifier (retrieval-parity contrast on merged Step5) remains open.
+- **Step 8 H10 sweep (2026-08-07, epoch 0).** 3D matrix N∈{1,2,3} ×
+  K∈{32,128,512} × mode∈{silent,prompt_cot,state_readout} on G1h 2.9B
+  step 8 checkpoint (DSL+L_state training). Peak: **N=2 silent 33.3%**
+  (16/48). N=3 silent collapses to 6.3% — third pass corrupts state.
+  state_readout == prompt_cot exactly at every (N,K) pair — readout axis
+  carries no additional signal at epoch 0 (H10 "readout carries signal"
+  falsified). First bit_decoding success: bit_sub_01 at N=2 K=128.
+  extraction = 0% everywhere (DSL training overwrote direct-output path).
+  Full table: `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory

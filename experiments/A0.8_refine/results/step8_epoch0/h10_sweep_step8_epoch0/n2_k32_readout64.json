@@ -1,0 +1,661 @@
+{
+  "model": "training/runs/pilot_g1h_step8_dsl/rwkv-0.pth",
+  "backend": "rwkv",
+  "num_predict": 32,
+  "n_passes": 2,
+  "readout_mode": "state_readout",
+  "readout_k": 64,
+  "n_tasks": 48,
+  "elapsed_s": 93.3479573726654,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 5,
+    "overall_accuracy": 0.10416666666666667,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 1,
+        "accuracy": 0.125
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 2,
+        "accuracy": 0.3333333333333333
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 2,
+        "accuracy": 0.3333333333333333
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": " one byte per group, MSB first: 01001000 01000101 01001100 01001100 01001111. Decode",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": " 01110010 01110101 01101110 00100000 01110100 01100101 01110011 01110100",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "-8 text encoded as hexadecimal, two hex digits per byte: 6e6f65736973. Decode.The following is UTF-8",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "6572206973203432Decode this hex string to ASCII: 74686520616e73776572206973203432",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "string, required): Path to the file to read.\\n- `encoding` (string, optional, default=\\\"utf-8\\\"): Encoding to use when",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": " text.Apply ROT-13 to decode: 'nggnpx ng qnja'. Output only the decoded text.Apply ROT-13 to decode: '",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": " 25) that makes it decode to a real word, and output the decoded word only.The text 'olsw' is a Caesar cipher of a common English",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "f 5e 0a 47 4f\\n\\nOutput:\\nThe decoded text is: \\\"The key is: f8f8f8f",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": "()` method converts bytes to a string using the specified encoding\\n# The `decode()` method converts bytes to a string using the specified encoding\\n# The",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "\n- \u03b9 \u2192 i\n- \u03ba \u2192 j\nThe message is: \u03b3\u03b1\u03b7\u03b5.\nLet's decode each letter:\n- \u03b3 \u2192 c",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "|im_start|>user\\nSolve for x: 3x + 7 = 22. Give only the numeric value.\\nAnswer: x =",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": " get all x terms on one side.\n-6 = 2x + 6\nStep 4: Subtract 6 from both sides to isolate the x term.",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": " (2a + 3b) - (a - b). \nFirst, I should distribute the negative sign across the second parentheses. That means I need to",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": ".\\\"\n<+> The user's intent is to convert a mass measurement from grams to kilograms.\n<+> The relevant information is that 1",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "/h? Answer numerically only.A car travels 90 km in 45 minutes. What is its average speed in km/h? Answer numerically only.",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "2/s^2, kg/s, m^3]? Output only the chosen expression.Which of these has units of energy (choose one): [",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": " is $m = 70$ kg. What is the person's weight on Earth? Answer in units of N.\nAnswer: The weight of an object is",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": " the input 2, and then apply the function f to the result of that. So first, compute g(2), then plug that into f.\nLet",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": ", city. Output only valid JSON.From the text: 'Alice, aged 34, works as an engineer in Berlin.' Extract fields into JSON with keys name",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": "<+> Output JSON.\n<+> Output JSON.\n<+> Output JSON.\n<+> Output JSON.\n<+> Output",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": " <+> <+> <+> <+> <+> <+> <+> <+> <+> <+> <+",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": ".168.1.42 to /api/v1/users returned 404 in 123 ms.' Output JSON with keys client_ip, endpoint",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": ".com; blocks release 2.3.' Output JSON with keys bug_id, severity, reporter, blocks_release. JSON only.From: 'Bug",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": ", 2 eggs, 150ml milk, mix and bake at 180\u00b0C for 25 minutes.' Output JSON with keys ingredients (list of {item, quantity",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "; department: Data Science; hired 2024-01-15; salary 82000 USD annually.' Output JSON with keys full_name, department, hire",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "73) captured at altitude 156 m; accuracy 5 m.' Output JSON with keys latitude, longitude, altitude_m, accuracy_m. JSON only.",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "We need to compute the earliest finish time for each task under the constraint.\nWe can think of a greedy approach: schedule tasks in order of earliest finish time",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": ".\\n- X \u2264 Z start.\\n- No overlap.\\n\\nStep 2: Try Y at 09:30.\\n- Y ends at 10",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": "- 1.67 \u2192 2 hours.\n**Step 3:** Verify.\\n- 3 workers \u00d7 2 hours \u00d7 4 widgets/hour = 24 widgets.\\n",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "'s think about this step by step.\nFirst, the total weight of all boxes is the sum of all the weights. Let me calculate that first. The",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": " polynomial-time algorithm for the general case, but there are heuristics and approximations.\nFirst, let me list the items and their sizes: 3,",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "nThe user wants the reversed string. The instruction says \\\"Output only the reversed string.\\\" So we should output \\\"yellort\\\".\\n\\n",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "The user says: \\\"Take the string 'aBcDeFg' and swap the case of every character. Output only the transformed string.\\\"\\n",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": "'.\\n\\nNow I need to verify this result by running the `verify_result` tool with the same input to confirm the output matches the expected",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": " of the frequencies of the most frequent character in each substring. Find the minimum possible cost of such a split.\nInput:\nThe first line contains $T",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": " So, the steps I need to take are:\n1. Split the input string into words. The default split in Python is on whitespace, so that's",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": " I should compare each character in the two strings at the same index. For every position i, check if the i-th character of 'planet' is the",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "^2). Answer only the number.Compute: ((7 * 8) + (12 / 4)) - (5^2). Answer only the number.",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": " positive integer, this is done by repeatedly dividing by 2 and recording the remainders.\\n\\nLet me work through the conversion step by step:\\n\\",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "\\n\\n## Task\\n\\n## Task\\n\\n## Task\\n\\n## Task\\n\\n## Task\\n",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "/4 full. After adding 6 liters, it's 5/8 full. What is its total capacity in liters?A container is 1/4",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": " no explanation.\\n\\nAssistant: <think>The user wants me to decode a bitstring using a codebook. The codebook is a=",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": " spaces, no explanation.\\n\\nAssistant: <think>The user wants me to decode a bitstring using a codebook. The codebook is",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "0001010011. Output only the decoded letters concatenated, no spaces, no explanation.\\n\\nAssistant: <think>The user wants me",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": "0001010011101100. Output only the decoded letters concatenated, no spaces, no explanation.\\n\\nAssistant: <think>The",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": " no spaces, no explanation.\\n\\nAssistant: <think>The user wants me to decode a bitstring using a variable-length prefix code.",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": " no explanation.\\n\\nAssistant: <think>The user wants me to decode a bitstring using a codebook. The codebook is:\\n",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+# Step 9 — Serious training: latent-CoT + ε-mask + H12b.i + H16 gate signal
+#
+# Goals:
+#   1. Fix extraction=0%: ε-mask restores WKV signal outside <think> spans
+#   2. Fix bit_decoding: RFC binary-protocol corpus activates latent G1h knowledge
+#   3. Teach WKV-optimal CoT: self-generated <think> traces filtered by correctness
+#   4. H12b.i utilization regularizer: prevent LoRA slot collapse
+#   5. H16 gate signal: train model to know when to emit vs stay silent
+#
+# Key lesson from step 8: 100% DSL format killed extraction.
+# Step 9 corpus is deliberately mixed: RFC QA (plain text) + self-CoT + small DSL fraction.
+#
+# Base: step 8 epoch 0 merged checkpoint (G1h 2.9B + 2-epoch DSL adapter)
+# Method: LoRA rank 32 (up from 16), target_modules expanded to include output proj
+#
+# Corpus (to be built before launch):
+#   training/tokenised/step9_rfc_train.pt       — RFC binary-protocol QA tasks
+#   training/tokenised/step9_selfcot_train.pt   — self-generated CoT, filtered
+#   training/tokenised/step9_action_mix_train.pt — 10% action-chain (anti-forgetting)
+#   training/tokenised/step9_val.pt             — held-out val set
+#
+# state_mask in .pt files:
+#   inside <think>: 1.0
+#   outside <think>: EPSILON (0.05) — no longer hard 0
+
+model:
+  checkpoint: training/runs/pilot_g1h_step8_dsl/rwkv-0.pth  # step8 epoch0 merged
+  ctx_len: 32768
+  dtype: bf16
+  n_layer: 32
+  n_embd: 2560
+
+lora:
+  rank: 32                          # up from 16 — more expressivity for CoT shaping
+  alpha: 64
+  target_modules: [receptance, key, value, output]  # added output proj
+  dropout: 0.0
+
+optimizer:
+  name: adamw
+  lr: 3.0e-5                        # slightly lower than step8 (5e-5) — preserve extraction
+  weight_decay: 0.01
+  warmup_steps: 30
+  grad_accum_steps: 8
+  batch_size: 1
+
+training:
+  epochs: 3                         # more epochs for diverse mixed corpus
+  chunk_ctx: 512
+
+corpus:
+  # Mixed corpus — fill paths after tokenization
+  tokenized_pt: training/tokenised/step9_combined_train.pt
+  val_tokenized_pt: training/tokenised/step9_val.pt
+
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+
+  # STEP 9: ε-mask — WKV signal is NEVER fully off, just weaker outside <think>
+  # effective_mask = span_mask * (1 - outside_epsilon) + outside_epsilon
+  # Patch location: same as step8 (light_rwkv.py training_step after StateCapture)
+  outside_epsilon: 0.05
+  inside_epsilon: 1.0               # full L_state inside <think>
+
+  # All layers get L_state signal inside <think> (was 3 layers in step8)
+  # Outside <think>: only original 3 layers with ε weight
+  work_layers_inside: [0, 4, 8, 12, 16, 20, 24, 28]   # 8 sampled layers
+  work_layers_outside: [4, 16, 20]                      # original 3, ε-weighted
+
+  # H12b.i utilization regularizer (MoE-style, prevents LoRA slot collapse)
+  # Adds aux_loss = -entropy(gate_probs) across LoRA rank slots
+  # Keeps all rank components active, prevents winner-take-all collapse
+  h12b_i_aux_weight: 1.0e-4        # small — regularizer, not primary signal
+  h12b_i_enabled: true
+
+  # H16 gate signal: add binary supervision on <emit> decisions
+  # When model produces <think>...</think> then answer: <emit>=1 (correct)
+  # When model should have been silent but emitted noise: <emit>=0
+  # Requires emit_gate field in corpus .pt files (built by tokenizer)
+  h16_gate_weight: 1.0e-3
+  h16_gate_enabled: true            # only active if emit_gate field present in .pt
+
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1h_step9
+  save_steps: 20
+
+# ── Corpus build instructions ────────────────────────────────────────────────
+# Before launching step9:
+# 1. Build RFC corpus:
+#    python training/scripts/restructure_rfc.py \
+#        --rfcs training/corpus/rfc_binary/ \
+#        --out training/corpus_open/rfc_qa.jsonl
+#    python training/tokenize_rollouts.py \
+#        --input training/corpus_open/rfc_qa.jsonl \
+#        --out-train training/tokenised/step9_rfc_train.pt \
+#        --out-val training/tokenised/step9_rfc_val.pt \
+#        --format plain_cot  # NOT DSL
+#
+# 2. Generate self-CoT corpus from step8 checkpoint:
+#    python experiments/A0.8_refine/generate_cot_corpus.py \
+#        --model training/runs/pilot_g1h_step8_dsl/rwkv-0.pth \
+#        --tasks experiments/A0_eval/tasks.jsonl \
+#        --n-variants 200 \
+#        --out training/corpus_open/selfcot.jsonl
+#
+# 3. Combine + tokenize:
+#    python training/scripts/combine_step9_corpus.py \
+#        --rfc training/tokenised/step9_rfc_train.pt \
+#        --selfcot training/tokenised/step9_selfcot_train.pt \
+#        --action training/tokenised/action_chains_dsl_step8_train.pt \
+#        --action-fraction 0.10 \
+#        --out training/tokenised/step9_combined_train.pt

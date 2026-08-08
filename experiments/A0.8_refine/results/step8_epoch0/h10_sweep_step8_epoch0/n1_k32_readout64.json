@@ -1,0 +1,661 @@
+{
+  "model": "training/runs/pilot_g1h_step8_dsl/rwkv-0.pth",
+  "backend": "rwkv",
+  "num_predict": 32,
+  "n_passes": 1,
+  "readout_mode": "state_readout",
+  "readout_k": 64,
+  "n_tasks": 48,
+  "elapsed_s": 80.60789942741394,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 3,
+    "overall_accuracy": 0.0625,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 2,
+        "accuracy": 0.25
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 1,
+        "accuracy": 0.16666666666666666
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": "bit integer `N` (the number of messages in the file).\\n- The file is followed by `N` messages, each of which is a sequence",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": " 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "\nThe decoded text is: \"The given text is a palindrome.\"\nThe decoded text is: \"The given text is a palindrome.\"",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "** the decoded message matches the expected content\\n\u2705 **Verified** the decoded message matches the expected content\\n\\n---\\n\\n##",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "=\\\". The tool expects a string, so I should call it with that string. The output should be the decoded text. No other parameters needed. The user",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": "Input: \\\"VXHVYV\\\"\\nOutput: \\\"HELLO\\\"\\n\\nExample 4:\\nInput: \\\"VXHVY",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": "decoded| \u2264 100)\\n\\n## Examples\\n\\n### Example 1\\n\\n```\\nInput:\\nN = 3\\",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": "f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": " 115 115 115 115 115 115 115 115 115 115 115 115 115 115 115 115",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "n\\nAssistant: <think>\\nOkay, let's see. The user wants me to decode the message using the substitution table provided. The message",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": " by 2: x = -6.</think>\n-6.000000.",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": "b}",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": "",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": ":** Convert time to hours: 45 minutes = 45/60 = 0.75 hours.\\n**Step 2:** Apply formula: speed = distance / time =",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": ">\\n#include <array>\\n#include <utility>\\n#include <cstddef>\\n#include <cstdint>\\n#include",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": "^2, so pressure = (mass * (m/s^2)) / (m^2) = (kg * m/s^2)",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": " = 2*4 + 3 = 11. So answer is 11.\\n\\nThe user wants a single number. Provide the answer.\\n\\nWe",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": " Task\\n\\n## Task\\n\\n## Task\\n\\n## Task\\n\\n## Task\\n\\n## Task\\",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": " Model-B widget, quantity is 12, unit price is $4.50. The user wants JSON with keys product, quantity, unit_price. The",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": " time, timezone, topic. The note says \"UTC\" \u2014 so the timezone is UTC. The date is 2026-08-14. The time is",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": " logs include a timestamp, client IP, endpoint, status, and latency.\\n\\nI need to extract:\\n- client_ip (already extracted)\\",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": " specified keys. The tool call succeeded and returned the expected structure. The next step is to present the JSON output to the user.\n</think>\n<",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": ". The assistant's response matches the user's request exactly. The user's query was in English, and the assistant's response is in English. The user's",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": ">\n<think>\nThe file exists and contains the employee data. I need to parse it and extract the required information. The JSON structure is:\n",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": " message says: \\\"GPS coord (lat 55.7558, lon 37.6173) captured at altitude 156 m; accuracy 5 m.\\\"\\n",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "\": 30, \"dependencies\": [\"Task A\"]},\n    {\"name\": \"Task C\", \"duration\": 15, \"dependencies\": []}\n  ],\n  ",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": " H (30), I (60), J (30), K (30), L (30), M (30), N (30), O (30),",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "s the result to `output.json`\\n\\n## \ud83d\udccb Input Format\\n\\n```json\\n{\\n  \\\"desk",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": " the nearest whole number.\\n\\nFirst, I need to figure out how much work each worker can do in a day. Since each worker makes one widget",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": ".\nFirst, I should list out the weights. The boxes are 3, 5, 7, 8, and 12 kg. So the total weight is 3",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": " capacity 8 \u2192 remaining 3.\\n4. Third bin: 4 \u2192 capacity 8 \u2192 remaining 4.\\n5. Fourth bin: 3 \u2192 capacity 8 \u2192 remaining",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "\\n## Input\\n- `text`: A string representing the text to search within.\\n- `pattern`: A string representing the substring to search for",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": " remaining letters should stay the same. Let's think about how to approach this.\nFirst, I should process the input string and count the frequency of each character",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": "bccbbccbbccbbccbbccbbccbbccbbccbbccbbccbbccbbccbbccbbccbbccbbccb",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": "\n- \"quick\" = 5 letters \u2192 no.\n- \"brown\" = 5 letters \u2192 no.\n- \"fox\" = 3 letters \u2192 count",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": "planet` and `planed` simultaneously.\n3. For each pair of characters at the same index, if they are the same, increment the counter.",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": " a list of tuples `(timestamp, value)`, where `timestamp` is the index of the reading in the input list, and `value` is the reading",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": " be the amount added, right? Let me write that down.\nFirst, convert 1/4 to eighths so I can subtract it from 5/8",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": "The bitstring is 01001110.\\n\\nI need to split this into 2-bit chunks from left to right:\\n01, 00,",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": "- 11 \u2192 D\\n\\nThe bitstring is split into 2-bit chunks from left to right:\\n- 01 \u2192 B\\n- 00",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "0\\n- d = 011\\n- y = 100\\n- s = 101\\n\\nThe bitstring is split into",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": " a = 010\\n- d = 011\\n- y = 100\\n- s = 101\\n\\nThe bitstring",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": " tuples of (code, frequency). The decoding process uses a priority queue to select the symbol with the smallest frequency at each step. The bitstring is read from",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": "\\nThe bitstring is \\\"10110100\\\". I need to split this into 2-bit chunks from left to right.\\n\\nChunk",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}

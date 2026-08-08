@@ -50,4 +50,4 @@ state_reg:
 logging:
   run_dir: training/runs
   run_name: pilot_g1h_step7_action
-  save_steps: 35  # optimizer steps (= ~250 micro-batches ≈ 22% epoch); grad_accum=8
+  save_steps: 250

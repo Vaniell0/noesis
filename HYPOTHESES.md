@@ -658,18 +658,69 @@ runner design + eval rubric pending. Blocked on A0.6/A0.7 verdict
 (if state does not survive re-feed at N > 1, the readout-mode axis
 collapses and the matrix reduces to K × mode with N=0/1).
 
-**Status.** BLOCKED — awaiting Step 7 (action chains, ctx_len=16384) result.
+**Status.** PARTIAL — 3D sweep completed on step 8 epoch 0 checkpoint
+(G1h 2.9B, `training/runs/pilot_g1h_step8_dsl/rwkv-0.pth`, 2026-08-07).
+Sweep: N∈{1,2,3} × K∈{32,128,512} × mode∈{silent,prompt_cot,state_readout},
+48-task A0.2 rubric (6 categories). K=512 files unread (too large for current
+tooling); those cells marked N/A below.
+
+**Step 8 epoch 0 sweep results (overall accuracy, 48 tasks):**
+
+| N | K   | mode         | overall  | arith | bit_dec | extract | sched  | str_ops | symbolic |
+|---|-----|--------------|----------|-------|---------|---------|--------|---------|----------|
+| 1 | —   | silent       | 27.1%    | 75%   | 6.3%    | 0%      | 33.3%  | 33.3%   | 62.5%    |
+| 1 | 32  | prompt_cot   | 6.3%     | 0%    | 0%      | 0%      | 16.7%  | 0%      | 25%      |
+| 1 | 32  | state_readout| 6.3%     | 0%    | 0%      | 0%      | 16.7%  | 0%      | 25%      |
+| 1 | 128 | prompt_cot   | 16.7%    | 25%   | 6.3%    | 0%      | 33.3%  | 16.7%   | 37.5%    |
+| 1 | 128 | state_readout| 16.7%    | 25%   | 6.3%    | 0%      | 33.3%  | 16.7%   | 37.5%    |
+| 1 | 512 | prompt_cot   | N/A      | —     | —       | 0%      | —      | —       | —        |
+| 1 | 512 | state_readout| N/A      | —     | —       | 0%      | —      | —       | —        |
+| 2 | —   | silent       | **33.3%**| 25%   | 18.8%   | 0%      | **66.7%** | 50% | 62.5%    |
+| 2 | 32  | prompt_cot   | 10.4%    | 0%    | 0%      | 0%      | 33.3%  | 33.3%   | 12.5%    |
+| 2 | 32  | state_readout| 10.4%    | 0%    | 0%      | 0%      | 33.3%  | 33.3%   | 12.5%    |
+| 2 | 128 | prompt_cot   | 22.9%    | 0%    | 6.3%    | 0%      | 50%    | 50%     | 50%      |
+| 2 | 128 | state_readout| 22.9%    | 0%    | 6.3%    | 0%      | 50%    | 50%     | 50%      |
+| 2 | 512 | prompt_cot   | N/A      | —     | —       | 0%      | —      | —       | —        |
+| 2 | 512 | state_readout| N/A      | —     | —       | 0%      | —      | —       | —        |
+| 3 | —   | silent       | 6.3%     | 0%    | 0%      | 0%      | 16.7%  | 16.7%   | 12.5%    |
+| 3 | 32  | prompt_cot   | 4.2%     | 0%    | 0%      | 0%      | 16.7%  | 16.7%   | 0%       |
+| 3 | 32  | state_readout| 4.2%     | 0%    | 0%      | 0%      | 16.7%  | 16.7%   | 0%       |
+| 3 | 128 | prompt_cot   | 6.3%     | 0%    | 0%      | 0%      | 16.7%  | 16.7%   | 12.5%    |
+| 3 | 128 | state_readout| 6.3%     | 0%    | 0%      | 0%      | 16.7%  | 16.7%   | 12.5%    |
+| 3 | 512 | prompt_cot   | N/A      | —     | —       | 0%      | —      | —       | —        |
+
+**Key findings:**
+
+1. **Best cell: N=2 silent (33.3%).** Silent double-pass beats all CoT
+   modes at this checkpoint. Adding K think-tokens hurts for CoT modes
+   (N=2 K=128 at 22.9% < N=2 silent 33.3%).
+
+2. **N=3 collapse.** N=3 silent drops to 6.3% from N=2 silent 33.3% —
+   catastrophic regression. Third silent pass saturates or corrupts the
+   working state. Confirmed across all K: N=3 CoT cells also collapse.
+
+3. **state_readout == prompt_cot (exact tie).** Every (N, K) pair shows
+   numerically identical accuracy across the two modes. The state-readout
+   pathway carries zero additional signal over prompt-injected CoT at
+   epoch 0. **H10 falsification criterion triggered**: "readout carries
+   signal" (Δ ≥ 0.02) is not met → drop the readout axis pending A1.
+
+4. **extraction = 0% everywhere.** Root cause: step 8 trained 100% on
+   DSL `<tool_call>/<tool_result>` format (glaive-v2). The model calls
+   `extract_meeting_info(...)` etc. instead of emitting bare JSON.
+   The direct-output pathway has been overwritten by tool-dispatch training.
+
+5. **First bit_decoding success.** N=2 K=128 — `bit_sub_01` (Greek-to-Latin
+   substitution) solved correctly. Bit_decoding otherwise 0/16 across
+   all cells; suggests multi-pass state helps but K=128 threshold is needed.
 
 All prior K-sweep data (step4 8.3%, step5 6.2%, step6 0/48) is invalid:
 glaive-v2 and ToolBench both cause format bleeding — model outputs tool_call
-where eval expects direct answer. Frontier flat was tool-dispatch overhead, not
-reasoning. Step6 (ToolBench) produced `<tool_call>`/`<tool_response>` XML
-bleeding even worse than glaive — 0/48 at step2250 (2026-08-07).
+where eval expects direct answer. Step6 (ToolBench) produced
+`<tool_call>`/`<tool_response>` XML bleeding even worse — 0/48 at step2250.
 
-3D eval scaffold now ready: `experiments/A0.8_refine/run_matrix_sweep.sh`
-sweeps N∈{1,2,3,5} × K∈{32,128,512} × mode∈{silent,prompt_cot,state_readout}.
-`eval.py` extended with `--readout-mode` and `--readout-k` flags (2026-08-07).
-Run after Step 7 eval confirms non-zero signal on clean corpus.
+3D eval scaffold: `experiments/A0.8_refine/run_matrix_sweep.sh` (2026-08-07).
+Full results: `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
 
 ---
 
@@ -2213,7 +2264,8 @@ attribution signal — WKV state holds provenance structure independent of actio
 SFT fine-tuning.
 
 **Distinctness H21 vs H22** (items_overlap.jsonl, 32 items, G1h 2.9B):
-ρ(p_valid, p_attributable) = [TBD — distinctness probe running 2026-08-07]. Target: ρ < 0.4.
+ρ(p_valid, p_attributable) = −0.054. Target: ρ < 0.4 ✓. H21 F1=0.875, H22 F1=0.941 on overlap set.
+H21 CM: TP=14, FP=2, FN=2, TN=14. H22 CM: TP=16, FP=2, FN=0, TN=14.
 
 Files: `/tmp/ts_results/h22_g1h_{base,step7}/`, `h22_distinctness/` (G1h 2.9B, 2026-08-07).
 

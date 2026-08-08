@@ -314,7 +314,7 @@ def main() -> int:
                          "prompt_cot: decode --readout-k invisible tokens first (WKV update), "
                          "then answer. Tokens are not human-readable CoT — they are "
                          "WKV-internal state updates. "
-                         "state_readout: same mechanics as prompt_cot, less prompt-constrained.
+                         "state_readout: same mechanics as prompt_cot, less prompt-constrained. "
                          "(not scored), then answer.")
     ap.add_argument("--readout-k", type=int, default=64,
                     help="Intermediate (invisible) token budget for prompt_cot/state_readout modes.")

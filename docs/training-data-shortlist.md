@@ -168,6 +168,81 @@ beyond §1, skip and stay pure action-cloning.
   shift after action-tuning? (follow-up test of H8 conditioned
   on training).
 
+## Step 9 — Serious training plan (2026-08-08)
+
+### Design principles
+
+Step 8 result (epoch 0): silent 27.1%, N=2 silent 33.3%, CoT modes all worse than
+silent — model fills K tokens with DSL tool_call syntax instead of WKV-optimal state
+tokens. extraction = 0% (DSL format overfitting). bit_decoding = 6% (unchanged).
+
+**Three objectives for step 9:**
+1. Preserve G1h baseline (don't regress symbolic/scheduling/arithmetic)
+2. Fix bit_decoding via RFC binary-protocol corpus
+3. Teach model to generate WKV-optimal CoT (latent CoT principle)
+
+### Step 9 corpus (three layers)
+
+**Layer 1 — RFC binary-protocol tasks (new, primary signal for bit_decoding)**
+
+Slice QA tasks from IETF RFCs that define binary wire formats, bit fields, flag tables:
+- IP header (RFC 791): ToS, flags, fragmentation offset → bit manipulation tasks
+- TCP header (RFC 793): flag byte, sequence arithmetic → multi-step reasoning
+- DNS wire format (RFC 1035): label encoding, pointer compression → extraction tasks
+- TLS record (RFC 5246/8446): content type, version bytes → binary reasoning
+
+Format: `(RFC excerpt + scenario) → <think>apply rule</think> → plain-text answer`.
+No DSL tool_call inside think — pure reasoning format.
+Script: `training/scripts/restructure_rfc.py` (to be written).
+
+**Layer 2 — Self-generated CoT corpus (new, primary signal for N/K/mode learning)**
+
+1. Run step 8 checkpoint on diverse tasks (RFC QA + A0-like variants) with N=2, K=512
+2. Filter: keep rollouts where final answer is correct
+3. Relabel: correct `<think>` trace → training example with strong L_state inside think
+4. This teaches the model to produce think-tokens that actually help (not DSL noise)
+
+Script: `experiments/A0.8_refine/generate_cot_corpus.py` (to be written).
+
+**Layer 3 — Existing action-chain rollouts (small fraction, prevent forgetting)**
+
+~10% mix from step 7 action-chain corpus to prevent catastrophic forgetting of
+tool-dispatch format. No new DSL saturation — already have enough.
+
+### Step 9 loss changes
+
+**ε-mask for L_state outside `<think>`:**
+```python
+# In training_step, after StateCapture:
+effective_mask = span_mask * (1.0 - outside_epsilon) + outside_epsilon  # outside_epsilon = 0.05
+state_loss = compute_state_reg(capture.per_layer(), cfg, weight_mask=effective_mask)
+```
+Prevents WKV from going completely passive outside think-spans. Fixes extraction collapse.
+
+**All-layer L_state inside `<think>`:**
+```yaml
+# step9 config:
+state_reg:
+  work_layers: [0, 4, 8, 12, 16, 20, 24, 28]  # all 8 sampled layers inside think
+  outside_epsilon: 0.05  # soft mask outside think
+  inside_layers: "all"   # full-model L_state inside think spans
+```
+
+### What LoRA can and cannot do
+
+- **Can learn**: format patterns, when/how to use `<think>`, N/K/mode selection cues
+- **Cannot learn from scratch**: bit manipulation not in G1h base weights → RFC corpus
+  activates latent knowledge, not creates it; if G1h doesn't know RFC bit formats,
+  LoRA won't help. Validate: test G1h base on 5 RFC tasks before committing corpus.
+- **Rank consideration**: rank 16 may be insufficient for multi-layer state shaping.
+  Step 9 trial: rank 32, target_modules += output projection.
+
+### N/K/mode curriculum (deferred to step 10)
+
+After self-CoT corpus is built: generate training examples labeled by which (N,K,mode)
+solved each task. Model learns to self-select compute budget. Eventually model emits
+optimal K tokens autonomously (H16 gate) without explicit budget token.
+
 ## Open questions (not to resolve here)
 
 - Do we need to preserve World3-base linguistic breadth by including
