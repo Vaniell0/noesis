@@ -1,0 +1,21 @@
+{
+  "date": "2026-08-07",
+  "model": "RWKV-8 ROSA-4bit (minipile base, L12 n_embd=768)",
+  "model_path": "~/.libs/models/rwkv7/rosa/rwkv-rosa4bit-minipile.pth",
+  "tasks_run": 2,
+  "categories": ["symbolic"],
+  "tasks": ["sym_alg_01", "sym_alg_02"],
+  "raw_responses": [
+    {"id": "sym_alg_01", "prompt": "Solve for x: 3x + 7 = 22. Give only the numeric value.", "response": " \n{ \" . \" . \" . \" . \" . \" . \" . \" . \" .", "elapsed_s": 72.4},
+    {"id": "sym_alg_02", "prompt": "Solve for x: 2(x - 3) = 4x + 6. Give only the numeric value.", "response": "\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.", "elapsed_s": 93.9}
+  ],
+  "verdict": "INCOHERENT",
+  "notes": [
+    "ROSA-4bit-minipile generates pure punctuation on algebra tasks — no math knowledge in minipile base.",
+    "judge returned 100% due to regex rubric not handled (expected='' matches any response).",
+    "Real accuracy: 0/2. Model is a text-compression language model, not a reasoning model.",
+    "Speed: ~72-94s per task at 20 max_tokens on CPU. O(T^2) pure-Python makes it impractical.",
+    "Baseline: G1h 2.9B silent scores 75% arithmetic at N=1 — not a fair comparison (different task set).",
+    "Conclusion: ROSA-4bit is an architecture research artifact, not a production reasoning model."
+  ]
+}

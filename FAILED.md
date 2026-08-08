@@ -342,6 +342,88 @@ corpus analysis run on 2026-08-06 (63,218 rollouts inspected):
   chains as eligible §2 training data (reflexive-first, tool_use loss
   only — the architectural class that was missing from glaive-v2).
 
+### 2026-08-07 — H10 state_readout axis carries no signal over prompt_cot (step8 epoch0)
+
+**Was.** H10 readout-mode prediction: `state_readout` would score ≥ 0.02 pp
+above `prompt_cot` at the same (N, K), because reading the WKV state into
+text and re-injecting it yields information beyond what the same tokens
+injected via the prompt carry. Rationale: the state representation is
+richer than any token-level readout, so decoding it should add signal.
+
+**Refuted by.** H10 sweep 2026-08-07 on G1h-2.9B step8-epoch0 checkpoint
+(`experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`). 20-cell matrix,
+N ∈ {1,2,3} × K ∈ {32,128,512} × mode ∈ {silent, prompt_cot, state_readout}.
+
+- `state_readout` == `prompt_cot` at **every single cell** (not just on
+  aggregate, but numerically identical across all 6 categories).
+- The tie is exact — 0 pp difference on any (N, K, category) pair.
+- K=512 cells excluded (file too large to eval), but extraction=0% confirmed
+  for those as well.
+
+**Learned.**
+- At epoch 0, the model produces the same token distribution from WKV state
+  readout as from continuing the same prompt prefix. The state is not yet
+  specialised enough to contain information the prompt doesn't have.
+- The readout axis is degenerate until A1 training explicitly teaches the
+  model to load state-differentiated content into readout tokens — this is a
+  *training target problem*, not a mechanism problem.
+- H10 readout prediction requires dedicated state-readout supervision corpus
+  (examples where the state holds information the prompt cannot reconstruct)
+  before the axis becomes measurable. Swept too early.
+
+**Changed.**
+- `HYPOTHESES.md` §H10: readout-mode prediction marked FALSIFIED at epoch 0.
+  Axis dropped from active sweep dimensions. Will be revisited only after A1
+  training includes state-readout targets.
+- `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md` §Key Finding 3:
+  state_readout ≡ prompt_cot documented with the "axis degenerate" conclusion.
+
+---
+
+### 2026-08-07 — N=3 silent re-feed corrupts rather than refines WKV state (step8)
+
+**Was.** H10 refinement axis: additional silent re-feeds (N>2) continue to
+refine the WKV state, accumulating useful signal about the prompt. At minimum,
+N=3 should be neutral (≥ N=2 accuracy); the expectation was monotonic
+improvement through refinement passes.
+
+**Refuted by.** Same H10 sweep (step8 epoch0, 2026-08-07):
+
+| N | silent   | best K=128 CoT |
+|---|----------|----------------|
+| 1 | 27.1%    | 16.7%          |
+| 2 | **33.3%**| 22.9%          |
+| 3 | 6.3%     | 6.3%           |
+
+N=3 silent collapses 27 pp from N=2 — a catastrophic regression, not
+diminishing returns. All N=3 CoT cells are also at or below 6.3%.
+
+Proposed mechanism: glaive-v2 DSL training means a silent re-feed triggers an
+implicit `<tool_call>` loop in the state. By pass 3 the accumulated
+tool-dispatch activation pattern overwrites whatever reasoning signal passes
+1-2 built. With no stopping criterion, the third pass turns the state into
+DSL noise.
+
+**Learned.**
+- The usable refinement axis is N ∈ {1, 2} only at DSL-trained checkpoints.
+- "Silent re-feed always helps" is wrong for checkpoints where silent input
+  activates a looping pattern (tool_call, role-play turn, etc.). The corpus
+  determines the safe N range.
+- N=3 is not just uninformative — it actively reverses the N=2 gain. This
+  asymmetry is a useful upper bound for test-time compute: never exceed N=2
+  unless the checkpoint was specifically trained on N>2 stable re-feed.
+
+**Changed.**
+- `HYPOTHESES.md` §H10: N=3 result documented; refinement axis bounded to
+  N ∈ {1,2} for DSL checkpoints. Mechanism noted as unconfirmed (would need
+  N=3 on a non-DSL checkpoint to isolate DSL-loop from general WKV saturation).
+- `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md` §Key Finding 1-2:
+  N=3 collapse and N=2 sweet-spot documented.
+- Step 9 design: N/K/mode curriculum targets self-selected compute budget
+  (H16 gate), deferred to step 10 once the DSL saturation is cleared.
+
+---
+
 ### 2026-08-07 — Action-chain training (step7) does not improve multi-slot state retention
 
 **Was.** H12b behavioral baseline probe (quick run 2026-08-07, P=1 only):

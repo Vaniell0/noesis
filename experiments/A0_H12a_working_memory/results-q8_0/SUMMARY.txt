@@ -1,0 +1,25 @@
+=== A0.H12a summary — results-q8_0 ===
+
+Width sweep (fixed n_pairs, varying N):
+   N  tasks  acc_exact    F1  prec  recall  gap_w
+  --  -----  ---------  ----  ----  ------  -----
+   4      3       0.00  0.50  0.33    1.00     10
+   8      3       0.00  0.13  0.07    1.00     13
+  16      3       0.00  0.03  0.02    1.00     22
+  32      3       0.00  0.01  0.00    0.67     72
+  64      3       0.00  0.00  0.00    0.17     90
+
+Distance sweep (fixed N=16, varying target gap):
+  gap_target  tasks  acc_exact    F1  prec  recall  gap_measured
+  ----------  -----  ---------  ----  ----  ------  ------------
+          50      3       0.00  0.15  0.10    0.33            40
+         200      3       0.00  0.00  0.00    0.00           314
+         500      3       0.00  0.00  0.00    0.17           498
+        1000      3       0.00  0.00  0.00    0.17           860
+
+=== Decision tree verdict ===
+drop threshold = 0.30
+width  Δ_accuracy (max−min): 0.00  → flat
+dist   Δ_accuracy (max−min): 0.00  → flat
+
+VERDICT: flat but at low accuracy → floor effect; task may be too hard even at N=4 / gap=50. Simplify or check tokeniser handling.
