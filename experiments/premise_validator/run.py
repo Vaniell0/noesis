@@ -286,8 +286,8 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=13)
     ap.add_argument("--n-passes", type=int, default=1,
                     help="WKV cycling passes before state extraction (H10 N-axis).")
-    ap.add_argument("--save-head", default="auto",
-                    help="Save trained head + norm stats (default: <out>/head.pt; pass 'no' to skip).")
+    ap.add_argument("--save-head", default=None,
+                    help="Save trained head + norm stats to this .pt path.")
     ap.add_argument("--load-head", default=None,
                     help="Variant A: skip training, apply saved head to new features.")
     ap.add_argument("--from-features", action="store_true",
@@ -329,11 +329,9 @@ def main() -> int:
             X[train_idx], y[train_idx], X[test_idx], y[test_idx],
             epochs=args.epochs, lr=args.lr, weight_decay=args.weight_decay, seed=args.seed,
         )
-        head_path = (os.path.join(args.out, "head.pt")
-                     if args.save_head == "auto" else args.save_head)
-        if head_path and head_path != "no":
-            torch.save({"head": head.state_dict(), "mu": mu, "sd": sd}, head_path)
-            print(f"[H21] head saved → {head_path}", file=sys.stderr)
+        if args.save_head:
+            torch.save({"head": head.state_dict(), "mu": mu, "sd": sd}, args.save_head)
+            print(f"[H21] head saved → {args.save_head}", file=sys.stderr)
 
     results_path = os.path.join(args.out, "results.jsonl")
     with open(results_path, "w") as fout:

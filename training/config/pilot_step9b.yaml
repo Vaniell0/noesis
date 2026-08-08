@@ -1,0 +1,140 @@
+# Step 9b — Full-capability training: Constitutional + ReAct + RFC + self-CoT
+#
+# Goals:
+#   1. Direct WKV shaping: time_decay + time_first trainable (full FT, not LoRA)
+#   2. Constitutional AI alignment: hh-rlhf chosen + CAI critique in <think>
+#   3. Tool-use reasoning: Glaive/Toolbench in ReAct format inside <think>
+#   4. H12b.i utilization: prevent LoRA rank collapse (rank entropy regularizer)
+#   5. Preserve step9 gains: ε-mask + state_mask identical to step9
+#
+# Prerequisite: step9 epoch-2 merged checkpoint
+#   python training/merge_lora.py \
+#       --base  <step9_base>.pth \
+#       --lora  training/runs/pilot_g1h_step9/rwkv-2.pth \
+#       --out   training/runs/pilot_g1h_step9/merged_e2.pth \
+#       --rank 32 --lora-alpha 64
+#
+# Corpus build (run before launching step9b):
+#   python training/scripts/combine_step9b_corpus.py \
+#       --rfc     training/tokenised/step9_rfc_train.pt \
+#       --selfcot training/tokenised/selfcot_train.pt \
+#       --action  training/tokenised/action_chains_dsl_step8_train.pt \
+#       --hhrlhf  training/tokenised/hh_rlhf_train.pt \
+#       --react   training/tokenised/react_train.pt \
+#       --base    training/tokenised/step6_mixed_train.pt \
+#       --fractions rfc=0.25,hhrlhf=0.20,react=0.15,action=0.15,selfcot=0.15,base=0.10 \
+#       --out training/tokenised/step9b_combined_train.pt
+#
+# Launch command (server, 4090 24GB):
+#   cd /root/noesis/training/rwkv-peft
+#   RWKV_V7_ON=1 RWKV_CUDA_ON=1 python train.py \
+#       --load_model    ../runs/pilot_g1h_step9/merged_e2.pth \
+#       --proj_dir      ../runs/pilot_g1h_step9b \
+#       --data_file     ../tokenised/step9b_combined_train.pt \
+#       --data_type     binidx \
+#       --vocab_size    65536 \
+#       --ctx_len       512 \
+#       --epoch_steps   269 \
+#       --epoch_count   3 \
+#       --epoch_begin   0 \
+#       --epoch_save    1 \
+#       --micro_bsz     1 \
+#       --accumulate_grad_batches 8 \
+#       --n_layer 32 --n_embd 2560 \
+#       --pre_ffn 0 --head_qk 0 --tiny_att_dim 0 --tiny_att_layer -999 \
+#       --lr_init 2e-5 --lr_final 2e-6 \
+#       --warmup_steps 20 \
+#       --beta1 0.9 --beta2 0.999 --adam_eps 1e-8 \
+#       --accelerator gpu --devices 1 \
+#       --precision bf16 \
+#       --strategy auto \
+#       --grad_cp 1 \
+#       --peft lora \
+#       --lora_config '{"lora_load":"","lora_r":32,"lora_alpha":64,"lora_dropout":0.0}' \
+#       --train_parts time ln \
+#       --loss_mask pad \
+#       --train_type infctx \
+#       --chunk_ctx 512
+#
+# NOTE: train_parts="time ln" makes time_decay + time_first trainable (full FT, not LoRA).
+#       These parameters directly control WKV decay and time-first mixing — critical for
+#       shaping what the model remembers across tokens inside <think> spans.
+
+model:
+  checkpoint: training/runs/pilot_g1h_step9/rwkv-0.pth
+  ctx_len: 512
+  dtype: bf16
+  n_layer: 32
+  n_embd: 2560
+
+# LoRA on all linear projections (step9b upgrade: add gate vs step9 which had receptance/key/value/output)
+lora:
+  rank: 32
+  alpha: 64
+  target_modules: [receptance, key, value, output, gate]  # gate = additional WKV gating
+  dropout: 0.0
+
+# time_decay + time_first: trained as full FT via train_parts=["time", "ln"]
+# These are NOT wrapped in LoRA — direct gradient update, same lr as LoRA
+full_ft_parts: [time, ln]     # maps to --train_parts in rwkv-peft
+
+optimizer:
+  name: adamw
+  lr_init: 2.0e-5              # lower than step9 (3e-5) — more data, longer run
+  lr_final: 2.0e-6
+  weight_decay: 0.01
+  warmup_steps: 20
+  grad_accum_steps: 8
+  batch_size: 1
+
+training:
+  epochs: 3
+  chunk_ctx: 512
+  save_every_epoch: true
+
+corpus:
+  tokenized_pt: training/tokenised/step9b_combined_train.pt
+  val_tokenized_pt: training/tokenised/step9_val.pt  # reuse step9 val
+
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+
+  outside_epsilon: 0.05        # ε-mask: 5% L_state outside <think>
+  inside_epsilon: 1.0          # full L_state inside <think>
+
+  work_layers_inside: [0, 4, 8, 12, 16, 20, 24, 28]  # all 8 sampled layers
+  work_layers_outside: [4, 16, 20]                     # 3 load-bearing layers
+
+  # H12b.i — LoRA rank utilization regularizer
+  # Hookup: in training_step, collect (lora_A, lora_B) from all LoRA modules,
+  #   call compute_h12bi_aux(pairs), add h12b_i_aux_weight * result to L_total.
+  # Implementation: training/state_reg.py :: compute_h12bi_aux()
+  h12b_i_enabled: true
+  h12b_i_aux_weight: 1.0e-4   # regularizer weight (small vs CE and L_state)
+
+  # H16 gate signal (activate only if emit_gate present in corpus .pt files)
+  h16_gate_enabled: true
+  h16_gate_weight: 1.0e-3
+
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1h_step9b
+  save_steps: 20
+
+# ── Corpus token fractions ────────────────────────────────────────────────────
+# rfc     25%  — binary-protocol QA (pattern extraction + structured reasoning)
+# hhrlhf  20%  — Anthropic hh-rlhf chosen + CAI critique → <think> (alignment)
+# react   15%  — Glaive v2 + Toolbench ReAct traces (tool-use CoT)
+# action  15%  — Action chains DSL (anti-forgetting structured output)
+# selfcot 15%  — Self-generated CoT filtered by correctness (bootstrapped)
+# base    10%  — Step6 mixed sample (general language anti-forgetting)
+#
+# Corpus sources that have state_mask (inside/outside <think>):
+#   react_train.pt  — Thought/Action/Obs in <think> → state_mask=1 on think tokens
+#   hh_rlhf_train.pt — think="" → state_mask=0 everywhere (plain SFT)
+#   selfcot_train.pt — <think>...</think> spans → state_mask=1 on think tokens
+#   step9_rfc_train.pt — CoT format → state_mask=1 on think tokens
+# All corpora with state_mask=0 get ε-weighted L_state (outside_epsilon=0.05)

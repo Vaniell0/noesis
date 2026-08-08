@@ -287,4 +287,30 @@ __all__ = [
     "default_layer_weights",
     "StateRegConfig",
     "compute_state_reg",
+    "compute_h12bi_aux",
 ]
+
+
+def compute_h12bi_aux(
+    lora_pairs: "list[tuple[torch.Tensor, torch.Tensor]]",
+) -> torch.Tensor:
+    """H12b.i rank-utilisation regulariser — prevents LoRA rank collapse.
+
+    Returns negative mean entropy of per-rank importance scores across all
+    LoRA pairs. Minimising this loss maximises rank entropy.
+
+    Args:
+        lora_pairs: list of (lora_A, lora_B).
+            lora_A: [rank, in_features], lora_B: [out_features, rank]
+    """
+    if not lora_pairs:
+        return torch.zeros((), dtype=torch.float32)
+    entropy_sum = torch.zeros(
+        (), dtype=torch.float32, device=lora_pairs[0][0].device
+    )
+    for A, B in lora_pairs:
+        scores = A.float().norm(dim=1) * B.float().norm(dim=0)  # [rank]
+        probs = torch.softmax(scores, dim=0)
+        entropy = -(probs * (probs + 1e-30).log()).sum()
+        entropy_sum = entropy_sum + entropy
+    return -(entropy_sum / len(lora_pairs))
