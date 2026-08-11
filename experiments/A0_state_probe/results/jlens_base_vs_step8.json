@@ -1,0 +1,100 @@
+{
+  "base": {
+    "model_path": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth",
+    "n_tokens": 32,
+    "work_layers": [
+      0,
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      28
+    ],
+    "layer_stats": {
+      "0": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "4": {
+        "mean_sigma1": 7.664336794614792,
+        "mean_stable_rank": 1.2824204809973738,
+        "mean_frob": 8.368048027157784,
+        "n_head": 40
+      },
+      "8": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "12": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "16": {
+        "mean_sigma1": 8.562224677205085,
+        "mean_stable_rank": 1.3011845251529566,
+        "mean_frob": 9.440945082902909,
+        "n_head": 40
+      },
+      "20": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "24": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "28": {
+        "mean_sigma1": 11.66396073102951,
+        "mean_stable_rank": 1.1520784348599524,
+        "mean_frob": 12.315285778045654,
+        "n_head": 40
+      }
+    }
+  },
+  "trained": {
+    "model_path": "/home/vaniello/.libs/models/rwkv7/step8/rwkv-step8-epoch0.pth",
+    "n_tokens": 32,
+    "work_layers": [
+      0,
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      28
+    ],
+    "layer_stats": {
+      "0": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "4": {
+        "mean_sigma1": 9.171940964460372,
+        "mean_stable_rank": 1.2041058251084387,
+        "mean_frob": 9.727515912055969,
+        "n_head": 40
+      },
+      "8": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "12": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "16": {
+        "mean_sigma1": 8.417520266771316,
+        "mean_stable_rank": 1.2525572923301298,
+        "mean_frob": 9.166329818964005,
+        "n_head": 40
+      },
+      "20": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "24": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      },
+      "28": {
+        "mean_sigma1": 11.60740498304367,
+        "mean_stable_rank": 1.1400515633783965,
+        "mean_frob": 12.21024992465973,
+        "n_head": 40
+      }
+    }
+  }
+}
