@@ -113,17 +113,24 @@ Scaffolded 2026-07-21, pivoted 2026-07-22 per runtime-decisions §7:
   — the vendored tree stays untouched, patched on top when the real
   train run happens on CUDA.
 
-## Pilot runs completed (2026-07-31 – 2026-08-05)
+## Pilot runs (2026-07-31 – 2026-08-08, Selectel RTX 4090, now deleted)
 
-Training is now running on cloud VM (RTX 4090, Selectel). Steps 1–4
-are done; Step 5 is live. See `docs/verdicts/` for full writeups.
+All steps complete. See `docs/verdicts/` for per-step writeups.
 
-| Step | α | Result |
-|------|---|--------|
-| Step 1 | 1e-4 | PASS (narrow): CE 1.70→0.02, scheduling +33.3pp, symbolic −50pp |
-| Step 3 | 1e-4 | state_reg invisible (1:50 vs CE). Lower bound established. |
-| Step 4 | 1e-3 | Active regime. Interrupted at step 3500 (45% epoch). Checkpoint at `/tmp/noesis_vm_backup/step4_merged_step3500.pth`. |
-| **Step 5** | 1e-3 | **RUNNING** (2026-08-05). Resume from step4_merged_step3500.pth. VM root@161.104.49.78. Progress 47%, sum_loss≈0.562. |
+| Step | Corpus | α / notes | Eval (48-task) | Status |
+|------|--------|-----------|----------------|--------|
+| 1 | glaive-v2 | 1e-4 | — | DONE. CE 1.70→0.02 sanity. |
+| 3 | glaive-v2 | 1e-4 | — | DONE. state_reg invisible (1:50 vs CE). |
+| 4 | glaive-v2 | 1e-3 | — | DONE. Active regime, interrupted at step 3500. |
+| 5 | glaive-v2 | 1e-3 | 6.2% (3/48) | DONE. **FAILED** — corpus mismatch: glaive-v2 is reactive (1-2 tool calls); RWKV needs reflexive multi-step. See `FAILED.md`. |
+| 6 | action chains + ToolBench | 1e-3, trajectory_reg | no eval | DONE (partial epoch, VM died). No verdict recorded. |
+| 7 | action chains (Opus traces) | 1e-3 | 8.3% (4/48) | DONE. Autodiscovered `<think>` format; first honest reflexive test. |
+| 8 | DSL + L_state full span-mask | 1e-3, all-layers | 10.4% (5/48) | DONE. H10 sweep: state_readout degenerate; N=3 collapse −27pp. |
+| **9** | RFC binary-protocol QA + ε-mask | 1e-3, rank=32 | **43.75% (21/48)** | **DONE. BEST.** First to beat all baselines. epoch 1 lost (disk full). |
+| **9b** | 6-source corpus, ctx_len=512 | 1e-3 + H12b.i | 39.6% (19/48) | DONE. Regression: ctx_len=512 skips L_state (T<3). extraction 62.5%→12.5%. |
+
+**Best checkpoint:** step9 epoch0. Eval: 43.75% vs baselines (Gemma3-4B 41.7%, G1h-base 39.6%, Qwen 37.5%).
+Checkpoint on HuggingFace `Vaniello/noesis-rwkv7-g1h-2.9b`. Not present locally.
 
 **Bugs fixed during runs (eval.py must use these):**
 - `eval.py`: added `_strip_tool_use()` — step3500 eval was invalid without it (all answers wrapped in `<tool_use>` tags at 45% epoch, parser scored 0).
@@ -132,31 +139,34 @@ are done; Step 5 is live. See `docs/verdicts/` for full writeups.
 - deepspeed fused_adam: patched `light_rwkv.py` to use `torch.optim.AdamW`.
 - `run_effort_sweep.sh`: fixed wrong JSON keys for H10 sweep.
 
-## Pending (post-Step-5)
+## Step 10 — next training run
 
-1. **Merge final LoRA** → `step5_merged.pth`:
-   ```bash
-   python training/merge_lora.py \
-     --base ~/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth \
-     --lora training/runs/<step5_run>-adapter-step<N>/lora_weights.pth \
-     --out /tmp/step5_merged.pth --rank 16 --lora-alpha 32
-   ```
+Goal: restore L_state effectiveness lost in step9b (ctx_len=512 bug).
 
-2. **Eval on merged** (fixed eval.py, strips tool_use wrapper):
-   ```bash
-   NOESIS_EVAL_DEVICE=cuda python experiments/A0_eval/eval.py \
-     --backend rwkv --model /tmp/step5_merged.pth --out /tmp/eval_step5.json
-   ```
+- `ctx_len=2048–4096` (fixes T<3 short-circuit, restores ε-mask)
+- Keep RFC fraction dominant (~25-30%)
+- Add harder RFCs targeting `bit_decoding` gap (CRC, bitfield exercises)
+- Reduce `hhrlhf` fraction or normalize format (suspected noise source)
+- Config: `training/config/pilot_step9b.yaml` as template (update ctx_len)
 
-3. **Effort sweep** (H10 full data, Step5 model):
-   ```bash
-   NOESIS_EVAL_DEVICE=cuda bash experiments/A0_eval/run_effort_sweep.sh \
-     --model /tmp/step5_merged.pth --out /tmp/effort_sweep_step5
-   ```
+To run eval on any merged checkpoint:
+```bash
+RWKV_CUDA_ON=1 python experiments/A0_eval/eval.py \
+    --backend rwkv \
+    --model <merged.pth> \
+    --tasks experiments/A0_eval/tasks.jsonl \
+    --out experiments/A0_eval/results/step10_e0.json \
+    --num-predict 512
+```
 
-4. **A4 heads** (H21/H22) — if A1 PASS: train small MLP heads on frozen Step5 backbone (~1h each).
-
-5. **H7 falsifier** — retrieval-parity contrast on merged Step5 model (still open).
+To merge LoRA adapter:
+```bash
+python training/merge_lora.py \
+    --base ~/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth \
+    --lora training/runs/<run_dir>/rwkv-0.pth \
+    --out training/runs/<run_dir>/merged_e0.pth \
+    --rank 32 --lora-alpha 64
+```
 
 ## Deferred (not-in-pilot)
 
@@ -245,38 +255,53 @@ load so a typo cannot silently activate a non-existent loss.
 training/
   .venv/                       (gitignored) system-site-packages venv
   README.md                    this file
-  extract_traces.py            retrieval-corpus prep (was Step 3)
-  sanitize.py                  retrieval-corpus prep (was Step 4 driver)
-  sanitize_patterns.py         retrieval-corpus prep (regex + class map)
-  audit_sample.py              privacy gate (was Step 4 audit gate)
-  state_reg.py                 Step 6 loss (A0.5 trajectory_reg branch)
-  lora_train.py                Step 6 primitives (StateCapture + train_step)
-  light_rwkv_state_reg_patch.py  Step 6 monkey-patch for vendored trainer
-  train_pilot.py               Step 6 driver (patch + runpy vendored train.py)
-  tokenize_fixture.py          Step 5 mini (open fixture only)
+  state_reg.py                 L_state loss (trajectory_reg + ε-mask)
+  lora_train.py                LoRA primitives (StateCapture + train_step)
+  light_rwkv_state_reg_patch.py  monkey-patch for vendored trainer
+  noesis_dataset_patch.py      dataset loader with 4-tuple state_mask support
+  train_pilot.py               driver (patch + runpy vendored train.py)
+  merge_lora.py                merge LoRA adapter into base .pth
+  tokenize_fixture.py          smoke-test tokenizer (34-turn open fixture)
+  tokenize_rollouts.py         multi-file rollouts tokenizer (hash split)
+  tokenize_dsl_rollouts.py     DSL-format tokenizer (step 8)
+  tokenize_plain_cot.py        plain-CoT tokenizer + state_mask generator (step 9)
+  extract_traces.py            retrieval-corpus prep (personal logs, NOT training)
+  normalize_traces.py          Claude cache → rollouts JSONL
+  normalize_toolbench.py       ToolBench G123-DFS → ReAct JSONL
+  sanitize.py / sanitize_patterns.py  privacy gate for retrieval content
+  audit_sample.py              privacy gate sampler
+  dry_run_100.py               100-step smoke run
   scripts/
-    normalize_xlam.py          Variant C primary — xlam-60k → rollouts JSONL
+    normalize_xlam.py          xlam-60k → rollouts JSONL (Variant C primary)
+    normalize_glaive.py        glaive-v2 → rollouts JSONL (SUPERSEDED, step5)
+    normalize_hh_rlhf.py       hh-rlhf → plain-CoT JSONL
+    normalize_react.py         glaive+toolbench → ReAct <think> JSONL
+    restructure_rfc.py         RFC parser → QA tasks JSONL (step 9)
+    combine_step9_corpus.py    combine rfc+selfcot+action .pt blobs
+    combine_step9b_corpus.py   combine 6-source .pt blobs (step 9b)
   tests/
-    test_state_reg_hookup.py   Step 6 smoke test (mock model, 3 assertions)
-    test_light_rwkv_patch.py   Step 6 patch smoke on CPU (4 assertions)
+    test_state_reg_hookup.py   smoke test (mock model, 3 assertions)
+    test_light_rwkv_patch.py   patch smoke on CPU (4 assertions)
   fixtures/
-    tool_call_open.jsonl       open sources — A1 fine-tune signal
-    tool_call_open.pt          tokenised (Step 5 output)
+    tool_call_open.jsonl       open-source tool-use rollouts (smoke scale)
+    tool_call_open.pt          tokenised fixture
   config/
-    pilot.yaml                 pilot config (α=0 baseline)
+    pilot.yaml                 baseline config (α=0)
+    pilot_step5_from3500.yaml  step5 resume from step4 checkpoint
+    pilot_step6_action_chains.yaml  step6: action chains + ToolBench
+    pilot_step7_action_chains.yaml  step7: Opus action traces
+    pilot_step8_dsl.yaml       step8: DSL format + L_state all-layers
+    pilot_step9.yaml           step9: RFC + ε-mask, rank=32
+    pilot_step9b.yaml          step9b: 6-source, H12b.i, train_parts=time+ln
   corpus/
-    RECLASSIFIED.md            2026-07-22 pivot note (retrieval-only)
-    raw/                       (gitignored) personal Claude CLI logs —
-                               NOT training data anymore
+    RECLASSIFIED.md            2026-07-22 note — retrieval-only, NOT training
+    raw/                       (gitignored) personal Claude CLI logs
   sanitised/
-    RECLASSIFIED.md            2026-07-22 pivot note (retrieval-only)
-    <rid>.jsonl                (gitignored) sanitised rollouts +
-                               audit.jsonl + audit_decisions.jsonl
-  tokenised/                   (gitignored) reserved for future
-                               big-open-corpus tokeniser
-  runs/                        (gitignored) reserved for Step 7
+    RECLASSIFIED.md            2026-07-22 note — retrieval-only
+  corpus_open/                 (gitignored) open corpora (downloaded or generated)
+  tokenised/                   (gitignored) .pt blobs (step9_rfc_train.pt etc.)
+  runs/                        (gitignored) training checkpoints and logs
   rwkv-peft/                   (gitignored) vendored JL-er/RWKV-PEFT
-                               commit 5704c39f
 ```
 
 ## Reproducing

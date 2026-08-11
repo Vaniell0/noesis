@@ -23,7 +23,28 @@ The per-model / per-category tables below refer to the **original 42
 tasks**. The `bit_book_*` subset (6 tasks) was run separately on 3 of
 the 4 models (qwen skipped for battery budget — see §Constraints).
 
-## Per-model overall
+## Canonical 48-task baseline (JSON files, `num_predict=2048`)
+
+These are the authoritative numbers used for A1 comparisons. Source:
+`results/gemma3_4b_np2048.json`, `results/rwkv7_29b_g1h_np2048.json`,
+`results/qwen25_15b_np2048.json`. All 48 tasks (42 base + 6 `bit_book_*`
+merged into `bit_decoding` → 16 total).
+
+| model | overall | bit_dec (16) | symbolic (8) | extraction (8) | scheduling (6) | string_ops (6) | arith (4) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| gemma3:4b    | **41.7%** (20/48) | 1/16 (6.3%)  | 3/8 (37.5%) | 6/8 (75.0%) | 5/6 (83.3%) | 2/6 (33.3%) | 3/4 (75.0%) |
+| g1h-2.9b     | **39.6%** (19/48) | 3/16 (18.8%) | 2/8 (25.0%) | 7/8 (87.5%) | 1/6 (16.7%) | 3/6 (50.0%) | 3/4 (75.0%) |
+| qwen2.5-1.5b | **37.5%** (18/48) | 0/16 (0.0%)  | 6/8 (75.0%) | 4/8 (50.0%) | 3/6 (50.0%) | 3/6 (50.0%) | 2/4 (50.0%) |
+
+**A1 success threshold:** beat 41.7% (gemma3-4B) — first exceeded by step9 epoch0 at **43.75%** (21/48).
+
+---
+
+## Original 42-task run (Ollama backend, historical)
+
+The table below is from the original A0.2 runs (42 tasks, before `bit_book_*`
+was integrated). All four 2.9B/1.5B/4B models tied at 38.1% on this set.
+Use the 48-task JSON numbers above for any A1 comparison.
 
 | model | size | overall | wall | notes |
 |---|---:|---:|---:|---|
@@ -195,6 +216,20 @@ show either:
   memory improved), or
 - lift on **scheduling** (combinatorial search improved),
 - without regression on extraction/symbolic (basic competence preserved).
+
+## A1 fine-tune results (2026-08-08)
+
+| checkpoint | overall | bit_dec | symbolic | extraction | scheduling | string_ops | arith | JSON |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| step9 e0 (np=512) | **43.8%** (21/48) | 0/16 | 6/8 | 5/8 | 3/6 | 4/6 | 3/4 | `results/step9_e0_eval_np512.json` |
+| step9b e0 | 39.6% (19/48) | — | — | — | — | — | — | `results/step9b_e0_eval.json` |
+| step9b e1 | 39.6% (19/48) | — | — | — | — | — | — | `results/step9b_e1_eval.json` |
+
+**step9 e0 (np=512) is the canonical A1 best.** `step9_e0_eval.json` (without `_np512`) is a
+pre-tune eval at default num_predict — 25.0% (12/48), NOT canonical; kept for provenance.
+Verdict: `docs/verdicts/2026-08-08-step8-step9.md`.
+
+---
 
 ## Files
 

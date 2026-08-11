@@ -70,11 +70,7 @@ def apply() -> str:
         )
 
     from lora_train import load_state_reg_config
-<<<<<<< Updated upstream
-    from state_reg import compute_state_reg
-=======
     from state_reg import compute_state_reg, compute_h12bi_aux
->>>>>>> Stashed changes
     import yaml as _yaml
 
     cfg = load_state_reg_config(yaml_path)
@@ -83,12 +79,9 @@ def apply() -> str:
     _sr_raw = _raw_cfg.get("state_reg", {})
     _eps_out = float(_sr_raw.get("outside_epsilon", 0.0))
     _eps_in  = float(_sr_raw.get("inside_epsilon",  1.0))
-<<<<<<< Updated upstream
-=======
     # H12b.i aux_loss config
     _h12bi_enabled = bool(_raw_cfg.get("h12b_i_enabled", False))
     _h12bi_weight  = float(_raw_cfg.get("h12b_i_aux_weight", 1e-4))
->>>>>>> Stashed changes
 
     if cfg.mode == "off" or cfg.alpha == 0.0:
         _PATCH_APPLIED = True
@@ -229,9 +222,6 @@ def apply() -> str:
                 }, _f)
                 _f.write("\n")
 
-<<<<<<< Updated upstream
-        return total_loss + mean_alpha * state_loss
-=======
         final_loss = total_loss + mean_alpha * state_loss
 
         if _h12bi_enabled:
@@ -242,7 +232,6 @@ def apply() -> str:
                 final_loss = final_loss + _h12bi_weight * compute_h12bi_aux(lora_pairs)
 
         return final_loss
->>>>>>> Stashed changes
 
     _lr.RWKV.training_step = training_step_with_state_reg
     _PATCH_APPLIED = True

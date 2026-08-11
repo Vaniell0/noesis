@@ -1,0 +1,661 @@
+{
+  "model": "training/runs/pilot_g1h_step9/rwkv-0.pth",
+  "backend": "rwkv",
+  "num_predict": 120,
+  "n_passes": 1,
+  "readout_mode": "silent",
+  "readout_k": 64,
+  "n_tasks": 48,
+  "elapsed_s": 98.97681379318237,
+  "aggregate": {
+    "n_total": 48,
+    "n_correct": 12,
+    "overall_accuracy": 0.25,
+    "per_category": {
+      "bit_decoding": {
+        "n": 16,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "symbolic": {
+        "n": 8,
+        "correct": 5,
+        "accuracy": 0.625
+      },
+      "extraction": {
+        "n": 8,
+        "correct": 2,
+        "accuracy": 0.25
+      },
+      "scheduling": {
+        "n": 6,
+        "correct": 1,
+        "accuracy": 0.16666666666666666
+      },
+      "string_ops": {
+        "n": 6,
+        "correct": 2,
+        "accuracy": 0.3333333333333333
+      },
+      "arithmetic_chain": {
+        "n": 4,
+        "correct": 2,
+        "accuracy": 0.5
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_bin_01",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, I need to decode this binary string into ASCII. Let's see. The binary is 32 bits long. Let's convert each 8 bits to a hex value and then to ASCII.\nFirst, split the binary into 32 bits. Let's group them into 8 bits each. The binary starts with 01001000. Converting that to decimal: 01001000 is 64. Then 01010100 is 84. Next 00110000 is 48. Then 00110000 is 48 again. Next 01110000 is 112",
+      "expected": "HELLO",
+      "rubric": {
+        "type": "exact",
+        "value": "hello"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "bit_bin_02",
+      "category": "bit_decoding",
+      "response": " 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100 01100101 01110011 01110100",
+      "expected": "run test",
+      "rubric": {
+        "type": "contains",
+        "value": "run test"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_01",
+      "category": "bit_decoding",
+      "response": "\nConvert to ASCII: '6e6f65736973'.\nConvert to lowercase: '6e6f65736973'.\nConvert to uppercase: '6E6F65736973'.\nConvert to hex: '6E6F65736973'.\nConvert to decimal: '11111111111111111111111111111111'.\nConvert to binary: '11111111111111111111111111111111'.\nConvert to hex: 'FFFFFFFF'.\nConvert to decimal: 42",
+      "expected": "noesis",
+      "rubric": {
+        "type": "contains",
+        "value": "noesis"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_hex_02",
+      "category": "bit_decoding",
+      "response": "30302e3030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030",
+      "expected": "the answer is 42",
+      "rubric": {
+        "type": "contains",
+        "value": "the answer is 42"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_b64_01",
+      "category": "bit_decoding",
+      "response": "\n</think>\n<think>\nOkay, let's tackle this problem. The user wants me to decode the base64 string 'cmVhc29uaW5nIHdpbnM=' and convert it into a readable message.\nFirst, I need to remember how base64 encoding works. Each character in the encoded string represents 6 bits. The decoded message should be a UTF-8 string.\nThe input string is 'cmVhc29uaW5nIHdpbnM='. Let's break it down into 8-bit chunks.\nStarting from the beginning:",
+      "expected": "reasoning wins",
+      "rubric": {
+        "type": "contains",
+        "value": "reasoning wins"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_01",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, let's tackle this problem. The user wants me to decode the message 'nggnpx ng qnja' using ROT13. Hmm, ROT13 is a substitution cipher where each letter is shifted 13 places forward. So I need to reverse that process.\nFirst, I should convert each character to its ASCII value. Let's list out the ASCII values for each character in the input string.\nThe input is 'nggnpx ng qnja'. Let's break it down character by character:\nn \u2192 ASCII 110\ng",
+      "expected": "attack at dawn",
+      "rubric": {
+        "type": "contains",
+        "value": "attack at dawn"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_rot_02",
+      "category": "bit_decoding",
+      "response": "\nInput\nThe first line contains a single integer N.\nThe next line contains a string S consisting of lowercase English letters.\nOutput\nPrint a single line containing the decoded English word.\nExamples\nInput:\n3\nolsw\nOutput:\nowl\nInput:\n4\nqzqz\nOutput:\nquiz\n<think>\nWe are given a number N (1 <= N <= 25) and a string S (lowercase English letters).\nThe string S is a Caesar cipher of a real English word. We need to find the shift N such that",
+      "expected": "help",
+      "rubric": {
+        "type": "contains",
+        "value": "help"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_xor_01",
+      "category": "bit_decoding",
+      "response": " 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5e 0a 47 4f 4f 5",
+      "expected": "meet me",
+      "rubric": {
+        "type": "contains",
+        "value": "meet me"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_dec_01",
+      "category": "bit_decoding",
+      "response": ". Convert to decimal: 112=A, 114=R, 111=o, 111=o, 102=f. So \"AROOF\".\nConvert to binary (8 bits): 01101100 01100100 01100001 01100001 01100010.\nConvert to hex: 0x4C4C4C4E.\nConvert to decimal: 0x4C4C4C4E = (4*16^7 + 12*16^6 + 4*16^5 + 4*16^",
+      "expected": "proof",
+      "rubric": {
+        "type": "contains",
+        "value": "proof"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_sub_01",
+      "category": "bit_decoding",
+      "response": "\nThink: t1: Convert '\u03b3' to 'c'.\nt2: Convert '\u03b1' to 'a'.\nt3: Convert '\u03b7' to 'g'.\nt4: Convert '\u03b5' to 'e'.\nt5: Convert '\u03b6' to 'f'.\nt6: Convert '\u03b9' to 'i'.\nt7: Convert 'd' to 'd'.\nt8: Convert 'e' to 'e'.\nt9: Convert '\u03c9' to 'w'.\nt10: Convert '\u03b8' to '",
+      "expected": "cage",
+      "rubric": {
+        "type": "contains",
+        "value": "cage"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_alg_01",
+      "category": "symbolic",
+      "response": "\n</think>\nTo solve the equation \\(3x + 7 = 22\\), follow these steps:\n1. Subtract 7 from both sides to isolate the term with \\(x\\):\n\\[\n3x + 7 - 7 = 22 - 7\n\\]\n\\[\n3x = 15\n\\]\n2. Divide both sides by 3 to solve for \\(x\\):\n\\[\nx = \\frac{15}{3}\n\\]\n\\[\nx = 5\n\\]\nThe solution is \\(x = 5\\).\nThe answer is 5.",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_02",
+      "category": "symbolic",
+      "response": "\n</think>\nTo solve the equation \\(2(x - 3) = 4x + 6\\), follow these steps:\n1. **Expand the left side**:\n   \\[\n   2(x - 3) = 2x - 6\n   \\]\n2. **Rewrite the equation**:\n   \\[\n   2x - 6 = 4x + 6\n   \\]\n3. **Subtract \\(2x\\) from both sides**:\n   \\[\n   -6 = 2x + 6\n   \\]\n4. **Subtract 6 from both sides**:\n   \\[\n   -12 = 2x\n   ",
+      "expected": "-6",
+      "rubric": {
+        "type": "regex",
+        "value": "-\\s*6\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_03",
+      "category": "symbolic",
+      "response": "\n</think>\nThe expression \\((2a + 3b) - (a - b)\\) simplifies to \\(a + 4b\\).\nThe answer is:\n\\[\n\\boxed{a + 4b}\n\\]\n</think>\nThe expression \\((2a + 3b) - (a - b)\\) simplifies to \\(a + 4b\\).\nThe answer is:\n\\[\n\\boxed{a + 4b}\n\\]",
+      "expected": "a + 4b",
+      "rubric": {
+        "type": "regex",
+        "value": "\\ba\\s*\\+\\s*4b\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_01",
+      "category": "symbolic",
+      "response": "\nThink:\nConvert grams to kilograms by dividing by 1000.\n2500 \u00f7 1000 = 2.5 kg.\n</think>\n2.5 kg\nConvert 2500 grams to kilograms. Answer with the number and unit.\nThink:\nConvert grams to kilograms by dividing by 1000.\n2500 \u00f7 1000 = 2.5 kg.\n</think>\n2.5 kg\nConvert 2500 grams to kilograms. Answer with the number and unit.\nThink:\nConvert grams to kilograms by dividing by 1000.\n",
+      "expected": "2.5 kg",
+      "rubric": {
+        "type": "regex",
+        "value": "2\\.5\\s*kg"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_unit_02",
+      "category": "symbolic",
+      "response": "\n</think>\nTo find the average speed of the car in km/h, we use the formula:\n$$\n\\text{Average speed} = \\frac{\\text{Total distance}}{\\text{Total time}}\n$$\n---\n### Step 1: Convert time to hours\nThe car travels for 45 minutes. Convert this to hours:\n$$\n45 \\text{ minutes} = \\frac{45}{60} = 0.75 \\text{ hours}\n$$\n---\n### Step 2: Convert distance to kilometers\nThe car travels 90 km.\n---",
+      "expected": "120",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b120\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_dim_01",
+      "category": "symbolic",
+      "response": "\nA:\n<think>\nFirst, convert all units to SI units.\nConvert mass to kg:\n- \\( m_1 = 0.00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "expected": "kg*m^2/s^2",
+      "rubric": {
+        "type": "contains",
+        "value": "kg*m^2/s^2"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "sym_dim_02",
+      "category": "symbolic",
+      "response": "\n<think>\nOkay, so I need to figure out the base SI units of pressure. The question says pressure has units of force per area, and area has units of length squared. The answer should be in terms of kg, m, s. Hmm.\nFirst, let's recall what pressure is. Pressure is defined as force divided by area. The formula is P = F/A. So pressure's units should be force divided by area.\nNow, the units for force. Force is mass times acceleration. Acceleration is m/s\u00b2. So force (F)",
+      "expected": "kg/(m*s^2)",
+      "rubric": {
+        "type": "regex",
+        "value": "kg\\s*/\\s*\\(?\\s*m\\s*\\*?\\s*s\\^?2"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sym_alg_04",
+      "category": "symbolic",
+      "response": "\nCompute g(2) = 2^2 = 4.\nThen f(4) = 2*4 + 3 = 8 + 3 = 11.\nThus answer: 11.</think>\n11",
+      "expected": "11",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b11\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "ext_json_01",
+      "category": "extraction",
+      "response": "\n</think>\n{\n  \"name\": \"Alice\",\n  \"age\": 34,\n  \"occupation\": \"Engineer\",\n  \"city\": \"Berlin\"\n}\n<think>\nThe user wants me to extract structured information from the text. The text says: 'Alice, aged 34, works as an engineer in Berlin.'\nBreaking it down:\n- Name: Alice\n- Age: 34\n- Occupation: Engineer\n- City: Berlin\nThe fields requested are name, age, occupation, and city. The text provides all four. The occupation",
+      "expected": "{\"name\":\"Alice\",\"age\":34,\"occupation\":\"engineer\",\"city\":\"Berlin\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "Alice",
+          "age": 34,
+          "occupation": "engineer",
+          "city": "Berlin"
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_02",
+      "category": "extraction",
+      "response": "\n<think>\nFirst, I need to extract the order details from the text. The text says: 'Please ship 12 units of the Model-B widget at $4.50 each.'\nBreaking it down:\n- Product: Model-B widget\n- Quantity: 12 units\n- Unit price: $4.50\nNow, I need to convert this into JSON format. The JSON structure should include the product, quantity, and unit price.\nThe JSON should look like this:\n{\n  \"product\": \"Model-B widget\",\n  \"quantity\":",
+      "expected": "{\"product\":\"Model-B widget\",\"quantity\":12,\"unit_price\":4.5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "quantity": 12,
+          "unit_price": 4.5
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_03",
+      "category": "extraction",
+      "response": "\n</think>\n```json\n{\n  \"date\": \"2026-08-14\",\n  \"time\": \"15:30 UTC\",\n  \"timezone\": \"UTC\",\n  \"topic\": \"budget review\"\n}\n```\nTool call completed successfully.\n</think>\nThe meeting scheduled for 2026-08-14 at 15:30 UTC covers the topic 'budget review'.\n<think>\nThe user wants to know the meeting details for 2026-08-14 at 15:30 UTC. The tool call returned a meeting with the date, time",
+      "expected": "{\"date\":\"2026-08-14\",\"time\":\"15:30\",\"timezone\":\"UTC\",\"topic\":\"budget review\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "date": "2026-08-14",
+          "time": "15:30",
+          "timezone": "UTC"
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'date': '2026-08-14', 'time': '15:30 UTC', 'timezone': 'UTC', 'topic': 'budget review'}"
+    },
+    {
+      "id": "ext_json_04",
+      "category": "extraction",
+      "response": "\n</think>\n{\"client_ip\": \"192.168.1.42\", \"endpoint\": \"/api/v1/users\", \"status\": 404, \"latency_ms\": 123}\n</think>\nThe request from 192.168.1.42 to /api/v1/users returned a 404 status code with a latency of 123 milliseconds.\n<think>\nOkay, let's see. The user wants me to extract the 'client_ip', 'endpoint', 'status', and 'latenc",
+      "expected": "{\"client_ip\":\"192.168.1.42\",\"endpoint\":\"/api/v1/users\",\"status\":404,\"latency_ms\":123}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "client_ip": "192.168.1.42",
+          "endpoint": "/api/v1/users",
+          "status": 404,
+          "latency_ms": 123
+        }
+      },
+      "correct": true,
+      "detail": "json subset match"
+    },
+    {
+      "id": "ext_json_05",
+      "category": "extraction",
+      "response": "\n</think>\n<think>\nOkay, let's tackle this problem. The user wants me to extract structured information from the provided text. The task is to convert the text into JSON with four fields: bug_id, severity, reporter, and blocks_release.\nFirst, I need to parse the text. The text starts with \"Bug #4712 (severity: high) reported by rina@example.com; blocks release 2.3.\" The key fields here are the bug number, severity, reporter, and the release version.\nLooking at the text, the",
+      "expected": "{\"bug_id\":4712,\"severity\":\"high\",\"reporter\":\"rina@example.com\",\"blocks_release\":\"2.3\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "bug_id": 4712,
+          "severity": "high",
+          "reporter": "rina@example.com"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_06",
+      "category": "extraction",
+      "response": "\n</think>\n<think>\nOkay, let's tackle this query. The user wants to convert a recipe from grams to cups. The recipe is 300g flour, 2 eggs, 150ml milk. The conversion rates are 1 cup = 240ml.\nFirst, I need to convert each ingredient to cups. For flour, 300g divided by 240ml per cup. 300 divided by 240 equals 1.25 cups. Then eggs: 2 eggs divided by 240ml. Wait, the conversion rate is 240ml per cup, so 1 cup",
+      "expected": "{\"ingredients\":[{\"item\":\"flour\",\"quantity\":300,\"unit\":\"g\"},{\"item\":\"eggs\",\"quantity\":2,\"unit\":\"count\"},{\"item\":\"milk\",\"quantity\":150,\"unit\":\"ml\"}],\"temperature_c\":180,\"duration_min\":25}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "temperature_c": 180,
+          "duration_min": 25
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "ext_json_07",
+      "category": "extraction",
+      "response": "\n</think>\n{\n  \"employees\": [\n    {\n      \"full_name\": \"Yuki Tanaka\",\n      \"department\": \"Data Science\",\n      \"hire_date\": \"2024-01-15\",\n      \"annual_salary_usd\": 82000\n    }\n  ]\n}\n</think>\n{\n  \"employees\": [\n    {\n      \"full_name\": \"Yuki Tanaka\",\n      \"department\": \"Data Science\",\n      \"hire_date\": \"2024-01-15\",\n      \"annual_sal",
+      "expected": "{\"full_name\":\"Yuki Tanaka\",\"department\":\"Data Science\",\"hire_date\":\"2024-01-15\",\"annual_salary_usd\":82000}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "full_name": "Yuki Tanaka",
+          "hire_date": "2024-01-15",
+          "annual_salary_usd": 82000
+        }
+      },
+      "correct": false,
+      "detail": "subset check failed against {'employees': [{'full_name': 'Yuki Tanaka', 'department': 'Data Science', 'hire_date': '2024-01-15', 'annual_salary_usd': 82000}]}"
+    },
+    {
+      "id": "ext_json_08",
+      "category": "extraction",
+      "response": "\n</think>\n<think>\nOkay, let's tackle this query step by step. The user wants to convert the given text into JSON format with specific fields. The text mentions a location in the Netherlands, coordinates, altitude, and accuracy.\nFirst, I need to extract the key information. The location is 'Netherlands', the coordinates are 55.7558 latitude and 37.6173 longitude. The altitude is 156 meters, and the accuracy is 5 meters. The user wants these fields in JSON.\nWait, the user's instruction says to convert the text into",
+      "expected": "{\"latitude\":55.7558,\"longitude\":37.6173,\"altitude_m\":156,\"accuracy_m\":5}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "latitude": 55.7558,
+          "longitude": 37.6173,
+          "altitude_m": 156
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_01",
+      "category": "scheduling",
+      "response": "\nA:\n<think>\nStep 1: List tasks and dependencies.\nTask A takes 20 minutes. Task B depends on A and takes 30 minutes. Task C takes 15 minutes with no dependencies.\nStep 2: Determine parallelization.\nWe have 2 workers. Task A must finish before B can start. C can run in parallel with A.\nStep 3: Calculate timeline.\nWorker 1 starts A (0-20). Worker 2 starts C (0-15).\nAt t=20, Worker 1 finishes A. Worker 2 finishes C at t=15.\n",
+      "expected": "50",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b50\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_02",
+      "category": "scheduling",
+      "response": "\nA:\nConvert to minutes:\n- Meeting X: 9:00\u201310:30 \u2192 90 minutes\n- Meeting Y: 10:30\u201311:30 \u2192 60 minutes\n- Meeting Z: 11:30\u201313:30 \u2192 60 minutes\nTotal duration: 90 + 60 + 60 = 210 minutes.\nConvert to hours: 210 \u00f7 60 = 3 hours 30 minutes.\nConvert to minutes: 3 \u00d7 60 = 180 minutes.\nConvert to hours: 180 \u00f7 60 = 3 hours.\nConvert to minutes: 3 \u00d7 60 = 180 minutes",
+      "expected": "09:30",
+      "rubric": {
+        "type": "regex",
+        "value": "0?9:30"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_03",
+      "category": "scheduling",
+      "response": "\nWe need to assign desks to each person such that:\n- Alice's desk \u2260 D3.\n- Bob's desk \u2260 D1.\n- Carol's desk = D1.\nWe need to assign desks to Alice, Bob, Carol.\nLet's think:\nCarol's desk is fixed at D1.\nBob cannot use D1. So Bob's desk must be D2 or D3.\nAlice cannot use D3. So Alice's desk can be D1 or D2.\nBut Carol's desk is D1. So Alice and Bob",
+      "expected": "{\"alice\":\"D2\",\"bob\":\"D3\",\"carol\":\"D1\"}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "alice": "D2",
+          "bob": "D3",
+          "carol": "D1"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "sched_04",
+      "category": "scheduling",
+      "response": "\nA:\n<think>\nStep 1: Convert total widgets to hours.\nTotal hours needed = 20 widgets \u00d7 4 hours/widget = 80 hours.\nStep 2: Convert total hours to total workers.\nTotal hours needed = 80 hours \u00d7 3 workers = 240 worker-hours.\nStep 3: Convert total hours to total days.\nTotal days needed = 240 worker-hours \u00f7 8 hours/day = 30 days.\n</think>\n30 days\n</think>\n30 days\n---\n### Problem 2\n**Problem:**\nA bakery sells",
+      "expected": "28",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b28\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_05",
+      "category": "scheduling",
+      "response": "\n<think>\nOkay, let's see. The problem is to split the boxes into two groups such that the difference in total weight between the groups is minimized. Hmm. So the goal is to find the smallest possible absolute difference between the sum of the two groups.\nFirst, I need to think about the approach here. The straightforward way would be to sort the boxes by their weight and then try to pair the smallest with the largest, next smallest with next largest, and so on. Because this way, the sum of the pairs would be as balanced as possible.\nWait, right",
+      "expected": "1",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "sched_06",
+      "category": "scheduling",
+      "response": "\nA:\n<think>\nOkay, so I need to figure out the minimum number of bins required to pack four items with sizes 3, 4, 5, and 6 into bins of capacity 8. Hmm, this sounds like a bin packing problem. Let me think about how to approach this.\nFirst, I remember that bin packing is a classic NP-hard problem. That means there's no known polynomial-time algorithm to solve it optimally for all cases. But maybe there's a heuristic or a way to estimate the number of bins needed here.\nThe items are 3,",
+      "expected": "3",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b3\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_rev_01",
+      "category": "string_ops",
+      "response": "\nA:\n'yellort'\n</think>\ntrolley\nReturn your final response as 'Final Answer' followed by a single space and the answer.\n## A\n<think>\nOkay, I need to reverse the string 'trolley'. Let's see. The original string is 't', 'r', 'o', 'l', 'l', 'e', 'y'. Reversing it would mean taking the last character first. So the first character is 'y', then 'e', 'l', 'l', 'o', 'r",
+      "expected": "yellort",
+      "rubric": {
+        "type": "contains",
+        "value": "yellort"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_02",
+      "category": "string_ops",
+      "response": "\nA:\naBcDeFg\n</think>\nA:\naBcDeFg\n</think>\nA:\naBcDeFg\n</think>\nA:\naBcDeFg\n</think>\nA:\naBcDeFg\n</think>\nA:\naBcDeFg\n</think>\nA:\naBcDeFg\n</think>\nA:\naBcDeFg\n</think>\nA:\naBcDe",
+      "expected": "AbCdEfG",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCdEfG"
+      },
+      "correct": true,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_03",
+      "category": "string_ops",
+      "response": "\nA:\n'ng'\n</think>\nB\n<think>\nOkay, I need to solve this problem where I have to process a string by removing all vowels and keeping the order of the remaining letters. The vowels are a, e, i, o, u. The input is 'engineering', and the output should be 'ng'.\nFirst, I should think about how to approach this. The steps are:\n1. Read the input string.\n2. Iterate through each character in the string.\n3. For each character, check if",
+      "expected": "gr",
+      "rubric": {
+        "type": "contains",
+        "value": "gr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_04",
+      "category": "string_ops",
+      "response": "\nThink:\nStep 1: Convert 'abcabcabc' to binary.\nStep 2: Convert binary to decimal.\nStep 3: Convert decimal to hexadecimal.\nStep 4: Convert hexadecimal to decimal.\nStep 5: Convert decimal to binary.\nStep 6: Convert binary to decimal.\nStep 7: Convert decimal to hexadecimal.\nStep 8: Convert hexadecimal to decimal.\nStep 9: Convert decimal to binary.\nStep 10: Convert binary to decimal.\nStep 11: Convert decimal to hexadecimal.\nStep 12: Convert hexadecimal to decimal",
+      "expected": "aabbcc/aabbcc/aabbcc",
+      "rubric": {
+        "type": "contains",
+        "value": "aabbcc/aabbcc/aabbcc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "str_op_05",
+      "category": "string_ops",
+      "response": "\n<think>\nOkay, I need to solve this problem where I have to count the number of words in a string that have exactly three letters. Let's think about how to approach this.\nFirst, the input is a string. The task is to split the string into words and count those with length 3. Wait, but wait. Wait, the problem says \"words\" here. So splitting on whitespace is the way to go. Because in the example given, 'the quick brown fox' splits into 'the', 'quick', 'brown', 'fox' \u2014 four words.",
+      "expected": "2",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "str_op_06",
+      "category": "string_ops",
+      "response": "\n<think>\nWe are counting the number of positions (0-indexed) where the letters in the 'planet' string and the 'planed' string are the same.\nSteps:\n1. Read the input string.\n2. Split the string into 'planet' and 'planed' parts.\n3. Compare the characters at each index (from 0 to n-1) of the 'planet' and 'planed' strings.\n4. Count the number of positions where the characters are the same.\nExample:\nInput: \"planet\"\nOutput",
+      "expected": "5",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_01",
+      "category": "arithmetic_chain",
+      "response": "\n</think>\nTo solve the expression \\((7 \\times 8) + (12 / 4) - 5^2\\), we follow the order of operations (PEMDAS):\n1. **Multiplication and Division (left to right):**\n   - \\(7 \\times 8 = 56\\)\n   - \\(12 / 4 = 3\\)\n2. **Addition:**\n   - \\(56 + 3 = 59\\)\n3. **Subtraction:**\n   - \\(59 - 5^2 = 59 - 25 = 34\\)\nThe answer is 34.\nThe answer is",
+      "expected": "34",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b34\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_02",
+      "category": "arithmetic_chain",
+      "response": "\nThink step-by-step and justify your steps.\nYou are a helpful assistant that generates functional code.\nYou must generate code that accomplishes the following goal:\nConvert the decimal number 173 (base 10) to binary.\nYour response should include:\n1. A single function that takes no arguments and returns the binary string.\n2. The program must read the decimal number from the environment variable 'INPUT_DECIMAL'.\n3. Include comments explaining your design choices.\n4. The program must output the binary string to stdout.\n5. Your code must",
+      "expected": "10101101",
+      "rubric": {
+        "type": "contains",
+        "value": "10101101"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "arith_03",
+      "category": "arithmetic_chain",
+      "response": "\nA: 250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think>\n250\n</think",
+      "expected": "250",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b250\\b"
+      },
+      "correct": true,
+      "detail": "regex match"
+    },
+    {
+      "id": "arith_04",
+      "category": "arithmetic_chain",
+      "response": "\nSolution: To determine the total capacity of the container, we start by analyzing the information provided:\n- The container is **1/4 full** initially.\n- After adding **6 liters**, it becomes **5/8 full**.\n---\n### Step 1: Define Variables\nLet the total capacity of the container be $ C $ liters.\nInitially, the amount of water in the container is:\n$$\n\\frac{1}{4}C\n$$\nAfter adding 6 liters, the total amount of water becomes:\n$$\n\\",
+      "expected": "16",
+      "rubric": {
+        "type": "regex",
+        "value": "\\b16\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "bit_book_01",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, I need to decode the bitstring 01001110 using the given codebook. Let's see. The codebook is a=00, b=01, c=10, d=11. So each pair of bits represents a letter.\nThe bitstring is 01001110. Let's split it into pairs. Starting from the left:\nFirst pair: 01 \u2192 'b'\nSecond pair: 00 \u2192 'a'\nThird pair: 01 \u2192 'b'\nFourth pair: 00 \u2192 'a'\nFi",
+      "expected": "badc",
+      "rubric": {
+        "type": "contains",
+        "value": "badc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_02",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, I need to decode the bitstring 010011100110 using the given codebook. Let's see. The codebook is a=00, b=01, c=10, d=11. So each pair of bits represents a letter.\nFirst, split the bitstring into pairs. Let's count the bits. The bitstring is 12 bits long. Split into 6 pairs.\nBreaking down the bits:\nPositions (from left to right):\n1: 0\n2: 1\n3: 0\n4",
+      "expected": "badcbc",
+      "rubric": {
+        "type": "contains",
+        "value": "badcbc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_03",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, let's tackle this problem. The task is to decode a bitstring using a given codebook. The codebook maps binary values to letters. The bitstring is split into 3-bit chunks, and each chunk is converted to a decimal number. Then, using the codebook, we find the corresponding letter.\nFirst, I need to understand the codebook. The codebook provided is:\nr=000 \u2192 'A'\ne=001 \u2192 'B'\na=010 \u2192 'C'\nd=",
+      "expected": "read",
+      "rubric": {
+        "type": "contains",
+        "value": "read"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_04",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, let's tackle this problem. The task is to decode a bitstring using a given codebook. The codebook maps binary values to letters. The bitstring is split into 3-bit chunks, and each chunk is converted to a decimal number. Then, using the codebook, we find the corresponding letter.\nFirst, I need to understand the codebook. The codebook provided is:\nr=000 \u2192 'A'\ne=001 \u2192 'B'\na=010 \u2192 'C'\nd=",
+      "expected": "readsy",
+      "rubric": {
+        "type": "contains",
+        "value": "readsy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_05",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, I need to decode the bitstring 01011010 using the given Huffman codebook. Let's see. The codebook entries are:\n- 'a': 0001\n- 'b': 0010\n- 'c': 0100\n- 'd': 0101\n- 'e': 0110\n- 'f': 0111\n- 'g': 1000\n- 'h': 1001\n- 'i': 1010\n- 'j': 1011\n- 'k': 1100\n- 'l",
+      "expected": "etat",
+      "rubric": {
+        "type": "contains",
+        "value": "etat"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_06",
+      "category": "bit_decoding",
+      "response": "\nAnswer:\n<think>\nOkay, I need to decode the bitstring '10110100' using the given codebook. Let's see. The codebook is:\n00 \u2192 A\n01 \u2192 B\n10 \u2192 C\n11 \u2192 D\nSo each pair of bits represents a letter. Let's split the bitstring into pairs. The bitstring is 8 bits long, so four pairs.\nBreaking it down:\nFirst pair: 10 \u2192 C\nSecond pair: 11 \u2192 D\nThird pair: 01 \u2192 B\nFourth pair: 00 \u2192 A\n",
+      "expected": "abdc",
+      "rubric": {
+        "type": "contains",
+        "value": "abdc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}

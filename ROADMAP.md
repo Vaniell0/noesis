@@ -128,28 +128,38 @@ serialize them.
 - **Method**: QLoRA on cloud VM (RTX 4090). Local machine is CPU-only.
 - **Success criterion**: measurable improvement on the A0 held-out eval
   without regression on general-capability probes.
-- **Corpus (Variant C, locked 2026-07-30).** Primary: glaive-v2 (61k
-  rollouts). Secondary: xlam-60k, ToolBench, AgentInstruct. DeepSeek-R1
-  traces and Variant A open-reasoning scope superseded.
-- **Steps 1–5 results** — see `docs/verdicts/`.
-  - Step 1: PASS (CE 1.70→0.02, +33.3 pp scheduling, −50 pp symbolic).
-  - Step 3 (α=1e-4): state_reg invisible (ratio 1:50 vs CE). Lower bound.
-  - Step 4 (α=1e-3): active regime confirmed. Interrupted at step 3500
-    (45% epoch); checkpoint at `/tmp/noesis_vm_backup/step4_merged_step3500.pth`.
-    Eval at step3500 was invalid (tool_use wrapper bug — fixed 2026-08-05).
-  - **Step 5: RUNNING** (2026-08-05). Resume from step4_merged, 45%→full
-    epoch. VM root@161.104.49.78 (RTX 4090). Progress 47%, sum_loss≈0.562.
-    Config: `training/config/pilot_step5_from3500.yaml`.
-- H7 falsifier (retrieval-parity contrast on merged Step5) remains open.
-- **Step 8 H10 sweep (2026-08-07, epoch 0).** 3D matrix N∈{1,2,3} ×
-  K∈{32,128,512} × mode∈{silent,prompt_cot,state_readout} on G1h 2.9B
-  step 8 checkpoint (DSL+L_state training). Peak: **N=2 silent 33.3%**
-  (16/48). N=3 silent collapses to 6.3% — third pass corrupts state.
-  state_readout == prompt_cot exactly at every (N,K) pair — readout axis
-  carries no additional signal at epoch 0 (H10 "readout carries signal"
-  falsified). First bit_decoding success: bit_sub_01 at N=2 K=128.
-  extraction = 0% everywhere (DSL training overwrote direct-output path).
-  Full table: `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
+- **Corpus — evolution.** Variant C primary was glaive-v2 (Steps 1–5);
+  superseded 2026-08-06 after structural mismatch analysis (see `FAILED.md
+  §2026-08-06`). Step 6+: action chains (Claude cache, reflexive multi-step),
+  RFC QA (binary-protocol), ToolBench ReAct, hh-rlhf, selfcot. DeepSeek-R1
+  traces and Variant A scope superseded. Corpus policy: `docs/training-data-shortlist.md`.
+- **Step results** — see `docs/verdicts/` for full writeups.
+  - Step 1 (glaive-v2, G1d-0.4B): PASS. CE 1.70→0.02, +33.3 pp scheduling.
+  - Step 3 (α=1e-4, G1d-0.4B): state_reg invisible (ratio 1:50 vs CE). Lower bound.
+  - Step 4 (α=1e-3, G1d-0.4B): active regime confirmed. Interrupted at step 3500
+    (45% epoch). Eval invalid (tool_use wrapper bug — fixed 2026-08-05).
+  - Step 5 (G1d-0.4B, full epoch): **FAILED**. 3/48 = 6.25% — regression vs base.
+    Root cause: glaive-v2 is reactive (1–2 tool calls/session); RWKV WKV state
+    not exercised. See `FAILED.md §2026-08-06`.
+  - Step 6 (G1h-2.9B, action chains + ToolBench, ctx=32768): corpus switch.
+    Config: `training/config/pilot_step6_action_chains.yaml`.
+  - Step 7 (G1h-2.9B, action chains only): 4/48 = 8.3%.
+  - Step 8 (G1h-2.9B, DSL format + L_state span-mask, glaive-v2 DSL corpus):
+    CE 4.41→0.55; state_loss saturated at cap (−10.0) by step 100. A0 not run
+    directly; H10 sweep as proxy. Config: `training/config/pilot_step8_dsl.yaml`.
+  - Step 9 (G1h-2.9B, RFC QA + ε-mask + H12b.i, r=32): **43.75% (21/48) —
+    first checkpoint to exceed all baselines** (Gemma3-4B 41.7%, G1h-base 39.6%, Qwen 37.5%).
+    ε-mask restored extraction (0%→62.5%). Config: `training/config/pilot_step9.yaml`.
+  - Step 9b (G1h-2.9B, 6-source mixed, ctx=512): 39.58% — regression.
+    ctx_len=512 short-circuited L_state (T<3); extraction collapsed 62.5%→12.5%.
+    Best checkpoint remains step9 epoch0.
+    Config: `training/config/pilot_step9b.yaml`.
+- **Current best:** `training/runs/pilot_g1h_step9/rwkv-0.pth` (step9 epoch0, 43.75%).
+- H7 falsifier (retrieval-parity contrast) remains open.
+- **H10 sweep (step8 epoch0, 2026-08-07).** Peak: N=2 silent 33.3% (16/48).
+  N=3 collapses to 6.3% — third pass corrupts state. state_readout == prompt_cot
+  exactly (readout axis falsified at epoch 0). Full table:
+  `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory

@@ -92,6 +92,7 @@ models/
 __pycache__/
 *.pyc
 .venv/
+.venv-pilot/
 .env
 
 # Editor / OS

@@ -104,7 +104,9 @@ Running:
 - noesis-runtime: orchestrator, zone-permissions, retention scheduler.
 - noesis-composer: preamble rendering + keyword retrieval over SQLite (5 tests pass).
 - noesis-shim: 8 HTTP endpoints live.
-- A1 fine-tune: Step 5 training (16007/33933 steps, 47%) on cloud VM.
+- A1 fine-tune: Step 9b complete (2026-08-08). Best checkpoint: step9 epoch0,
+  43.75% (21/48) — first to exceed all baselines (Gemma3-4B 41.7%, G1h-base 39.6%, Qwen 37.5%).
+  See `docs/verdicts/` for per-step results.
 
 Not running yet (stubs):
 - Calibration CLI (thermal/RAPL reader is a stub; udev rule exists).
@@ -113,7 +115,8 @@ Not running yet (stubs):
 - Tool-call dispatcher (design in `docs/dsl.md`).
 - Extension surface (Phase-2 docs, `docs/extensions.md`).
 - Lens persistence (pending state save/load API in `noesis-rwkv-sys`).
-- Multi-slot LoRA H12b (blocked on H12a v2 verdict).
+- Multi-slot LoRA H12b architectural treatment (behavioral baseline run 2026-08-07;
+  architectural intervention with H12b.i regularizer is Phase 2).
 
 ## Hard constraints
 
