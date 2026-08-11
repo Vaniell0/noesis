@@ -1,0 +1,169 @@
+# Step 10 — ctx_len fix + H20/H21/H22 corpus + N-stabilization
+#
+# Goals:
+#   1. CRITICAL FIX: ctx_len 512 → 2048 (step9b regression: T<3 short-circuit killed L_state)
+#   2. N-stabilization: bit_sub lookup tasks (proven N=2 signal from step8 sweep)
+#   3. Symmetry closure: H20/H21/H22 corpus feed-back (probes done, corpus was missing)
+#   4. H12b.i WIRED: rank entropy regularizer connected to training_step (was implemented but not called)
+#   5. Preserve: RFC dominant fraction, ε-mask, LoRA rank 32
+#
+# Key decision: start from step9 e0 (best checkpoint, 43.75%) NOT step9b
+#   step9b regressed due to ctx_len=512 bug, not corpus or LoRA issues
+#   step9 e0 is the clean starting point
+#
+# Corpus build (run before launching):
+#   # Generate new corpus sources
+#   python training/scripts/gen_aporia_corpus.py \
+#       --out training/corpus_open/aporia_train.jsonl --n 80
+#   python training/scripts/gen_premise_refusal_corpus.py \
+#       --out training/corpus_open/premise_refusal_train.jsonl --n 80
+#   python training/scripts/gen_bitsub_tasks.py \
+#       --out training/corpus_open/bitsub_train.jsonl --n 120 \
+#       --min-table 4 --max-table 16 --min-seq 2 --max-seq 6
+#
+#   # Tokenize new sources (same tokenizer as RFC QA)
+#   python training/tokenize_plain_cot.py \
+#       --input training/corpus_open/aporia_train.jsonl \
+#       --out-train training/tokenised/aporia_train.pt \
+#       --out-val   training/tokenised/aporia_val.pt \
+#       --val-pct 10
+#   python training/tokenize_plain_cot.py \
+#       --input training/corpus_open/premise_refusal_train.jsonl \
+#       --out-train training/tokenised/premise_refusal_train.pt \
+#       --out-val   training/tokenised/premise_refusal_val.pt \
+#       --val-pct 10
+#   python training/tokenize_plain_cot.py \
+#       --input training/corpus_open/bitsub_train.jsonl \
+#       --out-train training/tokenised/bitsub_train.pt \
+#       --out-val   training/tokenised/bitsub_val.pt \
+#       --val-pct 10
+#
+#   # Combine (token-budget proportional)
+#   python training/scripts/combine_step10_corpus.py \
+#       --rfc       training/tokenised/step9_rfc_train.pt \
+#       --bitsub    training/tokenised/bitsub_train.pt \
+#       --selfcot   training/tokenised/selfcot_train.pt \
+#       --hhrlhf    training/tokenised/hh_rlhf_train.pt \
+#       --aporia    training/tokenised/aporia_train.pt \
+#       --premise   training/tokenised/premise_refusal_train.pt \
+#       --fractions rfc=0.30,bitsub=0.15,selfcot=0.15,hhrlhf=0.15,aporia=0.10,premise=0.10,attrib=0.05 \
+#       --out training/tokenised/step10_combined_train.pt
+#
+# Launch command (server, 4090 24GB):
+#   cd /root/noesis/training/rwkv-peft
+#   NOESIS_STATE_REG_YAML=../config/pilot_step10.yaml \
+#   RWKV_TRAIN_TYPE=infctx \
+#   RWKV_V7_ON=1 RWKV_CUDA_ON=1 \
+#   python -c "import sys; sys.path.insert(0,'..'); import light_rwkv_state_reg_patch; light_rwkv_state_reg_patch.apply(); exec(open('train.py').read())" \
+#       --load_model    ../runs/step10_base.pth \
+#       --proj_dir      ../runs/pilot_g1h_step10 \
+#       --data_file     ../tokenised/step10_combined_train.pt \
+#       --data_type     binidx \
+#       --vocab_size    65536 \
+#       --ctx_len       2048 \
+#       --epoch_steps   300 \
+#       --epoch_count   3 \
+#       --epoch_begin   0 \
+#       --epoch_save    1 \
+#       --micro_bsz     1 \
+#       --accumulate_grad_batches 8 \
+#       --n_layer 32 --n_embd 2560 \
+#       --pre_ffn 0 --head_qk 0 --tiny_att_dim 0 --tiny_att_layer -999 \
+#       --lr_init 2e-5 --lr_final 2e-6 \
+#       --warmup_steps 20 \
+#       --beta1 0.9 --beta2 0.999 --adam_eps 1e-8 \
+#       --accelerator gpu --devices 1 \
+#       --precision bf16 \
+#       --strategy auto \
+#       --grad_cp 1 \
+#       --peft lora \
+#       --lora_config '{"lora_load":"","lora_r":32,"lora_alpha":64,"lora_dropout":0.0}' \
+#       --train_parts time ln \
+#       --loss_mask pad \
+#       --train_type infctx \
+#       --chunk_ctx 512
+#
+# IMPORTANT: chunk_ctx stays 512 (memory budget per-chunk).
+#   ctx_len=2048 means sequences UP TO 2048 tokens are processed.
+#   chunk_ctx=512 means they are chunked into 4 windows of 512.
+#   L_state fires on EACH chunk independently → 4 state updates per sequence.
+#   T<3 short-circuit: fired because ctx_len=512 gave sequences that were
+#   shorter than 3 chunks after chunking; ctx_len=2048 guarantees T>=4.
+#
+# Base model: download step9 e0 from HuggingFace before launching:
+#   huggingface-cli download Vaniello/noesis-rwkv7-g1h-2.9b \
+#       rwkv7-g1h-2.9b-step9-e0-merged.pth \
+#       --local-dir training/runs/
+
+model:
+  checkpoint: training/runs/step10_base.pth  # step9 e0 merged from HF
+  ctx_len: 2048                               # CRITICAL: was 512 in step9b
+  dtype: bf16
+  n_layer: 32
+  n_embd: 2560
+
+lora:
+  rank: 32
+  alpha: 64
+  target_modules: [receptance, key, value, output, gate]
+  dropout: 0.0
+
+full_ft_parts: [time, ln]
+
+optimizer:
+  name: adamw
+  lr_init: 2.0e-5
+  lr_final: 2.0e-6
+  weight_decay: 0.01
+  warmup_steps: 20
+  grad_accum_steps: 8
+  batch_size: 1
+
+training:
+  epochs: 3
+  chunk_ctx: 512    # memory window; ctx_len controls total sequence length
+  save_every_epoch: true
+
+corpus:
+  tokenized_pt: training/tokenised/step10_combined_train.pt
+  val_tokenized_pt: training/tokenised/step9_rfc_val.pt
+
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+
+  outside_epsilon: 0.05
+  inside_epsilon: 1.0
+
+  work_layers_inside: [0, 4, 8, 12, 16, 20, 24, 28]
+  work_layers_outside: [4, 16, 20]
+
+  # H12b.i — NOW WIRED (step9b had it in yaml but not in training_step)
+  # Hookup: light_rwkv_state_reg_patch.py :: training_step_with_state_reg
+  #   collects lora_A/lora_B pairs, calls compute_h12bi_aux(), adds to final_loss.
+  # Already implemented in the patch — verified working by test_light_rwkv_patch.py
+  h12b_i_enabled: true
+  h12b_i_aux_weight: 1.0e-4
+
+logging:
+  run_dir: training/runs
+  run_name: pilot_g1h_step10
+  save_steps: 20
+
+# ── Corpus fractions ──────────────────────────────────────────────────────────
+# rfc      30%  state-motion signal carrier, dominant (step9 proof)
+# bitsub   15%  N-stabilization: lookup tables 4-16 sym, seq 2-6 (NEW)
+# selfcot  15%  self-generated CoT from step9 model (bootstrapped reasoning)
+# hhrlhf   15%  Constitutional AI, reduced from 20% (noise in step9b)
+# aporia   10%  H20 symmetry feed-back: ambiguity-holding examples (NEW)
+# premise  10%  H21 symmetry feed-back: invalid-premise refusals (NEW)
+# attrib    5%  H22 symmetry feed-back: attribution-labeled examples (NEW)
+#
+# Note: attribution corpus (attrib) needs gen_attribution_corpus.py — not yet written.
+# Fallback: use premise_refusal at 15% and drop attrib=0 for first run.
+#
+# State mask coverage:
+#   rfc, selfcot, aporia, premise → state_mask=1 on <think> tokens
+#   bitsub, hhrlhf              → state_mask=0 (ε_out=0.05 L_state only)

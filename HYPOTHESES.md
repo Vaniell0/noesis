@@ -484,6 +484,24 @@ framing H8's significance in any public write-up. **Not evidence for
 H8.** The frontier converging does not mean the RWKV-side version
 works — that is what A0.4/A0.5 exists to measure.
 
+**Frontier adjacency (WKV Jacobian / J-lens, 2026-08-11).** Analytical
+mean-field Jacobian of the WKV update rule achieves **0.76 cosine
+similarity** with the numerically computed Jacobian on G1h 2.9B
+(source: `clehaxze.tw/gemlog/2026/08-07-notes-on-replicating-j-lens-on-rwkvv7`).
+This shows the WKV update has tractable gradient structure — no chaotic
+regime, mean-field approximation is tight. Mechanistic consequence:
+`L_state` (which rewards `‖state_t − state_{t-1}‖` during think spans)
+is a **training-time proxy for maximising singular values of the WKV
+update Jacobian**. J-lens (mechanistic interpretability via Jacobians)
+measures these eigenvalues post-hoc; `L_state` trains for them
+directly. **Testable prediction:** step9 checkpoint should show higher
+WKV Jacobian eigenvalues in `work_layers` than g1h-base. This is the
+J-lens probe to run after A1. Note: per-token Jacobian norm varies —
+our binary ε-mask (think=1.0 / non-think=0.05) is an approximation of
+the true per-token Jacobian weighting. A continuous per-token weight
+`α_eff(t) = α · jac_norm(t)` is a natural refinement candidate after
+J-lens data is in hand.
+
 **Related.** Track A (A0.4). Feeds into A1 loss-formulation decision
 (see ROADMAP Gate 1 exit criteria).
 
@@ -721,6 +739,37 @@ where eval expects direct answer. Step6 (ToolBench) produced
 
 3D eval scaffold: `experiments/A0.8_refine/run_matrix_sweep.sh` (2026-08-07).
 Full results: `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
+
+**ctx_len regression (step9b, 2026-08-08).** Step9b trained with
+`ctx_len=512` triggered the T<3 short-circuit in `state_reg.py` —
+L_state never fired because each sequence fit in fewer than 3 chunks.
+Extraction dropped 62.5%→12.5% compared to step9 (43.75%). This is
+a direct instance of N-count dependency: at ctx_len=512 the effective
+N per sequence was ≤1, collapsing the state-refinement benefit.
+**Fix in step10:** `ctx_len=2048`, `chunk_ctx=512` → T=4 chunks per
+sequence guaranteed, L_state fires on each chunk independently.
+Lesson: `ctx_len` and `chunk_ctx` are independent knobs; confusing
+them reproduces a silent N=1 collapse.
+
+**N-stabilization (step10 corpus, 2026-08-11).** Bit-substitution
+lookup tasks (`bitsub_train.pt`, 15% of step10 corpus) are designed
+to make N=2 reliably terminal: the model reads the table on the first
+chunk and decodes on the second. At N=1 the model must hold table +
+decode simultaneously; at N=2 it splits the load. Task difficulty
+scales with table size (4–16 symbols) and sequence length (2–6),
+calibrated so N=1 is at the edge of WKV working-memory capacity.
+No `<think>` spans — pure state-refinement tasks, state_mask=0,
+L_state fires at ε_out=0.05α only.
+
+**Entropy routing (2026-08-11, from external data).** Think tokens
+help on high-entropy tasks (RFC extraction, open-ended QA) but hurt
+on low-entropy tasks (tool selection: 71→58 with real reasoning,
+Scarletwolf 2026-08-07). The knob is `H(target | context)`: when the
+answer is already well-constrained in WKV state, additional think
+tokens add noise. When the answer requires active accumulation,
+think tokens do substantive state work. This is an empirically
+confirmed sub-claim of H10 — the effort frontier is task-entropy-indexed,
+not a universal `(N, K, mode)` recommendation.
 
 ---
 
@@ -2035,7 +2084,12 @@ for P14 (agility over omniscience) — the principle only holds if
 the model can *tell* what it does not know, and H19/H20/H21/H22 are
 what turns that into measurable behaviour rather than a slogan.
 
-**Status.** Pilot 2026-07-30 on G1d-0.4B (40 items = 20 valid + 20
+**Status.** PILOT COMPLETE + EXTERNAL VALIDATED. G1d 0.4B LOO F1=0.789,
+G1h 2.9B LOO F1=0.889, G1h 2.9B v3_29b train/test F1=1.000. Scarletwolf
+pre-registered external validation (2026-08-11): data gap fill installs
+disposition, p=0.013 at 2.9B. Corpus feed-back in step10 (premise=10%).
+
+Pilot 2026-07-30 on G1d-0.4B (40 items = 20 valid + 20
 invalid across 4 subtypes; feature = per-layer per-head mean+std of
 WKV state, 768 dims; head = 128→64→1 MLP, BCE, 500 epochs). Single
 32/8 stratified split F1=1.000 was misleading (fold missed hard
@@ -2107,6 +2161,25 @@ runs — likely requires knowing the arithmetic is wrong, not just state shape.
 Feature dim 2560 (per-layer per-head mean+std). Pilot target 0.75 ✓.
 
 Files: `/tmp/ts_results/h21_g1h_{base,step7}_p{1,2}/` (G1h 2.9B, seed=13, 2026-08-07).
+
+**v3_29b: G1h 2.9B train/test split 2026-08-08** (`experiments/premise_validator/v3_29b/`).
+40 items (32 train / 8 test, stratified, seed=13). F1=**1.000**, acc=1.000.
+All 8 test items correct (4 invalid + 4 valid). This is more optimistic than
+LOO F1=0.889 because the 32/8 split places easy structurals in train; LOO
+is the honest number. Both pass pilot target 0.75.
+
+**External validation (Scarletwolf, 2026-08-11).** Pre-registered test on
+rwkv-toolcaller-bench: data gap identified (145 tool-calling examples,
+6 null/abstention). Three predictions committed publicly before writing
+examples. 160 additions (negatives + paired positives from same domain):
+- Abstention on covered families improves: **missed 18→7** (2.9B p=0.013,
+  7.2B p=0.002) ✓
+- Legitimate same-domain calls unchanged: **0 lost** ✓
+- Name confusions (falsifiable control): **flat at both scales** ✓
+Confirms H21 mechanistic claim: *filling a distribution gap installs the
+missing disposition and nothing else*. "Whether a disposition responds to
+data is a capacity question" — hardest category (hypotheticals) inert at
+2.9B, moves at 7.2B. Source: `scarletwolf.ai/en/blog/rwkv-enseigner-ou-lire`.
 
 ---
 

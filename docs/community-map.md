@@ -1,8 +1,8 @@
 # Community map — RWKV / SSM landscape vs noesis divergences
 
-Written 2026-07-25. Consolidates prior-art scattered across
-`docs/state-and-reasoning.md §2`, "Frontier adjacency" boxes inside
-`HYPOTHESES.md` H8/H12, and per-topic snippets in
+Written 2026-07-25. Last updated 2026-08-12. Consolidates prior-art
+scattered across `docs/state-and-reasoning.md §2`, "Frontier adjacency"
+boxes inside `HYPOTHESES.md` H8/H12, and per-topic snippets in
 `docs/effort-frontier.md`. Purpose: a single flat map of what the
 RWKV / state-space community *has*, what noesis is *actually adding*,
 and what merits deeper external research.
@@ -77,6 +77,33 @@ BlinkDL/ChatRWKV, Ai00 server) and arXiv 2503.14456v2.
   (unscoped, deferred until a runnable checkpoint at reasoning
   scale exists). Do not plan A1 / A2 around ROSA.
 
+### so(3)/SO(3)/Cayley state PoC (SimpleRose, 2026-08-02)
+
+Proposed alternative recurrence replacing RWKV compressed state with a
+constant-size state based on Lie algebra so(3) and Cayley composition:
+
+- State = 3-vector → antisymmetric matrix in so(3) (3 DOF, 3×3)
+- Token update → second so(3) element from `tanh(W·x_t)`
+- Composition via Cayley map: `C(X) = (I-X)(I+X)^{-1}` → both terms
+  are rotations → product `R_prev · R_token ∈ SO(3)`, non-commutative
+  (order-sensitive without KV cache)
+- Gram correction at temporal boundaries (PolARM): removes axis
+  anisotropy from mixed-precision accumulation
+- Decay: `λ(t) = sigmoid(W_λ · x_t + b_λ)`, RWKV-like forgetting
+- Compress back via inverse Cayley (exact for SO(3), singularity at 180°)
+
+Result: O(L) compute, constant 3-param state per head, orthogonality
+preserved by construction.
+
+**Significance for noesis.** Cayley composition is an architectural solution
+to WKV state matrix degeneracy — the same problem H12b.i (rank entropy
+regularizer) addresses via training-time penalty. so(3) approach: 3 DOF
+per head (very low capacity, architecturally bounded). WKV state:
+`head_size × head_size` = 4096 parameters per head (high capacity,
+degeneracy not architecturally prevented). These are orthogonal solutions
+to the same problem at different capacity/constraint tradeoffs. Not
+applicable to G1h without full retraining.
+
 ### Community ROSA training stack (reported 2026-08-04)
 
 Third-party toolchain that has grown around ROSA between the toy
@@ -142,6 +169,55 @@ re-discover the training stack from zero when the moment comes.
   running WKV memory" overshoot the actual mechanism.
 - **Blealtan/RWKV-LM-LoRA** — infinite-context training branch.
 
+### State-tuning empirical results (Scarletwolf, 2026-08)
+
+Independent benchmark: `scarletwolf_ai/rwkv-toolcaller-bench` (Codeberg),
+82-case frozen judge, greedy decode, G1x format, tool selection + abstention.
+
+**G1i raw (zero tuning):**
+
+| Size  | raw/82 |
+|-------|--------|
+| 1.5B  | 29     |
+| 2.9B  | 36     |
+| 7.2B  | 43     |
+| 13.3B | 52     |
+
+G1i raw *scales with size* — G1g raw was flat 28–29 across all sizes.
+Attributed to value residual in G1i (BlinkDL: "rwkv7 improved value
+residual"; prior art ResiDual, arXiv 2304.14802).
+
+**G1i state-tuned (same recipe and data, 1 epoch):**
+
+| Base  | state-tuned/82 | Δ abstention |
+|-------|---------------|--------------|
+| G1i 2.9B | **63/82** (bit-replicated) | 0/17 → 16/17 |
+| G1i 13.3B | **70/82** | 0/17 → 17/17 |
+
+McNemar G1i 13.3B vs 2.9B: p = 0.119 (not significant). Bench saturates
+at ~69–70. 17 of 18 gained points from abstention alone. Selection and
+args already near ceiling raw.
+
+**Key finding:** *"The base carries the knowledge, the state installs the
+disposition."* Abstention = 0/17 at every raw size and model (including
+Qwen3.5-4B: 4/17). One epoch sufficient — epochs 2–3 bought nothing.
+
+**Corpus design lesson (pre-registered, 2026-08-11):** Filling distribution
+gap (145 tool calls / 6 abstentions → +160 negatives + paired positives)
+improved missed abstentions 18→7 (p=0.013 at 2.9B, p=0.002 at 7.2B).
+Falsifiable control (name confusions) flat. "Whether a disposition responds
+to data is a capacity question" — hardest category inert at 2.9B, active
+at 7.2B. Source: `scarletwolf.ai/en/blog/rwkv-enseigner-ou-lire`.
+
+**Format sensitivity:** state does not survive format change — same state
+behind different priming dropped 71→58 (real reasoning priming). Empty
+`<think></think>` is neutral (71 unchanged, 20/82 generations differ but
+same pass/fail). Training eval format must match byte-for-byte.
+
+**ctx_len pitfall:** binidx silently truncates examples longer than ctx_len.
+At 20-tool JSON schemas ~6k tok/example; needed ctx_len 4096→6144.
+Same class of bug as our step9b T<3 short-circuit (ctx_len=512).
+
 ### Inference & state persistence
 
 - **rwkv.cpp:** exposes `state_in` / `state_out` FP32 buffers +
@@ -165,12 +241,117 @@ re-discover the training stack from zero when the moment comes.
   included in the library, must be handled at higher level." Nobody
   has implemented that higher level as a shared server pattern.
 
+**Lucas's 2-prefill + Linear merge (2026-08-11, fishy's basement).**
+Proposed architecture for non-forgettable system prompt injection:
+
+```python
+S_sys = prefill(system_prompt)       # prefill with frozen params
+S_ctx = prefill(context)             # prefill with same params
+delta = Linear(concat(S_sys, S_ctx)) # 2D → D; only this layer is trained
+S    = S_ctx + alpha * delta
+decode(S)
+```
+
+Post-train: freeze all weights except the Linear layer; use contrastive
+system prompts as dataset. ~30 min on a single GPU on G1i. "System
+prompt will not have decay (=1) — non-causal, never forgotten." Can be
+extended: multiple prefill sources (context, system, persona/style) with
+separate merge layers. "The best is to do a gated merge during decode"
+(= H16 emit gate at inference time). Implication for noesis: our trained
+initial state = S_sys; Lucas's Linear layer is the learned merge we do
+not yet have. Could compose: trained L_state disposition + inference-time
+Linear merge of context state into disposition.
+
 **Verdict:** stateless-by-turn inference with persistent WKV between
 turns is **architecturally supported everywhere and productionised
 nowhere.** OpenAI-compat convention (send `messages[]` each turn) is
 what wins at the transport layer; server-side WKV persistence
 requires sticky sessions, storage, and rollback semantics no one has
 committed to as a library.
+
+### G1I model (verified 2026-08-11)
+
+- `rwkv7-g1i-2.9b-20260805-ctx16384.pth` (5.9 GB) on `BlinkDL/rwkv7-g1`
+  HuggingFace. ctx=16384 > g1h's 10240. BlinkDL: "better inner
+  representation." Already in production in `rwkv-agent` at 13.3B scale.
+- `i` suffix = data-version iteration (same RWKV-7 architecture, new
+  curriculum / dataset run). Not a new architecture.
+- Baseline A0.2 eval vs. g1h-base (39.6%) — not yet measured; download
+  in progress as of 2026-08-11.
+
+### WKV state semantic embedding (verified 2026-08-11)
+
+Source: `github.com/cgisky1980/rwkv7-state-embedding` (RWKV-7 0.4B,
+albatross inference engine, August 2026).
+
+**Key finding:** Hidden state (last TMix layer, L12 output) contains
+semantic information; WKV state alone does not.
+
+| Method | Metric | Value |
+|--------|--------|-------|
+| WKV state (any aggregation: Q-Readout, row\_sum, diag) | clustering v\_measure | **0.11** |
+| Hidden state, unsupervised cosine | STS Spearman | 0.46 |
+| Hidden state, unsupervised KMeans | clustering v\_measure | 0.29–0.47 |
+| Hidden state + supervised MLP projector (3.15M params) | STS Spearman | **0.82** |
+| Hidden state + supervised contrastive projector | clustering v\_measure | **0.95** (MTEB short-text) |
+| Hidden state + MLP classifier | task classification | **0.93** |
+
+Root cause of unsupervised failure: **severe anisotropy** in raw hidden
+state. Supervised projectors unlock the latent geometry; unsupervised
+methods (PCA, UMAP, whitening, DeepCluster) all plateau below 0.35.
+
+**Task-specific projectors cannot be mixed:** STS projector transferred
+to clustering drops *below* unsupervised baseline (0.14 < 0.34). STS
+learns ranking distance; clustering needs absolute class separation —
+objectives are incompatible.
+
+**Implication for noesis.** WKV state being informationally sparse for
+external projectors does not undermine lens functionality — lenses feed
+WKV state *back to the model*, which reads it natively via WKV
+attention. However: any programmatic inspection of lens contents
+(H12a working-memory characterisation, H19 contamination probe) requires
+a supervised projector. The hidden state (not WKV state) is the natural
+signal for `ib_probe`.
+
+### WKV Jacobian analysis — gemlog (verified 2026-08-11)
+
+Source: `clehaxze.tw/gemlog/2026/08-07-notes-on-replicating-j-lens-on-rwkvv7`
+
+Analytical mean-field Jacobian of the WKV update function achieves
+**cosine similarity 0.76** with the numerically computed Jacobian on
+G1h. This shows the WKV update rule has tractable gradient structure
+(no chaotic regime) — the mean-field approximation is tight.
+
+Connection to `L_state`: maximising state motion (Δ between chunks)
+trains for large singular values of the WKV update Jacobian. J-lens
+(Anthropic's mechanistic interpretability via Jacobians) measures these
+eigenvalues post-hoc. `L_state` is a training-time proxy for the same
+quantity. **Testable prediction:** step9 checkpoint should show higher
+WKV Jacobian eigenvalues in `work_layers` than g1h-base when J-lens
+analysis is run post-hoc.
+
+### BLT / T-FREE (community architecture research, 2026-08)
+
+Reported in RWKV Discord; not yet in production RWKV builds.
+
+- **BLT (Byte Latent Transformer):** compresses raw bytes into latent
+  patch tokens before passing to WKV / attention. Fewer WKV updates per
+  semantic unit → state saturates slower → attractor activates later.
+  Architectural solution to the N=3 attractor collapse class of problems.
+- **T-FREE (Tokenizer-Free via sparse trigrams):** arXiv 2406.19223
+  (Aleph Alpha). Replaces BPE with sparse trigram overlap vectors.
+  Composes with BLT as a pure-RWKV-7 byte-level stack.
+- **Community recommendation:** BLT + T-FREE for tokenizer-free RWKV-7.
+  Not yet trained at reasoning scale (no public checkpoint).
+
+**Implication for noesis.** Architecturally non-applicable to current
+A1 (RWKV-7 G1h fixed substrate). The principle maps to an existing
+noesis mechanism: `<think>` tokens already function as latent patches —
+if the model places intermediate computation inside `<think>` spans, WKV
+updates within the span are local-scope and less prone to global attractor
+activation. ε-mask (α\_eff = 0.05 outside `<think>`) already enforces
+this boundary. BLT/T-FREE is runway context for A2/H24 if RWKV-8+BLT
+matures.
 
 ### Test-time compute
 
@@ -353,6 +534,11 @@ misattributed. Do not re-fold them without new evidence.
 - **"State Tuning trains running-WKV trajectory"** — false. Trains
   the *initial state vector* (per-layer, fixed-length), effectively
   a numerical prompt bias. Not a trajectory objective.
+- **"WKV state is a semantic embedding"** — false. WKV state aggregations
+  (Q-Readout, row\_sum, diag, trace) yield clustering v\_measure=0.11,
+  far below hidden state (0.93 with supervised projector). WKV state is
+  a *computation register*, not a compressed semantic representation.
+  Source: cgisky1980/rwkv7-state-embedding, verified 2026-08-11.
 - **"RWKV-8 codename is Rose"** — false. Codename is "Heron" 🪶.
   The rose 🌹 is a visual emoji tied to the ROSA mechanism inside
   Heron. Verified against BlinkDL twitter and RWKV-LM repo
