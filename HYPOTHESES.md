@@ -524,6 +524,12 @@ All three H8-causal sub-tests pass. Results in
 `experiments/A0_state_probe/results/a05_g1h_2.9b/verdict.md`.
 H8 SUPPORTED at 2.9B.
 
+**IB reconstruction probe (2026-08-12, G1d 0.4B, 13 393 tokens).** Linear probe
+predicts WKV state at t from state at t−lag. Baseline CE = 6.53 (no state).
+Frac explained: lag=1 → 95.9%, lag=8 → 82.1%, lag=64 → 78.3%. Gradual decay
+without collapse to baseline confirms WKV state carries predictive information
+over ≥64 tokens. Results: `experiments/ib_probe/results_g1d_base/reconstruction.json`.
+
 **Status.** **SUPPORTED** at 0.4B and 2.9B (A0.5 passed both scales,
 2026-08-04/05). A1 state_reg sweep findings in
 `docs/verdicts/2026-08-04-a1-pilot-step3-step4.md`.
