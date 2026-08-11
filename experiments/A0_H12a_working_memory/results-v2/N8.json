@@ -1,0 +1,744 @@
+{
+  "tasks_file": "tasks-v2/tasks-N8.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 120,
+  "num_predict_per_n": 0,
+  "num_predict_cap": 3000,
+  "n_tasks": 10,
+  "elapsed_s": 29.543867111206055,
+  "aggregate": {
+    "n": 10,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.05333333333333333,
+    "mean_precision": 0.02857142857142857,
+    "mean_recall": 0.4,
+    "mean_word_gap": 0.0
+  },
+  "results": [
+    {
+      "id": "v2-N08-s00",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 0,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item['color'] == 'orange':\n        pair = (item['item-alpha-00'], item['item-beta-01'])\n        pairs.append(pair)\n    elif item['color'] == 'turquoise':\n        pair = (item['item-gamma-02'], item['item-delta-03'])\n        pairs.append(pair)\n    elif item['color'] == 'navy':\n        pair = (item['item-epsilon-04'], item['item-theta-07'])",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ]
+      ],
+      "tp": 0,
+      "fp": 3,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s01",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 1,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = [(item_alpha, item_beta), (item_gamma, item_delta), (item_epsilon, item_zeta), (item_eta, item_theta)]\nfor pair in pairs:\n    print(f\"{pair[0]}-{pair[1]}\")\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s02",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 2,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03, item-epsilon-04, item-zeta-05, item-eta-06, item-theta-07",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s03",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 3,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == item[1]:\n        pairs.append((item, item))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s04",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 4,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03, item-epsilon-04, item-zeta-05, item-eta-06, item-theta-07",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s05",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 5,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03, item-epsilon-04, item-zeta-05, item-eta-06, item-theta-07",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s06",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 6,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == item[1]:\n        pairs.append((item, item[1]))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s07",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 7,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == item[1]:\n        pairs.append((item, item[1]))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s08",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 8,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == item[1]:\n        pairs.append((item, item))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N08-s09",
+      "n": 8,
+      "mean_word_gap": 0,
+      "seed": 9,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03, item-epsilon-04, item-zeta-05, item-eta-06, item-theta-07",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 2,
+      "fp": 26,
+      "fn": 0,
+      "precision": 0.07142857142857142,
+      "recall": 1.0,
+      "f1": 0.13333333333333333,
+      "exact_match": false
+    }
+  ]
+}

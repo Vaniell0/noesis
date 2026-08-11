@@ -1,0 +1,379 @@
+{
+  "tasks_file": "tasks-v2/tasks-N4.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 120,
+  "num_predict_per_n": 0,
+  "num_predict_cap": 3000,
+  "n_tasks": 10,
+  "elapsed_s": 30.171624898910522,
+  "aggregate": {
+    "n": 10,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.2,
+    "mean_precision": 0.13333333333333333,
+    "mean_recall": 0.4,
+    "mean_word_gap": 0.0
+  },
+  "results": [
+    {
+      "id": "v2-N04-s00",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 0,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s01",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 1,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == item[0]:\n        pairs.append((item, item))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s02",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 2,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s03",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 3,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nfrom collections import defaultdict, Counter\ndef main():\n    items = [\n        \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\"\n    ]\n    colors = {\n        \"alpha\": \"gainboro\",\n        \"beta\": \"ferno\",\n        \"gamma\": \"ferno\",\n        \"delta\": \"ferno\"\n    }\n    \n    # Build a dictionary of colors to their counts\n    color_counts = defaultdict(int)\n    for item in items:\n        color_counts[colors",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s04",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 4,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == 'eggshell':\n        for other in items[2:]:\n            if other[1] == 'tangerine':\n                pair = (item, other)\n                pairs.append(pair)\n                break\n    else:\n        for other in items[2:]:\n            if other[1] == 'tangerine':\n                pair = (other, item)\n                pairs.append(pair)\n                break\nprint(' '.join(map(str, pairs)))\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s05",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 5,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == item[2]:\n        pairs.append((item, item))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s06",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 6,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == item[1]:\n        pairs.append((item, item[2]))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s07",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 7,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "tp": 2,
+      "fp": 4,
+      "fn": 0,
+      "precision": 0.3333333333333333,
+      "recall": 1.0,
+      "f1": 0.5,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s08",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 8,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == 'eggshell':\n        pairs.append((item[0], item[2]))\n    elif item[1] == 'ginger':\n        pairs.append((item[0], item[3]))\n    else:\n        pairs.append((item[0], item[2]))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N04-s09",
+      "n": 4,
+      "mean_word_gap": 0,
+      "seed": 9,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == item[0]:\n        pairs.append((item, item))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}

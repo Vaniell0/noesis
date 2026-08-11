@@ -1,0 +1,684 @@
+{
+  "tasks_file": "tasks-v2/tasks-N64.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 120,
+  "num_predict_per_n": 0,
+  "num_predict_cap": 3000,
+  "n_tasks": 10,
+  "elapsed_s": 104.53710770606995,
+  "aggregate": {
+    "n": 10,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.008695652173913042,
+    "mean_precision": 0.0047619047619047615,
+    "mean_recall": 0.05,
+    "mean_word_gap": 0.0
+  },
+  "results": [
+    {
+      "id": "v2-N64-s00",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 0,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == 'orange':\n        pairs.append((item[0], 'orange'))\n    elif item[1] == 'green':\n        pairs.append((item[0], 'green'))\n    elif item[1] == 'blue':\n        pairs.append((item[0], 'blue'))\n    elif item[1] == 'yellow':\n        pairs.append((item[0], 'yellow'))\n    elif item[1] == 'red':\n        pairs.append((item[0],",
+      "expected": [
+        [
+          "item-omicron-50",
+          "item-phi-56"
+        ],
+        [
+          "item-pi-15",
+          "item-pi-51"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s01",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 1,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-iota-08\", \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\",\n    \"item-nu-12\", \"item-xi-13\", \"item-omicron-14\", \"item-",
+      "expected": [
+        [
+          "item-austral-33",
+          "item-psi-22"
+        ],
+        [
+          "item-eta-42",
+          "item-mu-11"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-omicron-14"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-13"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 21,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s02",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 2,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```json\n[\n    {\"item\": \"alpha-00\", \"color\": \"gold\"},\n    {\"item\": \"beta-01\", \"color\": \"yellow\"},\n    {\"item\": \"gamma-02\", \"color\": \"blue\"},\n    {\"item\": \"delta-03\", \"color\": \"green\"},\n    {\"item\": \"epsilon-04\", \"color\": \"red\"},\n    {\"item\": \"zeta-05\", \"color\": \"purple\"},\n    {\"item\": \"eta-06\", \"color\": \"orange\"},\n    {\"item\": \"theta-07\", \"",
+      "expected": [
+        [
+          "item-alpha-36",
+          "item-lunar-29"
+        ],
+        [
+          "item-rho-52",
+          "item-tropic-34"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s03",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 3,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-iota-08\", \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\",\n    \"item-nu-12\", \"item-\"\n]\n# Pairs: (i, j) where i and",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-mu-47"
+        ],
+        [
+          "item-gamma-02",
+          "item-omega-59"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 18,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s04",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 4,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-iota-08\", \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\",\n    \"item-nu-12\", \"item-xi-13\", \"item-omicron-14\", \"item-",
+      "expected": [
+        [
+          "item-alpha-36",
+          "item-north-24"
+        ],
+        [
+          "item-gamma-38",
+          "item-phi-20"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-omicron-14"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-13"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 21,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s05",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 5,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor i in range(1, len(items)):\n    item_id = items[i]\n    color = items[i][0]\n    if item_id not in pairs:\n        pairs.append((item_id, color))\nprint(\"Pairs:\", pairs)\n```",
+      "expected": [
+        [
+          "item-iota-08",
+          "item-sigma-53"
+        ],
+        [
+          "item-omicron-50",
+          "item-tau-54"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s06",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 6,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-iota-08\", \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\",\n    \"item-nu-12\", \"item-xi-13\", \"item-omicron-14\", \"item-",
+      "expected": [
+        [
+          "item-chi-57",
+          "item-nu-12"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-omicron-14"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-13"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 1,
+      "fp": 20,
+      "fn": 1,
+      "precision": 0.047619047619047616,
+      "recall": 0.5,
+      "f1": 0.08695652173913042,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s07",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 7,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == 'alpha':\n        pairs.append((item[1], 'orange'))\n    elif item[0] == 'beta':\n        pairs.append((item[1], 'goldenrod'))\n    elif item[0] == 'gamma':\n        pairs.append((item[1], 'maroon'))\n    elif item[0] == 'delta':\n        pairs.append((item[1], 'aquamarine'))\n    elif item[0] == 'epsilon':\n        pairs.append",
+      "expected": [
+        [
+          "item-mu-47",
+          "item-omicron-50"
+        ],
+        [
+          "item-omega-23",
+          "item-south-25"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s08",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 8,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-iota-08\", \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\",\n    \"item-nu-12\", \"item-xi-13\", \"item-\"\n]\n# Pairs: (",
+      "expected": [
+        [
+          "item-austral-33",
+          "item-theta-07"
+        ],
+        [
+          "item-chi-21",
+          "item-north-60"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 19,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N64-s09",
+      "n": 64,
+      "mean_word_gap": 0,
+      "seed": 9,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == 'coral':\n        pairs.append((item[0], 'coral'))\n    elif item[1] == 'gold':\n        pairs.append((item[0], 'gold'))\n    elif item[1] == 'orange':\n        pairs.append((item[0], 'orange'))\n    elif item[1] == 'green':\n        pairs.append((item[0], 'green'))\n    elif item[1] == 'blue':\n        pairs.append((item[",
+      "expected": [
+        [
+          "item-delta-39",
+          "item-solar-28"
+        ],
+        [
+          "item-mu-47",
+          "item-upsilon-55"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}

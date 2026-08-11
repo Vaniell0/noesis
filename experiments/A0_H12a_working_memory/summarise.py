@@ -114,8 +114,10 @@ def main() -> int:
         ))
         print()
 
-    width_accs = [r["aggregate"]["accuracy_exact"] for _, r in width_rows]
-    dist_accs = [r["aggregate"]["accuracy_exact"] for _, r in dist_rows]
+    # Use recall (not acc_exact) for the verdict: acc_exact is 0 everywhere at
+    # this task difficulty, masking real signal. Recall captures partial finds.
+    width_accs = [r["aggregate"]["mean_recall"] for _, r in width_rows]
+    dist_accs = [r["aggregate"]["mean_recall"] for _, r in dist_rows]
     width_drop = _series_drop(width_accs) if width_accs else None
     dist_drop = _series_drop(dist_accs) if dist_accs else None
 

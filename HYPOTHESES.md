@@ -1002,8 +1002,12 @@ copies.
   cross-contamination verdict). CPU probe, ~0 GPU cost. Ready to run.
 
 **Status.** H12a v1: decay axis PROVEN (recall 0.40 → 0.02 across
-gap 14–229), width axis BLOCKED by v1 probe confound (N grows with
-gap). H12a v2 = diagnostic follow-up (not a blocker on H12b).
+gap 14–229), width axis BLOCKED by v1 probe confound (N grows with gap).
+
+**H12a v2 (2026-08-11, G1d 0.4B, fixed tail-gap=50w).** Width axis now
+resolved. Recall drops 0.40 → 0.40 → 0.05 across N=4/8/16 with gap held
+constant. Collapse between N=8 and N=16 → WKV working-memory width ≈ 8
+active items on G1d 0.4B. H12a v2 results: `experiments/A0_H12a_working_memory/results-v2/`.
 
 **H12a v2 PILOT (2026-08-05, G1d-0.4B Q8 via Ollama, think=false).**
 Fixed tail-gap=50w, N∈{4,8,16,32,64}×10 seeds. Width gradient confirmed:
@@ -1437,10 +1441,12 @@ register) — the emit-gate's training data comes from persona-labeled
 traces; H15 must land first so the register is stable when H16
 learns *when* to use it.
 
-**Status.** Untested. Phase 3+ (post A1, post H13a probe, post H15
-persona pass). No budget estimate yet — depends on whether the
-gate can be trained with a few-K examples (~2 GPU-hours) or requires
-online RL from runtime traces (>> that).
+**Status.** **RETRACTED (2026-08-11).** The separate gated-emit MLP head is redundant:
+the LM head already encodes p(emit) — high probability on response-initiating tokens
+in the drip stream IS the gate signal. Poll-mode (currently implemented) suffices;
+the H16 architecture adds a separately trained component for a function the LM head
+provides natively. The drip-rate ceiling (H1) and the think-stream mechanism (H10)
+remain; only the separate gate head is dropped.
 
 ---
 

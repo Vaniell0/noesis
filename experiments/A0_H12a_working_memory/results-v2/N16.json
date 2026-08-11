@@ -1,0 +1,948 @@
+{
+  "tasks_file": "tasks-v2/tasks-N16.jsonl",
+  "model": "mollysama/rwkv-7-g1d:0.4b",
+  "num_predict": 120,
+  "num_predict_per_n": 0,
+  "num_predict_cap": 3000,
+  "n_tasks": 10,
+  "elapsed_s": 53.79416584968567,
+  "aggregate": {
+    "n": 10,
+    "accuracy_exact": 0.0,
+    "mean_f1": 0.005263157894736842,
+    "mean_precision": 0.0027777777777777775,
+    "mean_recall": 0.05,
+    "mean_word_gap": 0.0
+  },
+  "results": [
+    {
+      "id": "v2-N16-s00",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 0,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[1] == 'alpha':\n        pairs.append((item[0], 'alpha-00'))\n    elif item[1] == 'beta':\n        pairs.append((item[0], 'beta-01'))\n    elif item[1] == 'gamma':\n        pairs.append((item[0], 'gamma-02'))\n    elif item[1] == 'delta':\n        pairs.append((item[0], 'delta-03'))\n    elif item[1] == 'epsilon':\n        ",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-gamma-02",
+          "item-iota-08"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s01",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 1,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \"item-delta-03\",\n    \"item-epsilon-04\", \"item-zeta-05\", \"item-eta-06\", \"item-theta-07\",\n    \"item-iota-08\", \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\",\n    \"item-nu-12\", \"item-xi-13\", \"item-omicron-14\", \"item-",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-iota-08"
+        ],
+        [
+          "item-mu-11",
+          "item-pi-15"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-omicron-14"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-13"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 21,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s02",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 2,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == item[1]:\n        pairs.append((item, item[2]))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-eta-06",
+          "item-xi-13"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s03",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 3,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor i in range(1, 11):\n    item = list(range(i))\n    colors = [item[j] for j in range(i)]\n    if len(colors) == 2:\n        pair = (f\"{item[0]}-{item[1]}\", f\"{item[2]}-{item[3]}\")\n        pairs.append(pair)\nprint(\"Pairs:\", pairs)\n```",
+      "expected": [
+        [
+          "item-epsilon-04",
+          "item-mu-11"
+        ],
+        [
+          "item-omicron-14",
+          "item-theta-07"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s04",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 4,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03, item-epsilon-04, item-zeta-05, item-eta-06, item-theta-07, item-iota-08",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-lambda-10",
+          "item-nu-12"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-iota-08"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-iota-08"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-iota-08"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-iota-08"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-iota-08"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-iota-08"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-theta-07"
+        ],
+        [
+          "item-iota-08",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 1,
+      "fp": 35,
+      "fn": 1,
+      "precision": 0.027777777777777776,
+      "recall": 0.5,
+      "f1": 0.05263157894736842,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s05",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 5,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-beta-01, item-gamma-02, item-delta-03, item-epsilon-04, item-zeta-05, item-eta-06, item-theta-07, item-iota-08",
+      "expected": [
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-iota-08",
+          "item-omicron-14"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-iota-08"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-iota-08"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-iota-08"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-iota-08"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-iota-08"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-theta-07"
+        ],
+        [
+          "item-iota-08",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 28,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s06",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 6,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nitems = [\n    \"item-alpha-00\", \"item-beta-01\", \"item-gamma-02\", \n    \"item-delta-03\", \"item-epsilon-04\", \"item-zeta-05\", \n    \"item-eta-06\", \"item-theta-07\", \"item-iota-08\", \n    \"item-kappa-09\", \"item-lambda-10\", \"item-mu-11\", \n    \"item-nu-12\", \"item-xi-13\", \"item-omicron-14\", \n    \"",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-pi-15"
+        ],
+        [
+          "item-gamma-02",
+          "item-mu-11"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-iota-08"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-iota-08",
+          "item-theta-07"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-nu-12",
+          "item-omicron-14"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ],
+        [
+          "item-omicron-14",
+          "item-xi-13"
+        ]
+      ],
+      "tp": 0,
+      "fp": 15,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s07",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 7,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\npairs = []\nfor item in items:\n    if item[0] == item[1]:\n        pairs.append((item, item[1]))\nprint(pairs)\n```",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-nu-12",
+          "item-xi-13"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s08",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 8,
+      "variant": "width_v2_fixed_tail",
+      "response": "\nitem-alpha-00, item-beta-01, item-gamma-02, item-delta-03, item-epsilon-04, item-zeta-05, item-eta-06, item-theta-07, item-iota-08, item-kappa-09, item-lambda-10, item-mu-11,\nitem-nu-12,\nitem",
+      "expected": [
+        [
+          "item-beta-01",
+          "item-omicron-14"
+        ],
+        [
+          "item-nu-12",
+          "item-zeta-05"
+        ]
+      ],
+      "predicted": [
+        [
+          "item-alpha-00",
+          "item-beta-01"
+        ],
+        [
+          "item-alpha-00",
+          "item-delta-03"
+        ],
+        [
+          "item-alpha-00",
+          "item-epsilon-04"
+        ],
+        [
+          "item-alpha-00",
+          "item-eta-06"
+        ],
+        [
+          "item-alpha-00",
+          "item-gamma-02"
+        ],
+        [
+          "item-alpha-00",
+          "item-iota-08"
+        ],
+        [
+          "item-alpha-00",
+          "item-kappa-09"
+        ],
+        [
+          "item-alpha-00",
+          "item-lambda-10"
+        ],
+        [
+          "item-alpha-00",
+          "item-mu-11"
+        ],
+        [
+          "item-alpha-00",
+          "item-theta-07"
+        ],
+        [
+          "item-alpha-00",
+          "item-zeta-05"
+        ],
+        [
+          "item-beta-01",
+          "item-delta-03"
+        ],
+        [
+          "item-beta-01",
+          "item-epsilon-04"
+        ],
+        [
+          "item-beta-01",
+          "item-eta-06"
+        ],
+        [
+          "item-beta-01",
+          "item-gamma-02"
+        ],
+        [
+          "item-beta-01",
+          "item-iota-08"
+        ],
+        [
+          "item-beta-01",
+          "item-kappa-09"
+        ],
+        [
+          "item-beta-01",
+          "item-lambda-10"
+        ],
+        [
+          "item-beta-01",
+          "item-mu-11"
+        ],
+        [
+          "item-beta-01",
+          "item-theta-07"
+        ],
+        [
+          "item-beta-01",
+          "item-zeta-05"
+        ],
+        [
+          "item-delta-03",
+          "item-epsilon-04"
+        ],
+        [
+          "item-delta-03",
+          "item-eta-06"
+        ],
+        [
+          "item-delta-03",
+          "item-gamma-02"
+        ],
+        [
+          "item-delta-03",
+          "item-iota-08"
+        ],
+        [
+          "item-delta-03",
+          "item-kappa-09"
+        ],
+        [
+          "item-delta-03",
+          "item-lambda-10"
+        ],
+        [
+          "item-delta-03",
+          "item-mu-11"
+        ],
+        [
+          "item-delta-03",
+          "item-theta-07"
+        ],
+        [
+          "item-delta-03",
+          "item-zeta-05"
+        ],
+        [
+          "item-epsilon-04",
+          "item-eta-06"
+        ],
+        [
+          "item-epsilon-04",
+          "item-gamma-02"
+        ],
+        [
+          "item-epsilon-04",
+          "item-iota-08"
+        ],
+        [
+          "item-epsilon-04",
+          "item-kappa-09"
+        ],
+        [
+          "item-epsilon-04",
+          "item-lambda-10"
+        ],
+        [
+          "item-epsilon-04",
+          "item-mu-11"
+        ],
+        [
+          "item-epsilon-04",
+          "item-theta-07"
+        ],
+        [
+          "item-epsilon-04",
+          "item-zeta-05"
+        ],
+        [
+          "item-eta-06",
+          "item-gamma-02"
+        ],
+        [
+          "item-eta-06",
+          "item-iota-08"
+        ],
+        [
+          "item-eta-06",
+          "item-kappa-09"
+        ],
+        [
+          "item-eta-06",
+          "item-lambda-10"
+        ],
+        [
+          "item-eta-06",
+          "item-mu-11"
+        ],
+        [
+          "item-eta-06",
+          "item-theta-07"
+        ],
+        [
+          "item-eta-06",
+          "item-zeta-05"
+        ],
+        [
+          "item-gamma-02",
+          "item-iota-08"
+        ],
+        [
+          "item-gamma-02",
+          "item-kappa-09"
+        ],
+        [
+          "item-gamma-02",
+          "item-lambda-10"
+        ],
+        [
+          "item-gamma-02",
+          "item-mu-11"
+        ],
+        [
+          "item-gamma-02",
+          "item-theta-07"
+        ],
+        [
+          "item-gamma-02",
+          "item-zeta-05"
+        ],
+        [
+          "item-iota-08",
+          "item-kappa-09"
+        ],
+        [
+          "item-iota-08",
+          "item-lambda-10"
+        ],
+        [
+          "item-iota-08",
+          "item-mu-11"
+        ],
+        [
+          "item-iota-08",
+          "item-theta-07"
+        ],
+        [
+          "item-iota-08",
+          "item-zeta-05"
+        ],
+        [
+          "item-kappa-09",
+          "item-lambda-10"
+        ],
+        [
+          "item-kappa-09",
+          "item-mu-11"
+        ],
+        [
+          "item-kappa-09",
+          "item-theta-07"
+        ],
+        [
+          "item-kappa-09",
+          "item-zeta-05"
+        ],
+        [
+          "item-lambda-10",
+          "item-mu-11"
+        ],
+        [
+          "item-lambda-10",
+          "item-theta-07"
+        ],
+        [
+          "item-lambda-10",
+          "item-zeta-05"
+        ],
+        [
+          "item-mu-11",
+          "item-theta-07"
+        ],
+        [
+          "item-mu-11",
+          "item-zeta-05"
+        ],
+        [
+          "item-theta-07",
+          "item-zeta-05"
+        ]
+      ],
+      "tp": 0,
+      "fp": 66,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    },
+    {
+      "id": "v2-N16-s09",
+      "n": 16,
+      "mean_word_gap": 0,
+      "seed": 9,
+      "variant": "width_v2_fixed_tail",
+      "response": "\n```python\nimport sys\nfrom collections import defaultdict, Counter\ndef main():\n    items = []\n    for line in sys.stdin:\n        line = line.strip()\n        if not line:\n            continue\n        parts = line.split(',')\n        item_id = int(parts[0])\n        color = parts[1] if len(parts) > 1 else ''\n        items.append((item_id, color))\n    # Build a dictionary of item-to-color pairs\n    color_map = defaultdict(list)\n    for item_id, color in",
+      "expected": [
+        [
+          "item-delta-03",
+          "item-kappa-09"
+        ],
+        [
+          "item-pi-15",
+          "item-xi-13"
+        ]
+      ],
+      "predicted": [],
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "exact_match": false
+    }
+  ]
+}
