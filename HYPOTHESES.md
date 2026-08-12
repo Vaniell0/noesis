@@ -1759,6 +1759,56 @@ irrelevant.
   structure; H18 refuted *at that scale*. Log the scale-limit and
   register as an open sub-question — do not extrapolate.
 
+**Reliability assessment (2026-08-12).**
+
+Sub-claim priors after accumulated evidence:
+
+- **Sub-claim 1 (fork determinism): HIGH.** rwkv-cpp clone is
+  deterministic by design. Testable locally without GPU, no new
+  bindings needed. Run before any other sub-claim.
+
+- **Sub-claim 2 (branch coherence): LOW.** Three converging problems:
+
+  1. *A0.6 rules out candidate (a).* Full state swap = "state
+     dominates continuation" — exactly the mode A0.6 refuted.
+     icophy (2026-08-12): "the model can hold the state but looks
+     through it rather than into it." Trained read pathway expects
+     the trunk's own trajectory; injected branch state violates
+     that expectation.
+
+  2. *Arithmetic merge is semantically meaningless.* WKV state is
+     built by non-linear k·v outer-product accumulation. A weighted
+     average of two state matrices is not an average of two world
+     models — it is noise in the encoding space. Candidate (b)
+     should not be treated as a valid primitive until tested; the
+     prior is that it produces incoherent decode.
+
+  3. *Only tested merge primitive is Lucas's learned Linear layer*
+     (community-map, 2026-08-11): `delta = Linear(concat(S_sys,
+     S_ctx))`, trained contrastively, ~30 min on one GPU. This is
+     not a runtime-arithmetic merge — it is a trained module. This
+     fundamentally changes H18: if the only working merge requires
+     training, then branch/merge is not a zero-shot runtim operation;
+     it is a learned capability that must be installed per-domain.
+     Promote Lucas's approach as candidate (d) and make it the
+     primary target for sub-claim 2.
+
+- **Sub-claim 3 (continuation stability over M cycles): VERY LOW.**
+  N=3 silent collapse (-27pp, H10) shows WKV state destabilises on
+  the third re-feed of the *same* prompt without any branching.
+  M=25 branch/merge cycles is extremely optimistic given this
+  baseline. Sub-claim 3 should not be attempted before sub-claim 2
+  passes with M=1.
+
+- **Sub-claim 4 (structure adherence): CONDITIONAL** on sub-claim 2.
+  Not in scope until a working merge primitive is confirmed.
+
+**Revised prediction.** All four sub-claims PASS is no longer the
+baseline prediction. Realistic: sub-claim 1 trivially passes; sub-claim
+2 passes only with a trained Linear merge module (Lucas's candidate),
+not with arithmetic primitives; sub-claim 3 is an open question beyond
+M=3; sub-claim 4 follows from 3.
+
 **Related work / state-portability ties.**
 - Builds on the state-work workstream now first-class (see project
   memory `project_noesis_state_work_first_class.md` and plan §5, §6).
@@ -1767,9 +1817,8 @@ irrelevant.
 - The FAILED.md 2026-07-22 entry (WKV state is not a semantic
   override switch) constrains H18 sub-claim 2 candidate (a): a raw
   full-state swap "replace trunk with branch" is exactly the "state
-  dominates continuation" mode that A0.6 refuted. This raises the
-  prior on candidate (b) or (c). H18's merge experiment must respect
-  the A0.6 verdict — do not re-litigate.
+  dominates continuation" mode that A0.6 refuted. Candidate (d) —
+  Lucas's trained Linear merge — is now the primary candidate.
 
 **Related hypotheses.**
 - H17 (state absorption vs history re-inject) — H18 is the output-
