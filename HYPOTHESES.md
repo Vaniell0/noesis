@@ -53,6 +53,42 @@ form that could be shown wrong, it does not belong here.
 
 ---
 
+## Overarching framing (2026-08-12)
+
+The WKV state is not a rolling summary — it is a **world model register**.
+Each delta-rule update is a write into a fixed-capacity compressed
+representation of the current situation. The `<think>` tokens in L_state
+training are not chain-of-thought for human readers; they are **sequential
+WKV state writes** — deliberate updates to the world model before the model
+commits to an action.
+
+This is what noesis is uniquely building:
+- `L_state` loss = trains the model to maximise write bandwidth per think
+  token (inverted SFA on the world model register)
+- N=2 structure = write phase (chunk 1 builds world model from prompt) +
+  readout phase (chunk 2 selects action from world model state)
+- Persistent WKV across sessions = the world model survives between turns
+
+Nobody else trains for this explicitly. State tuning (Scarletwolf/RWKV-PEFT)
+installs a fixed initial state (disposition). LoRA trains weight deltas
+(procedure). L_state trains the *dynamics* — how fast and how richly the
+model writes into its world model register during generation. The two are
+complementary: state tuning sets the prior, L_state training sets the
+update rule quality.
+
+BlinkDL's agent direction and noesis's world-model direction are compatible:
+agents need a world model to act from. L_state-trained G1i gives the agent
+a richer internal state per think token, reducing the token cost of
+grounding before action.
+
+H8–H10, H12, H17 are all sub-questions of this overarching claim.
+The full empirical program is: measure write bandwidth (H8), show training
+amplifies it (H9), map the N×K effort frontier (H10), characterise capacity
+limits (H12), and demonstrate that persistent state substitutes for
+re-injection (H17).
+
+---
+
 ## Navigation
 
 Grouped for orientation. Full text follows below in numeric order.
