@@ -404,6 +404,42 @@ quantity. **Testable prediction:** step9 checkpoint should show higher
 WKV Jacobian eigenvalues in `work_layers` than g1h-base when J-lens
 analysis is run post-hoc.
 
+### R-lens: improved J-lens for early layers (2026-08-12)
+
+Source: lesswrong.com/posts/nv8oedrnLXKRzNEL9 (BlinkDL shared in Discord)
+Open-sourced: `camilablank/workspace-lenses` on HuggingFace.
+
+Drop-in replacement for J-lens. Identical fitting procedure; backward pass
+uses LRP (Layer-wise Relevance Propagation) stop-gradients instead of raw
+gradients, primarily the **LN-rule**: treat the LayerNorm variance denominator
+as a constant (stop_grad). Cost: negligible — forward pass unchanged.
+
+**Why early layers are noisy in J-lens:** backpropagating from the final
+residual stream to an early readout point accumulates errors over many
+layers. LRP stop-gradients reduce this accumulation, transporting a relevance
+coefficient instead of a raw gradient.
+
+**Measured advantages over J-lens:**
+- Substantially fewer incoherent tokens at early layers
+- R-lens directions are more causally important (ablation confirmed)
+- Detects concepts that J-lens misses entirely, especially early-layer-only
+- Quantitative advantage grows with model scale
+
+**Applicability to noesis.** Our `experiments/A0_state_probe/jlens_probe.py`
+is an analytical SVD proxy (WKV state matrix singular values), not a true
+J-lens readout. For a proper R-lens analysis of RWKV-7 we would need to:
+1. Implement the residual-stream → logits attribution path with LRP rules
+   at each RWKV-7 block (GroupNorm → time-mixing WKV → channel-mixing FFN)
+2. Fit a linear readout at each layer's residual stream
+
+Immediate implication: our work_layers L0/L4 showing low sigma1 in the
+SVD proxy is consistent with J-lens being noisy at early depths — R-lens
+might reveal that early WKV layers do carry meaningful content that our
+analytical probe cannot surface. Worth applying R-lens post-hoc on G1i
+once we have a trained checkpoint. Could revise the L_state `work_layers`
+selection if early layers are informationally richer than the sigma1
+proxy suggests.
+
 ### BLT / T-FREE (community architecture research, 2026-08)
 
 Reported in RWKV Discord; not yet in production RWKV builds.
