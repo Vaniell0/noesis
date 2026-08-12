@@ -58,7 +58,7 @@
 #       --load_model    ../runs/step10_base.pth \
 #       --proj_dir      ../runs/pilot_g1h_step10 \
 #       --data_file     ../tokenised/step10_combined_train.pt \
-#       --data_type     binidx \
+#       --data_type     sft \    # step9 used sft for .pt format (binidx expects .bin/.idx, not .pt)
 #       --vocab_size    65536 \
 #       --ctx_len       2048 \
 #       --epoch_steps   300 \

@@ -169,6 +169,66 @@ re-discover the training stack from zero when the moment comes.
   running WKV memory" overshoot the actual mechanism.
 - **Blealtan/RWKV-LM-LoRA** — infinite-context training branch.
 
+### State-tuning production pipeline (Scarletwolf champion recipe, 2026-08-12)
+
+Verified production pipeline for RWKV state tuning (not LoRA). Output is
+**the initial hidden state only** (11 MB at 2.9B) — not a weight delta,
+no merge step needed.
+
+**Chain:**
+```
+jsonl {"text": ...}
+  → json2binidx (RWKVTokenizer, --append-eod)
+  → RWKV-PEFT --peft state --op fla --my_testing x070
+     lr 1e-2→1e-3 cos, warmup 50, one epoch, bf16, grad_cp 1
+  → rwkv-0.pth  ← this IS the state (overwrite st[3i+1] at inference)
+```
+
+BlinkDL note (2026-08-12): 1e-2→1e-3 LR "too high" — try 1e-3→1e-5 or
+1e-4→1e-6; warmup 10 sufficient; larger models need smaller LR.
+
+**Silent failure modes (in order hit in production):**
+1. `ctx_len` shorter than longest formatted example → binidx truncates without warning
+   (20-tool JSON schemas ~6k tok/example; went 4096→6144)
+2. Eval priming must match training byte-for-byte — same state behind different
+   priming dropped 71→58
+3. `time_state` injection orientation: overwrite `st[3i+1]` directly; transposed
+   loads and generates garbage; probe one known query before burning an eval
+4. Token id 0 = end of document; `clean_txt` (collapse repeated newlines) on
+   system/user — both from official G1x templates file
+5. Tiny corpus: repeat with seeded passes to reach recipe's step count, else
+   cosine schedule never leaves warmup and state-tuning appears to not work
+
+**Inference serving:**
+- State = initial hidden state; overwrite `st[3i+1]` before prefill; nothing
+  to merge. Cache state after fixed prefix, reuse across requests → prefill
+  cost collapses.
+- **GGUF/llama.cpp cannot carry state** — their CPU production cannot use tuned
+  states. Ollama GGUF is inference-only; state injection requires `.pth` +
+  rwkv-cpp.
+
+**Hardware / cost:** single 3090 or A40 comfortable at 2.9B (~5.5 GB bf16).
+17.7M tokens, 2885 steps, ~110 min on A40 at $0.44/h. First complete run
+under $2.
+
+**Corpus lessons:**
+- A few hundred examples installs fence format; two things matter more than
+  exact mix: (a) train inside the scaffold you'll serve, (b) include nulls
+  (~15% of mix). Pair negatives with positives from same domain — unpaired
+  negatives install a silence reflex, not a boundary.
+- Name confusion: 135 targeted examples → 0 improvement. Capacity question,
+  not data question.
+- Abstention installs inside its curriculum then drops by half on fresh cases
+  in a different style. Test out-of-curriculum before shipping.
+
+**Multi-turn empirical law (production, 2026-08-12):** 0/2 for every model
+measured (tuned or not, RWKV or Transformer). "States install dispositions,
+not procedures." Multi-step procedures must live in the agent harness.
+
+**Checkpoint hygiene:** g1g and g1h bases deleted from BlinkDL/RWKV-LM main
+on 2026-08-05/08-08. Resolve snapshot `6d5762253b34` preserves them. SHA256
+everything before relying on a checkpoint.
+
 ### State-tuning empirical results (Scarletwolf, 2026-08)
 
 Independent benchmark: `scarletwolf_ai/rwkv-toolcaller-bench` (Codeberg),

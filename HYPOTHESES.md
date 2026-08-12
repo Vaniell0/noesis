@@ -777,6 +777,39 @@ think tokens do substantive state work. This is an empirically
 confirmed sub-claim of H10 — the effort frontier is task-entropy-indexed,
 not a universal `(N, K, mode)` recommendation.
 
+**bit_book / bit_sub mechanism unification (icophy, 2026-08-12).**
+Base `bit_book` capability (arbitrary codebook, no prior, zero fine-tune)
+and `N=2 K=128 bit_sub_01` solve (Greek-to-Latin after fine-tune) are
+the **same underlying mechanism at different token-budget capacities**,
+not two separate phenomena. Base bit_book is K=∞ implicit budget (full
+WKV write capacity on the codebook). N=2 K=128 bitsub is the same
+mechanism with an explicit budget constraint. DSL fine-tuning did not
+destroy the WKV capacity — it reallocated the *read pathway*. The model
+"looks through the state rather than into it" (icophy's phrase): the
+trained forward pass no longer routes to the codebook geometry that the
+WKV state holds. Consistent with A0.6 (WKV state is compressed context
+bias, not a semantic override switch). Add to HYPOTHESES.md when running
+N=3 bitsub ablation: if N=3 collapses on bitsub corpus (no DSL), it
+points to weight-geometry change in step8, not corpus-attractor alone.
+
+**Multi-turn law (Scarletwolf, 2026-08-12, production confirmed).**
+Multi-turn task success: 0/2 for **every** model measured (tuned or not,
+RWKV or Transformer). "States install dispositions, not procedures."
+The state shapes the boundary (when to act, when to abstain) but not
+the multi-step procedure (which must come from the agent harness).
+Design implication for H11: lens handoff resolves the state-persistence
+problem, not the procedural-memory problem. Procedures belong in the
+harness, not the WKV state.
+
+**state_readout community convergence (2026-08-12).** BlinkDL: "you
+can just ask model to repeat" = independent discovery of H10
+`state_readout` mode. Community context: Smerky, Lucas propose decode
+state → prompt via inference; BlinkDL confirms simpler route (ask model
+to reproduce after prefill). This validates that the mechanism is real
+and interpretable without dedicated training. H10's falsification of
+readout (state_readout == prompt_cot at step8 e0) is a training-signal
+gap, not an architectural impossibility.
+
 ---
 
 ## H11. Zone-typed lenses beat monolithic text-bottleneck handoff
