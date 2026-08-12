@@ -189,14 +189,28 @@ residual"; prior art ResiDual, arXiv 2304.14802).
 
 **G1i state-tuned (same recipe and data, 1 epoch):**
 
-| Base  | state-tuned/82 | Δ abstention |
-|-------|---------------|--------------|
-| G1i 2.9B | **63/82** (bit-replicated) | 0/17 → 16/17 |
-| G1i 13.3B | **70/82** | 0/17 → 17/17 |
+| Base  | state-tuned/82 | Δ abstention | notes |
+|-------|---------------|--------------|-------|
+| G1i 1.5B | **55/82** | 0/17 → 16/17 | 4 unparsable outputs; selection 9/18, args 15/22 |
+| G1i 2.9B | **63/82** (bit-replicated) | 0/17 → 16/17 | |
+| G1g 7.2B | **69/82** | — | |
+| G1i 13.3B | **70/82** | 0/17 → 17/17 | |
 
 McNemar G1i 13.3B vs 2.9B: p = 0.119 (not significant). Bench saturates
-at ~69–70. 17 of 18 gained points from abstention alone. Selection and
-args already near ceiling raw.
+at ~69–70. 17 of 18 gained points from abstention alone. **Disposition
+installs at 1.5B** — what degrades going down is output format and argument
+mapping, not the core decision.
+
+**Readout corrector (exploratory, 2026-08-12):** post-hoc reranker on WKV
+state readout, 2.9B policy, no retraining. Free 57 → corrected 64, peaks 65.
+Gain by size: **+7 (1.5B), +6 (2.9B), +2 (7.2B)** — smaller models benefit
+most. 1.5B tuned + corrector ≈ bare 2.9B tuned (63). CPU-deployable at
+inference, no GPU required.
+
+**Decision layer depth fraction (2026-08-12):** corpus-only CV picks L16/24
+at 1.5B ≈ L21/32 at 2.9B — both ≈ **0.67 depth fraction**, independent of
+model size. The readout zone tracks depth fraction, not absolute layer index.
+Implication for L_state work_layers: L_state should emphasise ~0.67×n_layer.
 
 **Key finding:** *"The base carries the knowledge, the state installs the
 disposition."* Abstention = 0/17 at every raw size and model (including
