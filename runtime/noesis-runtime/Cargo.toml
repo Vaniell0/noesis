@@ -24,6 +24,7 @@ toml.workspace = true
 evdev.workspace = true
 axum.workspace = true
 tokio-stream.workspace = true
+reqwest.workspace = true
 bytes = "1"
 
 [dev-dependencies]
