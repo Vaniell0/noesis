@@ -686,13 +686,40 @@ async fn handle_api_chat(
     }
 }
 
+/// Unix timestamp → RFC3339 string (`2026-08-13T19:44:02Z`).
 fn chrono_now_str() -> String {
-    use std::time::SystemTime;
+    use std::time::{SystemTime, UNIX_EPOCH};
     let secs = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
+        .duration_since(UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0);
-    format!("{secs}")
+    unix_to_rfc3339(secs)
+}
+
+fn unix_to_rfc3339(ts: u64) -> String {
+    let sec = ts % 60;
+    let min = (ts / 60) % 60;
+    let hour = (ts / 3600) % 24;
+    let days = ts / 86400; // days since 1970-01-01
+
+    // Gregorian calendar: compute year/month/day from days since epoch.
+    let mut y = 1970u64;
+    let mut d = days;
+    loop {
+        let dy = if y % 4 == 0 && (y % 100 != 0 || y % 400 == 0) { 366 } else { 365 };
+        if d < dy { break; }
+        d -= dy;
+        y += 1;
+    }
+    let leap = y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
+    let months = [31u64, if leap {29} else {28}, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let mut mo = 1u64;
+    for m in months {
+        if d < m { break; }
+        d -= m;
+        mo += 1;
+    }
+    format!("{y:04}-{mo:02}-{:02}T{hour:02}:{min:02}:{sec:02}Z", d + 1)
 }
 
 /// Serialize `v` as a single NDJSON line (JSON + `\n`).
@@ -862,7 +889,7 @@ struct MessagesRequest {
 const MESSAGES_DEFAULT_STOPS: &[&str] = &[
     "<|im_end|>",
     "<|endoftext|>",
-    "\n<|im_start|>",
+    "<|im_start|>",   // catches role-loops at any position
 ];
 
 /// Convert `AnthropicMessage` slice → `ChatTurn` slice for the context transform.
