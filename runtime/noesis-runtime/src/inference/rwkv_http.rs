@@ -121,6 +121,7 @@ pub(super) async fn serve(
         .route("/api/ps", get(handle_ps))
         .route("/api/show", post(handle_show))
         .route("/api/generate", post(handle_generate))
+        .route("/api/chat", post(handle_api_chat))
         .route("/v1/models", get(handle_v1_models))
         .route("/v1/messages", post(handle_v1_messages))
         .route("/v1/chat/completions", post(handle_v1_chat_completions))
@@ -511,6 +512,140 @@ fn save_lens_if_needed(lens_binding: &Option<(String, LensDir)>, session: &RwkvS
             warn!(lens_id = %id, error = %e, "lens save-back failed");
         }
     }
+}
+
+// ── Ollama /api/chat ──────────────────────────────────────────────────────
+
+/// `POST /api/chat` — Ollama chat endpoint. Open WebUI uses this when the
+/// connection type is "Ollama External". Takes a `messages` array (same shape
+/// as OpenAI), renders to ChatML prompt via the context transform, runs
+/// generation, returns Ollama chat streaming NDJSON or buffered JSON.
+async fn handle_api_chat(
+    State(s): State<HttpState>,
+    Json(req): Json<ChatCompletionsRequest>,
+) -> Response<Body> {
+    let streaming = req.stream.unwrap_or(true);
+    let model_name = req
+        .model
+        .filter(|m| !m.is_empty())
+        .unwrap_or_else(|| s.model_name.to_string());
+
+    let turns: Vec<ChatTurn> = req.messages.iter()
+        .map(|m| ChatTurn {
+            role: m.role.clone(),
+            content: m.content.clone().unwrap_or_default(),
+        })
+        .collect();
+    let query = turns.iter().rfind(|t| t.role == "user").map(|t| t.content.as_str()).unwrap_or("");
+    let (preamble, snippet) = s.composer.compose(query, s.ctx_transform.config.retrieval_bytes);
+    let mut transform_cfg = s.ctx_transform.config.clone();
+    transform_cfg.system_preamble = preamble;
+    let transform = ContextTransform::new(transform_cfg);
+    let slot = if snippet.is_empty() { RetrievalSlot::Empty } else { RetrievalSlot::Snippet(&snippet) };
+    let prompt = transform.build_prompt(&turns, slot);
+
+    let mut sampling = http_sampling_defaults();
+    if let Some(t) = req.temperature { sampling.temperature = t.max(0.0); }
+    if let Some(p) = req.top_p       { sampling.top_p = p.clamp(0.0, 1.0); }
+    let max_gen = req.max_tokens.unwrap_or(s.default_max_gen);
+    let mut stops: Vec<String> = match req.stop {
+        Some(serde_json::Value::String(s)) => vec![s],
+        Some(serde_json::Value::Array(arr)) => arr.into_iter()
+            .filter_map(|v| v.as_str().map(|s| s.to_string())).collect(),
+        _ => vec![],
+    };
+    for &stop in MESSAGES_DEFAULT_STOPS {
+        if !stops.iter().any(|x| x == stop) { stops.push(stop.to_string()); }
+    }
+
+    let created_at = chrono_now_str();
+    let ctx = s.ctx.clone();
+    let tok = Arc::clone(&s.tok);
+    let lock = Arc::clone(&s.eval_lock);
+    let _regime = InteractiveGuard::acquire(Arc::clone(&s.interactive));
+    let started = Instant::now();
+
+    if streaming {
+        let (tx, rx) = mpsc::channel::<Result<Bytes, std::io::Error>>(128);
+        let mn = model_name.clone();
+        let cat = created_at.clone();
+
+        tokio::task::spawn_blocking(move || {
+            let _guard = lock.lock().unwrap_or_else(|e| e.into_inner());
+            let mut session = RwkvSession::new(ctx.clone());
+
+            let mut on_delta = |delta: &str| {
+                let line = ndjson_line(&json!({
+                    "model": &mn,
+                    "created_at": &cat,
+                    "message": {"role": "assistant", "content": delta},
+                    "done": false,
+                }));
+                let _ = tx.blocking_send(Ok(Bytes::from(line)));
+            };
+            let result = generate_on_session(
+                &mut session, &tok, &prompt, max_gen, &sampling, &stops,
+                Some(&mut on_delta),
+            );
+            let total_ns = started.elapsed().as_nanos() as u64;
+            let done_reason = match result.stop_reason {
+                super::StopReason::Length => "length",
+                _ => "stop",
+            };
+            let done_line = ndjson_line(&json!({
+                "model": mn,
+                "created_at": cat,
+                "message": {"role": "assistant", "content": ""},
+                "done": true,
+                "done_reason": done_reason,
+                "total_duration": total_ns,
+                "eval_count": result.gen_tokens,
+            }));
+            let _ = tx.blocking_send(Ok(Bytes::from(done_line)));
+        });
+
+        let stream = ReceiverStream::new(rx);
+        Response::builder()
+            .status(StatusCode::OK)
+            .header(header::CONTENT_TYPE, "application/x-ndjson")
+            .body(Body::from_stream(stream))
+            .unwrap()
+    } else {
+        let result = tokio::task::spawn_blocking(move || {
+            let _guard = lock.lock().unwrap_or_else(|e| e.into_inner());
+            let mut session = RwkvSession::new(ctx.clone());
+            generate_on_session(&mut session, &tok, &prompt, max_gen, &sampling, &stops, None)
+        }).await;
+
+        match result {
+            Ok(result) => {
+                let total_ns = started.elapsed().as_nanos() as u64;
+                let done_reason = match result.stop_reason {
+                    super::StopReason::Length => "length",
+                    _ => "stop",
+                };
+                Json(json!({
+                    "model": model_name,
+                    "created_at": created_at,
+                    "message": {"role": "assistant", "content": result.response},
+                    "done": true,
+                    "done_reason": done_reason,
+                    "total_duration": total_ns,
+                    "eval_count": result.gen_tokens,
+                })).into_response()
+            }
+            Err(e) => err_response(StatusCode::INTERNAL_SERVER_ERROR, format!("join error: {e}")),
+        }
+    }
+}
+
+fn chrono_now_str() -> String {
+    use std::time::SystemTime;
+    let secs = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    format!("{secs}")
 }
 
 /// Serialize `v` as a single NDJSON line (JSON + `\n`).
