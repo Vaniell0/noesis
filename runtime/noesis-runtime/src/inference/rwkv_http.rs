@@ -658,9 +658,10 @@ struct MessagesRequest {
     #[serde(default)]
     model: Option<String>,
     messages: Vec<AnthropicMessage>,
-    /// Optional top-level system prompt (Anthropic API v1.1+).
+    /// Optional top-level system prompt. Anthropic SDK sends this as either
+    /// a plain string or an array of content blocks — accept both.
     #[serde(default)]
-    system: Option<String>,
+    system: Option<AnthropicContent>,
     max_tokens: usize,
     #[serde(default)]
     stream: Option<bool>,
@@ -727,7 +728,8 @@ async fn handle_v1_messages(
         .filter(|m| !m.is_empty())
         .unwrap_or_else(|| s.model_name.to_string());
 
-    let turns = anthropic_to_turns(req.system.as_deref(), &req.messages);
+    let system_text = req.system.as_ref().map(|c| c.as_text());
+    let turns = anthropic_to_turns(system_text.as_deref(), &req.messages);
     let query = turns.iter().rfind(|t| t.role == "user").map(|t| t.content.as_str()).unwrap_or("");
     let (preamble, snippet) = s.composer.compose(query, s.ctx_transform.config.retrieval_bytes);
     let mut transform_cfg = s.ctx_transform.config.clone();
