@@ -547,7 +547,8 @@ async fn handle_api_chat(
     let mut sampling = http_sampling_defaults();
     if let Some(t) = req.temperature { sampling.temperature = t.max(0.0); }
     if let Some(p) = req.top_p       { sampling.top_p = p.clamp(0.0, 1.0); }
-    let max_gen = req.max_tokens.unwrap_or(s.default_max_gen);
+    // Interactive chat needs a larger default than the ambient heartbeat default (20).
+    let max_gen = req.max_tokens.unwrap_or(512);
     let mut stops: Vec<String> = match req.stop {
         Some(serde_json::Value::String(s)) => vec![s],
         Some(serde_json::Value::Array(arr)) => arr.into_iter()
