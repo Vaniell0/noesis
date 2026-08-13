@@ -8,6 +8,10 @@ license.workspace = true
 name = "noesis-runtime"
 path = "src/main.rs"
 
+[[bin]]
+name = "noesis"
+path = "src/cli_main.rs"
+
 [dependencies]
 noesis-schema = { path = "../noesis-schema" }
 noesis-store = { path = "../noesis-store" }

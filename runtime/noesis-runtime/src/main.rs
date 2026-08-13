@@ -15,7 +15,6 @@ mod calibration;
 mod collectors;
 mod inference;
 mod retention;
-mod run_interactive;
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -334,10 +333,6 @@ async fn main() -> Result<()> {
 
     // Subcommand dispatch
     let args: Vec<String> = std::env::args().collect();
-    if args.get(1).map(|s| s.as_str()) == Some("run") {
-        let run_args = run_interactive::parse_args(&args[2..]);
-        return run_interactive::run(run_args).await;
-    }
     if args.get(1).map(|s| s.as_str()) == Some("calibrate") {
         let interactive = args.iter().any(|a| a == "--interactive" || a == "-i");
         let sweep = args.iter().any(|a| a == "--thread-sweep" || a == "-s");
