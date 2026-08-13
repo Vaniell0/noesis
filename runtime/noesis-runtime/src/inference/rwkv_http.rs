@@ -32,7 +32,7 @@ use axum::body::Body;
 use axum::extract::State;
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Json, Response};
-use axum::routing::{get, post};
+use axum::routing::{get, head, post};
 use axum::Router;
 use bytes::Bytes;
 use noesis_rwkv::{tokenizer::WorldTokenizer, RwkvContext, RwkvSession, SamplingParams};
@@ -116,11 +116,13 @@ pub(super) async fn serve(
         model_name,
     };
     let router = Router::new()
+        .route("/", head(|| async { StatusCode::OK }))
         .route("/api/version", get(handle_version))
         .route("/api/tags", get(handle_tags))
         .route("/api/ps", get(handle_ps))
         .route("/api/show", post(handle_show))
         .route("/api/generate", post(handle_generate))
+        .route("/api/pull", post(handle_pull))
         .route("/api/chat", post(handle_api_chat))
         .route("/v1/models", get(handle_v1_models))
         .route("/v1/messages", post(handle_v1_messages))
@@ -144,8 +146,11 @@ pub(super) async fn serve(
 }
 
 async fn handle_version() -> Json<Value> {
-    Json(json!({ "version": "noesis-rwkv-shim/0.1" }))
+    // Return a semver-parseable version so ollama CLI version checks pass.
+    Json(json!({ "version": "0.6.5" }))
 }
+
+const NOESIS_DIGEST: &str = "noesis000000000000000000000000000000000000000000000000000000000000";
 
 async fn handle_tags(State(s): State<HttpState>) -> Json<Value> {
     let (param_size, quant) = parse_model_details(s.model_name.as_ref());
@@ -154,11 +159,13 @@ async fn handle_tags(State(s): State<HttpState>) -> Json<Value> {
             "name": s.model_name.as_ref(),
             "model": s.model_name.as_ref(),
             "modified_at": "2026-07-23T00:00:00Z",
-            "size": 0,
-            "digest": "",
+            "size": 2752905804u64,
+            "digest": NOESIS_DIGEST,
             "details": {
+                "parent_model": "",
                 "format": "rwkv.cpp",
                 "family": "rwkv7",
+                "families": ["rwkv7"],
                 "parameter_size": param_size,
                 "quantization_level": quant
             }
@@ -185,17 +192,40 @@ async fn handle_show(
     State(s): State<HttpState>,
     Json(_req): Json<Value>,
 ) -> Json<Value> {
+    let (param_size, quant) = parse_model_details(s.model_name.as_ref());
     Json(json!({
-        "modelfile": format!("# {}\n", s.model_name),
+        "modelfile": format!("FROM {}\n", s.model_name),
         "parameters": "",
-        "template": "",
+        "template": "<|im_start|>{{ .System }}\n<|im_end|>\n<|im_start|>user\n{{ .Prompt }}<|im_end|>\n<|im_start|>assistant\n",
         "details": {
+            "parent_model": "",
             "format": "rwkv.cpp",
             "family": "rwkv7",
-            "parameter_size": "unknown",
-            "quantization_level": "unknown"
-        }
+            "families": ["rwkv7"],
+            "parameter_size": param_size,
+            "quantization_level": quant
+        },
+        "model_info": {}
     }))
+}
+
+/// `POST /api/pull` — Ollama pull stub. Since the model is always resident
+/// in the runtime, just stream a single "success" status to satisfy clients
+/// that call pull before run.
+async fn handle_pull(State(s): State<HttpState>, Json(_req): Json<Value>) -> Response<Body> {
+    let line = ndjson_line(&json!({
+        "status": "success",
+        "digest": "",
+        "total": 0u64,
+        "completed": 0u64
+    }));
+    let line2 = ndjson_line(&json!({ "status": format!("pulling {}", s.model_name) }));
+    let body = [line2, line].concat();
+    Response::builder()
+        .status(StatusCode::OK)
+        .header(header::CONTENT_TYPE, "application/x-ndjson")
+        .body(Body::from(body))
+        .unwrap()
 }
 
 /// `GET /api/ps` — Ollama "running models" endpoint. Returns the single
@@ -205,8 +235,8 @@ async fn handle_ps(State(s): State<HttpState>) -> Json<Value> {
         "models": [{
             "name": s.model_name.as_ref(),
             "model": s.model_name.as_ref(),
-            "size": 0,
-            "digest": "",
+            "size": 2752905804u64,
+            "digest": NOESIS_DIGEST,
             "details": {
                 "format": "rwkv.cpp",
                 "family": "rwkv7",
