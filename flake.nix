@@ -71,6 +71,19 @@
       noesis-model-g1d-04b      = mkModel g1d-04b "Q8_0";
       noesis-model-g1d-04b-fp16 = mkModel g1d-04b "FP16";
 
+      # ── G1I 2.9B (locally-trained, builtins.path) ────────────────────────────
+      #   Downloading to noesis/models/ (BlinkDL/rwkv7-g1, 2026-08-05, ctx16384).
+      #   Build will fail until download completes — expected.
+      g1i-29b-pth = builtins.path {
+        path = /home/vaniello/Desktop/projects/noesis/models/rwkv7-g1i-2.9b-20260805-ctx16384.pth;
+        name = "rwkv7-g1i-2.9b-20260805-ctx16384.pth";
+      };
+      g1i-29b = { name = "rwkv7-g1i-2.9b"; version = "20260805-ctx16384"; pth = g1i-29b-pth; };
+
+      noesis-model-g1i-29b       = mkModel g1i-29b "Q5_1";
+      noesis-model-g1i-29b-q8_0  = mkModel g1i-29b "Q8_0";
+      noesis-model-g1i-29b-fp16  = mkModel g1i-29b "FP16";
+
       # ── G1H 1.5B (locally-trained, builtins.path) ────────────────────────────
       g1h-15b-pth = builtins.path {
         path = /home/vaniello/.libs/models/rwkv7/rwkv7-g1h-1.5b-20260710-ctx10240.pth;
@@ -107,6 +120,8 @@
         inherit noesis-model-world-29b noesis-model-world-29b-q8_0;
         # 2.9B G1H
         inherit noesis-model-g1h-29b noesis-model-g1h-29b-q8_0 noesis-model-g1h-29b-fp16;
+        # 2.9B G1I
+        inherit noesis-model-g1i-29b noesis-model-g1i-29b-q8_0 noesis-model-g1i-29b-fp16;
         # 0.4B G1D
         inherit noesis-model-g1d-04b noesis-model-g1d-04b-fp16;
         # 1.5B G1H
