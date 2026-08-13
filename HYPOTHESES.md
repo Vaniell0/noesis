@@ -829,9 +829,29 @@ destroy the WKV capacity — it reallocated the *read pathway*. The model
 "looks through the state rather than into it" (icophy's phrase): the
 trained forward pass no longer routes to the codebook geometry that the
 WKV state holds. Consistent with A0.6 (WKV state is compressed context
-bias, not a semantic override switch). Add to HYPOTHESES.md when running
-N=3 bitsub ablation: if N=3 collapses on bitsub corpus (no DSL), it
-points to weight-geometry change in step8, not corpus-attractor alone.
+bias, not a semantic override switch). N=3 bitsub ablation: if N=3
+collapses on bitsub corpus (no DSL), it points to weight-geometry change
+in step8, not corpus-attractor alone.
+
+**Narrow-casting and trajectory diversity (icophy, 2026-08-13).**
+Production confirmation from cron-heartbeat runs (847 sessions since June):
+the K=2 P=1 drop (65%→25% post step7 fine-tune) is real and reproducible.
+Mechanism: "narrow-casting" — after enough prior-success accumulation in
+context, the model commits to the most recently activated slot pattern and
+suppresses alternatives. This is a corpus-pattern attractor, not WKV
+saturation: fresh sessions at identical lengths do not collapse,
+discriminating the two explanations.
+
+The slot-entropy loss (H12b.i) resists this by penalising gating collapse
+across the batch. Icophy's complementary proposal: a **trajectory diversity
+reward** during GRPO rollout — reward diversity in WKV update directions
+across rollout steps, not just uniform gating. This is the right loss when
+the collapse is in the WKV update direction rather than the embedding space.
+Both losses may be needed: slot-entropy catches gating collapse; trajectory
+diversity catches update-direction collapse. Track which failure mode
+dominates on word-search RL (detectable via J-lens stable_rank during
+training: stable_rank ≈ 1 = update-direction collapse, stable_rank >
+log₂(K) = gating collapse).
 
 **Multi-turn law (Scarletwolf, 2026-08-12, production confirmed).**
 Multi-turn task success: 0/2 for **every** model measured (tuned or not,

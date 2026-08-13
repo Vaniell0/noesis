@@ -236,8 +236,17 @@ def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
             logits, state = model.forward([nxt], state)
         return out
 
-    if readout_mode in ("silent", "state_readout"):
-        # Decode answer directly from accumulated WKV state, no intermediate tokens.
+    if readout_mode == "state_readout":
+        # Inject </think> trigger token(s) to close the reasoning block, then
+        # decode. This is the correct implementation: state accumulates from the
+        # prompt, </think> signals end-of-thought without visible CoT tokens,
+        # and the model decodes the answer from that state alone.
+        think_end_ids = tokenizer("</think>", return_tensors="pt")["input_ids"][0].tolist()
+        for tid in think_end_ids:
+            logits, state = model.forward([tid], state)
+        out_ids = _greedy(num_predict)
+    elif readout_mode == "silent":
+        # No intermediate tokens — answer decoded directly from prompt state.
         out_ids = _greedy(num_predict)
     elif readout_mode == "prompt_cot":
         # Generate K free CoT tokens (update WKV state), then decode answer.

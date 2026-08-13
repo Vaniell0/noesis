@@ -65,6 +65,24 @@ serialize them.
 - Blocks A1. Foundation + skeleton landed with the same commit as
   A0.1; execution deferred to a dedicated session.
 
+### A0.4b. Rich WKV probe + TransformerLens path (2026-08-13)
+- **`experiments/A0_state_probe/rich_probe.py`** — per-head spectral analysis
+  + layer trajectory + gradient saliency (R-lens proxy). CPU-compatible
+  (BlinkDL rwkv package, no triton). New metrics vs old mean+std pooling:
+  - `sigma1[l,h]`: per-head top singular value (H8 metric, per-head resolution)
+  - `stable_rank[l,h]`: multi-slot capacity per head
+  - `sv_entropy[l,h]`: head specialisation signal
+  - `layer_trajectory[l]`: relative state change across layers
+  - `gradient_saliency[t]`: per-token relevance (R-lens proxy via autograd)
+- **TransformerLens + RWKV7**: installed (`fla` v0.5.2, TL RWKV7ArchitectureAdapter).
+  Blocked on CPU: `fla` requires `triton` (CUDA). Full TL path deferred to
+  GPU session (Selectel). CPU path: `rich_probe.py` above.
+- **Running (2026-08-13):**
+  - J-lens G1h base vs step8 → `results/jlens_base_vs_step8.json`
+  - H22 attribution probe on G1h-2.9B → `attribution_probe/v3_29b/`
+  - Word-search baseline (G1h-2.9B) → `A0_eval/results/g1h_wordsearch_baseline.json`
+    — expected 0%, confirms zero-shot floor for RL curriculum.
+
 ### A0.5. Causal intervention grid (COMPLETE — 2026-08-04)
 - Extended runner in `experiments/A0_state_probe/a05_run.py` +
   aggregator in `a05_analyze.py`. Grid: 2×2 (World-0.4B, G1d-0.4B) ×
@@ -157,9 +175,47 @@ serialize them.
 - **Current best:** `training/runs/pilot_g1h_step9/rwkv-0.pth` (step9 epoch0, 43.75%).
 - H7 falsifier (retrieval-parity contrast) remains open.
 - **H10 sweep (step8 epoch0, 2026-08-07).** Peak: N=2 silent 33.3% (16/48).
-  N=3 collapses to 6.3% — third pass corrupts state. state_readout == prompt_cot
-  exactly (readout axis falsified at epoch 0). Full table:
-  `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
+  N=3 collapses to 6.3% — third pass corrupts state. Prior state_readout data
+  invalid (bug: shared greedy path with prompt_cot — fixed 2026-08-13;
+  now injects `</think>` trigger token before decode). Re-run pending on G1i.
+  Full table: `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
+- **Base model migration.** Step 9 base was G1h-2.9B; G1i-2.9B
+  (ctx16384, 2026-08-05) is the new baseline. All step 10+ runs use G1i.
+  G1i eval through runtime pending (see § A1.5 below).
+
+### A1.5. RL fine-tune — word-search curriculum (step 10+)
+
+Replaces bit-decoding as the RL task family. Word-search puzzles provide
+verifiable binary reward, a natural 7-level difficulty curriculum, and a
+direct probe of spatial/directional WKV state utilisation (H8, H10, H12b.i).
+
+See `docs/rl-track.md` for the full design.
+
+- **Algorithm.** GRPO (`n_samples=8`, T=0.7 rollout, greedy eval).
+- **Curriculum.** Level 1 (5×5 H_LR only) → level 7 (12×12 all 8 directions).
+  Advance when accuracy > 80%; drop back when < 50%.
+- **Task generator.** `experiments/A0_eval/gen_matrix_wordsearch.py`
+  (`--all-levels --per-level N`). 7 levels × mixed orientations. Levels:
+  - L1: 5×5, H→ only, 3–4 letters
+  - L2: 6×6, H→ + V↓, 4–5 letters
+  - L3: 7×7, H→ + V↓ + H←, 4–5 letters
+  - L4: 8×8, all 4 axis ± reverse, 5–6 letters
+  - L5: 9×9, 4 axis + 2 diagonals, 5–6 letters
+  - L6: 10×10, all 4 axis + all 4 diagonals, 5–7 letters
+  - L7: 12×12, all 8 directions, 6–8 letters (hardest)
+- **Eval baseline.** Run `tasks_matrix_wordsearch.jsonl` (56 tasks,
+  8 per level) through G1i base before RL to establish the zero-shot floor.
+- **Corpus mix.** 15–20% of step 10 training tokens alongside RFC QA,
+  selfcot, hh-rlhf. See `training/config/pilot_step10.yaml`.
+- **Hypothesis connections.** H16 (gated externalisation): word-search RL
+  trains latent think-phase use — precursor, not replacement; gate head
+  trained in A4. H19 (weight-knowledge contamination): L6–L7 accuracy is
+  a pure context-dependency proxy — a model guessing from weights cannot
+  find an 8-direction word in a novel grid.
+- **Implementation details** (not separate hypotheses, recorded in `docs/rl-track.md`):
+  binary ε-mask outside answer span (ε=0.05); entropy routing reward
+  shaping (α·Δentropy_reduction in think span).
+- **Blockers.** G1i download + runtime eval (§A0, task 0).
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory
@@ -225,20 +281,31 @@ serialize them.
 
 ## Track C — Integration (runtime)
 
-### C0. Runtime + CLI wiring (weeks 1–2) *(reframed 2026-07-25 — was "Ollama + CLI wiring")*
-- **Backend change.** Ollama removed as a supported backend 2026-07-25
-  (state APIs not exposed through it; see `docs/policies.md` § Model
-  backend sandboxing). The runtime now embeds rwkv-cpp in-process via
-  the `noesis-runtime` supervisor. `noesis-http` exposes an
-  OpenAI-compatible endpoint (`/v1/chat/completions`) so that
-  Claude-Code CLI, other CLI callers, and IDE integrations that speak
-  the OpenAI dialect keep working — the wire format is preserved, the
-  backend under it changed.
-- Verify that noesis-as-a-local-endpoint works cleanly inside the
-  Claude-Code CLI workflow. If the integration path is more involved
-  than a config change (`ANTHROPIC_API_URL` / equivalent pointing at
-  `localhost:<port>`), spec the shim explicitly.
-- No custom harness beyond what integration verification requires.
+### C0. Runtime + CLI wiring *(landed 2026-08-13)*
+
+- **noesis-runtime** runs as a systemd user service (port 11435). Embeds
+  rwkv-cpp in-process; heartbeat disabled by default so the 2.9B substrate
+  idles at ~3% CPU and activates only on HTTP request.
+- **HTTP shim** (`noesis-http`) exposes:
+  - Ollama wire format: `HEAD /`, `/api/version`, `/api/tags`, `/api/ps`,
+    `/api/show`, `/api/pull` (stub), `/api/generate`, `/api/chat`.
+  - Anthropic Messages API: `POST /v1/messages` (SSE + buffered).
+  - OpenAI chat completions: `POST /v1/chat/completions`.
+- **Client launchers** (`noesis launch <client>`):
+  - `claude` — sets `ANTHROPIC_BASE_URL + ANTHROPIC_API_KEY=noesis`, execs `claude`.
+  - `codex` — sets `OPENAI_BASE_URL + OPENAI_API_KEY=noesis`, execs `codex`.
+  - `ollama` — sets `OLLAMA_HOST`, execs `ollama run <discovered-model>`.
+  - API key overrideable via `NOESIS_API_KEY` env var.
+- **Open WebUI** connects via "Ollama External" at `http://127.0.0.1:11435`.
+- **Context transform** (plan §10): `tail_turns=20`, retrieval slot, preamble.
+  Stop sequences: `<|im_end|>`, `<|endoftext|>`, `<|im_start|>` (prevents
+  role-loop at generation start).
+- **Lens persistence** (`/lens/*`): per-session WKV snapshots — enabled when
+  `lens_root` is set in `runtime.toml`. Used by Open WebUI sessions to avoid
+  re-priming the full history on each turn.
+- **Remaining gap.** True session-level state carry-over in `/api/chat` for
+  multi-turn Open WebUI conversations — currently re-builds the full ChatML
+  prompt each turn. Lens-based optimisation deferred.
 
 ### C1. Event-stream ingestion (weeks 4–8)
 - Absorb key-daemon collectors (libevdev, Hyprland IPC) as noesis modules

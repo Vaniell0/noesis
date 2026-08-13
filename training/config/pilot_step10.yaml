@@ -96,7 +96,7 @@
 #       --local-dir training/runs/
 
 model:
-  checkpoint: training/runs/step10_base.pth  # step9 e0 merged from HF
+  checkpoint: models/rwkv7-g1i-2.9b-20260805-ctx16384.pth  # G1i base (2026-08-13)
   ctx_len: 2048                               # CRITICAL: was 512 in step9b
   dtype: bf16
   n_layer: 32
