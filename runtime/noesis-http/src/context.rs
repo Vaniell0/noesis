@@ -42,7 +42,7 @@ pub struct TransformConfig {
 }
 
 fn default_tail_turns() -> usize {
-    4
+    20
 }
 
 fn default_retrieval_bytes() -> usize {

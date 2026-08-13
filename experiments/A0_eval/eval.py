@@ -207,10 +207,14 @@ def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
 
     readout_mode — source of the K intermediate tokens:
       "silent"       : readout_k=0 forced; answer decoded directly after N passes.
-      "prompt_cot"   : K tokens decoded as text continuation (constrained by
-                       prompt's linguistic context), then answer decoded.
-      "state_readout": K tokens decoded freely from post-N state (no scaffold);
-                       same mechanics as prompt_cot, less constrained token space.
+      "prompt_cot"   : K tokens decoded as text continuation (free CoT tokens
+                       update WKV state), then answer decoded.
+      "state_readout": answer decoded directly from accumulated WKV state, no
+                       intermediate tokens. Mechanically equivalent to silent;
+                       kept as a distinct mode for future impl (proper version
+                       would inject </think> trigger token before decoding).
+                       NOTE: prior to 2026-08-12 this shared code with prompt_cot
+                       — all previous state_readout results are invalid.
     """
     import torch
     enc = tokenizer(prompt, return_tensors="pt")
@@ -232,12 +236,11 @@ def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
             logits, state = model.forward([nxt], state)
         return out
 
-    if readout_mode == "silent":
+    if readout_mode in ("silent", "state_readout"):
+        # Decode answer directly from accumulated WKV state, no intermediate tokens.
         out_ids = _greedy(num_predict)
-    elif readout_mode in ("prompt_cot", "state_readout"):
-        # Intermediate tokens update WKV state, are not returned.
-        # prompt_cot: continuation constrained by prompt context.
-        # state_readout: same mechanics, state drives token choice freely.
+    elif readout_mode == "prompt_cot":
+        # Generate K free CoT tokens (update WKV state), then decode answer.
         _greedy(readout_k)
         out_ids = _greedy(num_predict)
     else:

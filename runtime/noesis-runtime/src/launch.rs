@@ -33,7 +33,7 @@ pub fn launch(args: &[String]) -> Result<()> {
         "claude" => {
             let mut cmd = std::process::Command::new("claude");
             cmd.env("ANTHROPIC_BASE_URL", &host)
-               .env("ANTHROPIC_API_KEY", "noesis-local");
+               .env("ANTHROPIC_API_KEY", "sk-ant-api03-noesis-local");
             cmd.args(extra);
             let err = cmd.exec(); // replaces the process image on success
             bail!("exec claude: {err}");

@@ -550,7 +550,7 @@ in flight (`experiments/A0_state_probe/a05_run.py`,
 
 **A0.5 result (2026-08-04).** All H8-causal sub-tests passed. σ-slopes
 1.56–2.10 across all 4 cells (reasoning × G1d / World3); cross-prompt
-state-motion ratio 21–99×; monotone response to layer depth confirmed.
+state-motion ratio 21–99×; monotone response to layer depth observed.
 H8 SUPPORTED at 0.4B.
 
 **A0.5 result 2.9B (2026-08-05).** G1h-2.9B, medium+narrative cells, CUDA.
@@ -563,8 +563,8 @@ H8 SUPPORTED at 2.9B.
 **IB reconstruction probe (2026-08-12, G1d 0.4B, 13 393 tokens).** Linear probe
 predicts WKV state at t from state at t−lag. Baseline CE = 6.53 (no state).
 Frac explained: lag=1 → 95.9%, lag=8 → 82.1%, lag=64 → 78.3%. Gradual decay
-without collapse to baseline confirms WKV state carries predictive information
-over ≥64 tokens. Results: `experiments/ib_probe/results_g1d_base/reconstruction.json`.
+without collapse to baseline is consistent with WKV state carrying predictive
+information over ≥64 tokens (one probe, one model size, not yet replicated). Results: `experiments/ib_probe/results_g1d_base/reconstruction.json`.
 
 **Status.** **SUPPORTED** at 0.4B and 2.9B (A0.5 passed both scales,
 2026-08-04/05). A1 state_reg sweep findings in
@@ -759,11 +759,16 @@ tooling); those cells marked N/A below.
    catastrophic regression. Third silent pass saturates or corrupts the
    working state. Confirmed across all K: N=3 CoT cells also collapse.
 
-3. **state_readout == prompt_cot (exact tie).** Every (N, K) pair shows
-   numerically identical accuracy across the two modes. The state-readout
-   pathway carries zero additional signal over prompt-injected CoT at
-   epoch 0. **H10 falsification criterion triggered**: "readout carries
-   signal" (Δ ≥ 0.02) is not met → drop the readout axis pending A1.
+3. **state_readout == prompt_cot (exact tie) — eval bug, not signal.**
+   Every (N, K) pair shows numerically identical accuracy. This was
+   interpreted as "readout carries zero signal" but is an eval artefact:
+   `eval.py` used the same greedy-decoding path for both modes (bug
+   confirmed 2026-08-12 by marty1885, fixed same day). The tie does not
+   test the hypothesis — it tests one mode twice. **All state_readout
+   data in this table is invalid.** Rerun required on step8 baseline
+   with the fixed evaluator before drawing any conclusion about the
+   readout axis. H10 falsification criterion is suspended pending valid
+   data.
 
 4. **extraction = 0% everywhere.** Root cause: step 8 trained 100% on
    DSL `<tool_call>/<tool_result>` format (glaive-v2). The model calls
@@ -1085,11 +1090,11 @@ constant. Collapse between N=8 and N=16 → WKV working-memory width ≈ 8
 active items on G1d 0.4B. H12a v2 results: `experiments/A0_H12a_working_memory/results-v2/`.
 
 **H12a v2 PILOT (2026-08-05, G1d-0.4B Q8 via Ollama, think=false).**
-Fixed tail-gap=50w, N∈{4,8,16,32,64}×10 seeds. Width gradient confirmed:
+Fixed tail-gap=50w, N∈{4,8,16,32,64}×10 seeds. Width gradient observed:
 F1 4→8→16→32→64 = 0.15→0.07→0.02→0.01→0.01, recall 0.30→0.40→0.15→0.15→0.05.
 F1 and recall drop monotonically with N. Caveat: base G1d model formats
 output incorrectly (lists all items on one line → recall>0 but precision≈0);
-the F1 gradient is real but noisy. Data: `/tmp/h12a_v2_results_vm/N{04,08,16,32,64}.json`.
+the F1 gradient is present but noisy — not conclusive on its own. Data: `/tmp/h12a_v2_results_vm/N{04,08,16,32,64}.json`.
 
 **Cross-reference with H12b (2026-08-07).** H12b behavioral probe independently
 measured width capacity via K parallel tracks (K=2/4/8, same concept as N in
@@ -1101,9 +1106,9 @@ H12a v2 has not been run on G1h 2.9B base or step7; that run would confirm
 whether the G1h architecture's stronger multi-slot performance appears in the
 fixed-gap N-sweep or only in the K-track probe.
 
-**Status (2026-08-07).** G1d width gradient = confirmed (N drops F1). G1h
-comparison not yet run via H12a v2 protocol. Run on step7 model is the
-priority for conclusive verdict — step7 is available locally for CPU or on VM.
+**Status (2026-08-07).** G1d width gradient = observed (N drops F1, noisy data).
+G1h comparison not yet run via H12a v2 protocol. Run on G1i base is the
+priority for conclusive verdict — step7.pth is corrupted, use G1i once available.
 
 **H12b behavioral probe (2026-08-07, full run).** 420 cells:
 K∈{2,4,8}, P∈{1,2,4}, n=10 per cell. Three models: G1d-0.4B base,
@@ -1130,7 +1135,8 @@ treatment (LoRA-expanded multi-slot state + H12b.i regularizer). The
 architectural intervention remains Phase 2 work.
 
 H12b = runnable treatment (independent of H12a v2 verdict); H12b.i
-regularizer confirmed mandatory. Phase 2 architectural probe.
+regularizer expected necessary by analogy with MoE prior art (untested).
+Phase 2 architectural probe.
 
 **H12b BEHAVIORAL PROBE — full run 2026-08-07** (420 probes, K={2,4,8},
 P={1,2,4}, 10/cell, seed=42, CUDA RTX 4090). Files:
@@ -1763,18 +1769,34 @@ irrelevant.
 
 Sub-claim priors after accumulated evidence:
 
-- **Sub-claim 1 (fork determinism): HIGH.** rwkv-cpp clone is
-  deterministic by design. Testable locally without GPU, no new
-  bindings needed. Run before any other sub-claim.
+- **Sub-claim 1 (fork determinism): CONFIRMED.** Tested locally
+  2026-08-12 on G1d 0.4B (CPU bf16) via `rwkv.model` Python bindings:
+  deep-copy of WKV state after prime sequence → both branches decode
+  identically at greedy. Output: `Identical: True`. No divergence on
+  first or subsequent tokens. This sub-claim is closed.
 
-- **Sub-claim 2 (branch coherence): LOW.** Three converging problems:
+- **Sub-claim 2 (branch coherence): LOW — but prior revised upward.**
 
-  1. *A0.6 rules out candidate (a).* Full state swap = "state
-     dominates continuation" — exactly the mode A0.6 refuted.
-     icophy (2026-08-12): "the model can hold the state but looks
-     through it rather than into it." Trained read pathway expects
-     the trunk's own trajectory; injected branch state violates
-     that expectation.
+  *Counter-argument added 2026-08-12 (user framing):* "перемещаешь
+  предмет из одной комнаты в другую — мир тот же." Branch and trunk
+  are not two different worlds — they are two views of the same world
+  model. The branch adds objects (tokens) to the same underlying world;
+  merge is not averaging two incompatible encodings but reinserting
+  objects from a second room back into the first. This does not
+  guarantee arithmetic average works (k·v accumulation is still
+  non-linear), but removes the "meaningless by construction" prior.
+  Arithmetic merge should be *tested*, not assumed dead. Prior shifts
+  from "will not work" to "unknown, test required".
+
+  Three remaining problems:
+
+  1. *A0.6 argues against candidate (a).* Full state swap = "state
+     dominates continuation" — exactly the mode A0.6 found does not
+     hold. icophy (2026-08-12): "the model can hold the state but
+     looks through it rather than into it." Trained read pathway
+     expects the trunk's own trajectory; injected branch state likely
+     violates that expectation. Not a direct test of H18 candidate (a)
+     — an indirect argument from analogous experiment.
 
   2. *Arithmetic merge is semantically meaningless.* WKV state is
      built by non-linear k·v outer-product accumulation. A weighted

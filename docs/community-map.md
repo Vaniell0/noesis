@@ -407,7 +407,7 @@ analysis is run post-hoc.
 ### R-lens: improved J-lens for early layers (2026-08-12)
 
 Source: lesswrong.com/posts/nv8oedrnLXKRzNEL9 (BlinkDL shared in Discord)
-Open-sourced: `camilablank/workspace-lenses` on HuggingFace.
+Reference implementation: `camilablank/workspace-lenses` on HuggingFace.
 
 Drop-in replacement for J-lens. Identical fitting procedure; backward pass
 uses LRP (Layer-wise Relevance Propagation) stop-gradients instead of raw
@@ -425,20 +425,32 @@ coefficient instead of a raw gradient.
 - Detects concepts that J-lens misses entirely, especially early-layer-only
 - Quantitative advantage grows with model scale
 
-**Applicability to noesis.** Our `experiments/A0_state_probe/jlens_probe.py`
-is an analytical SVD proxy (WKV state matrix singular values), not a true
-J-lens readout. For a proper R-lens analysis of RWKV-7 we would need to:
-1. Implement the residual-stream → logits attribution path with LRP rules
-   at each RWKV-7 block (GroupNorm → time-mixing WKV → channel-mixing FFN)
-2. Fit a linear readout at each layer's residual stream
+### TransformerLens — canonical lens infrastructure for RWKV-7 (confirmed 2026-08-12)
 
-Immediate implication: our work_layers L0/L4 showing low sigma1 in the
-SVD proxy is consistent with J-lens being noisy at early depths — R-lens
-might reveal that early WKV layers do carry meaningful content that our
-analytical probe cannot surface. Worth applying R-lens post-hoc on G1i
-once we have a trained checkpoint. Could revise the L_state `work_layers`
-selection if early layers are informationally richer than the sigma1
-proxy suggests.
+Source: Lucas in Discord #state-and-finetuning 2026-08-12; BlinkDL endorsed.
+Repo: github.com/TransformerLensOrg/TransformerLens
+RWKV-7 architecture file: `transformer_lens/model_bridge/supported_architectures/rwkv7.py`
+
+TransformerLens is the community standard for mechanistic interpretability
+(activation patching, logit lens, attention pattern visualisation). RWKV-7
+is now a supported architecture — meaning the full TransformerLens API
+(hook points, activation cache, patching) works out of the box.
+
+**Implications for noesis.**
+- R-lens can be implemented as a TransformerLens hook (stop_grad on LN
+  variance denominator) without custom backward passes — replaces the
+  fragile `jlens_probe.py` analytical SVD proxy.
+- Cross-research: one TransformerLens install covers H8 (J/R-lens diff
+  base vs trained), H18 (what branch state contains vs trunk), H12b.i
+  (rank entropy base vs trained). No separate custom scripts needed.
+- Canonical path: `pip install transformer-lens`, load G1i checkpoint,
+  run standard TransformerLens activation cache on PROMPT sequence,
+  apply R-lens stop-grad hook. Baseline established before fine-tuning;
+  diff computed after step10 checkpoint.
+
+**Status:** not yet run. Blocked on G1i download completing. First
+priority once `~/.libs/models/rwkv7/rwkv7-g1i-2.9b-20260805-ctx16384.pth`
+is available.
 
 ### BLT / T-FREE (community architecture research, 2026-08)
 
@@ -528,8 +540,8 @@ technique. Each divergence is explicit about which.
 |------------|--------|------------------|
 | **`L_state` — state-motion reward + curvature reward on load-bearing layers** | Mirror-image of Slow-and-Steady SFA (they minimize, we maximize). Per-layer A0.5-derived weights are empirical noesis contribution. **Risk: no unit-variance analogue anchor; CE alone may not prevent state-norm blow-up.** | `training/state_reg.py`, HYPOTHESES §H8/H9 |
 | **Runtime-persistent WKV across sessions with lens-scoped snapshots** | Community has in-process chat demos + trie prefix cache. Server-side session-persistent WKV as first-class abstraction — nobody built it. | HYPOTHESES §H17, plan §5 (lens cache), plan §10 (context transform) |
-| **K=4 tail + retrieval instead of full-history injection** | Direct consequence of persistent WKV. Community accepts OpenAI-compat convention (send everything). We wager the substrate holds it. | HYPOTHESES §H17, plan §10 |
-| **N/K/readout_mode 3D effort frontier** | Industry uses single-scalar effort dial. RWKV community has no effort framework at all. `state_readout` mode (decode from refined state, no CoT scaffold) — noesis original. | HYPOTHESES §H10, `docs/effort-frontier.md` |
+| **K=4 tail + retrieval instead of full-history injection** | Untested wager: if WKV state holds prior context, resending full history is redundant. "K=4" is arbitrary — no empirical basis for this number. **Pressure (2026-08-12):** multi-turn law (0/2 across all models, tuned or not) shows state does not reliably enable multi-turn recall without dedicated training. The wager may still hold with correct training, but "K=4 tail works out of the box" is not supported. H17 is the formal bet; do not treat as an engineering decision until H17 passes. | HYPOTHESES §H17, plan §10 |
+| **N/K effort frontier (2D validated, readout axis pending)** | Industry uses single-scalar effort dial. RWKV community has no effort framework at all. N×K sweep is validated (N=2 silent best cell). `state_readout` mode was eval-buggy (shared code path with `prompt_cot`, fixed 2026-08-12) — readout axis data is invalid, rerun required. "3D frontier" claim is suspended until state_readout is properly tested. | HYPOTHESES §H10, `docs/effort-frontier.md` |
 | **Gated externalisation (H16 drip + emit gate)** | RWKV is strictly autoregressive; needs external token to fire. Poll-mode is universal community pattern. Silent drip stream + trained emit gate — nobody built. | HYPOTHESES §H16 |
 | **Multi-slot LoRA with utilisation regularizer (H12b + H12b.i)** | Standard MoE toolkit (entropy + dissimilarity + coverage) applied to RWKV WKV state. **First application of MoE anti-collapse tricks to recurrent state slots.** | HYPOTHESES §H12b/§H12b.i |
 | **Startup thermal calibration → drip rate derived** | Community drip experiments (rare) all use hardcoded rates. Per-machine calibration + fan-off invariant — noesis specific. | HYPOTHESES §H1, plan §11 |
@@ -609,8 +621,10 @@ H16 becomes buildable.
 Discussed 2026-07-21 as `β·L_length` alongside `α·L_state` — never
 landed in code or HYPOTHESES. Directly relevant to H15 (short
 responses) and H16 (dense state-think per emit token). Either
-promote to H18 with prediction + falsifier, or write it off with
-reasoning.
+promote to a new H-number with prediction + falsifier, or write it
+off with reasoning. **Note:** original text said "promote to H18"
+— H18 is now the git-like branch/merge hypothesis. If L_length is
+promoted, it gets the next free number (currently H24+).
 
 ---
 

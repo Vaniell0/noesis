@@ -207,60 +207,64 @@ async fn run_rwkv_cpp(
     // heartbeat's `n_threads`) to reduce interactive TTFT.
     let model_name: Arc<str> = model_display_name(&model_path).into();
 
-    let http_task = if let Some(bind) = http_bind {
+    // When heartbeat is disabled (secs=0) the substrate is idle between HTTP
+    // requests — a regular clone is safe since there's no concurrent loop.
+    // When enabled, clone_for_parallel gives HTTP its own scratch buffers so
+    // the two contexts don't contend mid-eval.
+    let http_ctx_opt = if heartbeat == Duration::ZERO {
+        info!("heartbeat disabled — substrate serves HTTP on demand only");
+        Some(ctx.clone())
+    } else {
         match ctx.clone_for_parallel(http_threads) {
-            Ok(http_ctx) => {
-                let tok = Arc::clone(&tok);
-                let shutdown = Arc::clone(&shutdown);
-                let interactive = Arc::clone(&interactive);
-                let composer = Arc::new(noesis_composer::Composer::new(
-                    noesis_composer::ComposerConfig::default(),
-                    Arc::clone(&store),
-                ));
-                Some(tokio::spawn(rwkv_http::serve(
-                    http_ctx,
-                    tok,
-                    bind,
-                    max_gen_tokens,
-                    shutdown,
-                    interactive,
-                    lens_root.clone(),
-                    transform_config,
-                    composer,
-                    Arc::clone(&model_name),
-                )))
-            }
+            Ok(c) => Some(c),
             Err(e) => {
                 warn!(error = ?e, "rwkv clone_for_parallel failed — HTTP shim disabled");
                 None
             }
         }
+    };
+
+    let http_task = if let (Some(bind), Some(http_ctx)) = (http_bind, http_ctx_opt) {
+        let tok = Arc::clone(&tok);
+        let shutdown = Arc::clone(&shutdown);
+        let interactive = Arc::clone(&interactive);
+        let composer = Arc::new(noesis_composer::Composer::new(
+            noesis_composer::ComposerConfig::default(),
+            Arc::clone(&store),
+        ));
+        Some(tokio::spawn(rwkv_http::serve(
+            http_ctx,
+            tok,
+            bind,
+            max_gen_tokens,
+            shutdown,
+            interactive,
+            lens_root.clone(),
+            transform_config,
+            composer,
+            Arc::clone(&model_name),
+        )))
     } else {
         None
     };
 
-    // Heartbeat loop on the original ctx, on the blocking pool.
-    let heartbeat_task = {
-        let ctx = ctx.clone();
+    // Heartbeat loop — skip entirely when disabled (secs=0).
+    // When enabled, runs on the original ctx (HTTP uses the clone above).
+    if heartbeat > Duration::ZERO {
+        let hb_ctx = ctx.clone();
         let tok = Arc::clone(&tok);
         let store = Arc::clone(&store);
         let shutdown = Arc::clone(&shutdown);
         let model_path = model_path.clone();
-        tokio::task::spawn_blocking(move || {
+        let heartbeat_task = tokio::task::spawn_blocking(move || {
             heartbeat_loop(
-                store,
-                ctx,
-                tok,
-                model_path,
-                heartbeat_prompt,
-                heartbeat,
-                max_gen_tokens,
-                shutdown,
+                store, hb_ctx, tok, model_path,
+                heartbeat_prompt, heartbeat, max_gen_tokens, shutdown,
             );
-        })
-    };
+        });
+        let _ = heartbeat_task.await;
+    }
 
-    let _ = heartbeat_task.await;
     if let Some(h) = http_task {
         let _ = h.await;
     }

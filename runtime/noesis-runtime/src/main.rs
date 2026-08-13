@@ -147,7 +147,7 @@ fn default_heartbeat_prompt() -> String {
 }
 
 fn default_heartbeat_secs() -> u64 {
-    300
+    0 // disabled by default — substrate serves HTTP on demand only
 }
 
 fn default_backend() -> String {
