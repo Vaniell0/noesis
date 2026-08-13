@@ -28,12 +28,17 @@ pub fn launch(args: &[String]) -> Result<()> {
     let extra = &args[1..];
     let host = std::env::var("NOESIS_HOST")
         .unwrap_or_else(|_| DEFAULT_HOST.to_string());
+    // API key sent to clients. Our server accepts any value; the key is only
+    // forwarded in request headers and never validated server-side.
+    // Override with NOESIS_API_KEY env var or set in your shell profile.
+    let api_key = std::env::var("NOESIS_API_KEY")
+        .unwrap_or_else(|_| "noesis".to_string());
 
     match client {
         "claude" => {
             let mut cmd = std::process::Command::new("claude");
             cmd.env("ANTHROPIC_BASE_URL", &host)
-               .env("ANTHROPIC_API_KEY", "sk-ant-api03-noesis-local");
+               .env("ANTHROPIC_API_KEY", &api_key);
             cmd.args(extra);
             let err = cmd.exec(); // replaces the process image on success
             bail!("exec claude: {err}");
@@ -41,7 +46,7 @@ pub fn launch(args: &[String]) -> Result<()> {
         "codex" => {
             let mut cmd = std::process::Command::new("codex");
             cmd.env("OPENAI_BASE_URL", format!("{host}/v1"))
-               .env("OPENAI_API_KEY", "noesis-local");
+               .env("OPENAI_API_KEY", &api_key);
             cmd.args(extra);
             let err = cmd.exec();
             bail!("exec codex: {err}");
