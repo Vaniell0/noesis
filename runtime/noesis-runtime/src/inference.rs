@@ -45,6 +45,25 @@ pub struct RwkvRuntime {
     pub n_threads: u32,
 }
 
+/// Derive a user-facing model name from its file path.
+///
+/// For nix-store paths the stem is always `"model"`, so we fall back to
+/// stripping the 32-char hash prefix from the parent directory name.
+/// For regular paths the file stem is used directly.
+pub fn model_display_name(path: &Path) -> String {
+    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+    if stem.is_empty() || stem == "model" {
+        path.parent()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            .and_then(|n| n.splitn(2, '-').nth(1))
+            .unwrap_or("noesis-model")
+            .to_string()
+    } else {
+        stem.to_string()
+    }
+}
+
 /// Load model + tokenizer synchronously. Callers on the async runtime
 /// wrap in `spawn_blocking` — this is a multi-second mmap on real
 /// weights, so it must not block a tokio worker.
@@ -186,6 +205,8 @@ async fn run_rwkv_cpp(
     // its own scratch buffers — safe to run concurrently with the
     // heartbeat loop. Uses `http_threads` (possibly higher than the
     // heartbeat's `n_threads`) to reduce interactive TTFT.
+    let model_name: Arc<str> = model_display_name(&model_path).into();
+
     let http_task = if let Some(bind) = http_bind {
         match ctx.clone_for_parallel(http_threads) {
             Ok(http_ctx) => {
@@ -206,6 +227,7 @@ async fn run_rwkv_cpp(
                     lens_root.clone(),
                     transform_config,
                     composer,
+                    Arc::clone(&model_name),
                 )))
             }
             Err(e) => {

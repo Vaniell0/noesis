@@ -48,10 +48,6 @@ use noesis_http::{ChatTurn, ContextTransform, RetrievalSlot, TransformConfig};
 use super::lens::{self, LensDir};
 use super::generate_on_session;
 
-/// Identifier the shim advertises via `/api/tags` and echoes on
-/// `/api/generate` responses. Not the file path — this is the
-/// user-facing model name a CLI would type.
-const MODEL_NAME: &str = "noesis-rwkv7-0.4b";
 
 /// Conservative sampling defaults for the HTTP shim.
 ///
@@ -77,6 +73,9 @@ struct HttpState {
     tok: Arc<WorldTokenizer>,
     eval_lock: Arc<Mutex<()>>,
     default_max_gen: usize,
+    /// User-facing model name advertised via /api/tags and /v1/models.
+    /// Derived from the model path at startup — never the raw file path.
+    model_name: Arc<str>,
     /// Interactive-regime signal: shared with the supervisor so ambient
     /// consumers (calibration, future drip pacer) can back off while a
     /// client request is in flight. Set true on `/api/generate` entry,
@@ -103,6 +102,7 @@ pub(super) async fn serve(
     lens_root: Option<PathBuf>,
     transform_config: TransformConfig,
     composer: Arc<Composer>,
+    model_name: Arc<str>,
 ) -> anyhow::Result<()> {
     let state = HttpState {
         ctx,
@@ -113,12 +113,15 @@ pub(super) async fn serve(
         lens_dir: lens_root.map(LensDir::new),
         ctx_transform: Arc::new(ContextTransform::new(transform_config)),
         composer,
+        model_name,
     };
     let router = Router::new()
         .route("/api/version", get(handle_version))
         .route("/api/tags", get(handle_tags))
+        .route("/api/ps", get(handle_ps))
         .route("/api/show", post(handle_show))
         .route("/api/generate", post(handle_generate))
+        .route("/v1/models", get(handle_v1_models))
         .route("/v1/messages", post(handle_v1_messages))
         .route("/v1/chat/completions", post(handle_v1_chat_completions))
         .route("/lens/save", post(handle_lens_save))
@@ -143,37 +146,76 @@ async fn handle_version() -> Json<Value> {
     Json(json!({ "version": "noesis-rwkv-shim/0.1" }))
 }
 
-async fn handle_tags(State(_s): State<HttpState>) -> Json<Value> {
+async fn handle_tags(State(s): State<HttpState>) -> Json<Value> {
     Json(json!({
         "models": [{
-            "name": MODEL_NAME,
+            "name": s.model_name.as_ref(),
             "modified_at": "2026-07-23T00:00:00Z",
             "size": 0,
             "digest": "",
             "details": {
                 "format": "rwkv.cpp",
                 "family": "rwkv7",
-                "parameter_size": "0.4B",
-                "quantization_level": "FP16"
+                "parameter_size": "unknown",
+                "quantization_level": "unknown"
             }
         }]
     }))
 }
 
 async fn handle_show(
-    State(_s): State<HttpState>,
+    State(s): State<HttpState>,
     Json(_req): Json<Value>,
 ) -> Json<Value> {
     Json(json!({
-        "modelfile": format!("# {}\n", MODEL_NAME),
+        "modelfile": format!("# {}\n", s.model_name),
         "parameters": "",
         "template": "",
         "details": {
             "format": "rwkv.cpp",
             "family": "rwkv7",
-            "parameter_size": "0.4B",
-            "quantization_level": "FP16"
+            "parameter_size": "unknown",
+            "quantization_level": "unknown"
         }
+    }))
+}
+
+/// `GET /api/ps` — Ollama "running models" endpoint. Returns the single
+/// resident model so Ollama-compat clients see it as already loaded.
+async fn handle_ps(State(s): State<HttpState>) -> Json<Value> {
+    Json(json!({
+        "models": [{
+            "name": s.model_name.as_ref(),
+            "model": s.model_name.as_ref(),
+            "size": 0,
+            "digest": "",
+            "details": {
+                "format": "rwkv.cpp",
+                "family": "rwkv7",
+                "parameter_size": "unknown",
+                "quantization_level": "unknown"
+            },
+            "expires_at": "0001-01-01T00:00:00Z",
+            "size_vram": 0
+        }]
+    }))
+}
+
+/// `GET /v1/models` — OpenAI-format model list. Required by Open WebUI
+/// and any client using the OpenAI wire format (OPENAI_BASE_URL=...).
+async fn handle_v1_models(State(s): State<HttpState>) -> Json<Value> {
+    let created = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    Json(json!({
+        "object": "list",
+        "data": [{
+            "id": s.model_name.as_ref(),
+            "object": "model",
+            "created": created,
+            "owned_by": "noesis"
+        }]
     }))
 }
 
@@ -326,7 +368,7 @@ async fn handle_generate(
     let model_name = req
         .model
         .filter(|m| !m.is_empty())
-        .unwrap_or_else(|| MODEL_NAME.to_string());
+        .unwrap_or_else(|| s.model_name.to_string());
     let prompt = req.prompt;
 
     // Validate lens_id before entering spawn_blocking.
@@ -682,7 +724,7 @@ async fn handle_v1_messages(
     let model_name = req
         .model
         .filter(|m| !m.is_empty())
-        .unwrap_or_else(|| MODEL_NAME.to_string());
+        .unwrap_or_else(|| s.model_name.to_string());
 
     let turns = anthropic_to_turns(req.system.as_deref(), &req.messages);
     let query = turns.iter().rfind(|t| t.role == "user").map(|t| t.content.as_str()).unwrap_or("");
@@ -878,7 +920,7 @@ async fn handle_v1_chat_completions(
     let model_name = req
         .model
         .filter(|m| !m.is_empty())
-        .unwrap_or_else(|| MODEL_NAME.to_string());
+        .unwrap_or_else(|| s.model_name.to_string());
 
     // Separate system message from the rest; convert to AnthropicMessage for
     // reuse of messages_to_prompt (same ChatML format).
