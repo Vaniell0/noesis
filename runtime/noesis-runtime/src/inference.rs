@@ -47,13 +47,14 @@ pub struct RwkvRuntime {
 
 /// Derive a user-facing model name from its file path.
 ///
-/// For nix-store paths the stem is always `"model"`, so we fall back to
-/// stripping the 32-char hash prefix from the parent directory name.
-/// For regular paths the file stem is used directly.
+/// Resolves symlinks first (`model.bin` → `rwkv7-g1i-2.9b-q5_1.bin`) so the
+/// quant suffix is visible. For nix-store paths where the resolved stem is
+/// still `"model"`, falls back to stripping the hash prefix from the parent.
 pub fn model_display_name(path: &Path) -> String {
-    let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
+    let resolved = std::fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let stem = resolved.file_stem().and_then(|s| s.to_str()).unwrap_or("");
     if stem.is_empty() || stem == "model" {
-        path.parent()
+        resolved.parent()
             .and_then(|p| p.file_name())
             .and_then(|n| n.to_str())
             .and_then(|n| n.splitn(2, '-').nth(1))
@@ -508,14 +509,24 @@ pub fn generate_on_session(
                             }
                         }
 
-                        // Emit any newly decoded bytes as a delta.
+                        // Emit newly decoded bytes as a delta, holding back the
+                        // last `stop_tail_bytes` to avoid emitting a partial
+                        // stop sequence that completes on the next token.
                         if let Some(cb) = on_delta.as_mut() {
-                            if text.len() > emitted_bytes
+                            let safe_end = if stop_tail_bytes > 0 {
+                                let e = text.len().saturating_sub(stop_tail_bytes);
+                                (0..=e).rev()
+                                    .find(|&i| text.is_char_boundary(i))
+                                    .unwrap_or(emitted_bytes)
+                            } else {
+                                text.len()
+                            };
+                            if safe_end > emitted_bytes
                                 && text.is_char_boundary(emitted_bytes)
                             {
-                                let s = text[emitted_bytes..].replace('\x00', "");
+                                let s = text[emitted_bytes..safe_end].replace('\x00', "");
                                 if !s.is_empty() { cb(&s); }
-                                emitted_bytes = text.len();
+                                emitted_bytes = safe_end;
                             }
                         }
                     }
@@ -529,6 +540,19 @@ pub fn generate_on_session(
         }
     } else {
         warn!("rwkv eval_sequence failed");
+    }
+    // Flush any held-back delta bytes (the stop_tail_bytes window) when the
+    // loop ended for a reason other than a stop-sequence match.
+    if stop_reason != StopReason::StopSequence {
+        if let Some(cb) = on_delta.as_mut() {
+            let flush_text = tok.decode(&generated).unwrap_or_default().replace('\x00', "");
+            if flush_text.len() > emitted_bytes
+                && flush_text.is_char_boundary(emitted_bytes)
+            {
+                let s = flush_text[emitted_bytes..].replace('\x00', "");
+                if !s.is_empty() { cb(&s); }
+            }
+        }
     }
     let gen_ms = t_gen.elapsed().as_millis() as u64;
 

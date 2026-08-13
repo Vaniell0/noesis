@@ -148,6 +148,7 @@ async fn handle_version() -> Json<Value> {
 }
 
 async fn handle_tags(State(s): State<HttpState>) -> Json<Value> {
+    let (param_size, quant) = parse_model_details(s.model_name.as_ref());
     Json(json!({
         "models": [{
             "name": s.model_name.as_ref(),
@@ -158,11 +159,26 @@ async fn handle_tags(State(s): State<HttpState>) -> Json<Value> {
             "details": {
                 "format": "rwkv.cpp",
                 "family": "rwkv7",
-                "parameter_size": "unknown",
-                "quantization_level": "unknown"
+                "parameter_size": param_size,
+                "quantization_level": quant
             }
         }]
     }))
+}
+
+/// Extract parameter_size and quantization_level from a model name.
+/// e.g. "rwkv7-g1i-2.9b-q5_1" → ("2.9B", "Q5_1")
+fn parse_model_details(name: &str) -> (String, String) {
+    let lower = name.to_lowercase();
+    let param_size = lower.split('-')
+        .find(|p| p.ends_with('b') && p[..p.len()-1].parse::<f32>().is_ok())
+        .map(|p| p.to_uppercase())
+        .unwrap_or_else(|| "unknown".into());
+    let quant = lower.split('-')
+        .find(|p| p.starts_with('q') && p.len() > 1 && p.chars().nth(1).map_or(false, |c| c.is_ascii_digit()))
+        .map(|p| p.to_uppercase().replace('_', "_"))
+        .unwrap_or_else(|| "F16".into());
+    (param_size, quant)
 }
 
 async fn handle_show(
