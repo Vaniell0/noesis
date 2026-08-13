@@ -150,6 +150,7 @@ async fn handle_tags(State(s): State<HttpState>) -> Json<Value> {
     Json(json!({
         "models": [{
             "name": s.model_name.as_ref(),
+            "model": s.model_name.as_ref(),
             "modified_at": "2026-07-23T00:00:00Z",
             "size": 0,
             "digest": "",
