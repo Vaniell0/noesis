@@ -381,6 +381,65 @@ top of the frozen weights. Word-search RL contributes two things to A4:
 
 ---
 
+## Step10 SFT — skip decision (icophy, 2026-08-14)
+
+Source: icophy Discord message, 6 months production RWKV-6 state work.
+
+**Conclusion: skip step10 SFT, go direct RL on G1i.**
+
+Reason: SFT before RL reduces variance on *which behavior* RL reinforces — it does not improve the model's ability to do the task. For G1i at 0/56 on word-search there is no existing behavior to exploit as shortcut. This is exactly the case where skipping SFT is cleaner.
+
+**Mechanism of SFT-less RL risk:** GRPO on binary reward latches onto surface shortcuts early. State encodes the shortcut, not the reasoning pathway. The shortcut's verifiable output is indistinguishable from genuine task completion in reward signal.
+
+**Why 0/56 baseline protects us:** no spurious partial-success correlation → nothing to pre-remove. Icophy: "The counterargument for skipping step10 is stronger here than in tasks where the model already achieves non-trivial baseline performance."
+
+**Mandatory checkpoint after first RL epoch:**
+R-lens probe on non-task axes (e.g. narrative, arithmetic) before continuing curriculum. If R-lens returns near-chance probe accuracy on non-task axes while word-search performance is high → state is encoding shortcut geometry, not reasoning. Stop and investigate before advancing curriculum.
+
+**L_KVB:** skip for now (SFT-only loss, no SFT phase). Revisit if full-FT SFT is added later.
+
+---
+
+## Integrated RL loop — instrument map
+
+All instruments and where they plug in:
+
+```
+G1i base checkpoint
+│
+├── [NO step10 SFT — skip]
+│
+└── Phase 3: Direct RL (GRPO, word-search L1→L7)
+    │
+    ├── Per batch:
+    │   ├── Sample G=8 rollouts per prompt (T=0.7)
+    │   ├── r_correct  = ±1 binary (regex match on row=R col=C)
+    │   ├── r_clipo    = -λ · InfoNCE(WKV_state_end_think) clamped -0.5
+    │   │                 [CLIPO, 2603.10101 — separates reasoning from shortcut]
+    │   ├── r_entropy  = α · Δentropy_reduction (think span entry→exit)
+    │   │                 [GTPO, 2508.04349 — weight WKV-write tokens by entropy]
+    │   └── GRPO update on combined reward
+    │
+    ├── After checkpoint 1 (mandatory):
+    │   └── R-lens probe: stable_rank on task + non-task axes
+    │       → if non-task near-chance: shortcut alert, stop curriculum
+    │       → if non-task intact: proceed
+    │
+    ├── Curriculum advance: L_k → L_{k+1} when acc > 80% on current level
+    │
+    └── Phase 4 (after convergence):
+        Switch-GRPO → latent tokens (<swi>/<latent></swi>)
+        [2606.13106 — boundary tokens make policy ratio well-defined]
+```
+
+**Undecided before writing code:**
+1. Training stack: RWKV-PEFT GRPO branch vs custom loop in `training/`?
+2. WKV state extraction for CLIPO: hook into `state[3*L+1]` at `</think>` position
+3. Full FT vs LoRA for RL (current plan: LoRA r=32 on att, full on time/ln — same as step9b)
+4. CLIPO projection head: small MLP (2 layers, dim 512) trained from scratch alongside policy
+
+---
+
 ## Open questions
 
 - **Prompting direction hint.** The current prompt names the orientation
