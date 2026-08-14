@@ -1,6 +1,6 @@
 # Community map — RWKV / SSM landscape vs noesis divergences
 
-Written 2026-07-25. Last updated 2026-08-12. Consolidates prior-art
+Written 2026-07-25. Last updated 2026-08-14. Consolidates prior-art
 scattered across `docs/state-and-reasoning.md §2`, "Frontier adjacency"
 boxes inside `HYPOTHESES.md` H8/H12, and per-topic snippets in
 `docs/effort-frontier.md`. Purpose: a single flat map of what the
@@ -488,6 +488,21 @@ matures.
   patterns** — they follow from the delta-rule framing but are
   unexplored empirically.
 
+**Adjacent RL/policy work (found 2026-08-14):**
+
+- **"Demystifying Hidden-State Recurrence: Switchable Latent Reasoning"**
+  (arXiv 2606.13106) — boundary tokens enter/exit latent (hidden-state-only)
+  reasoning via Switch-GRPO that keeps policy ratio well-defined over recurrent
+  positions. Curriculum: visible→latent. Solves our specific gap: GRPO ratio is
+  undefined over `<think>` spans that accumulate WKV state without emitting.
+  **Read before RL launch.**
+
+- **"GTPO and GRPO-S: Token and Sequence-Level Reward Shaping with Policy
+  Entropy"** (arXiv 2508.04349) — entropy-weighted per-token GRPO advantage.
+  Entropy is cheap in RWKV during forward pass; weighting WKV-update tokens
+  inside `<think>` focuses gradient on active state-write moments — complement
+  to L_state curvature signal.
+
 ### MoE / multi-expert losses (adjacent field, not native RWKV)
 
 - **Switch Transformer, GShard, Mixtral, DynMoLE, SimSMoE** —
@@ -517,6 +532,26 @@ None of these reward state motion. noesis's `L_state` is a
 sign-flipped SFA with per-layer weights derived from empirical
 measurement (A0.5) — a mirror-image of known technique, not a
 breakthrough.
+
+**Aligned techniques (found 2026-08-14, systematic search):**
+
+- **"TTT with KV Binding Is Secretly Linear Attention"** (arXiv 2602.21204, ICML 2026)
+  — proves that online gradient-based memory update at inference (TTT) reduces to a
+  delta-rule linear attention write. WKV state update IS this operator. Reframes
+  L_state as TTT self-supervision inside `<think>`: the model is running online
+  test-time training of its own state write with no architecture change.
+
+- **"CLIPO: Contrastive Learning in Policy Optimization Generalizes RLVR"**
+  (arXiv 2603.10101) — contrastive loss over successful rollouts suppresses
+  hallucination from process-wrong/outcome-correct traces. Extends L_state:
+  push WKV states from two correct `<think>` paths closer; pull correct vs.
+  incorrect apart. Geometry-level rather than scalar-magnitude level.
+
+- **"Birdie: Advancing State Space Models with Reward-Driven Objectives and
+  Curricula"** (arXiv 2411.01030) — RL-scheduled mixture of pre-training
+  objectives closing SSM long-range recall gap without architecture changes.
+  Transferable: schedule L_CE vs. L_state vs. L_GRPO dynamically by task
+  difficulty instead of fixing ε, replacing the current fixed-mask approach.
 
 ### Multimodal RWKV
 
@@ -683,6 +718,16 @@ misattributed. Do not re-fold them without new evidence.
   false. `ROSA_QKV_B_1bit` is a network block sitting alongside
   `RWKV_Tmix_x070`; upgrading requires training the ROSA block,
   not just loading a new inference-time module.
+
+### 3.8 Read 2606.13106 before RL launch
+
+arXiv 2606.13106 "Switchable Latent Reasoning" provides Switch-GRPO: a training
+recipe for boundary tokens that enter/exit latent recurrent computation with policy
+ratio well-defined over opaque recurrent positions. This directly closes the GRPO
+implementation gap for noesis `<think>` spans (ratio undefined when no tokens are
+emitted). The visible→latent curriculum is a plug-in recipe for the word-search RL
+track. Also read arXiv 2602.21204 for the theoretical grounding: TTT = delta-rule
+linear attention = WKV update. Neither paper requires architecture changes.
 
 ---
 
