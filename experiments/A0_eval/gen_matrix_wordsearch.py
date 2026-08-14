@@ -179,16 +179,21 @@ def _orient_human(orient: str) -> str:
     }[orient]
 
 
+def _layout_desc(fmt: str) -> str:
+    if fmt == "nsp":
+        return "letters within each row are concatenated with no separator"
+    return "letters within a row are separated by single spaces"
+
+
+def _sep_for_fmt(fmt: str) -> str:
+    return "" if fmt == "nsp" else " "
+
+
 def make_prompt(grid_str: str, word: str, n: int, orient: str,
-                no_spaces: bool = False) -> str:
-    layout = (
-        "letters within each row are concatenated with no separator"
-        if no_spaces else
-        "letters within a row are separated by single spaces"
-    )
+                fmt: str = "") -> str:
     return (
         f"Below is a {n}x{n} letter matrix. Rows are separated by newlines; "
-        f"{layout}. Rows and columns are 0-indexed (top-left is row=0 col=0).\n\n"
+        f"{_layout_desc(fmt)}. Rows and columns are 0-indexed (top-left is row=0 col=0).\n\n"
         f"{grid_str}\n\n"
         f"The word {word} appears exactly once, placed {_orient_human(orient)}. "
         f"Find it. Output only the position of the word's first letter in the "
@@ -196,15 +201,10 @@ def make_prompt(grid_str: str, word: str, n: int, orient: str,
     )
 
 
-def make_prompt_name(grid_str: str, n: int, no_spaces: bool = False) -> str:
-    layout = (
-        "letters within each row are concatenated with no separator"
-        if no_spaces else
-        "letters within a row are separated by single spaces"
-    )
+def make_prompt_name(grid_str: str, n: int, fmt: str = "") -> str:
     return (
         f"Below is a {n}x{n} letter matrix. Rows are separated by newlines; "
-        f"{layout}.\n\n"
+        f"{_layout_desc(fmt)}.\n\n"
         f"{grid_str}\n\n"
         f"Exactly one English word is hidden in this grid — it may run in any "
         f"direction (horizontal, vertical, or diagonal, forwards or backwards). "
@@ -216,7 +216,7 @@ def make_task(rng: random.Random, level: int, tier_idx: int, task_idx: int,
               n: int, min_len: int, max_len: int,
               allowed_orientations: List[str],
               mode: str = "position",
-              no_spaces: bool = False) -> dict:
+              fmt: str = "") -> dict:
     orient = rng.choice(allowed_orientations)
     dr, dc = ORIENTATIONS[orient]
     word = _pick_word(rng, min_len, max_len)
@@ -230,19 +230,18 @@ def make_task(rng: random.Random, level: int, tier_idx: int, task_idx: int,
     row, col = rng.choice(valid)
 
     grid = _fill_grid(rng, n, word, row, col, dr, dc, orient)
-    sep = "" if no_spaces else " "
-    grid_str = _render(grid, sep=sep)
-    fmt_tag = "nsp" if no_spaces else "sp"
+    grid_str = _render(grid, sep=_sep_for_fmt(fmt))
+    fmt_tag = fmt if fmt else "sp"
 
     if mode == "name":
-        prompt = make_prompt_name(grid_str, n, no_spaces=no_spaces)
+        prompt = make_prompt_name(grid_str, n, fmt=fmt)
         rubric_value = rf"(?i)\b{word}\b"
         return {
             "id": f"wsearch_name_L{level}_{n}x{n}_{orient}_{fmt_tag}_{tier_idx:02d}_{task_idx:02d}",
             "category": "matrix_wordsearch_name",
             "level": level,
             "orientation": orient,
-            "no_spaces": no_spaces,
+            "fmt": fmt_tag,
             "prompt": prompt,
             "answer": word,
             "rubric": {"type": "regex", "value": rubric_value},
@@ -252,14 +251,14 @@ def make_task(rng: random.Random, level: int, tier_idx: int, task_idx: int,
             ),
         }
 
-    prompt = make_prompt(grid_str, word, n, orient, no_spaces=no_spaces)
+    prompt = make_prompt(grid_str, word, n, orient, fmt=fmt)
     rubric_value = rf"row\s*=\s*{row}\b[^0-9]*col\s*=\s*{col}\b"
     return {
         "id": f"wsearch_L{level}_{n}x{n}_{orient}_{fmt_tag}_{tier_idx:02d}_{task_idx:02d}",
         "category": "matrix_wordsearch",
         "level": level,
         "orientation": orient,
-        "no_spaces": no_spaces,
+        "fmt": fmt_tag,
         "prompt": prompt,
         "answer": f"row={row} col={col}",
         "rubric": {"type": "regex", "value": rubric_value},
@@ -293,14 +292,15 @@ def main() -> int:
     ap.add_argument("--mode", choices=["position", "name"], default="position",
                     help="'position': output row=R col=C (default). "
                          "'name': model names the hidden word (no position hint).")
-    ap.add_argument("--no-spaces", action="store_true",
-                    help="Render grid without spaces between letters (uniform tokenisation).")
+    ap.add_argument("--format", dest="fmt", default="",
+                    help="Grid format tag. '' (default) = spaces. 'nsp' = no spaces. "
+                         "Any other string becomes the fmt_tag in task IDs.")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
     tasks: List[dict] = []
 
-    no_spaces = args.no_spaces
+    fmt = args.fmt
     if args.tiers:
         for ti, spec in enumerate(args.tiers.split(",")):
             parts = spec.split(":")
@@ -309,14 +309,14 @@ def main() -> int:
             orients = parts[3].split("+") if len(parts) > 3 else ["H_LR"]
             for tj in range(args.per_tier):
                 tasks.append(make_task(rng, 0, ti, tj, n, mn, mx, orients,
-                                       mode=args.mode, no_spaces=no_spaces))
+                                       mode=args.mode, fmt=fmt))
     else:
         levels = list(LEVEL_SPECS) if args.all_levels else [args.level or 1]
         for level in levels:
             n, mn, mx, orients = LEVEL_SPECS[level]
             for tj in range(args.per_level):
                 tasks.append(make_task(rng, level, level, tj, n, mn, mx, orients,
-                                       mode=args.mode, no_spaces=no_spaces))
+                                       mode=args.mode, fmt=fmt))
 
     with open(args.out, "w") as f:
         for t in tasks:
