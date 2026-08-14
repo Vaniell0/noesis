@@ -102,21 +102,33 @@ model:
   n_layer: 32
   n_embd: 2560
 
+# Training mode: two variants
+#   Variant A (default): full fine-tune toward latent tokens
+#     - No LoRA: full weight update on all modules
+#     - L_state loss mandatory (trajectory + ε-mask)
+#     - H12b.i optional (see h12b_i_enabled below)
+#   Variant B: LoRA only (cheaper, for ablation comparison)
+#     - lora.enabled: true, rank: 32
+#     - LoRA alone cannot achieve fundamental latent-token behavior shift
+#
+# Active: Variant A (full FT, latent token training)
+
 lora:
+  enabled: false  # Variant A: full FT. Set true for Variant B LoRA ablation.
   rank: 32
   alpha: 64
   target_modules: [receptance, key, value, output, gate]
   dropout: 0.0
 
-full_ft_parts: [time, ln]
+full_ft_parts: [all]   # Variant A: full model. Variant B: [time, ln]
 
 optimizer:
   name: adamw
-  lr_init: 2.0e-5
-  lr_final: 2.0e-6
+  lr_init: 1.0e-5    # lower than LoRA run — full FT needs smaller lr
+  lr_final: 1.0e-6
   weight_decay: 0.01
-  warmup_steps: 20
-  grad_accum_steps: 8
+  warmup_steps: 40   # longer warmup for full FT stability
+  grad_accum_steps: 16
   batch_size: 1
 
 training:

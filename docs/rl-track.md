@@ -123,6 +123,33 @@ record to get per-level accuracy.
 
 ---
 
+## Full FT vs LoRA for latent token training
+
+LoRA alone cannot achieve a fundamental shift toward latent-token behavior.
+LoRA modifies projection matrices within a low-rank subspace; the model's
+core decision about whether to emit or hold (the quality gate, H16) lives
+in the full weight geometry. To train the model to allocate WKV state
+budget toward latent computation rather than output generation, the full
+parameter space must be updated.
+
+**Variant A — Full FT (default, latent token track):**
+- All weights updated (full_ft_parts: all, lora.enabled: false)
+- L_state mandatory: trajectory regularization + ε-mask (0.05 outside think)
+- H12b.i slot entropy optional (separate run for ablation)
+- Two-phase: (1) SFT to establish latent token style, (2) GRPO RL to shape it
+- Loss on memory: L_state penalises low-rank WKV updates, forcing the model
+  to use its state budget for reasoning before committing to output
+
+**Variant B — LoRA (ablation only):**
+- LoRA rank 32 on attention weights, full FT on time/ln
+- Cheaper; useful to quantify what LoRA alone achieves vs full FT
+- Expected: partial latent behavior, insufficient depth shift
+
+H12b.i is optional in both variants — run as a separate checkpoint to
+isolate the slot entropy effect from the full-FT effect.
+
+---
+
 ## RL design (step 10+)
 
 **Reward signal.** Binary: +1 for exact match on `row=R col=C`, 0 otherwise.
