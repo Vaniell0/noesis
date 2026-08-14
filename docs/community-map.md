@@ -624,7 +624,7 @@ responses) and H16 (dense state-think per emit token). Either
 promote to a new H-number with prediction + falsifier, or write it
 off with reasoning. **Note:** original text said "promote to H18"
 — H18 is now the git-like branch/merge hypothesis. If L_length is
-promoted, it gets the next free number (currently H25+). H24 = decoding КПД under RL pressure (2026-08-14, HYPOTHESES.md).
+promoted, it gets the next free number (currently H25+). H24 = decoding efficiency (DE) under RL pressure (2026-08-14, HYPOTHESES.md).
 
 ---
 

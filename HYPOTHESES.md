@@ -238,7 +238,7 @@ vs Gemma4 e4b (37.5% / 37.5%) — reasoning-tuned RWKV beats a larger mixed-corp
 reasoning tasks. The formal comparison (Qwen-2.5-3B-Instruct or Phi-4-mini + retrieval vs
 noesis + retrieval) was never run. Interest in this as a standalone research question has
 faded; the sub-claims that remain live are carried by H12a (state-capacity reallocation),
-H17 (substrate absorption vs re-injection), and H24 (decoding КПД under RL). Closing without
+H17 (substrate absorption vs re-injection), and H24 (decoding efficiency (DE) under RL). Closing without
 scheduling a test that would add little beyond what A1 already showed.
 
 ---
@@ -2677,19 +2677,19 @@ G1d-0.4B once H12b lands.
 
 ---
 
-## H24. ε-mask + GRPO raises decoding КПД without accuracy regression
+## H24. ε-mask + GRPO raises decoding efficiency (DE) without accuracy regression
 ### *(wager, Phase 2, RL track)*
 
 **Claim.** After word-search RL training on G1i with ε-mask active (think=1.0 /
-non-think=0.05), the model's decoding КПД — defined as `accuracy / mean_output_words_for_correct_answer × 100`
+non-think=0.05), the model's decoding efficiency (DE) — defined as `accuracy / mean_output_words_for_correct_answer × 100`
 — rises significantly compared to the pre-RL baseline, without accuracy regression on A0.2
 tasks. The mechanism: ε-mask makes every emitted token costly relative to correct rollouts that
 used fewer tokens; the model learns to route uncertain reasoning into WKV state and emit only when
 confident. Result: same information extracted from weights, fewer tokens spent doing it.
 
-**Motivation.** Pre-RL КПД measured 2026-08-14 on A0.2 tasks:
+**Motivation.** Pre-RL DE measured 2026-08-14 on A0.2 tasks:
 
-| Model | Accuracy | Avg tokens/correct | КПД (acc/tokens × 100) |
+| Model | Accuracy | Avg tokens/correct | DE (acc/tokens × 100) |
 |---|---|---|---|
 | Gemma4 e4b | 37.5% | 5.2 | 7.26 |
 | Gemma3 4B | 38.1% | 35.6 | 1.07 |
@@ -2697,32 +2697,32 @@ confident. Result: same information extracted from weights, fewer tokens spent d
 | G1i chatwrap | 41.7% | 154 | 0.27 |
 | step9b-e1 | 39.6% | 270 | 0.15 |
 
-step9b-e1 has the worst КПД despite best reasoning accuracy — it outputs verbose CoT chains.
-Gemma4's КПД is high because it gives terse direct answers, not because WKV carries the work.
-The RL phase should invert this: step9b-e1 / G1i should reach КПД ≥ 1.0 (Gemma3 level) while
+step9b-e1 has the worst DE despite best reasoning accuracy — it outputs verbose CoT chains.
+Gemma4's DE is high because it gives terse direct answers, not because WKV carries the work.
+The RL phase should invert this: step9b-e1 / G1i should reach DE ≥ 1.0 (Gemma3 level) while
 maintaining ≥ 39% accuracy — same answers, fewer tokens.
 
 **Prediction.**
-- Post-RL G1i: КПД ≥ 1.0 on A0.2 tasks (7× improvement from 0.15 pre-RL baseline).
+- Post-RL G1i: DE ≥ 1.0 on A0.2 tasks (7× improvement from 0.15 pre-RL baseline).
 - Think-span token count drops ≥ 50% vs pre-RL for correct answers.
 - Accuracy on A0.2 does not regress more than 3pp from pre-RL baseline.
 - J-lens stable_rank rises at L4/L16 simultaneously with think-span shortening —
   measurable signature that WKV is doing more work per token.
 
 **Falsification.**
-- КПД < 0.5 post-RL with no accuracy gain ⇒ ε-mask collapses generation without
+- DE < 0.5 post-RL with no accuracy gain ⇒ ε-mask collapses generation without
   routing to state; model emits empty or malformed answers.
 - Accuracy regresses > 5pp ⇒ ε-mask suppresses needed output pathways; relax ε_out.
-- КПД rises but J-lens stable_rank does not ⇒ КПД improvement is verbosity reduction only,
+- DE rises but J-lens stable_rank does not ⇒ DE improvement is verbosity reduction only,
   not state-work increase; the WKV-efficiency story is not confirmed even if output is shorter.
 
 **Measurement.** Run A0.2 eval on first post-RL checkpoint with `--chat-wrap --num-predict 256`.
-Compute КПД from result JSON: `accuracy / mean(len(r["response"].split()) for r in results if r["correct"])`.
+Compute DE from result JSON: `accuracy / mean(len(r["response"].split()) for r in results if r["correct"])`.
 J-lens probe on same checkpoint at L4/L16/L20.
 
-**Related.** H10 (test-time compute frontier) — КПД is an orthogonal metric to the N×K×mode
+**Related.** H10 (test-time compute frontier) — DE is an orthogonal metric to the N×K×mode
 matrix; RL changes the per-token efficiency, not the number of passes. H17 ε-mask trains the
 model to prefer state computation over emission. H12a (state capacity) — if state is already
-full (H12a), RL cannot route more into it; КПД ceiling is set by state capacity.
+full (H12a), RL cannot route more into it; DE ceiling is set by state capacity.
 
 **Status.** Untested. RL track blocked on GPU. Pre-RL baseline locked (2026-08-14).

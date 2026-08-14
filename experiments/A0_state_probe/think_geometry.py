@@ -1,0 +1,231 @@
+#!/usr/bin/env python3
+"""think_geometry.py — per-token WKV state delta analysis, think vs non-think.
+
+Measures how much each token changes the WKV state (delta norm, stable rank
+of the delta matrix, sigma1) at key layers. Tokens inside <think>...</think>
+are labelled separately from tokens outside.
+
+Prediction (H8): think-span tokens produce larger, higher-rank WKV deltas
+than non-think tokens — the model routes active computation there.
+
+Usage:
+    python think_geometry.py \
+        --model ~/.libs/models/rwkv7/rwkv7-g1h-2.9b-step9b-e1.pth \
+        --layers 4,16,31 \
+        --out results/think_vs_nonthink_step9b_e1.json
+
+    # Optionally compare two checkpoints:
+    python think_geometry.py \
+        --model ~/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth \
+        --compare ~/.libs/models/rwkv7/rwkv7-g1h-2.9b-step9b-e1.pth \
+        --layers 4,16,31 \
+        --out results/think_geometry_base_vs_step9b.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import pathlib
+import sys
+from typing import Dict, List, Optional, Tuple
+
+import torch
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from probe import load_model
+
+THINK_OPEN = "<think>"
+THINK_CLOSE = "</think>"
+
+DEFAULT_PROMPT = (
+    "Solve step by step: A train leaves city A at 9:00 at 60 km/h. "
+    "Another train leaves city B (300 km away) at 10:00 at 90 km/h. "
+    "When do they meet?\n"
+    "<think>\n"
+    "Distance from A: 60*(t+1), distance from B: 90*t where t = hours after 10:00.\n"
+    "They meet when 60*(t+1) + 90*t = 300.\n"
+    "60t + 60 + 90t = 300 → 150t = 240 → t = 1.6 hours.\n"
+    "They meet at 11:36.\n"
+    "</think>\n"
+    "They meet at 11:36 AM."
+)
+
+
+def _svd_stats(m: torch.Tensor) -> Dict[str, float]:
+    try:
+        sv = torch.linalg.svdvals(m.float())
+        s1 = float(sv[0])
+        frob = float(m.float().norm())
+        sr = (frob ** 2) / (s1 ** 2 + 1e-12)
+        return {"sigma1": s1, "stable_rank": sr, "frob": frob}
+    except Exception as e:
+        return {"sigma1": 0.0, "stable_rank": 0.0, "frob": 0.0, "error": str(e)}
+
+
+def _find_think_spans(token_ids: List[int], tokenizer) -> List[bool]:
+    """Return per-token boolean: True = inside <think>...</think>."""
+    # Tokenize the markers to find their ids
+    think_open_ids = tokenizer(THINK_OPEN)["input_ids"]
+    think_close_ids = tokenizer(THINK_CLOSE)["input_ids"]
+
+    inside = [False] * len(token_ids)
+    in_think = False
+
+    def _matches(ids: List[int], pos: int, target: List[int]) -> bool:
+        return ids[pos : pos + len(target)] == target
+
+    i = 0
+    while i < len(token_ids):
+        if _matches(token_ids, i, think_open_ids):
+            in_think = True
+            for j in range(i, min(i + len(think_open_ids), len(token_ids))):
+                inside[j] = True
+            i += len(think_open_ids)
+        elif _matches(token_ids, i, think_close_ids):
+            for j in range(i, min(i + len(think_close_ids), len(token_ids))):
+                inside[j] = True
+            in_think = False
+            i += len(think_close_ids)
+        else:
+            inside[i] = in_think
+            i += 1
+
+    return inside
+
+
+def run_probe(model_path: str, layers: List[int], prompt: str,
+              device: str = "cpu") -> Dict:
+    model, tokenizer = load_model(model_path, device=device)
+    model.eval()
+
+    enc = tokenizer(prompt)
+    token_ids: List[int] = enc["input_ids"]
+    if isinstance(token_ids, torch.Tensor):
+        token_ids = token_ids.squeeze().tolist()
+
+    think_mask = _find_think_spans(token_ids, tokenizer)
+
+    tokens_decoded = [tokenizer.decode([t]) for t in token_ids]
+
+    per_token: List[Dict] = []
+    prev_state: Optional[List[torch.Tensor]] = None
+
+    with torch.no_grad():
+        state = None
+        for pos, tok_id in enumerate(token_ids):
+            _, state = model.forward([tok_id], state)
+
+            # Extract WKV state per target layer: state[3*L + 1]
+            wkv_now: Dict[int, torch.Tensor] = {}
+            for L in layers:
+                idx = 3 * L + 1
+                if idx < len(state):
+                    wkv_now[L] = state[idx].float().cpu()
+
+            # Compute delta vs previous step
+            layer_stats: Dict[str, Dict] = {}
+            for L in layers:
+                if L not in wkv_now:
+                    continue
+                s_cur = wkv_now[L]  # (n_head, H, H)
+                if prev_state is not None and L in prev_state:
+                    delta = s_cur - prev_state[L]
+                else:
+                    delta = s_cur  # first token: delta = state itself
+
+                # Average stats across heads
+                n_head = s_cur.shape[0]
+                head_stats = [_svd_stats(delta[h]) for h in range(n_head)]
+                layer_stats[str(L)] = {
+                    "sigma1": sum(x["sigma1"] for x in head_stats) / n_head,
+                    "stable_rank": sum(x["stable_rank"] for x in head_stats) / n_head,
+                    "frob": sum(x["frob"] for x in head_stats) / n_head,
+                }
+
+            per_token.append({
+                "pos": pos,
+                "token_id": tok_id,
+                "token": tokens_decoded[pos],
+                "in_think": think_mask[pos],
+                "layers": layer_stats,
+            })
+
+            # Save current WKV state for next delta
+            prev_state = {L: wkv_now[L].clone() for L in layers if L in wkv_now}
+
+    # Aggregate: mean stats inside vs outside think
+    for L in layers:
+        key = str(L)
+        think_frobs = [t["layers"][key]["frob"] for t in per_token
+                       if key in t["layers"] and t["in_think"]]
+        nothink_frobs = [t["layers"][key]["frob"] for t in per_token
+                         if key in t["layers"] and not t["in_think"]]
+        think_srs = [t["layers"][key]["stable_rank"] for t in per_token
+                     if key in t["layers"] and t["in_think"]]
+        nothink_srs = [t["layers"][key]["stable_rank"] for t in per_token
+                       if key in t["layers"] and not t["in_think"]]
+
+        def _mean(lst):
+            return sum(lst) / len(lst) if lst else None
+
+        print(f"\nLayer {L}:")
+        print(f"  mean delta frob  — think: {_mean(think_frobs):.4f}  "
+              f"non-think: {_mean(nothink_frobs):.4f}  "
+              f"ratio: {(_mean(think_frobs) or 0) / ((_mean(nothink_frobs) or 1e-9)):.2f}×")
+        print(f"  mean stable_rank — think: {_mean(think_srs):.4f}  "
+              f"non-think: {_mean(nothink_srs):.4f}")
+
+    return {
+        "model_path": str(model_path),
+        "prompt_len": len(token_ids),
+        "think_tokens": sum(think_mask),
+        "non_think_tokens": len(think_mask) - sum(think_mask),
+        "layers": layers,
+        "per_token": per_token,
+    }
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--compare", default=None, help="Optional second checkpoint")
+    ap.add_argument("--layers", default="4,16,31")
+    ap.add_argument("--prompt", default=None, help="Custom prompt (must contain <think>...</think>)")
+    ap.add_argument("--device", default="cpu")
+    ap.add_argument("--out", required=True)
+    args = ap.parse_args()
+
+    layers = [int(x) for x in args.layers.split(",")]
+    prompt = args.prompt or DEFAULT_PROMPT
+    out = pathlib.Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    print(f"=== think_geometry: {args.model} ===")
+    result_a = run_probe(args.model, layers, prompt, args.device)
+
+    result = {"model_a": result_a}
+
+    if args.compare:
+        print(f"\n=== think_geometry: {args.compare} ===")
+        result_b = run_probe(args.compare, layers, prompt, args.device)
+        result["model_b"] = result_b
+
+        print("\n=== Delta frob ratio comparison (model_b / model_a) ===")
+        for L in layers:
+            key = str(L)
+            def _think_mean(res):
+                vals = [t["layers"][key]["frob"] for t in res["per_token"]
+                        if key in t["layers"] and t["in_think"]]
+                return sum(vals) / len(vals) if vals else 0.0
+            ra = _think_mean(result_a)
+            rb = _think_mean(result_b)
+            print(f"  L{L}: base={ra:.4f}  trained={rb:.4f}  ratio={rb/(ra+1e-9):.2f}×")
+
+    out.write_text(json.dumps(result, indent=2))
+    print(f"\nSaved → {out}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
