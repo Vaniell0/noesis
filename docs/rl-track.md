@@ -201,6 +201,41 @@ emergent behavior, not create it from scratch.
 **Entropy reward shaping.** During GRPO rollout, reward term:
 `α * Δentropy_reduction` (entropy before vs. after think span). Encourages
 resolving uncertainty in think-space. Tune α separately from binary reward.
+See also arXiv 2508.04349 (GTPO/GRPO-S): entropy-weight per-token advantage
+directly inside the GRPO update — weight WKV-write tokens inside `<think>`
+by their token-level entropy, focusing gradient on high-uncertainty state
+writes. Complement to the span-level entropy term above.
+
+**CLIPO contrastive reward** (arXiv 2603.10101). Add as a reward term on top
+of binary correctness:
+
+```python
+# for each prompt group of G rollouts:
+# z_i = WKV state at end of <think> span, passed through small MLP head
+r_con_i = -λ * InfoNCE(z_i, positives={z_j: correct_j}, negatives={z_k: ~correct_k})
+r_con_i = max(r_con_i, -0.5)   # clamp
+# add r_con_i to verifiable reward before computing GRPO advantages
+```
+
+τ = 0.05, λ tuned per run (start 0.01). Projection dim 512. Push WKV states
+of correct rollouts together; pull correct vs. incorrect apart — geometry-level
+signal that correct answers route through similar WKV trajectories.
+
+**L_KVB auxiliary SFT loss** (arXiv 2602.21204). Add during SFT phase (before
+RL) to teach model to emit think-span tokens whose KV structure the WKV state
+can absorb cleanly:
+
+```python
+# inside think span forward pass, per WKV layer l:
+# W_{t-1}: WKV state before token t
+# k_t, v_t: key/value projections of current token
+L_KVB += mean(‖W_{t-1} @ φ(k_t) - v_t‖²)   # over think-span tokens
+# add to SFT loss: L_total = L_CE + λ_kvb * L_KVB,  λ_kvb ≈ 0.01
+```
+
+This is the inner-loop loss the delta rule already minimises per step; training
+L_KVB end-to-end teaches the outer loop to issue self-consistent KV pairs so
+the state becomes a good compressor of think-span content.
 
 Both activate at step 10+ RL phase; irrelevant to the SFT baseline.
 
@@ -266,6 +301,67 @@ These are not bugs to fix (WorldTokenizer is fixed); they are structural
 constraints the RL curriculum must accommodate. The H_LR→H_RL progression
 in levels 1→3 is partly a token-type-reversal training, not only a
 directional-attention training.
+
+---
+
+## Phase 4 — Switch-GRPO path to H16 (latent computation, no emitted tokens)
+
+Source: arXiv 2606.13106 "Switchable Latent Reasoning."
+
+Current word-search RL (Phase 3) uses visible `<think>` tokens — GRPO policy
+ratio is well-defined over all emitted positions. H16 (gated externalisation)
+requires the model to eventually compute silently: no visible think tokens,
+pure WKV state accumulation. At that point, policy density is undefined over
+latent positions — Switch-GRPO fixes this.
+
+**Three-token vocabulary extension:**
+- `<swi>` — enter latent block
+- `</swi>` — exit latent block
+- `<latent>` — latent placeholder (no embedding; previous hidden state h_{t-1} is the input)
+
+**Switch-SFT (prerequisite, after word-search RL convergence):**
+
+Phase 1 SFT: tag high-entropy sub-spans of existing think-span outputs with
+`<swi>`/`</swi>`. Use Shannon entropy of token distribution to identify
+uncertain positions — these are the natural candidate latent positions.
+Train with standard CE on the annotated corpus.
+
+Phase 2 latent curriculum: progressively replace text inside `<swi>` blocks
+with `<latent>` placeholders. Parallel schedule:
+```
+n_m(k) = c · min(k, |span_m|, K_max)
+```
+per-span latent count grows each stage. One-shot replacement kills the block
+(model exits in 1 step without K_min constraint).
+
+**Switch-GRPO objective:**
+
+Hidden-state injection is deterministic given preceding text → rollout
+likelihood factors over visible positions only. Policy ratio defined at
+`<swi>`, `</swi>`, visible answer tokens. `<latent>` positions contribute
+no policy-gradient term. Gradient propagates through latent computation via
+segmented backward.
+
+Reward = ±1 correctness + ±1 tag-format (valid `<swi>`/`</swi>` pairs) +
+{0,1} latent-usage (bonus when correct answer used the latent path).
+
+**Noesis mapping:**
+
+| Switch paper | noesis equivalent |
+|---|---|
+| `<swi>`/`</swi>` | `<think>`/`</think>` (already in vocab) |
+| `<latent>` placeholder | new token (add to WordTokenizer) |
+| High-entropy CoT segment | Any think-span content after word-search RL |
+| Phase 1 SFT | Annotate think spans from RL checkpoint with entropy probe |
+| Phase 2 curriculum | Progressive: think tokens → `<latent>` placeholders |
+| Phase 3 Switch-GRPO | GRPO with latent-usage reward on word-search tasks |
+
+K_min (minimum latent dwell) must be enforced; without it the trained model
+exits the latent block in one step. Start K_min = 4; ablate (arXiv 2606.13106
+Appendix I).
+
+**Prerequisite:** word-search RL (Phase 3) must first converge on visible
+think tokens before Phase 4 is useful. Do not start Phase 4 cold.
 
 ---
 
