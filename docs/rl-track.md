@@ -432,11 +432,14 @@ G1i base checkpoint
         [2606.13106 — boundary tokens make policy ratio well-defined]
 ```
 
-**Undecided before writing code:**
-1. Training stack: RWKV-PEFT GRPO branch vs custom loop in `training/`?
-2. WKV state extraction for CLIPO: hook into `state[3*L+1]` at `</think>` position
-3. Full FT vs LoRA for RL (current plan: LoRA r=32 on att, full on time/ln — same as step9b)
-4. CLIPO projection head: small MLP (2 layers, dim 512) trained from scratch alongside policy
+**Resolved — use existing tools:**
+1. **Training stack**: RWKV-PEFT (reliable, already used in step9/9b). GRPO via `verl`
+   (same stack CLIPO uses — `verl/trainer/ppo/ray_trainer.py`).
+2. **WKV state extraction**: TransformerLens hook on `state[3*L+1]` at `</think>` position.
+   Canonical RWKV-7 support confirmed (Lucas, 2026-08-12). No custom backward needed.
+3. **LoRA r=32** on att weights, full FT on time/ln — same as step9b. RWKV-PEFT handles this.
+4. **CLIPO projection head**: use `Qwen-Applications/CLIPO` repo directly. Their MLP head
+   (2-layer, dim 512, InfoNCE) plugs into verl reward computation unchanged.
 
 ---
 
