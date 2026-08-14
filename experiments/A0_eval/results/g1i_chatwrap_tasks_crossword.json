@@ -1,0 +1,317 @@
+{
+  "model": "rwkv7-g1i-2.9b-q5_1",
+  "backend": "ollama",
+  "num_predict": 256,
+  "n_passes": 1,
+  "readout_mode": "silent",
+  "readout_k": 64,
+  "n_tasks": 24,
+  "elapsed_s": 2880.8151619434357,
+  "aggregate": {
+    "n_total": 24,
+    "n_correct": 0,
+    "overall_accuracy": 0.0,
+    "per_category": {
+      "crossword_enum": {
+        "n": 12,
+        "correct": 0,
+        "accuracy": 0.0
+      },
+      "crossword_fill": {
+        "n": 12,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "xword_A_L8_7x7_enum_00",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "CEDAR\nEMBER",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bCEDAR\\b)(?=.*\\bEMBER\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L8_7x7_enum_01",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "BIRD\nGIFT",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bBIRD\\b)(?=.*\\bGIFT\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L8_7x7_enum_02",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "HAVEN\nOPAL",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bHAVEN\\b)(?=.*\\bOPAL\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L8_7x7_enum_03",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "HORSE\nTUSK",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bHORSE\\b)(?=.*\\bTUSK\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L8_7x7_enum_04",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "GLASS\nVISOR",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bGLASS\\b)(?=.*\\bVISOR\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L8_7x7_enum_05",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "EMBER\nMAIZE",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bEMBER\\b)(?=.*\\bMAIZE\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L9_8x8_enum_00",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "JOUST\nSPIRE\nTURRET",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bJOUST\\b)(?=.*\\bSPIRE\\b)(?=.*\\bTURRET\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L9_8x8_enum_01",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "GOLDEN\nNEST\nROSE",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bGOLDEN\\b)(?=.*\\bNEST\\b)(?=.*\\bROSE\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L9_8x8_enum_02",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "CAVE\nDELTA\nFOREST",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bCAVE\\b)(?=.*\\bDELTA\\b)(?=.*\\bFOREST\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L9_8x8_enum_03",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "JOUST\nNAPALM\nSCHEMA",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bJOUST\\b)(?=.*\\bNAPALM\\b)(?=.*\\bSCHEMA\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L9_8x8_enum_04",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "MAIZE\nTORCH\nZERO",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bMAIZE\\b)(?=.*\\bTORCH\\b)(?=.*\\bZERO\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_A_L9_8x8_enum_05",
+      "category": "crossword_enum",
+      "response": "",
+      "expected": "CEDAR\nEMBER\nMOON",
+      "rubric": {
+        "type": "regex",
+        "value": "(?=.*\\bCEDAR\\b)(?=.*\\bEMBER\\b)(?=.*\\bMOON\\b)"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "xword_B_L10_9x9_H_LR_00",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "UMBRA",
+      "rubric": {
+        "type": "exact",
+        "value": "UMBRA"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L10_9x9_H_RL_01",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "CEDAR",
+      "rubric": {
+        "type": "exact",
+        "value": "CEDAR"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L10_9x9_H_LR_02",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "SMILE",
+      "rubric": {
+        "type": "exact",
+        "value": "SMILE"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L10_9x9_H_LR_03",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "RIVER",
+      "rubric": {
+        "type": "exact",
+        "value": "RIVER"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L10_9x9_H_RL_04",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "ROSE",
+      "rubric": {
+        "type": "exact",
+        "value": "ROSE"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L10_9x9_V_TD_05",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "YOKE",
+      "rubric": {
+        "type": "exact",
+        "value": "YOKE"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L11_10x10_H_RL_00",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "MAIZE",
+      "rubric": {
+        "type": "exact",
+        "value": "MAIZE"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L11_10x10_V_TD_01",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "VORTEX",
+      "rubric": {
+        "type": "exact",
+        "value": "VORTEX"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L11_10x10_V_TD_02",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "KELVIN",
+      "rubric": {
+        "type": "exact",
+        "value": "KELVIN"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L11_10x10_V_TD_03",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "YACHT",
+      "rubric": {
+        "type": "exact",
+        "value": "YACHT"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L11_10x10_V_TD_04",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "FLUTE",
+      "rubric": {
+        "type": "exact",
+        "value": "FLUTE"
+      },
+      "correct": false,
+      "detail": "exact match"
+    },
+    {
+      "id": "xword_B_L11_10x10_D_DR_05",
+      "category": "crossword_fill",
+      "response": "",
+      "expected": "IVORY",
+      "rubric": {
+        "type": "exact",
+        "value": "IVORY"
+      },
+      "correct": false,
+      "detail": "exact match"
+    }
+  ]
+}

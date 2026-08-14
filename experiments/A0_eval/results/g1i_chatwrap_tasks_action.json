@@ -1,0 +1,151 @@
+{
+  "model": "rwkv7-g1i-2.9b-q5_1",
+  "backend": "ollama",
+  "num_predict": 256,
+  "n_passes": 1,
+  "readout_mode": "silent",
+  "readout_k": 64,
+  "n_tasks": 8,
+  "elapsed_s": 960.0308685302734,
+  "aggregate": {
+    "n_total": 8,
+    "n_correct": 0,
+    "overall_accuracy": 0.0,
+    "per_category": {
+      "action_slice": {
+        "n": 8,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "act_01",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"get_weather\",\"input\":{\"location\":\"Tokyo\"}}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "get_weather",
+          "input": {
+            "location": "Tokyo"
+          }
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "act_02",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"calculate_bmi\",\"input\":{\"weight_kg\":70,\"height_m\":1.75}}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "calculate_bmi",
+          "input": {
+            "weight_kg": 70,
+            "height_m": 1.75
+          }
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "act_03",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"get_stock_price\",\"input\":{\"ticker\":\"AAPL\"}}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "get_stock_price",
+          "input": {
+            "ticker": "AAPL"
+          }
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "act_04",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"send_email\",\"input\":{\"to\":\"alice@example.com\",\"subject\":\"Q3 sync\",\"body\":\"...\"}}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "send_email",
+          "input": {
+            "to": "alice@example.com",
+            "subject": "Q3 sync"
+          }
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "act_05",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"run_shell\",\"input\":{\"cmd\":\"python3 --version\"}}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "run_shell"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "act_06",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"sql_query\",\"input\":{\"sql\":\"SELECT COUNT(*) FROM users\"}}",
+      "rubric": {
+        "type": "regex",
+        "value": "select\\s+count.*from\\s+users"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "act_07",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"list_dir\",\"input\":{\"path\":\"/etc/nginx\"}}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "list_dir",
+          "input": {
+            "path": "/etc/nginx"
+          }
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    },
+    {
+      "id": "act_08",
+      "category": "action_slice",
+      "response": "",
+      "expected": "{\"name\":\"web_search\",\"input\":{\"query\":\"2026 FIFA World Cup winner\"}}",
+      "rubric": {
+        "type": "json_subset",
+        "value": {
+          "name": "web_search"
+        }
+      },
+      "correct": false,
+      "detail": "no valid JSON found in response"
+    }
+  ]
+}

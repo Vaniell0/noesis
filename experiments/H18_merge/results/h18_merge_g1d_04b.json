@@ -1,0 +1,89 @@
+{
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192",
+  "results": [
+    {
+      "pair_id": "math_narrative",
+      "context_A": "What is 17 * 23? Let me compute step by step. 17 * 20 = 340. 17 * 3 = 51. Total: 391.",
+      "context_B": "Actually, I meant to ask about a different problem. The farmer has 17 fields and each grows 23 crops.",
+      "probe": "So the answer",
+      "pure_A": " is 391.\n\nBut the user might want the answer in a box. So I'll output 391.\n\n",
+      "pure_B": " is 391.\nBut the question is: \"What is 17 * 23?\" So the answer is 391.",
+      "alpha_results": [
+        {
+          "alpha": 0.3,
+          "text": " is 391.\nBut the problem says \"What is 17 * 23?\" So the answer is 391.\n",
+          "has_expected_A": true,
+          "has_expected_B": false
+        },
+        {
+          "alpha": 0.5,
+          "text": " is 391.\nBut let me double-check: 17*23. 17*20=340, 17",
+          "has_expected_A": true,
+          "has_expected_B": false
+        },
+        {
+          "alpha": 0.7,
+          "text": " is 391.\nBut let me check if there's any other way to approach this problem. For example, using",
+          "has_expected_A": true,
+          "has_expected_B": false
+        }
+      ]
+    },
+    {
+      "pair_id": "code_history",
+      "context_A": "The function returns sum(lst) // len(lst) to compute the average of a list of integers.",
+      "context_B": "Historically, averaging was done by hand, using tallies and fractions before calculators existed.",
+      "probe": "This means",
+      "pure_A": " that the function will return the average of the list of integers.\nThe function is called with the list [1,",
+      "pure_B": " that the average of a list of integers is the sum of the integers divided by the number of integers.The average of",
+      "alpha_results": [
+        {
+          "alpha": 0.3,
+          "text": " that the average of a list of integers is the sum of the integers divided by the number of integers.The average of",
+          "has_expected_A": true,
+          "has_expected_B": false
+        },
+        {
+          "alpha": 0.5,
+          "text": " that the average of a list of integers is the sum of the integers divided by the number of integers in the list.",
+          "has_expected_A": true,
+          "has_expected_B": false
+        },
+        {
+          "alpha": 0.7,
+          "text": " that the average is calculated by dividing the sum of the list by the number of elements in the list.The function is",
+          "has_expected_A": false,
+          "has_expected_B": false
+        }
+      ]
+    },
+    {
+      "pair_id": "science_recipe",
+      "context_A": "Sodium chloride (NaCl) dissolves in water because the polar water molecules surround the Na+ and Cl- ions.",
+      "context_B": "To make a simple salt solution, add one teaspoon of salt to a glass of warm water and stir until clear.",
+      "probe": "The result is",
+      "pure_A": " a solution with a high concentration of Na+ and Cl- ions.\nWhat is the difference between a solution and a",
+      "pure_B": " a salt solution.\nWhat is the difference between a salt and a solution?\nA solution is a mixture of two",
+      "alpha_results": [
+        {
+          "alpha": 0.3,
+          "text": " a solution of NaCl.\nWhat is the difference between a salt and a solution?\nA solution is a mixture",
+          "has_expected_A": true,
+          "has_expected_B": true
+        },
+        {
+          "alpha": 0.5,
+          "text": " a solution of NaCl.\nWhat is the difference between a solution and a mixture?\nA solution is a homogeneous",
+          "has_expected_A": true,
+          "has_expected_B": true
+        },
+        {
+          "alpha": 0.7,
+          "text": " a solution of NaCl.\nWhat is the difference between a solution and a mixture?\nA solution is a homogeneous",
+          "has_expected_A": true,
+          "has_expected_B": true
+        }
+      ]
+    }
+  ]
+}

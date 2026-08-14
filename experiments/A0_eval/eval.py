@@ -172,12 +172,16 @@ def score_task(task: Dict[str, Any], response: str) -> Dict[str, Any]:
 # --------------------------------------------------------------------------- #
 
 def call_ollama(host: str, model: str, prompt: str,
-                num_predict: int, timeout_s: int) -> str:
+                num_predict: int, timeout_s: int,
+                chat_wrap: bool = False) -> str:
+    if chat_wrap:
+        prompt = f"User: {prompt}\n\nAssistant:"
     payload = {
         "model": model,
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": 0.0, "num_predict": num_predict},
+        "options": {"temperature": 0.0, "num_predict": num_predict,
+                    **({"stop": ["\n\nUser", "\n\nHuman"]} if chat_wrap else {})},
     }
     req = urllib.request.Request(
         f"{host}/api/generate",
@@ -335,6 +339,8 @@ def main() -> int:
     ap.add_argument("--out", required=True, help="Path to output JSON.")
     ap.add_argument("--limit", type=int, default=None,
                     help="Cap number of tasks (for smoke tests).")
+    ap.add_argument("--chat-wrap", action="store_true",
+                    help="Wrap prompt as 'User: ...\\n\\nAssistant:' for chat-trained models (G1i+).")
     args = ap.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
@@ -361,7 +367,8 @@ def main() -> int:
                     print(f"[eval] warning: --n-passes ignored for ollama backend",
                           file=sys.stderr)
                 resp = call_ollama(args.host, args.model, task["prompt"],
-                                   args.num_predict, args.timeout)
+                                   args.num_predict, args.timeout,
+                                   chat_wrap=args.chat_wrap)
             else:
                 resp = call_rwkv(args.model, tok, mdl, task["prompt"],
                                  args.num_predict, args.n_passes,

@@ -1,0 +1,54 @@
+{
+  "base": {
+    "model_path": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth",
+    "n_tokens": 32,
+    "work_layers": [
+      4,
+      16,
+      20
+    ],
+    "layer_stats": {
+      "4": {
+        "mean_sigma1": 7.664336794614792,
+        "mean_stable_rank": 1.2824204809973738,
+        "mean_frob": 8.368048027157784,
+        "n_head": 40
+      },
+      "16": {
+        "mean_sigma1": 8.562224677205085,
+        "mean_stable_rank": 1.3011845251529566,
+        "mean_frob": 9.440945082902909,
+        "n_head": 40
+      },
+      "20": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      }
+    }
+  },
+  "trained": {
+    "model_path": "/home/vaniello/.libs/models/rwkv7/rwkv-step9b-e1.pth",
+    "n_tokens": 32,
+    "work_layers": [
+      4,
+      16,
+      20
+    ],
+    "layer_stats": {
+      "4": {
+        "mean_sigma1": 9.321228778362274,
+        "mean_stable_rank": 1.1918538644310428,
+        "mean_frob": 9.823044830560685,
+        "n_head": 40
+      },
+      "16": {
+        "mean_sigma1": 8.433915251493454,
+        "mean_stable_rank": 1.25702102033997,
+        "mean_frob": 9.193362841010094,
+        "n_head": 40
+      },
+      "20": {
+        "error": "not enough values to unpack (expected 3, got 1)"
+      }
+    }
+  }
+}

@@ -232,7 +232,14 @@ confounded and must be excluded from H2 evidence. Step 6 corpus must be
 reflexive-first; the corpus-architecture fit is a prerequisite for any
 valid H2 test, not a post-hoc tuning parameter.
 
-**Status.** Untested. Blocked on corpus replacement (Step 6).
+**Status.** **WITHDRAWN (2026-08-14).** A1 results make the direction obvious without the
+formal test: step9b-e1 (2.9B, reasoning LoRA) scores 39.6% overall and 87.5% on symbolic
+vs Gemma4 e4b (37.5% / 37.5%) — reasoning-tuned RWKV beats a larger mixed-corpus model on
+reasoning tasks. The formal comparison (Qwen-2.5-3B-Instruct or Phi-4-mini + retrieval vs
+noesis + retrieval) was never run. Interest in this as a standalone research question has
+faded; the sub-claims that remain live are carried by H12a (state-capacity reallocation),
+H17 (substrate absorption vs re-injection), and H24 (decoding КПД under RL). Closing without
+scheduling a test that would add little beyond what A1 already showed.
 
 ---
 
@@ -566,6 +573,16 @@ Frac explained: lag=1 → 95.9%, lag=8 → 82.1%, lag=64 → 78.3%. Gradual deca
 without collapse to baseline is consistent with WKV state carrying predictive
 information over ≥64 tokens (one probe, one model size, not yet replicated). Results: `experiments/ib_probe/results_g1d_base/reconstruction.json`.
 
+**R-lens diff G1h base → step9b-e1 (2026-08-14).** `experiments/A0_state_probe/results/rlens_g1h_vs_step9b_e1.json`.
+Three contexts (reasoning / math / narrative), 32 layers. Consistent direction: small SR
+decrease (Δ ≈ −0.01 to −0.03) and small σ1 decrease across all layers and contexts.
+Most prominent change: L31 reasoning σ1 46.1→41.1 (−4.9), L31 narrative 52.3→50.4 (−1.8).
+Narrative context shows near-zero change at most layers — consistent with step9b training
+not including narrative-style data. Interpretation: LoRA training made WKV saliency slightly
+more concentrated without restructuring the broad geometry; the intervention is narrow,
+not a wholesale state-dynamics rewrite. Supports the view that step9b-e1's symbolic 87.5%
+accuracy gain comes from targeted pathway adjustment, not global state restructuring.
+
 **Status.** **SUPPORTED** at 0.4B and 2.9B (A0.5 passed both scales,
 2026-08-04/05). A1 state_reg sweep findings in
 `docs/verdicts/2026-08-04-a1-pilot-step3-step4.md`.
@@ -870,6 +887,32 @@ to reproduce after prefill). This validates that the mechanism is real
 and interpretable without dedicated training. H10's falsification of
 readout (state_readout == prompt_cot at step8 e0) is a training-signal
 gap, not an architectural impossibility.
+
+**WorldTokenizer column-position asymmetry (2026-08-14, icophy + verified).**
+In grid-structured prompts, the same letter receives different tokens depending
+on column position: `A` at column 0 → token 66 (`'A'`), same letter at column
+1+ → token 300 (`' A'`) or 301 (`' B'`) etc. (space-prefixed BPE merge). At
+row-start after `\n` → two-token sequence `[11, 66]`. Same letter, three
+different WKV update directions by position. This is a fundamental confound
+for all grid/spatial tasks (word-search, crossword): the model sees positionally
+distinct tokens where the task semantics require position-invariant letter
+identity. Explains the universal 0% baseline across all models on word-search.
+
+**Design implication:** Grid prompts should either (a) use a fixed-width
+format that forces all letters into the same tokenization context (e.g. always
+space-prefix: `" A B C D"` for every row), or (b) treat the position asymmetry
+as a learned feature (the RL curriculum trains on real tokenization, not
+normalised). Option (b) is preferable — normalising may hide the real WKV
+geometry. Track whether RL on raw grid format causes position-specific
+attention patterns in J-lens (column 0 vs column 1+ should diverge in
+stable_rank if the model is exploiting position rather than letter identity).
+
+**Word-search 0/56 confirmed on G1i (2026-08-14, chatwrap, both variants).**
+`g1i_chatwrap_tasks_matrix_wordsearch.json` and `g1i_chatwrap_tasks_matrix_wordsearch_name.json`:
+0/56 = 0.0% on G1i 2.9B with chat wrapping. Tested across both matrix_wordsearch (find word in grid)
+and matrix_wordsearch_name (find person's name in grid) formats. G1h also 0/56 (prior run).
+WorldTokenizer asymmetry explains the floor; this is the clean RL baseline to push against.
+All models at 0% regardless of scale or training — the task has no shortcut through weights.
 
 ---
 
@@ -1894,9 +1937,18 @@ needs a curated set of "answer wrong / branch-then-answer right"
 probe pairs. Reuses rwkv-cpp state APIs already required by lens
 persistence, H14/H15/H16 — no new bindings.
 
-**Status.** Untested. Sub-claim (1) cheap once state-save/clone/load
-lands. Sub-claim (2) onwards is Phase-2 wager, ordering behind lens
-persistence but ahead of any Phase-3 multimodal work.
+**Status.** Sub-claim (1) CONFIRMED (2026-08-13). Fork determinism verified on G1d 0.4B:
+`experiments/H18_merge/test_arithmetic_merge.py`. Clone-then-decode matches
+parent-then-decode exactly (greedy, 100% deterministic). Sub-claim (2) PARTIAL
+(2026-08-13). Arithmetic merge `merged = α*state_A + (1-α)*state_B` tested on
+G1d 0.4B with three context pairs (math+narrative, code+history, science+recipe),
+α ∈ {0.3, 0.5, 0.7}. Results: `science_recipe` pair — ALL three α values preserve
+BOTH contexts in decoded output (A=True, B=True). `code_history` — all α retain
+context A (integer), context B (history) lost. `math_narrative` — α=0.3/0.5 B
+dominates, α=0.7 neither context retained. Merge candidate (b) weighted average
+works on at least one pair at all α. Candidate (a) replace and (c) selective-layer
+merge untested. Full results: `experiments/H18_merge/results/h18_merge_g1d_04b.json`.
+Sub-claims (3) continuation stability and (4) structure adherence: untested, pending GPU.
 
 ---
 
@@ -2622,3 +2674,55 @@ natural extension if H23 lands.
 **Status.** Untested. Phase 2. Blocked on H12b checkpoint (which
 is now unblocked from H12a v2 — see H12 reframe). Pilot on
 G1d-0.4B once H12b lands.
+
+---
+
+## H24. ε-mask + GRPO raises decoding КПД without accuracy regression
+### *(wager, Phase 2, RL track)*
+
+**Claim.** After word-search RL training on G1i with ε-mask active (think=1.0 /
+non-think=0.05), the model's decoding КПД — defined as `accuracy / mean_output_words_for_correct_answer × 100`
+— rises significantly compared to the pre-RL baseline, without accuracy regression on A0.2
+tasks. The mechanism: ε-mask makes every emitted token costly relative to correct rollouts that
+used fewer tokens; the model learns to route uncertain reasoning into WKV state and emit only when
+confident. Result: same information extracted from weights, fewer tokens spent doing it.
+
+**Motivation.** Pre-RL КПД measured 2026-08-14 on A0.2 tasks:
+
+| Model | Accuracy | Avg tokens/correct | КПД (acc/tokens × 100) |
+|---|---|---|---|
+| Gemma4 e4b | 37.5% | 5.2 | 7.26 |
+| Gemma3 4B | 38.1% | 35.6 | 1.07 |
+| Qwen2.5-1.5B | 38.1% | 60.4 | 0.63 |
+| G1i chatwrap | 41.7% | 154 | 0.27 |
+| step9b-e1 | 39.6% | 270 | 0.15 |
+
+step9b-e1 has the worst КПД despite best reasoning accuracy — it outputs verbose CoT chains.
+Gemma4's КПД is high because it gives terse direct answers, not because WKV carries the work.
+The RL phase should invert this: step9b-e1 / G1i should reach КПД ≥ 1.0 (Gemma3 level) while
+maintaining ≥ 39% accuracy — same answers, fewer tokens.
+
+**Prediction.**
+- Post-RL G1i: КПД ≥ 1.0 on A0.2 tasks (7× improvement from 0.15 pre-RL baseline).
+- Think-span token count drops ≥ 50% vs pre-RL for correct answers.
+- Accuracy on A0.2 does not regress more than 3pp from pre-RL baseline.
+- J-lens stable_rank rises at L4/L16 simultaneously with think-span shortening —
+  measurable signature that WKV is doing more work per token.
+
+**Falsification.**
+- КПД < 0.5 post-RL with no accuracy gain ⇒ ε-mask collapses generation without
+  routing to state; model emits empty or malformed answers.
+- Accuracy regresses > 5pp ⇒ ε-mask suppresses needed output pathways; relax ε_out.
+- КПД rises but J-lens stable_rank does not ⇒ КПД improvement is verbosity reduction only,
+  not state-work increase; the WKV-efficiency story is not confirmed even if output is shorter.
+
+**Measurement.** Run A0.2 eval on first post-RL checkpoint with `--chat-wrap --num-predict 256`.
+Compute КПД from result JSON: `accuracy / mean(len(r["response"].split()) for r in results if r["correct"])`.
+J-lens probe on same checkpoint at L4/L16/L20.
+
+**Related.** H10 (test-time compute frontier) — КПД is an orthogonal metric to the N×K×mode
+matrix; RL changes the per-token efficiency, not the number of passes. H17 ε-mask trains the
+model to prefer state computation over emission. H12a (state capacity) — if state is already
+full (H12a), RL cannot route more into it; КПД ceiling is set by state capacity.
+
+**Status.** Untested. RL track blocked on GPU. Pre-RL baseline locked (2026-08-14).

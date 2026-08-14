@@ -472,7 +472,7 @@ noesis mechanism: `<think>` tokens already function as latent patches —
 if the model places intermediate computation inside `<think>` spans, WKV
 updates within the span are local-scope and less prone to global attractor
 activation. ε-mask (α\_eff = 0.05 outside `<think>`) already enforces
-this boundary. BLT/T-FREE is runway context for A2/H24 if RWKV-8+BLT
+this boundary. BLT/T-FREE is runway context for A2/H25 if RWKV-8+BLT
 matures.
 
 ### Test-time compute
@@ -624,7 +624,7 @@ responses) and H16 (dense state-think per emit token). Either
 promote to a new H-number with prediction + falsifier, or write it
 off with reasoning. **Note:** original text said "promote to H18"
 — H18 is now the git-like branch/merge hypothesis. If L_length is
-promoted, it gets the next free number (currently H24+).
+promoted, it gets the next free number (currently H25+). H24 = decoding КПД under RL pressure (2026-08-14, HYPOTHESES.md).
 
 ---
 

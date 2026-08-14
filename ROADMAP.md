@@ -77,11 +77,10 @@ serialize them.
 - **TransformerLens + RWKV7**: installed (`fla` v0.5.2, TL RWKV7ArchitectureAdapter).
   Blocked on CPU: `fla` requires `triton` (CUDA). Full TL path deferred to
   GPU session (Selectel). CPU path: `rich_probe.py` above.
-- **Running (2026-08-13):**
-  - J-lens G1h base vs step8 → `results/jlens_base_vs_step8.json`
-  - H22 attribution probe on G1h-2.9B → `attribution_probe/v3_29b/`
-  - Word-search baseline (G1h-2.9B) → `A0_eval/results/g1h_wordsearch_baseline.json`
-    — expected 0%, confirms zero-shot floor for RL curriculum.
+- **COMPLETE (2026-08-14):**
+  - J-lens G1h base vs step9b-e1 → `results/jlens_g1h_vs_step9b_e1.json` (L4 σ₁ +1.66, SR −0.09)
+  - R-lens G1h base vs step9b-e1 → `results/rlens_g1h_vs_step9b_e1.json` (small SR decrease, L31 reasoning σ₁ −4.9)
+  - Word-search baseline G1h + G1i → 0/56 both (see A1.5 below)
 
 ### A0.5. Causal intervention grid (COMPLETE — 2026-08-04)
 - Extended runner in `experiments/A0_state_probe/a05_run.py` +
@@ -170,9 +169,13 @@ serialize them.
     ε-mask restored extraction (0%→62.5%). Config: `training/config/pilot_step9.yaml`.
   - Step 9b (G1h-2.9B, 6-source mixed, ctx=512): 39.58% — regression.
     ctx_len=512 short-circuited L_state (T<3); extraction collapsed 62.5%→12.5%.
-    Best checkpoint remains step9 epoch0.
     Config: `training/config/pilot_step9b.yaml`.
-- **Current best:** `training/runs/pilot_g1h_step9/rwkv-0.pth` (step9 epoch0, 43.75%).
+    step9b-e1 uploaded to HF: `Vaniello/noesis-rwkv7-g1h-2.9b` (836 downloads 2026-08-14).
+- **Checkpoint status (2026-08-14).** All local checkpoints LOST (disk corruption). HF is canonical source.
+  Best available: step9b-e1 (39.6%). Best ever seen locally: step9 e0 (43.75%) — irrecoverable.
+- **A0.2 eval results (2026-08-14):** G1i chatwrap 41.7% (20/48, extraction 87.5%, symbolic 75%);
+  step9b-e1 39.6% (arithmetic 100%, symbolic 87.5%, scheduling 50%); Gemma4 e4b 37.5% (symbolic 37.5%, scheduling 0%).
+  RWKV step9b-e1 wins symbolic by 2.3×. КПД baseline: step9b-e1=0.15, G1i=0.27, Gemma4=7.26 (see H24).
 - H7 falsifier (retrieval-parity contrast) remains open.
 - **H10 sweep (step8 epoch0, 2026-08-07).** Peak: N=2 silent 33.3% (16/48).
   N=3 collapses to 6.3% — third pass corrupts state. Prior state_readout data
@@ -181,7 +184,7 @@ serialize them.
   Full table: `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
 - **Base model migration.** Step 9 base was G1h-2.9B; G1i-2.9B
   (ctx16384, 2026-08-05) is the new baseline. All step 10+ runs use G1i.
-  G1i eval through runtime pending (see § A1.5 below).
+  G1i eval DONE (2026-08-14): 41.7% chatwrap. Local checkpoints lost; HF is canonical.
 
 ### A1.5. RL fine-tune — word-search curriculum (step 10+)
 
@@ -215,7 +218,8 @@ See `docs/rl-track.md` for the full design.
 - **Implementation details** (not separate hypotheses, recorded in `docs/rl-track.md`):
   binary ε-mask outside answer span (ε=0.05); entropy routing reward
   shaping (α·Δentropy_reduction in think span).
-- **Blockers.** G1i download + runtime eval (§A0, task 0).
+- **Blockers (2026-08-14).** GPU only. G1i download DONE; G1i eval DONE (41.7%);
+  word-search baseline CONFIRMED 0/56 on G1i (matrix_wordsearch + matrix_wordsearch_name). Next: Selectel 4090 (~₽1500/24h).
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory

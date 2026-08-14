@@ -191,9 +191,21 @@ def make_prompt(grid_str: str, word: str, n: int, orient: str) -> str:
     )
 
 
+def make_prompt_name(grid_str: str, n: int) -> str:
+    return (
+        f"Below is a {n}x{n} letter matrix. Rows are separated by newlines; "
+        f"letters within a row are separated by single spaces.\n\n"
+        f"{grid_str}\n\n"
+        f"Exactly one English word is hidden in this grid — it may run in any "
+        f"direction (horizontal, vertical, or diagonal, forwards or backwards). "
+        f"Find it and output only the word in uppercase. Output nothing else."
+    )
+
+
 def make_task(rng: random.Random, level: int, tier_idx: int, task_idx: int,
               n: int, min_len: int, max_len: int,
-              allowed_orientations: List[str]) -> dict:
+              allowed_orientations: List[str],
+              mode: str = "position") -> dict:
     orient = rng.choice(allowed_orientations)
     dr, dc = ORIENTATIONS[orient]
     word = _pick_word(rng, min_len, max_len)
@@ -208,9 +220,26 @@ def make_task(rng: random.Random, level: int, tier_idx: int, task_idx: int,
 
     grid = _fill_grid(rng, n, word, row, col, dr, dc, orient)
     grid_str = _render(grid)
+
+    if mode == "name":
+        prompt = make_prompt_name(grid_str, n)
+        rubric_value = rf"(?i)\b{word}\b"
+        return {
+            "id": f"wsearch_name_L{level}_{n}x{n}_{orient}_{tier_idx:02d}_{task_idx:02d}",
+            "category": "matrix_wordsearch_name",
+            "level": level,
+            "orientation": orient,
+            "prompt": prompt,
+            "answer": word,
+            "rubric": {"type": "regex", "value": rubric_value},
+            "notes": (
+                f"Level {level}, n={n}, orient={orient}, "
+                f"word='{word}' (len {len(word)}), anchor=(row={row}, col={col})."
+            ),
+        }
+
     prompt = make_prompt(grid_str, word, n, orient)
     rubric_value = rf"row\s*=\s*{row}\b[^0-9]*col\s*=\s*{col}\b"
-
     return {
         "id": f"wsearch_L{level}_{n}x{n}_{orient}_{tier_idx:02d}_{task_idx:02d}",
         "category": "matrix_wordsearch",
@@ -246,6 +275,9 @@ def main() -> int:
                     help="Tasks per level (--level / --all-levels).")
     ap.add_argument("--per-tier", type=int, default=4,
                     help="Tasks per custom tier (--tiers).")
+    ap.add_argument("--mode", choices=["position", "name"], default="position",
+                    help="'position': output row=R col=C (default). "
+                         "'name': model names the hidden word (no position hint).")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -258,13 +290,13 @@ def main() -> int:
             mn, mx = int(parts[1]), int(parts[2])
             orients = parts[3].split("+") if len(parts) > 3 else ["H_LR"]
             for tj in range(args.per_tier):
-                tasks.append(make_task(rng, 0, ti, tj, n, mn, mx, orients))
+                tasks.append(make_task(rng, 0, ti, tj, n, mn, mx, orients, mode=args.mode))
     else:
         levels = list(LEVEL_SPECS) if args.all_levels else [args.level or 1]
         for level in levels:
             n, mn, mx, orients = LEVEL_SPECS[level]
             for tj in range(args.per_level):
-                tasks.append(make_task(rng, level, level, tj, n, mn, mx, orients))
+                tasks.append(make_task(rng, level, level, tj, n, mn, mx, orients, mode=args.mode))
 
     with open(args.out, "w") as f:
         for t in tasks:

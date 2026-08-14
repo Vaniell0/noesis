@@ -1,0 +1,192 @@
+{
+  "model": "rwkv7-g1i-2.9b-q5_1",
+  "backend": "ollama",
+  "num_predict": 256,
+  "n_passes": 1,
+  "readout_mode": "silent",
+  "readout_k": 64,
+  "n_tasks": 14,
+  "elapsed_s": 1680.8037672042847,
+  "aggregate": {
+    "n_total": 14,
+    "n_correct": 0,
+    "overall_accuracy": 0.0,
+    "per_category": {
+      "bit_decoding": {
+        "n": 14,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "bit_book_ext_01",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "xwzy",
+      "rubric": {
+        "type": "contains",
+        "value": "xwzy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_02",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "psqrqrr",
+      "rubric": {
+        "type": "contains",
+        "value": "psqrqrr"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_03",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "onmk",
+      "rubric": {
+        "type": "contains",
+        "value": "onmk"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_04",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "guvtugtv",
+      "rubric": {
+        "type": "contains",
+        "value": "guvtugtv"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_05",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "cogi",
+      "rubric": {
+        "type": "contains",
+        "value": "cogi"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_06",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "yrnaib",
+      "rubric": {
+        "type": "contains",
+        "value": "yrnaib"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_07",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "lespmh",
+      "rubric": {
+        "type": "contains",
+        "value": "lespmh"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_08",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "twierqyu",
+      "rubric": {
+        "type": "contains",
+        "value": "twierqyu"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_09",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "abcdb",
+      "rubric": {
+        "type": "contains",
+        "value": "abcdb"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_10",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "tsrnst",
+      "rubric": {
+        "type": "contains",
+        "value": "tsrnst"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_11",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "yxzxzxy",
+      "rubric": {
+        "type": "contains",
+        "value": "yxzxzxy"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_12",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "AbCd",
+      "rubric": {
+        "type": "contains",
+        "value": "AbCd"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_13",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "ba abc",
+      "rubric": {
+        "type": "contains",
+        "value": "ba abc"
+      },
+      "correct": false,
+      "detail": "substring match"
+    },
+    {
+      "id": "bit_book_ext_14",
+      "category": "bit_decoding",
+      "response": "",
+      "expected": "WoR-WoR-",
+      "rubric": {
+        "type": "contains",
+        "value": "WoR-WoR-"
+      },
+      "correct": false,
+      "detail": "substring match"
+    }
+  ]
+}
