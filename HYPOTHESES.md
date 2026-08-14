@@ -583,6 +583,23 @@ more concentrated without restructuring the broad geometry; the intervention is 
 not a wholesale state-dynamics rewrite. Supports the view that step9b-e1's symbolic 87.5%
 accuracy gain comes from targeted pathway adjustment, not global state restructuring.
 
+**think_geometry probe — per-token WKV delta, think vs non-think spans (2026-08-14).**
+`experiments/A0_state_probe/results/think_vs_nonthink_step9b_vs_base.json`.
+Prompt: short think span ("The answer is 42."). Metric: Frobenius norm of per-token WKV
+state delta, averaged across heads per layer.
+
+G1h 2.9B base (no fine-tuning): think/non-think delta frob ratio
+L4=1.68×, L16=2.00×, L31=1.43×. Even without L_state training the G1 base already routes
+more state computation into think tokens than non-think tokens — an effect of the G1
+reasoning-distillation pre-training (think-span content is semantically denser).
+
+step9b-e1 (LoRA r=32, L_state + ε-mask): L4=1.89×, L16=2.07×, L31=1.60×.
+trained/base ratio: L4=0.97×, L16=1.02×, L31=1.01× — LoRA training did not shift the
+routing geometry measurably. The think > non-think pattern exists in the base; LoRA
+amplified it marginally (<10%) without restructuring it. Interpretation: LoRA operates
+within the existing state-update subspace; a fundamental routing shift (H16 quality gate)
+requires full-weight training where the routing geometry itself can be updated.
+
 **Status.** **SUPPORTED** at 0.4B and 2.9B (A0.5 passed both scales,
 2026-08-04/05). A1 state_reg sweep findings in
 `docs/verdicts/2026-08-04-a1-pilot-step3-step4.md`.

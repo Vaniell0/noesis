@@ -52,15 +52,21 @@ DEFAULT_PROMPT = (
 )
 
 
-def _svd_stats(m: torch.Tensor) -> Dict[str, float]:
+def _delta_stats(delta: torch.Tensor) -> Dict[str, float]:
+    """Fast stats on (n_head, H, H) delta tensor — no SVD, just norms."""
+    d = delta.float()
+    frob = float(d.norm())
+    # Per-head mean absolute delta — proxy for update magnitude
+    mean_abs = float(d.abs().mean())
+    # Rough rank proxy: ratio of max singular value of mean head to frob
+    # Use only first head for sigma1 to keep cost low
     try:
-        sv = torch.linalg.svdvals(m.float())
+        sv = torch.linalg.svdvals(d[0])
         s1 = float(sv[0])
-        frob = float(m.float().norm())
-        sr = (frob ** 2) / (s1 ** 2 + 1e-12)
-        return {"sigma1": s1, "stable_rank": sr, "frob": frob}
-    except Exception as e:
-        return {"sigma1": 0.0, "stable_rank": 0.0, "frob": 0.0, "error": str(e)}
+        sr = (frob ** 2) / (s1 ** 2 * d.shape[0] + 1e-12)
+    except Exception:
+        s1, sr = 0.0, 0.0
+    return {"sigma1": s1, "stable_rank": sr, "frob": frob, "mean_abs": mean_abs}
 
 
 def _find_think_spans(token_ids: List[int], tokenizer) -> List[bool]:
@@ -134,14 +140,8 @@ def run_probe(model_path: str, layers: List[int], prompt: str,
                 else:
                     delta = s_cur  # first token: delta = state itself
 
-                # Average stats across heads
-                n_head = s_cur.shape[0]
-                head_stats = [_svd_stats(delta[h]) for h in range(n_head)]
-                layer_stats[str(L)] = {
-                    "sigma1": sum(x["sigma1"] for x in head_stats) / n_head,
-                    "stable_rank": sum(x["stable_rank"] for x in head_stats) / n_head,
-                    "frob": sum(x["frob"] for x in head_stats) / n_head,
-                }
+                stats = _delta_stats(delta)
+                layer_stats[str(L)] = stats
 
             per_token.append({
                 "pos": pos,
