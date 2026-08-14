@@ -1,0 +1,2324 @@
+{
+  "base": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth",
+  "trained": "/home/vaniello/.libs/models/rwkv7/rwkv-step9b-e1.pth",
+  "lora_rank": 32,
+  "n_matrices": 192,
+  "by_type": {
+    "att_proj": {
+      "count": 128,
+      "mean_effective_rank": 186.5703125,
+      "mean_top32_energy": 0.9443931293923297
+    },
+    "ffn": {
+      "count": 64,
+      "mean_effective_rank": 440.796875,
+      "mean_top32_energy": 0.9303551607648368
+    }
+  },
+  "matrices": [
+    {
+      "key": "blocks.0.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.33842167258262634,
+      "effective_rank": 723,
+      "top32_energy": 0.8866778071724217,
+      "sigma1": 0.2022930234670639
+    },
+    {
+      "key": "blocks.0.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.2377089262008667,
+      "effective_rank": 646,
+      "top32_energy": 0.9331160637544533,
+      "sigma1": 0.15297934412956238
+    },
+    {
+      "key": "blocks.0.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.35464242100715637,
+      "effective_rank": 559,
+      "top32_energy": 0.9034570884610194,
+      "sigma1": 0.2198423147201538
+    },
+    {
+      "key": "blocks.0.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5098076462745667,
+      "effective_rank": 94,
+      "top32_energy": 0.9495373055951809,
+      "sigma1": 0.3437332808971405
+    },
+    {
+      "key": "blocks.0.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 0.7882206439971924,
+      "effective_rank": 95,
+      "top32_energy": 0.9346740286297789,
+      "sigma1": 0.5310023427009583
+    },
+    {
+      "key": "blocks.0.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3311486840248108,
+      "effective_rank": 2361,
+      "top32_energy": 0.8258134750336513,
+      "sigma1": 0.13263235986232758
+    },
+    {
+      "key": "blocks.1.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.32092273235321045,
+      "effective_rank": 560,
+      "top32_energy": 0.878065699163488,
+      "sigma1": 0.17852206528186798
+    },
+    {
+      "key": "blocks.1.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.297086626291275,
+      "effective_rank": 1310,
+      "top32_energy": 0.843889493115416,
+      "sigma1": 0.08685468137264252
+    },
+    {
+      "key": "blocks.1.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.30661511421203613,
+      "effective_rank": 1049,
+      "top32_energy": 0.855616215303187,
+      "sigma1": 0.12676508724689484
+    },
+    {
+      "key": "blocks.1.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3495241105556488,
+      "effective_rank": 263,
+      "top32_energy": 0.8875596556695686,
+      "sigma1": 0.21953913569450378
+    },
+    {
+      "key": "blocks.1.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 0.8777287602424622,
+      "effective_rank": 93,
+      "top32_energy": 0.9473815669737465,
+      "sigma1": 0.5818132162094116
+    },
+    {
+      "key": "blocks.1.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3318999409675598,
+      "effective_rank": 2559,
+      "top32_energy": 0.8143632180088388,
+      "sigma1": 0.10441487282514572
+    },
+    {
+      "key": "blocks.10.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6107183694839478,
+      "effective_rank": 92,
+      "top32_energy": 0.9645175554471812,
+      "sigma1": 0.47974205017089844
+    },
+    {
+      "key": "blocks.10.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.39194223284721375,
+      "effective_rank": 97,
+      "top32_energy": 0.9478360000902863,
+      "sigma1": 0.24614650011062622
+    },
+    {
+      "key": "blocks.10.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6443126797676086,
+      "effective_rank": 90,
+      "top32_energy": 0.9686138345935628,
+      "sigma1": 0.526167631149292
+    },
+    {
+      "key": "blocks.10.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5708307027816772,
+      "effective_rank": 91,
+      "top32_energy": 0.9619392917107472,
+      "sigma1": 0.45639199018478394
+    },
+    {
+      "key": "blocks.10.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.3416141271591187,
+      "effective_rank": 83,
+      "top32_energy": 0.9789381851888904,
+      "sigma1": 1.093489646911621
+    },
+    {
+      "key": "blocks.10.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.46241453289985657,
+      "effective_rank": 266,
+      "top32_energy": 0.9053085964675177,
+      "sigma1": 0.3165890872478485
+    },
+    {
+      "key": "blocks.11.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6731320023536682,
+      "effective_rank": 90,
+      "top32_energy": 0.9696220359710201,
+      "sigma1": 0.5293715596199036
+    },
+    {
+      "key": "blocks.11.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3671734035015106,
+      "effective_rank": 111,
+      "top32_energy": 0.9300663110130607,
+      "sigma1": 0.2133154720067978
+    },
+    {
+      "key": "blocks.11.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7259095907211304,
+      "effective_rank": 84,
+      "top32_energy": 0.9768585704965196,
+      "sigma1": 0.5939161777496338
+    },
+    {
+      "key": "blocks.11.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4473918676376343,
+      "effective_rank": 177,
+      "top32_energy": 0.9307564054426479,
+      "sigma1": 0.249736487865448
+    },
+    {
+      "key": "blocks.11.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.2200473546981812,
+      "effective_rank": 77,
+      "top32_energy": 0.9802554106229316,
+      "sigma1": 0.9546335935592651
+    },
+    {
+      "key": "blocks.11.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3621754050254822,
+      "effective_rank": 765,
+      "top32_energy": 0.8798458087829256,
+      "sigma1": 0.25079524517059326
+    },
+    {
+      "key": "blocks.12.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5701636672019958,
+      "effective_rank": 86,
+      "top32_energy": 0.9688477231574546,
+      "sigma1": 0.4510880708694458
+    },
+    {
+      "key": "blocks.12.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.34090232849121094,
+      "effective_rank": 312,
+      "top32_energy": 0.9228556574140732,
+      "sigma1": 0.1789865493774414
+    },
+    {
+      "key": "blocks.12.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5911104679107666,
+      "effective_rank": 86,
+      "top32_energy": 0.9728053998955541,
+      "sigma1": 0.4729675054550171
+    },
+    {
+      "key": "blocks.12.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.37645721435546875,
+      "effective_rank": 139,
+      "top32_energy": 0.9310153850678295,
+      "sigma1": 0.25616365671157837
+    },
+    {
+      "key": "blocks.12.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.1221024990081787,
+      "effective_rank": 82,
+      "top32_energy": 0.9763486166738403,
+      "sigma1": 0.8492488861083984
+    },
+    {
+      "key": "blocks.12.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3887757658958435,
+      "effective_rank": 532,
+      "top32_energy": 0.8861364034079272,
+      "sigma1": 0.275946706533432
+    },
+    {
+      "key": "blocks.13.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6583282351493835,
+      "effective_rank": 86,
+      "top32_energy": 0.9762597405488157,
+      "sigma1": 0.5169065594673157
+    },
+    {
+      "key": "blocks.13.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3486042022705078,
+      "effective_rank": 150,
+      "top32_energy": 0.9273858973271212,
+      "sigma1": 0.20390208065509796
+    },
+    {
+      "key": "blocks.13.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5650782585144043,
+      "effective_rank": 91,
+      "top32_energy": 0.9673424860755184,
+      "sigma1": 0.40502840280532837
+    },
+    {
+      "key": "blocks.13.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.43584883213043213,
+      "effective_rank": 94,
+      "top32_energy": 0.9495380686453774,
+      "sigma1": 0.32654523849487305
+    },
+    {
+      "key": "blocks.13.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.2044782638549805,
+      "effective_rank": 84,
+      "top32_energy": 0.9780101270528354,
+      "sigma1": 0.9277011752128601
+    },
+    {
+      "key": "blocks.13.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.36558184027671814,
+      "effective_rank": 969,
+      "top32_energy": 0.8700494289514207,
+      "sigma1": 0.23593442142009735
+    },
+    {
+      "key": "blocks.14.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5298795700073242,
+      "effective_rank": 92,
+      "top32_energy": 0.9534219470264075,
+      "sigma1": 0.3954277038574219
+    },
+    {
+      "key": "blocks.14.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3452615439891815,
+      "effective_rank": 314,
+      "top32_energy": 0.9350309598238625,
+      "sigma1": 0.18221399188041687
+    },
+    {
+      "key": "blocks.14.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5378442406654358,
+      "effective_rank": 95,
+      "top32_energy": 0.9580082259863009,
+      "sigma1": 0.40739333629608154
+    },
+    {
+      "key": "blocks.14.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4198904037475586,
+      "effective_rank": 95,
+      "top32_energy": 0.9492342602153075,
+      "sigma1": 0.3103834092617035
+    },
+    {
+      "key": "blocks.14.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.0709898471832275,
+      "effective_rank": 89,
+      "top32_energy": 0.9682406277493434,
+      "sigma1": 0.8076292276382446
+    },
+    {
+      "key": "blocks.14.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3465465307235718,
+      "effective_rank": 850,
+      "top32_energy": 0.8758352723459959,
+      "sigma1": 0.23969218134880066
+    },
+    {
+      "key": "blocks.15.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5846619009971619,
+      "effective_rank": 88,
+      "top32_energy": 0.9723699509348708,
+      "sigma1": 0.46361181139945984
+    },
+    {
+      "key": "blocks.15.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3322467803955078,
+      "effective_rank": 316,
+      "top32_energy": 0.921359899581809,
+      "sigma1": 0.17995135486125946
+    },
+    {
+      "key": "blocks.15.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5575573444366455,
+      "effective_rank": 94,
+      "top32_energy": 0.9650283198190474,
+      "sigma1": 0.43392953276634216
+    },
+    {
+      "key": "blocks.15.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5259827971458435,
+      "effective_rank": 91,
+      "top32_energy": 0.9637977593146458,
+      "sigma1": 0.42421528697013855
+    },
+    {
+      "key": "blocks.15.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.0155085325241089,
+      "effective_rank": 92,
+      "top32_energy": 0.9649045042860679,
+      "sigma1": 0.7292236089706421
+    },
+    {
+      "key": "blocks.15.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.32597219944000244,
+      "effective_rank": 861,
+      "top32_energy": 0.8684185275191334,
+      "sigma1": 0.23175203800201416
+    },
+    {
+      "key": "blocks.16.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.533474326133728,
+      "effective_rank": 95,
+      "top32_energy": 0.9589239916984907,
+      "sigma1": 0.3967127501964569
+    },
+    {
+      "key": "blocks.16.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.32398948073387146,
+      "effective_rank": 412,
+      "top32_energy": 0.9129247882654103,
+      "sigma1": 0.17146192491054535
+    },
+    {
+      "key": "blocks.16.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5150167942047119,
+      "effective_rank": 98,
+      "top32_energy": 0.959002166032569,
+      "sigma1": 0.37667012214660645
+    },
+    {
+      "key": "blocks.16.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4238601624965668,
+      "effective_rank": 93,
+      "top32_energy": 0.9465084716341788,
+      "sigma1": 0.323014497756958
+    },
+    {
+      "key": "blocks.16.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 0.9641185998916626,
+      "effective_rank": 91,
+      "top32_energy": 0.9632639875763751,
+      "sigma1": 0.6558874249458313
+    },
+    {
+      "key": "blocks.16.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3076837956905365,
+      "effective_rank": 1158,
+      "top32_energy": 0.8490654685306974,
+      "sigma1": 0.2084600180387497
+    },
+    {
+      "key": "blocks.17.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6622617244720459,
+      "effective_rank": 87,
+      "top32_energy": 0.9745691034259717,
+      "sigma1": 0.5515244007110596
+    },
+    {
+      "key": "blocks.17.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.32922011613845825,
+      "effective_rank": 388,
+      "top32_energy": 0.9180002252818427,
+      "sigma1": 0.17270009219646454
+    },
+    {
+      "key": "blocks.17.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6231809854507446,
+      "effective_rank": 82,
+      "top32_energy": 0.9754935215344362,
+      "sigma1": 0.5161333680152893
+    },
+    {
+      "key": "blocks.17.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.38564324378967285,
+      "effective_rank": 102,
+      "top32_energy": 0.9399022524058364,
+      "sigma1": 0.27345722913742065
+    },
+    {
+      "key": "blocks.17.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.0449529886245728,
+      "effective_rank": 91,
+      "top32_energy": 0.9666390210344326,
+      "sigma1": 0.7694849371910095
+    },
+    {
+      "key": "blocks.17.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3764183521270752,
+      "effective_rank": 217,
+      "top32_energy": 0.9035003141055257,
+      "sigma1": 0.298126757144928
+    },
+    {
+      "key": "blocks.18.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5405355095863342,
+      "effective_rank": 92,
+      "top32_energy": 0.9675717716448204,
+      "sigma1": 0.4004060924053192
+    },
+    {
+      "key": "blocks.18.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.32857298851013184,
+      "effective_rank": 556,
+      "top32_energy": 0.9173236878670135,
+      "sigma1": 0.15236139297485352
+    },
+    {
+      "key": "blocks.18.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5164852142333984,
+      "effective_rank": 103,
+      "top32_energy": 0.9586429250967281,
+      "sigma1": 0.386755108833313
+    },
+    {
+      "key": "blocks.18.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.44373375177383423,
+      "effective_rank": 96,
+      "top32_energy": 0.9465548308364419,
+      "sigma1": 0.3061312437057495
+    },
+    {
+      "key": "blocks.18.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.0130300521850586,
+      "effective_rank": 94,
+      "top32_energy": 0.9629033450871394,
+      "sigma1": 0.6728613972663879
+    },
+    {
+      "key": "blocks.18.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.35680973529815674,
+      "effective_rank": 804,
+      "top32_energy": 0.8917353325929791,
+      "sigma1": 0.24010542035102844
+    },
+    {
+      "key": "blocks.19.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7920686602592468,
+      "effective_rank": 79,
+      "top32_energy": 0.9816796245962304,
+      "sigma1": 0.6616136431694031
+    },
+    {
+      "key": "blocks.19.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3401471674442291,
+      "effective_rank": 435,
+      "top32_energy": 0.9107070584621412,
+      "sigma1": 0.16906556487083435
+    },
+    {
+      "key": "blocks.19.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6828091740608215,
+      "effective_rank": 81,
+      "top32_energy": 0.9764465604876066,
+      "sigma1": 0.5527255535125732
+    },
+    {
+      "key": "blocks.19.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3923879861831665,
+      "effective_rank": 147,
+      "top32_energy": 0.9376254470716895,
+      "sigma1": 0.2502482831478119
+    },
+    {
+      "key": "blocks.19.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.1486730575561523,
+      "effective_rank": 91,
+      "top32_energy": 0.9689308067291913,
+      "sigma1": 0.8240605592727661
+    },
+    {
+      "key": "blocks.19.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.38154077529907227,
+      "effective_rank": 807,
+      "top32_energy": 0.8918098959169031,
+      "sigma1": 0.24835045635700226
+    },
+    {
+      "key": "blocks.2.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3614009916782379,
+      "effective_rank": 521,
+      "top32_energy": 0.8852067896913863,
+      "sigma1": 0.18535035848617554
+    },
+    {
+      "key": "blocks.2.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.33501556515693665,
+      "effective_rank": 502,
+      "top32_energy": 0.8831368368492394,
+      "sigma1": 0.15745598077774048
+    },
+    {
+      "key": "blocks.2.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3726806342601776,
+      "effective_rank": 417,
+      "top32_energy": 0.8905200454330064,
+      "sigma1": 0.19763322174549103
+    },
+    {
+      "key": "blocks.2.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.42949119210243225,
+      "effective_rank": 129,
+      "top32_energy": 0.9106524580873877,
+      "sigma1": 0.252360075712204
+    },
+    {
+      "key": "blocks.2.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.1312693357467651,
+      "effective_rank": 88,
+      "top32_energy": 0.9673096549182165,
+      "sigma1": 0.8509366512298584
+    },
+    {
+      "key": "blocks.2.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.40289106965065,
+      "effective_rank": 2383,
+      "top32_energy": 0.8526771269846065,
+      "sigma1": 0.13589242100715637
+    },
+    {
+      "key": "blocks.20.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6506474614143372,
+      "effective_rank": 91,
+      "top32_energy": 0.9699562476111646,
+      "sigma1": 0.514184296131134
+    },
+    {
+      "key": "blocks.20.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.35032016038894653,
+      "effective_rank": 489,
+      "top32_energy": 0.8884032821043925,
+      "sigma1": 0.16550768911838531
+    },
+    {
+      "key": "blocks.20.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6436970829963684,
+      "effective_rank": 90,
+      "top32_energy": 0.9684515312256086,
+      "sigma1": 0.49827301502227783
+    },
+    {
+      "key": "blocks.20.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4117116928100586,
+      "effective_rank": 172,
+      "top32_energy": 0.935113121917704,
+      "sigma1": 0.2505636215209961
+    },
+    {
+      "key": "blocks.20.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.258925437927246,
+      "effective_rank": 88,
+      "top32_energy": 0.9756329152292578,
+      "sigma1": 0.919281005859375
+    },
+    {
+      "key": "blocks.20.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.3871682584285736,
+      "effective_rank": 912,
+      "top32_energy": 0.8766749463836153,
+      "sigma1": 0.24819660186767578
+    },
+    {
+      "key": "blocks.21.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6548848748207092,
+      "effective_rank": 90,
+      "top32_energy": 0.966433534101738,
+      "sigma1": 0.4931238293647766
+    },
+    {
+      "key": "blocks.21.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3708403408527374,
+      "effective_rank": 365,
+      "top32_energy": 0.888067775057589,
+      "sigma1": 0.18059484660625458
+    },
+    {
+      "key": "blocks.21.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5491109490394592,
+      "effective_rank": 96,
+      "top32_energy": 0.9513553309711192,
+      "sigma1": 0.3868948817253113
+    },
+    {
+      "key": "blocks.21.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.39465633034706116,
+      "effective_rank": 257,
+      "top32_energy": 0.9317558638182514,
+      "sigma1": 0.22805285453796387
+    },
+    {
+      "key": "blocks.21.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.3653947114944458,
+      "effective_rank": 83,
+      "top32_energy": 0.980083313369642,
+      "sigma1": 1.0592405796051025
+    },
+    {
+      "key": "blocks.21.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.43792179226875305,
+      "effective_rank": 1187,
+      "top32_energy": 0.8801276591176572,
+      "sigma1": 0.23791517317295074
+    },
+    {
+      "key": "blocks.22.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7433515191078186,
+      "effective_rank": 88,
+      "top32_energy": 0.9746575875310293,
+      "sigma1": 0.6099386215209961
+    },
+    {
+      "key": "blocks.22.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.41177570819854736,
+      "effective_rank": 467,
+      "top32_energy": 0.8972054667386711,
+      "sigma1": 0.17275604605674744
+    },
+    {
+      "key": "blocks.22.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5934371948242188,
+      "effective_rank": 94,
+      "top32_energy": 0.954176319542448,
+      "sigma1": 0.4436977505683899
+    },
+    {
+      "key": "blocks.22.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3909473121166229,
+      "effective_rank": 369,
+      "top32_energy": 0.9107599446376728,
+      "sigma1": 0.2125348597764969
+    },
+    {
+      "key": "blocks.22.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.460636854171753,
+      "effective_rank": 87,
+      "top32_energy": 0.9801483757428243,
+      "sigma1": 1.1378346681594849
+    },
+    {
+      "key": "blocks.22.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.4569028317928314,
+      "effective_rank": 1217,
+      "top32_energy": 0.8712652346253595,
+      "sigma1": 0.2419697642326355
+    },
+    {
+      "key": "blocks.23.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7074562311172485,
+      "effective_rank": 91,
+      "top32_energy": 0.9658404761377862,
+      "sigma1": 0.5479609966278076
+    },
+    {
+      "key": "blocks.23.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4029448330402374,
+      "effective_rank": 430,
+      "top32_energy": 0.8931333627030421,
+      "sigma1": 0.174448162317276
+    },
+    {
+      "key": "blocks.23.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.666350245475769,
+      "effective_rank": 90,
+      "top32_energy": 0.9658790156949031,
+      "sigma1": 0.5087212920188904
+    },
+    {
+      "key": "blocks.23.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.48038819432258606,
+      "effective_rank": 96,
+      "top32_energy": 0.9432018935560778,
+      "sigma1": 0.31219130754470825
+    },
+    {
+      "key": "blocks.23.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.4687979221343994,
+      "effective_rank": 84,
+      "top32_energy": 0.9786380730533917,
+      "sigma1": 1.1618986129760742
+    },
+    {
+      "key": "blocks.23.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.49390336871147156,
+      "effective_rank": 939,
+      "top32_energy": 0.8820029701098547,
+      "sigma1": 0.2692967355251312
+    },
+    {
+      "key": "blocks.24.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7025726437568665,
+      "effective_rank": 90,
+      "top32_energy": 0.9652841072758039,
+      "sigma1": 0.5694032907485962
+    },
+    {
+      "key": "blocks.24.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.42886239290237427,
+      "effective_rank": 558,
+      "top32_energy": 0.8886984134996359,
+      "sigma1": 0.1650051772594452
+    },
+    {
+      "key": "blocks.24.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6842758059501648,
+      "effective_rank": 91,
+      "top32_energy": 0.9645167605965979,
+      "sigma1": 0.5535565614700317
+    },
+    {
+      "key": "blocks.24.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.42481729388237,
+      "effective_rank": 193,
+      "top32_energy": 0.9200003232270194,
+      "sigma1": 0.23878708481788635
+    },
+    {
+      "key": "blocks.24.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.5799014568328857,
+      "effective_rank": 84,
+      "top32_energy": 0.9809250436621559,
+      "sigma1": 1.2705320119857788
+    },
+    {
+      "key": "blocks.24.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.4833960235118866,
+      "effective_rank": 612,
+      "top32_energy": 0.8844424576689225,
+      "sigma1": 0.30216801166534424
+    },
+    {
+      "key": "blocks.25.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6844357848167419,
+      "effective_rank": 92,
+      "top32_energy": 0.9586497281506746,
+      "sigma1": 0.5405149459838867
+    },
+    {
+      "key": "blocks.25.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.39795318245887756,
+      "effective_rank": 189,
+      "top32_energy": 0.9050503446438665,
+      "sigma1": 0.21660307049751282
+    },
+    {
+      "key": "blocks.25.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6623741388320923,
+      "effective_rank": 92,
+      "top32_energy": 0.9599476091215345,
+      "sigma1": 0.5281757116317749
+    },
+    {
+      "key": "blocks.25.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.45862123370170593,
+      "effective_rank": 98,
+      "top32_energy": 0.9273036639418015,
+      "sigma1": 0.29222992062568665
+    },
+    {
+      "key": "blocks.25.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.6200332641601562,
+      "effective_rank": 85,
+      "top32_energy": 0.97873394102024,
+      "sigma1": 1.3175455331802368
+    },
+    {
+      "key": "blocks.25.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.5217331647872925,
+      "effective_rank": 927,
+      "top32_energy": 0.896187542348367,
+      "sigma1": 0.2745217978954315
+    },
+    {
+      "key": "blocks.26.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7572173476219177,
+      "effective_rank": 88,
+      "top32_energy": 0.9660475612197349,
+      "sigma1": 0.626183271408081
+    },
+    {
+      "key": "blocks.26.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.40968045592308044,
+      "effective_rank": 395,
+      "top32_energy": 0.9198111852624927,
+      "sigma1": 0.18380267918109894
+    },
+    {
+      "key": "blocks.26.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7797101736068726,
+      "effective_rank": 86,
+      "top32_energy": 0.9686116526425554,
+      "sigma1": 0.6451141238212585
+    },
+    {
+      "key": "blocks.26.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5402899384498596,
+      "effective_rank": 93,
+      "top32_energy": 0.9543780461296847,
+      "sigma1": 0.40463152527809143
+    },
+    {
+      "key": "blocks.26.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.6081992387771606,
+      "effective_rank": 85,
+      "top32_energy": 0.9775174355732377,
+      "sigma1": 1.3131214380264282
+    },
+    {
+      "key": "blocks.26.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.49759113788604736,
+      "effective_rank": 309,
+      "top32_energy": 0.8960912461866557,
+      "sigma1": 0.33921360969543457
+    },
+    {
+      "key": "blocks.27.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.8528118133544922,
+      "effective_rank": 86,
+      "top32_energy": 0.9744371210244726,
+      "sigma1": 0.7247925996780396
+    },
+    {
+      "key": "blocks.27.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.45238757133483887,
+      "effective_rank": 149,
+      "top32_energy": 0.9140762351632975,
+      "sigma1": 0.22552259266376495
+    },
+    {
+      "key": "blocks.27.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7602633237838745,
+      "effective_rank": 88,
+      "top32_energy": 0.9703875745434696,
+      "sigma1": 0.6203834414482117
+    },
+    {
+      "key": "blocks.27.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.59189373254776,
+      "effective_rank": 95,
+      "top32_energy": 0.960176131063532,
+      "sigma1": 0.4291984736919403
+    },
+    {
+      "key": "blocks.27.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.543587327003479,
+      "effective_rank": 86,
+      "top32_energy": 0.9743806176512556,
+      "sigma1": 1.2243956327438354
+    },
+    {
+      "key": "blocks.27.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.5610342025756836,
+      "effective_rank": 94,
+      "top32_energy": 0.9197020236968833,
+      "sigma1": 0.42002224922180176
+    },
+    {
+      "key": "blocks.28.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.8861609101295471,
+      "effective_rank": 82,
+      "top32_energy": 0.9782076935631113,
+      "sigma1": 0.7503817677497864
+    },
+    {
+      "key": "blocks.28.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.44805383682250977,
+      "effective_rank": 129,
+      "top32_energy": 0.9294069160884633,
+      "sigma1": 0.2329942137002945
+    },
+    {
+      "key": "blocks.28.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.8505820035934448,
+      "effective_rank": 80,
+      "top32_energy": 0.9768888652678263,
+      "sigma1": 0.7339017987251282
+    },
+    {
+      "key": "blocks.28.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.624801754951477,
+      "effective_rank": 92,
+      "top32_energy": 0.967693340732841,
+      "sigma1": 0.46809887886047363
+    },
+    {
+      "key": "blocks.28.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.4697959423065186,
+      "effective_rank": 83,
+      "top32_energy": 0.9772738782969416,
+      "sigma1": 1.1544365882873535
+    },
+    {
+      "key": "blocks.28.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.4796636998653412,
+      "effective_rank": 347,
+      "top32_energy": 0.9095706173479727,
+      "sigma1": 0.32476577162742615
+    },
+    {
+      "key": "blocks.29.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.880877673625946,
+      "effective_rank": 76,
+      "top32_energy": 0.9809067835673333,
+      "sigma1": 0.7618235349655151
+    },
+    {
+      "key": "blocks.29.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4454542398452759,
+      "effective_rank": 227,
+      "top32_energy": 0.9285322045086507,
+      "sigma1": 0.2125099152326584
+    },
+    {
+      "key": "blocks.29.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6410792469978333,
+      "effective_rank": 93,
+      "top32_energy": 0.9642891087203896,
+      "sigma1": 0.44917020201683044
+    },
+    {
+      "key": "blocks.29.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5664358139038086,
+      "effective_rank": 92,
+      "top32_energy": 0.9682731358067109,
+      "sigma1": 0.4261448383331299
+    },
+    {
+      "key": "blocks.29.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.5341495275497437,
+      "effective_rank": 83,
+      "top32_energy": 0.975152611165167,
+      "sigma1": 1.1988441944122314
+    },
+    {
+      "key": "blocks.29.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.5193535089492798,
+      "effective_rank": 334,
+      "top32_energy": 0.8959361471582176,
+      "sigma1": 0.33081933856010437
+    },
+    {
+      "key": "blocks.3.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.48472270369529724,
+      "effective_rank": 96,
+      "top32_energy": 0.9364887059064486,
+      "sigma1": 0.32543012499809265
+    },
+    {
+      "key": "blocks.3.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.35315319895744324,
+      "effective_rank": 475,
+      "top32_energy": 0.8930619199651958,
+      "sigma1": 0.16335174441337585
+    },
+    {
+      "key": "blocks.3.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5076203346252441,
+      "effective_rank": 96,
+      "top32_energy": 0.9433075327923743,
+      "sigma1": 0.3619528114795685
+    },
+    {
+      "key": "blocks.3.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5595642328262329,
+      "effective_rank": 95,
+      "top32_energy": 0.9489429879206767,
+      "sigma1": 0.4316762089729309
+    },
+    {
+      "key": "blocks.3.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.2896915674209595,
+      "effective_rank": 83,
+      "top32_energy": 0.972831354544485,
+      "sigma1": 1.032681941986084
+    },
+    {
+      "key": "blocks.3.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.4405202567577362,
+      "effective_rank": 1253,
+      "top32_energy": 0.8873292993596557,
+      "sigma1": 0.22344861924648285
+    },
+    {
+      "key": "blocks.30.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6816388964653015,
+      "effective_rank": 93,
+      "top32_energy": 0.9598349256384242,
+      "sigma1": 0.49055567383766174
+    },
+    {
+      "key": "blocks.30.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.42636898159980774,
+      "effective_rank": 204,
+      "top32_energy": 0.928622248638238,
+      "sigma1": 0.22360004484653473
+    },
+    {
+      "key": "blocks.30.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7146769165992737,
+      "effective_rank": 87,
+      "top32_energy": 0.9650672076826634,
+      "sigma1": 0.5651920437812805
+    },
+    {
+      "key": "blocks.30.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6242855191230774,
+      "effective_rank": 93,
+      "top32_energy": 0.9644820372843979,
+      "sigma1": 0.4623508155345917
+    },
+    {
+      "key": "blocks.30.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.3915657997131348,
+      "effective_rank": 87,
+      "top32_energy": 0.9697696829385095,
+      "sigma1": 1.04384446144104
+    },
+    {
+      "key": "blocks.30.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.40581440925598145,
+      "effective_rank": 1188,
+      "top32_energy": 0.9091738857684523,
+      "sigma1": 0.22713948786258698
+    },
+    {
+      "key": "blocks.31.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5264905095100403,
+      "effective_rank": 98,
+      "top32_energy": 0.9516554650199168,
+      "sigma1": 0.31969326734542847
+    },
+    {
+      "key": "blocks.31.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3472537398338318,
+      "effective_rank": 315,
+      "top32_energy": 0.9499904943675963,
+      "sigma1": 0.20450183749198914
+    },
+    {
+      "key": "blocks.31.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.49547967314720154,
+      "effective_rank": 120,
+      "top32_energy": 0.9478373760942417,
+      "sigma1": 0.29728707671165466
+    },
+    {
+      "key": "blocks.31.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4896434545516968,
+      "effective_rank": 95,
+      "top32_energy": 0.961222110108153,
+      "sigma1": 0.3317125141620636
+    },
+    {
+      "key": "blocks.31.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.268558382987976,
+      "effective_rank": 77,
+      "top32_energy": 0.9759907379401306,
+      "sigma1": 0.9452501535415649
+    },
+    {
+      "key": "blocks.31.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.45628464221954346,
+      "effective_rank": 100,
+      "top32_energy": 0.927481291014213,
+      "sigma1": 0.35502031445503235
+    },
+    {
+      "key": "blocks.4.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5587910413742065,
+      "effective_rank": 92,
+      "top32_energy": 0.9554673125351628,
+      "sigma1": 0.4109836518764496
+    },
+    {
+      "key": "blocks.4.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3953693211078644,
+      "effective_rank": 221,
+      "top32_energy": 0.932319546271012,
+      "sigma1": 0.19457562267780304
+    },
+    {
+      "key": "blocks.4.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5553491711616516,
+      "effective_rank": 90,
+      "top32_energy": 0.9542682620833629,
+      "sigma1": 0.42122170329093933
+    },
+    {
+      "key": "blocks.4.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7233892679214478,
+      "effective_rank": 85,
+      "top32_energy": 0.9702329210637938,
+      "sigma1": 0.6098965406417847
+    },
+    {
+      "key": "blocks.4.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.4055348634719849,
+      "effective_rank": 81,
+      "top32_energy": 0.9780279303240298,
+      "sigma1": 1.135679841041565
+    },
+    {
+      "key": "blocks.4.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.5009585618972778,
+      "effective_rank": 86,
+      "top32_energy": 0.9396417946378944,
+      "sigma1": 0.41650763154029846
+    },
+    {
+      "key": "blocks.5.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.542870819568634,
+      "effective_rank": 96,
+      "top32_energy": 0.9543847608606498,
+      "sigma1": 0.3806268572807312
+    },
+    {
+      "key": "blocks.5.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4121077358722687,
+      "effective_rank": 106,
+      "top32_energy": 0.9403587238070605,
+      "sigma1": 0.24217715859413147
+    },
+    {
+      "key": "blocks.5.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5782890319824219,
+      "effective_rank": 94,
+      "top32_energy": 0.9622399765593619,
+      "sigma1": 0.42094913125038147
+    },
+    {
+      "key": "blocks.5.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7315905690193176,
+      "effective_rank": 82,
+      "top32_energy": 0.9776090712618044,
+      "sigma1": 0.6236586570739746
+    },
+    {
+      "key": "blocks.5.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.357900857925415,
+      "effective_rank": 84,
+      "top32_energy": 0.9756615010204673,
+      "sigma1": 1.0427883863449097
+    },
+    {
+      "key": "blocks.5.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.4619334042072296,
+      "effective_rank": 283,
+      "top32_energy": 0.9025967710292264,
+      "sigma1": 0.31207987666130066
+    },
+    {
+      "key": "blocks.6.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6272794604301453,
+      "effective_rank": 86,
+      "top32_energy": 0.9694187742316734,
+      "sigma1": 0.5046872496604919
+    },
+    {
+      "key": "blocks.6.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.4090324342250824,
+      "effective_rank": 99,
+      "top32_energy": 0.9360500984176428,
+      "sigma1": 0.23389886319637299
+    },
+    {
+      "key": "blocks.6.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5918698906898499,
+      "effective_rank": 91,
+      "top32_energy": 0.9656373340389458,
+      "sigma1": 0.4693053662776947
+    },
+    {
+      "key": "blocks.6.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6613845229148865,
+      "effective_rank": 83,
+      "top32_energy": 0.9737844451638769,
+      "sigma1": 0.5643487572669983
+    },
+    {
+      "key": "blocks.6.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.3759591579437256,
+      "effective_rank": 83,
+      "top32_energy": 0.9806085542838202,
+      "sigma1": 1.1030391454696655
+    },
+    {
+      "key": "blocks.6.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.48478978872299194,
+      "effective_rank": 93,
+      "top32_energy": 0.931006750814558,
+      "sigma1": 0.36128300428390503
+    },
+    {
+      "key": "blocks.7.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6399510502815247,
+      "effective_rank": 90,
+      "top32_energy": 0.9636102018073894,
+      "sigma1": 0.5005185604095459
+    },
+    {
+      "key": "blocks.7.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.3918536603450775,
+      "effective_rank": 216,
+      "top32_energy": 0.9172920934758044,
+      "sigma1": 0.19130970537662506
+    },
+    {
+      "key": "blocks.7.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5814287066459656,
+      "effective_rank": 93,
+      "top32_energy": 0.9588934609881529,
+      "sigma1": 0.4161716103553772
+    },
+    {
+      "key": "blocks.7.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5669492483139038,
+      "effective_rank": 92,
+      "top32_energy": 0.9631737868734364,
+      "sigma1": 0.4435253441333771
+    },
+    {
+      "key": "blocks.7.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.3792855739593506,
+      "effective_rank": 85,
+      "top32_energy": 0.9799338758155286,
+      "sigma1": 1.0953258275985718
+    },
+    {
+      "key": "blocks.7.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.48532620072364807,
+      "effective_rank": 114,
+      "top32_energy": 0.9021631539382711,
+      "sigma1": 0.3444446921348572
+    },
+    {
+      "key": "blocks.8.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6493556499481201,
+      "effective_rank": 91,
+      "top32_energy": 0.9650478934243423,
+      "sigma1": 0.5054358839988708
+    },
+    {
+      "key": "blocks.8.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.45702168345451355,
+      "effective_rank": 98,
+      "top32_energy": 0.9294066834041539,
+      "sigma1": 0.23944808542728424
+    },
+    {
+      "key": "blocks.8.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6520465016365051,
+      "effective_rank": 89,
+      "top32_energy": 0.9683653030250297,
+      "sigma1": 0.5118141770362854
+    },
+    {
+      "key": "blocks.8.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6209624409675598,
+      "effective_rank": 90,
+      "top32_energy": 0.9709536838672902,
+      "sigma1": 0.5009362697601318
+    },
+    {
+      "key": "blocks.8.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.401769757270813,
+      "effective_rank": 88,
+      "top32_energy": 0.9783347233842908,
+      "sigma1": 1.1315579414367676
+    },
+    {
+      "key": "blocks.8.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.49862566590309143,
+      "effective_rank": 226,
+      "top32_energy": 0.9054773093379148,
+      "sigma1": 0.32566961646080017
+    },
+    {
+      "key": "blocks.9.att.key.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.7905793786048889,
+      "effective_rank": 85,
+      "top32_energy": 0.976728355263847,
+      "sigma1": 0.6795142889022827
+    },
+    {
+      "key": "blocks.9.att.output.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.38559168577194214,
+      "effective_rank": 153,
+      "top32_energy": 0.9154695383266411,
+      "sigma1": 0.20629194378852844
+    },
+    {
+      "key": "blocks.9.att.receptance.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.6605165600776672,
+      "effective_rank": 91,
+      "top32_energy": 0.965970146849972,
+      "sigma1": 0.5341108441352844
+    },
+    {
+      "key": "blocks.9.att.value.weight",
+      "shape": [
+        2560,
+        2560
+      ],
+      "type": "att_proj",
+      "delta_frob": 0.5477175116539001,
+      "effective_rank": 92,
+      "top32_energy": 0.9553363478525866,
+      "sigma1": 0.4359893202781677
+    },
+    {
+      "key": "blocks.9.ffn.key.weight",
+      "shape": [
+        10240,
+        2560
+      ],
+      "type": "ffn",
+      "delta_frob": 1.3396075963974,
+      "effective_rank": 82,
+      "top32_energy": 0.9781441768515476,
+      "sigma1": 1.0777090787887573
+    },
+    {
+      "key": "blocks.9.ffn.value.weight",
+      "shape": [
+        2560,
+        10240
+      ],
+      "type": "ffn",
+      "delta_frob": 0.40426692366600037,
+      "effective_rank": 710,
+      "top32_energy": 0.885711695368027,
+      "sigma1": 0.2616627514362335
+    }
+  ]
+}

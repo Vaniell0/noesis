@@ -1588,6 +1588,22 @@ screen) with no polling loop needed.
   Alder Lake; H16 becomes a cloud-bursted / bigger-headroom-hardware
   probe only.
 
+**LoRA rank analysis — why full FT is required for H16 (2026-08-14).**
+`experiments/A0_state_probe/results/lora_rank_step9b_e1.json`.
+Delta W = (step9b-e1) − (G1h base), SVD per weight matrix.
+Attention projection matrices (n=128): mean effective rank = 186.6, top-32 energy = 94.4%.
+FFN matrices (n=64): mean effective rank = 440.8, top-32 energy = 93.0%.
+
+LoRA r=32 captures 94% of the delta energy in attention projections. But for a
+2560×2560 weight matrix, rank-32 spans 1.25% of the full weight space. The routing
+geometry — which subspace the model uses to decide whether a token routes computation
+into WKV state vs output — lives in the full 100% of the weight space. The other 98.75%
+of dimensions are unchanged from the base model. LoRA can shift the model's behavior
+within the top-32 subspace (which accounts for the symbolic reasoning gains in step9b-e1),
+but it cannot modify the routing pathways that live in the orthogonal complement.
+The quality gate H16 requires changing which tokens are routed into WKV think-space at all.
+This is a routing geometry change, not a behavior-within-subspace change — hence full FT.
+
 **Related.** H1 (constant-cost background operation) — H1 sets the
 drip-rate ceiling; the whole rate-limited framing exists specifically
 to fit inside H1. H10 (test-time compute per token) — H16
