@@ -30,6 +30,7 @@
 !experiments/**/*.yml
 !experiments/**/*.yaml
 !experiments/**/*.txt
+!experiments/**/*.ipynb
 
 # Training track
 !training/**/*.py
