@@ -209,22 +209,9 @@ See `docs/rl-track.md` for the full design.
   sweeps are a direct handle on state convergence. H16 (gated externalisation):
   RL on think-phase trains latent use before gate head (A4). H19 (weight-knowledge
   contamination): L6–L7 wordsearch accuracy is a pure context-dependency proxy.
-- **New metrics from 2026-08-15 research (inform A1.5 design):**
-  - **IPC (Information Processing Capacity)** — offline metric, CPU-only.
-    Measures how much of the WKV state budget encodes recoverable past-token
-    information (Dambre et al. 2012). Script: `experiments/A0_state_probe/ipc_analysis.py`.
-    Run on step9b-e1 baseline before A1.5 to set the capacity floor.
-    H10 gap = IPC_state − what output head actually reads → quantifies headroom.
-  - **L_mem (future, post-IPC verdict)** — aux loss forcing WKV state to retain
-    recent tokens: `L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))`. Complementary to
-    L_state (rewards motion magnitude); L_mem rewards informative motion.
-    Add only if IPC reveals low linear memory capacity.
-  - **L_tPC (future, post-GPU)** — InfoNCE between WKV states at t and t+k.
-    Keeps state motion on a predictable manifold (Predictive Coding framing).
-    Theoretical anchor: arXiv 2506.00580 (SFA = variational inference objective).
-    Risk: β tuning may collapse 43.8% baseline — defer until ablation budget exists.
-  - **SNN/STDP** — checked, closed. Pushes toward smoothness (same as SFA),
-    opposite of L_state. ε-mask already covers the reward-modulation intuition.
+- **State metrics and new aux losses** — see `docs/rl-track.md §State metrics`.
+  IPC analysis (CPU, offline) runs before RL launch; L_mem and L_tPC are
+  post-GPU additions contingent on IPC verdict.
 - **Implementation details** (in `docs/rl-track.md`):
   binary ε-mask outside answer span (ε=0.05); entropy routing reward
   shaping (α·Δentropy_reduction in think span); Switch-GRPO curriculum

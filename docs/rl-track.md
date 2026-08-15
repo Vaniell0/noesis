@@ -1,4 +1,4 @@
-# RL Track — Word-Search Curriculum
+# RL Track — Matrix Task Curriculum (A1.5)
 
 ## Motivation
 
@@ -441,6 +441,66 @@ G1i base checkpoint
 3. **LoRA r=32** on att weights, full FT on time/ln — same as step9b. RWKV-PEFT handles this.
 4. **CLIPO projection head**: use `Qwen-Applications/CLIPO` repo directly. Their MLP head
    (2-layer, dim 512, InfoNCE) plugs into verl reward computation unchanged.
+
+---
+
+## State metrics — what to measure before and during A1.5
+
+### IPC (Information Processing Capacity) — run first, CPU-only
+
+Offline metric: how much of the WKV state budget encodes recoverable
+past-token information. Formula (Dambre et al. 2012):
+
+```
+IPC = Σ_{k,d} R²(x_L(t), P_d(u(t−k)))
+```
+
+- x_L(t) = WKV state at layer L (random-projected to 128 dims)
+- u(t−k) = token ID at lag k, normalised to [−1, 1]
+- P_d = Legendre polynomial of degree d
+- MC (linear memory) = d=1 terms only
+- Total IPC ≤ N_proj (hard capacity bound)
+
+Script: `experiments/A0_state_probe/ipc_analysis.py` — run on step9b-e1
+before RL launch to set the capacity floor.
+
+**H10 gap** = IPC_state − what the output head reads → quantifies headroom
+for state_readout improvement. If IPC_state is high but state_readout
+accuracy is low, the gap is in the readout design, not the state content.
+
+**Memory-nonlinearity trade-off**: L_state (rewards motion and curvature)
+may shift capacity budget toward nonlinear terms at the cost of linear
+memory MC. IPC decomposition shows this directly.
+
+### L_mem — future aux loss (add only if IPC reveals low MC)
+
+```
+L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))
+```
+
+Forces WKV state to retain recent tokens. Differentiable through a small
+linear head W_k per lag, co-trained and then discarded. Complementary to
+L_state: L_state rewards motion magnitude, L_mem rewards informative motion.
+Add only after IPC verdict — do not add speculatively.
+
+### L_tPC — post-GPU, ablation required
+
+InfoNCE between WKV states at t and t+k. Keeps state motion on a
+predictable manifold (Predictive Coding framing). Theoretical anchor:
+arXiv 2506.00580 (SFA = variational inference objective — closes the gap
+under L_state). Risk: β tuning may collapse 43.8% baseline — defer until
+full ablation budget exists on Selectel 4090.
+
+### SNN/STDP — closed
+
+Checked 2026-08-15. STDP pushes toward temporal smoothness (same direction
+as SFA), opposite of L_state. ε-mask already covers the reward-modulation
+intuition. No new objective.
+
+### ARC-AGI probe — spatial reasoning ceiling
+
+400 eval tasks, cell-query format. Running on step9b-e1 (PID 491788).
+Result will bound what spatial RL can realistically achieve on novel grids.
 
 ---
 
