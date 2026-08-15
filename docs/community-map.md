@@ -553,6 +553,60 @@ breakthrough.
   Transferable: schedule L_CE vs. L_state vs. L_GRPO dynamically by task
   difficulty instead of fixing ε, replacing the current fixed-mask approach.
 
+### Adjacent architecture families — systematic survey (2026-08-15)
+
+Three families checked for loss-function ideas applicable to WKV state training.
+
+**SNN / STDP — closed.**
+STDP computes a temporally local pre→post correlation with causal asymmetry. It
+pushes state toward temporal autocorrelation and smoothness — the **same direction
+as SFA**, opposite to L_state. Reward-modulated STDP (three-factor rule,
+Δw ∝ pre × post × reward) is structurally similar to ε-mask gating already
+implemented. No new objective worth adding. Bridge paper: arXiv 2409.11263
+(Bio-Inspired Mamba, STDP+RTRL on Mamba SSM) works but replaces BPTT, does
+not add an auxiliary loss. Theoretical: STDP minimizes a lagged cross-correlation
+objective (arXiv 2505.10272); L_state maximizes curvature — structurally
+orthogonal.
+
+**Reservoir Computing / ESN — highest value.**
+Classic ESN = fixed random recurrent weights + trained linear readout. WKV state
+trained = the reservoir that ESN keeps fixed. The literature gives two immediately
+applicable results:
+
+1. **IPC (Information Processing Capacity)** (Dambre et al. 2012, Sci. Reports) —
+   computable offline metric for state quality. IPC = Σ_{k,d} R²(x(t), P_d(u(t−k))),
+   summed over lag k and Legendre polynomial degree d. Total IPC ≤ N_state (hard
+   upper bound). Decomposes into linear memory MC and nonlinear capacity. Directly
+   quantifies H8 (how much world-model info is in state) and H10 (IPC_state −
+   IPC_output_head = gap state_readout should close). CPU-only, ridge regression on
+   existing trajectory. Key bridge paper: arXiv 2509.04422 (Singh & Raman, ESN as
+   SSM, ESP = ISS, frequency-domain memory spectra).
+
+2. **L_mem — new auxiliary loss for future training:**
+   `L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))`. Forces WKV state to retain recent
+   tokens. Complementary to L_state (which rewards motion magnitude) — rewards
+   informative motion. Running IPC analysis before adding L_mem shows where the
+   capacity budget currently goes.
+
+NG-RC framing (arXiv 2106.07688): WKV state = implicit polynomial delay-embedding
+of input. Elegant formal characterisation of H8 without additional assumptions.
+
+**Predictive Coding / Friston FEP — conditional, post-GPU.**
+The hierarchical PC energy `E = Σ_l ε_l^T Π_l ε_l` (prediction error at each layer)
+gives a layer-wise state supervision signal opposite to L_state: L_state rewards
+motion amplitude; L_tPC rewards predictable motion. Synthesis:
+`L_hybrid = L_CE + α·L_state + β·L_tPC` where L_tPC = InfoNCE between WKV states
+at t and t+k (no per-layer predictor networks needed). Risk: wrong β collapses
+43.8% baseline. Not worth attempting without GPU budget for ablation.
+Theoretical anchor: arXiv 2506.00580 ("Slow Feature Analysis as Variational
+Inference Objective") — direct bridge between SFA and Free Energy Principle,
+closes the theoretical gap under L_state.
+Bridge paper for RNN: arXiv 2602.18131 (temporal PC + RTRL, 15M-param RNN,
+near-BPTT translation quality).
+
+**Action:** IPC analysis script (`experiments/A0_state_probe/ipc_analysis.py`) on
+step9b-e1 trajectory — CPU, no GPU needed. H8 and H10 gap quantified directly.
+
 ### Multimodal RWKV
 
 - **VisualRWKV** line (BlinkDL + academic follow-ups) demonstrates
