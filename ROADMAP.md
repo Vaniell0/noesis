@@ -186,40 +186,52 @@ serialize them.
   (ctx16384, 2026-08-05) is the new baseline. All step 10+ runs use G1i.
   G1i eval DONE (2026-08-14): 41.7% chatwrap. Local checkpoints lost; HF is canonical.
 
-### A1.5. RL fine-tune — word-search curriculum (step 10+)
+### A1.5. RL track — matrix task curriculum
 
-Replaces bit-decoding as the RL task family. Word-search puzzles provide
-verifiable binary reward, a natural 7-level difficulty curriculum, and a
-direct probe of spatial/directional WKV state utilisation (H8, H10, H12b.i).
+**Paradigm shift from A1.** Steps 1–9b were SFT: CE + L_state supervision,
+corpus-driven. A1.5 is reward-only GRPO — no CE loss, no corpus labels,
+binary verifiable reward. The step numbering stops at step 9b; A1.5 is a
+separate track.
 
 See `docs/rl-track.md` for the full design.
 
 - **Algorithm.** GRPO (`n_samples=8`, T=0.7 rollout, greedy eval).
-- **Curriculum.** Level 1 (5×5 H_LR only) → level 7 (12×12 all 8 directions).
-  Advance when accuracy > 80%; drop back when < 50%.
-- **Task generator.** `experiments/A0_eval/gen_matrix_wordsearch.py`
-  (`--all-levels --per-level N`). 7 levels × mixed orientations. Levels:
-  - L1: 5×5, H→ only, 3–4 letters
-  - L2: 6×6, H→ + V↓, 4–5 letters
-  - L3: 7×7, H→ + V↓ + H←, 4–5 letters
-  - L4: 8×8, all 4 axis ± reverse, 5–6 letters
-  - L5: 9×9, 4 axis + 2 diagonals, 5–6 letters
-  - L6: 10×10, all 4 axis + all 4 diagonals, 5–7 letters
-  - L7: 12×12, all 8 directions, 6–8 letters (hardest)
-- **Eval baseline.** Run `tasks_matrix_wordsearch.jsonl` (56 tasks,
-  8 per level) through G1i base before RL to establish the zero-shot floor.
-- **Corpus mix.** 15–20% of step 10 training tokens alongside RFC QA,
-  selfcot, hh-rlhf. See `training/config/pilot_step10.yaml`.
-- **Hypothesis connections.** H16 (gated externalisation): word-search RL
-  trains latent think-phase use — precursor, not replacement; gate head
-  trained in A4. H19 (weight-knowledge contamination): L6–L7 accuracy is
-  a pure context-dependency proxy — a model guessing from weights cannot
-  find an 8-direction word in a novel grid.
-- **Implementation details** (not separate hypotheses, recorded in `docs/rl-track.md`):
+- **Task family.** Unified matrix task curriculum — 5 types in one generator:
+  wordsearch (30%), crossword (10%), arithmetic (20%), pattern (20%), bits (20%).
+  Generator: `experiments/A0_eval/gen_tasks.py` → `training/corpus_open/matrix_tasks.jsonl`
+  (65 899 tasks, ~20M tokens). Replaces word-search-only framing and bit-decoding.
+  Wordsearch curriculum: 7 levels × mixed orientations (see `docs/rl-track.md`).
+- **Colab notebook.** `experiments/rl/noesis_rl_colab.ipynb` — Drive mount,
+  auto-detect VRAM (T4/A100), gen_tasks on-the-fly, checkpoint to Drive.
+- **Hypothesis connections.** H8 (state-as-world-model): matrix tasks require
+  integrating spatial context across many positions — WKV state must hold
+  directional and structural information. H10 (readout frontier): multi-pass
+  sweeps are a direct handle on state convergence. H16 (gated externalisation):
+  RL on think-phase trains latent use before gate head (A4). H19 (weight-knowledge
+  contamination): L6–L7 wordsearch accuracy is a pure context-dependency proxy.
+- **New metrics from 2026-08-15 research (inform A1.5 design):**
+  - **IPC (Information Processing Capacity)** — offline metric, CPU-only.
+    Measures how much of the WKV state budget encodes recoverable past-token
+    information (Dambre et al. 2012). Script: `experiments/A0_state_probe/ipc_analysis.py`.
+    Run on step9b-e1 baseline before A1.5 to set the capacity floor.
+    H10 gap = IPC_state − what output head actually reads → quantifies headroom.
+  - **L_mem (future, post-IPC verdict)** — aux loss forcing WKV state to retain
+    recent tokens: `L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))`. Complementary to
+    L_state (rewards motion magnitude); L_mem rewards informative motion.
+    Add only if IPC reveals low linear memory capacity.
+  - **L_tPC (future, post-GPU)** — InfoNCE between WKV states at t and t+k.
+    Keeps state motion on a predictable manifold (Predictive Coding framing).
+    Theoretical anchor: arXiv 2506.00580 (SFA = variational inference objective).
+    Risk: β tuning may collapse 43.8% baseline — defer until ablation budget exists.
+  - **SNN/STDP** — checked, closed. Pushes toward smoothness (same as SFA),
+    opposite of L_state. ε-mask already covers the reward-modulation intuition.
+- **Implementation details** (in `docs/rl-track.md`):
   binary ε-mask outside answer span (ε=0.05); entropy routing reward
-  shaping (α·Δentropy_reduction in think span).
-- **Blockers (2026-08-14).** GPU only. G1i download DONE; G1i eval DONE (41.7%);
-  word-search baseline CONFIRMED 0/56 on G1i (matrix_wordsearch + matrix_wordsearch_name). Next: Selectel 4090 (~₽1500/24h).
+  shaping (α·Δentropy_reduction in think span); Switch-GRPO curriculum
+  (arXiv 2606.13106) for multi-task stability.
+- **Blockers.** GPU only. G1i download DONE; G1i eval DONE (41.7%);
+  word-search baseline CONFIRMED 0/56. IPC analysis running (CPU).
+  Next: Selectel 4090 (~₽1500/24h) or Colab A100.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory

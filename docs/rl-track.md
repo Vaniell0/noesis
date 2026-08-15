@@ -150,7 +150,7 @@ isolate the slot entropy effect from the full-FT effect.
 
 ---
 
-## RL design (step 10+)
+## RL design
 
 **Reward signal.** Binary: +1 for exact match on `row=R col=C`, 0 otherwise.
 No partial credit — the position is either right or wrong.
@@ -162,10 +162,11 @@ Drop back one level if accuracy falls below 50%.
 **Training algorithm.** GRPO (Group Relative Policy Optimisation) with
 `n_samples=8` per prompt. Temperature 0.7 during rollout, greedy for eval.
 
-**Corpus mix.** Word-search tasks are a supplement to the step-10 base
-corpus (RFC QA + selfcot + hh-rlhf), not a replacement. Target fraction:
-15–20% of training tokens in each epoch. See `training/config/pilot_step10.yaml`
-for the full mix.
+**Corpus mix.** Unified matrix task curriculum via `experiments/A0_eval/gen_tasks.py`
+→ `training/corpus_open/matrix_tasks.jsonl` (65 899 tasks, ~20M tokens).
+Five types: wordsearch 30%, crossword 10%, arithmetic 20%, pattern 20%, bits 20%.
+No SFT base corpus mixed in — pure RL on verifiable matrix tasks.
+SFT phase explicitly skipped (see decision record below).
 
 **Connection to hypotheses.**
 
@@ -237,7 +238,7 @@ This is the inner-loop loss the delta rule already minimises per step; training
 L_KVB end-to-end teaches the outer loop to issue self-consistent KV pairs so
 the state becomes a good compressor of think-span content.
 
-Both activate at step 10+ RL phase; irrelevant to the SFT baseline.
+Both activate in the A1.5 RL phase; irrelevant to the SFT baseline (steps 1–9b).
 
 ---
 
@@ -385,13 +386,13 @@ top of the frozen weights. Word-search RL contributes two things to A4:
 
 Source: icophy Discord message, 6 months production RWKV-6 state work.
 
-**Conclusion: skip step10 SFT, go direct RL on G1i.**
+**Conclusion: skip SFT warm-up, go direct RL on G1i.**
 
 Reason: SFT before RL reduces variance on *which behavior* RL reinforces — it does not improve the model's ability to do the task. For G1i at 0/56 on word-search there is no existing behavior to exploit as shortcut. This is exactly the case where skipping SFT is cleaner.
 
 **Mechanism of SFT-less RL risk:** GRPO on binary reward latches onto surface shortcuts early. State encodes the shortcut, not the reasoning pathway. The shortcut's verifiable output is indistinguishable from genuine task completion in reward signal.
 
-**Why 0/56 baseline protects us:** no spurious partial-success correlation → nothing to pre-remove. Icophy: "The counterargument for skipping step10 is stronger here than in tasks where the model already achieves non-trivial baseline performance."
+**Why 0/56 baseline protects us:** no spurious partial-success correlation → nothing to pre-remove. Icophy: "The counterargument for skipping SFT is stronger here than in tasks where the model already achieves non-trivial baseline performance."
 
 **Mandatory checkpoint after first RL epoch:**
 R-lens probe on non-task axes (e.g. narrative, arithmetic) before continuing curriculum. If R-lens returns near-chance probe accuracy on non-task axes while word-search performance is high → state is encoding shortcut geometry, not reasoning. Stop and investigate before advancing curriculum.
@@ -407,7 +408,7 @@ All instruments and where they plug in:
 ```
 G1i base checkpoint
 │
-├── [NO step10 SFT — skip]
+├── [NO SFT warm-up — skip]
 │
 └── Phase 3: Direct RL (GRPO, word-search L1→L7)
     │
