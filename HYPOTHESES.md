@@ -133,16 +133,29 @@ decision in `docs/policies.md` — the numeric slot is preserved).
 - **H16** — Gated externalisation from a rate-limited silent
   think-stream.
 
-**Truth system / epistemic behaviour** *(added 2026-07-29; treats the
-model's own honesty as a first-class research object, not a byproduct
-of good WKV-mechanism claims. H2/H7/H8/H10/H16 all touch pieces of this
-implicitly; H19–H21 make the claims falsifiable in their own right).*
+**Truth system / epistemic behaviour** *(added 2026-07-29; H19–H22 make
+honesty failures falsifiable in their own right; H2/H7/H8/H10/H16 all
+touch pieces implicitly).*
 - **H19** — Weight-knowledge contamination detector (empirical arm of
   H7).
 - **H20** — State holds contradictory belief pairs without premature
   collapse.
 - **H21** — Premise-validity readout — model refuses invalid premises
   before answering.
+- **H22** — Unattributed collective claims ("usually X", "most believe Y")
+  are a detectable, distinct honesty failure. *(v2 LOO F1=0.947; G1h
+  2.9B F1=0.929; distinctness ρ=−0.054 vs H21 ✓)*
+
+**State-work — slot addressability and RL substrate.**
+- **H23** — LoRA-added WKV rank is structured-addressable (write-here /
+  read-here), not just entropy-spread. *(wager; okna / window slots in
+  state; pilot pending H12b checkpoint)*
+- **H24** — ε-mask + GRPO raises decoding efficiency (DE) without
+  accuracy regression. *(wager; pre-RL baseline locked 2026-08-14:
+  G1i DE=0.27, step9b-e1 DE=0.15; target DE ≥ 1.0 post-RL)*
+- **H25** — WKV state is a learnable computational substrate for
+  approximate linear algebra without CoT tokens. *(wager, Phase 3;
+  direction prompted by fleeb83 symbolic results 2026-08-16)*
 
 ---
 
