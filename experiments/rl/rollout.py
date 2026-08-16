@@ -8,8 +8,13 @@ Token constants (WorldTokenizer):
     THINK_OPEN  = [61, 35762, 63]   # <think>
     THINK_CLOSE = [754, 35762, 63]  # </think>
 
+Byte-level mode (--byte-adapter):
+    Encodes prompts as UTF-8 bytes (vocab=256). THINK_CLOSE detected by
+    byte sequence of '</think>' = [60,47,116,104,105,110,107,62].
+    Model embedding table rows 0-255 are patched with ByteAdapter weights.
+
 Usage:
-    from experiments.rl.rollout import generate_rollouts, RolloutGroup
+    from experiments.rl.rollout import generate_rollouts, RolloutGroup, ByteTokenizer
 """
 from __future__ import annotations
 
@@ -23,8 +28,21 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parents[2] / "experiments/A0_state_probe"))
 
-THINK_CLOSE = [754, 35762, 63]  # </think>
+# WorldTokenizer constants
+THINK_CLOSE_WORLD = [754, 35762, 63]   # </think>
+THINK_CLOSE_BYTES = list("</think>".encode("utf-8"))  # [60,47,116,104,105,110,107,62]
+THINK_CLOSE = THINK_CLOSE_WORLD        # default; overridden in byte mode
 EOS_ID = 0
+
+
+class ByteTokenizer:
+    """Drop-in tokenizer replacement using raw UTF-8 bytes (vocab size = 256)."""
+
+    def encode(self, text: str) -> List[int]:
+        return list(text.encode("utf-8"))
+
+    def decode(self, ids: List[int]) -> str:
+        return bytes([b for b in ids if 0 <= b < 256]).decode("utf-8", errors="replace")
 
 
 @dataclass
@@ -60,6 +78,7 @@ def generate_rollouts(
     temperature: float = 0.7,
     top_p: float = 0.9,
     device: str = "cpu",
+    byte_mode: bool = False,
 ) -> List[RolloutGroup]:
     """Generate G rollouts per task. Returns one RolloutGroup per task.
 
@@ -67,6 +86,7 @@ def generate_rollouts(
     tokenizer: has .encode(str) → List[int] and .decode(List[int]) → str
     tasks: list of task dicts with keys: id, prompt, answer, rubric
     """
+    think_close = THINK_CLOSE_BYTES if byte_mode else THINK_CLOSE_WORLD
     groups: List[RolloutGroup] = []
 
     for task in tasks:
@@ -82,6 +102,7 @@ def generate_rollouts(
             rollout = _single_rollout(
                 model, tokenizer, prompt_ids,
                 max_new_tokens, temperature, top_p, device,
+                think_close=think_close,
             )
             group.rollouts.append(rollout)
 
@@ -98,6 +119,7 @@ def _single_rollout(
     temperature: float,
     top_p: float,
     device: str,
+    think_close: List[int] = THINK_CLOSE_WORLD,
 ) -> Rollout:
     """One forward rollout. Captures WKV state at first </think> boundary."""
     with torch.no_grad():
@@ -116,10 +138,10 @@ def _single_rollout(
             output_ids.append(next_id)
             log_probs.append(lp)
             close_buf.append(next_id)
-            if len(close_buf) > len(THINK_CLOSE):
+            if len(close_buf) > len(think_close):
                 close_buf.pop(0)
 
-            if wkv_state_think is None and _detect_think_close(close_buf):
+            if wkv_state_think is None and _detect_think_close(close_buf, think_close):
                 wkv_state_think = _extract_wkv(state)
 
             if next_id == EOS_ID:

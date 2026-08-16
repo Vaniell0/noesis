@@ -84,6 +84,10 @@ def main():
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--no-clipo", action="store_true")
+    ap.add_argument("--byte-adapter", action="store_true",
+                    help="Use byte-level tokenization + ByteAdapter embedding patch. "
+                         "Requires nsp-format tasks (--format nsp). "
+                         "Trains only ByteAdapter weights; WKV backbone frozen.")
     args = ap.parse_args()
 
     random.seed(args.seed)
@@ -98,6 +102,20 @@ def main():
     # Inference model for rollout (no grad)
     inf_model, tokenizer = load_inference_model(args.model, args.device)
     inf_model.eval()
+
+    # Byte adapter setup (replaces tokenizer + patches embedding table)
+    byte_adapter = None
+    if args.byte_adapter:
+        sys.path.insert(0, str(ROOT / "experiments/byte_adapter"))
+        from byte_adapter import ByteAdapter
+        import torch
+        byte_adapter = ByteAdapter(model_dim=1024).to(args.device)
+        # Patch inference model embedding
+        with torch.no_grad():
+            emb = inf_model.z["emb.weight"]
+            emb[:256] = byte_adapter.embed.weight.to(emb.dtype)
+        tokenizer = __import__("rollout").ByteTokenizer()
+        print(f"[train] byte-adapter mode: vocab=256, trainable params={sum(p.numel() for p in byte_adapter.parameters()):,}")
 
     # Training model for gradient update
     train_model = load_train_model(args.model, args.device)
@@ -130,6 +148,7 @@ def main():
                 inf_model, tokenizer, batch,
                 G=args.G, max_new_tokens=args.max_new,
                 temperature=0.7, device=args.device,
+                byte_mode=args.byte_adapter,
             )
 
             # 2. Rewards

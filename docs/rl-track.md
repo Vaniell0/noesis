@@ -271,6 +271,44 @@ RL level, not just at the SFT level (where H12b.i slot-entropy operates).
 
 ---
 
+## ByteAdapter — tokenizer-free word-search (planned, GPU required)
+
+**Motivation.** WorldTokenizer creates two problems for grid tasks (see below).
+ByteAdapter eliminates both by replacing the 65k-vocab embedding with a 256-entry
+byte-level embedding trained from scratch, keeping the WKV backbone frozen.
+
+**Architecture.** `experiments/byte_adapter/byte_adapter.py`:
+- `ByteEmbed`: `nn.Embedding(256, model_dim)` — trainable, ~262K params
+- Frozen G1d/G1i WKV backbone (patched via `emb.weight[:256]` replacement)
+- `ByteHead`: `nn.Linear(model_dim, 256)` — trainable, ~262K params
+- Total trainable: ~524K (vs 410M backbone)
+
+**Task format:** `--format nsp` (no-spaces) + byte tokenizer.
+`STONE` → `[83, 84, 79, 78, 69]` — 1 byte per letter, zero asymmetry.
+Compare: WorldTokenizer gives `['ST', 'ONE']` (positions destroyed).
+
+**Probe results (G1d 0.4B, random ByteEmbed, 2026-08-16):**
+
+| Layer | World norm | Byte norm | Ratio |
+|-------|-----------|-----------|-------|
+| L0    | 3.6–7.6   | 5.4–13.4  | 1.0–3.7× |
+| L4    | 2.7–13.8  | 1.7–2.7   | **0.14–0.26×** |
+| L16   | 12.6–35.1 | 12.2–17.0 | 0.35–1.35× |
+| L23   | 31.8–60.4 | 30.6–35.2 | 0.53–0.96× |
+
+L4 is the bottleneck: random byte embeddings activate it at only 14–26% of
+World norm. L4 is the G1 think-routing layer (think_geometry L4=1.68×). The
+ByteAdapter training objective: bring L4 byte/World ratio to ~1.0 on nsp grids.
+L16/L23 already converge (0.5–1.0×) even with random embeddings.
+
+**RL integration:** `--byte-adapter` flag in `train_wordsearch.py`.
+THINK_CLOSE detection switches to byte sequence `[60,47,116,104,105,110,107,62]`
+(`</think>` UTF-8). See `experiments/rl/rollout.py:ByteTokenizer`.
+
+**Status:** code ready, training blocked on GPU.
+
+---
+
 ## WorldTokenizer asymmetry in grid tasks
 
 The RWKV WorldTokenizer creates a systematic positional asymmetry in
@@ -474,12 +512,23 @@ memory MC. IPC decomposition shows this directly.
 
 ### L_mem — SKIP (IPC verdict 2026-08-16)
 
-IPC measured on G1h base, G1i base, step9b-e1: MC≈6/128 per layer (4.7% of capacity).
-Not zero — linear memory is present and roughly equal to nonlinear IPC. MC is not the
-bottleneck. L_mem not added to A1.5 RL phase.
+IPC measured on G1h base, G1i base, step9b-e1 (commit 9b28b7f, held-out R²):
 
 ```
-L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))   # skipped — MC adequate
+basis_ipc_bound = max_lag(8) × max_degree(2) = 16   ← actual max observable
+dambre_theoretical_bound = n_proj = 128              ← limit if basis were infinite
+```
+
+| Layer | MC (linear) | IPC_total | MC/basis | IPC/basis |
+|-------|-------------|-----------|----------|-----------|
+| L0    | ~2.1–2.6    | ~4.5–5.8  | 13–16%   | 28–36%    |
+| L4–L31| ~6.0–6.5   | ~12.0–13.3| 38–41%   | 75–83%    |
+
+~80% of the measured basis is used at mid-to-late layers. MC ≈ IPC/2 (50/50
+linear/nonlinear split). MC is not the bottleneck. L_mem not added to A1.5 RL phase.
+
+```
+L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))   # skipped — MC adequate (~38% of basis)
 ```
 
 ### L_tPC — post-GPU, ablation required
