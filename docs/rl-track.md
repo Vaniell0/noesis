@@ -105,6 +105,59 @@ python3 experiments/A0_eval/gen_matrix_wordsearch.py \
 
 ---
 
+## Training corpus — matrix_tasks.jsonl
+
+**Generator:** `experiments/A0_eval/gen_tasks.py`  
+**Current file:** `training/corpus_open/matrix_tasks.jsonl` — 66 029 tasks, ~38 MB  
+(SHA-256 in PROVENANCE.md; not committed — regenerate with `--seed 42 --n-tokens 20_000_000`
+once Sudoku CSV and ARC-AGI data are available; current 66k is the base run without them)
+
+**No `.pt` file.** GRPO is an online algorithm: each step samples a prompt from `.jsonl`,
+generates G=8 rollouts live, computes rewards, updates weights. Pre-tokenization to `.pt`
+is for SFT (fixed batches). The RL loop tokenizes on the fly inside `rollout.py`.
+
+**Format: sp only (space-separated).** nsp eval on G1d 0.4B → 3.6% (see ByteAdapter section).
+All training tasks use WorldTokenizer sp format. ByteAdapter is a separate GPU experiment.
+
+### Task types — what the model is trained and tested on
+
+| Category | Tasks | Level dial | Model action | Rubric | Cognitive load |
+|---|---|---|---|---|---|
+| `matrix_wordsearch` | 13 157 | L1–L7 (grid size, orientations) | Find word → `row=R col=C` | `regex row=\d+ col=\d+` | Directional spatial scanning |
+| `matrix_wordsearch_name` | 6 619 | L1–L7 | Name the word in grid | `exact \bWORD\b` | Grid reading, recognition (L0 warmup) |
+| `arithmetic_matrix` | 13 211 | L1–L7 (digit count, op, task type) | Compute sum / find missing digit / find error | `regex \bN\b` | Column-position arithmetic |
+| `bits_matrix` | 13 075 | L1–L7 (op: XOR/AND/OR/NOT, task: result/missing/error/key) | Find result bit / missing input / correct bit | `regex \b[01]\b` | Bitwise computation, reverse lookup |
+| `pattern_matrix` | 13 347 | L1–L7 (arithmetic/geometric/modular/Fibonacci) | Find missing value in sequence | `regex \bN\b` | Rule induction, sequence extrapolation |
+| `crossword_enum` | 3 258 | L8–L11 | Enumerate intersecting words | `regex` | Multi-word grid constraint |
+| `crossword_fill` | 3 362 | L8–L11 | Fill blank in crossing word | `regex` | Constraint propagation |
+| `sudoku_matrix` | — (needs CSV) | fixed 9×9 | Find blank cell value | `regex \b[1-9]\b` | Row/col/box constraint reasoning |
+| `arc_matrix` | — (needs dir) | 1–5 (train examples) | Apply transformation, output one cell | `regex \b[0-9]\b` | Pattern induction from examples |
+
+All nine types share the same `{id, category, level, prompt, answer, rubric}` format —
+`compute_rewards` evaluates any of them via the rubric field unchanged.
+
+### Eval protocol
+
+No pre-built held-out split. Eval is run separately with a different seed:
+
+```bash
+# word-search only (primary benchmark, 56 tasks)
+python3 experiments/A0_eval/eval.py \
+    --tasks experiments/A0_eval/tasks_matrix_wordsearch.jsonl \
+    --backend rwkv --model <checkpoint_path>
+
+# full curriculum sample (2 000 tasks, seed ≠ training seed)
+python3 experiments/A0_eval/gen_tasks.py \
+    --out /tmp/matrix_eval_2k.jsonl --n-tokens 400_000 --seed 99
+python3 experiments/A0_eval/eval.py \
+    --tasks /tmp/matrix_eval_2k.jsonl --backend rwkv --model <checkpoint_path>
+```
+
+Run full-curriculum eval after checkpoint 1 to catch category-level collapse
+(a model gaming wordsearch via shortcut will still score ~chance on bits/pattern).
+
+---
+
 ## Eval integration
 
 Word-search tasks are scored by `eval.py` via the existing `regex` rubric
@@ -312,6 +365,10 @@ THINK_CLOSE detection switches to byte sequence `[60,47,116,104,105,110,107,62]`
 (`</think>` UTF-8). See `experiments/rl/rollout.py:ByteTokenizer`.
 
 **Status:** code ready, training blocked on GPU.
+**nsp eval result (G1d 0.4B, 2026-08-16): 3.6%. Closed.** Random ByteEmbed without
+training converges at chance level on word-search — L4 activation deficit confirmed
+(14–26% of World norm). RL proceeds on sp (space-separated) format exclusively.
+ByteAdapter training is a separate GPU experiment, not on the RL critical path.
 
 ---
 
