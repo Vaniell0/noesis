@@ -2797,3 +2797,71 @@ model to prefer state computation over emission. H12a (state capacity) — if st
 full (H12a), RL cannot route more into it; DE ceiling is set by state capacity.
 
 **Status.** Untested. RL track blocked on GPU. Pre-RL baseline locked (2026-08-14).
+
+---
+
+## H25. WKV state is a learnable computational substrate for approximate linear algebra without CoT tokens
+### *(wager, Phase 3, post-RL)*
+
+**Claim.** A model trained via RL can learn to encode equation coefficients as rank-1 WKV
+updates during think-span tokens, then read them back via attention at the answer token to
+produce approximate numerical solutions — without writing intermediate steps to the visible
+output stream. Accuracy scales with model size (larger head_size × n_head → higher-precision
+rank-1 decompositions, less interference between stored rows).
+
+**Motivation.** WKV state capacity for G1i: `32 heads × 64 × 64 × 32 layers` ≈ 8 MB at
+bf16. A single 64×64 matrix occupies 32 KB; the state fits ~250 such matrices. Capacity is
+not the bottleneck. The bottleneck is *controllability*: the model must learn to generate
+tokens whose v/k projections write numerically structured content into state rather than
+purely semantic content. External correspondence (2026-08-16) reported state-dependent
+stopping and multi-step symbolic composition on G1h 7.2B using frozen backbone + one-layer
+adapter, with causal controls (swap/replace/zero) ruling out token-surface confounds.
+That result is boolean/symbolic; H25 is the numerical extension of the same mechanism.
+
+**Why this matters vs. transformers.** A transformer can do in-context arithmetic only via
+chain-of-thought (visible tokens, output-budget-limited) or weight memorisation (no
+generalisation). WKV state accumulates across tokens invisibly: think-tokens write,
+answer-token reads, no CoT emitted. The computation is invisible to the output stream, does
+not consume the response token budget, and generalises to coefficient values not seen during
+training (if the rank-1 write mechanism is learned as a skill, not a lookup).
+
+**ROSA's role.** WKV rank-1 writes are approximate: bf16 limits precision to ~3 significant
+decimal digits, and learned time-decay `w` attenuates earlier writes before the full matrix
+is assembled. ROSA (RWKV-8) eliminates both limitations: its rank-1 outer product writes are
+exact (no approximation, no decay interference on the write channel), and the suffix-automaton
+read is exact-match rather than soft-attention. In a full RWKV-8 system: WKV handles semantic
+routing (understand what equation to solve), ROSA stores exact coefficient values, WKV reads
+the result — a complete numerical pipeline with no external calls.
+
+**Structural prediction.**
+
+| Regime | Mechanism | Precision | Token cost |
+|---|---|---|---|
+| G1i + RL (this H25) | Learned rank-1 writes | bf16, ~3 digits | 0 output tokens |
+| G1i + RL, large model | Same, more heads | Higher | 0 |
+| RWKV-8 (ROSA) | Exact rank-1 writes | fp32, exact | 0 |
+| Transformer CoT | Pattern + explicit steps | Depends on digits | O(N) tokens |
+
+**Effort-frontier connection.** For mathematical tasks, the K-frontier is predicted to be a
+step function: flat for K < rank(equation system), step up once all rows are written, flat
+again. Qualitatively different from the smooth curves expected for extraction/symbolic tasks.
+If observed post-RL, it confirms K acts as write-budget for matrix rows, not reasoning-trace
+length.
+
+**Falsification.**
+- Post-RL IPC on mathematical prompts matches pre-RL (no new state dimensions activated
+  for coefficient structure) ⇒ model is pattern-matching, not writing to state.
+- Accuracy on linear equations with out-of-distribution coefficients does not exceed random
+  baseline ⇒ weight memorisation, not state-substrate computation.
+- Zeroing L16 WKV state at answer token does not degrade accuracy ⇒ state is not read.
+
+**Measurement.** Construct held-out set of 2×2 and 3×3 linear systems with integer
+coefficients, unique solutions in [-20, 20]. Compare: (1) G1i base, (2) G1i post-RL,
+(3) G1i post-RL with WKV state zeroed at answer token. If (2) > (1) and (3) < (2),
+state is causally involved. Complementary: R-lens / IPC on mathematical prompts before
+and after RL.
+
+**Status.** Hypothesis only. RL track blocked on GPU. Pre-RL baseline not yet measured.
+Formalised 2026-08-16; direction prompted by fleeb83's symbolic computation results
+(state-dependent stopping, multi-step composition, causal controls — see external
+correspondence thread). H25 is the numerical extension of that mechanism.

@@ -1,28 +1,38 @@
 # Effort frontier — noesis-specific test-time compute knobs
 
-> **Status (2026-08-07).**
+> **Status (2026-08-16).**
 >
-> **K-sweep** (2026-08-05, step4_merged_step3500.pth, A1 Step 4 @ 45% epoch):
+> **K-sweep** (2026-08-05, step4_merged @45% epoch, A1 plan — now superseded):
 > K ∈ {0, 128, 512, 2048}, N=1, mode=prompt_cot, 48 tasks.
 > Raw: K=0 → 0/48 (no output), K=128/512/2048 → 4/48 flat.
-> Interpretation: flat because the model was never trained to emit
-> WKV-useful tokens — human-readable CoT trace training is not the path
-> (see §CoT-as-WKV-input below). K-axis meaningless until the K-token
-> emission is trained against a state-quality objective, not imitation.
+> Interpretation unchanged: K-axis flat because model was never trained with
+> a state-quality objective for intermediate tokens (see §CoT-as-WKV-input).
+> A1 plan abandoned; training base is now G1i 2.9B. K verdict carries over.
 >
-> **N-sweep**: NOT YET RUN. Planned on step7 model.
+> **N-sweep**: NOT YET RUN. Target model: G1i base or post-RL checkpoint.
+> External validation of N-axis mechanism: fleeb83 (external correspondence, 2026-08-16) demonstrated
+> 48/48 state-dependent stopping and multi-step symbolic composition on G1h 7.2B
+> using frozen backbone + silent recurrent ticks (no output tokens) + causal
+> swap/replace/zero controls. This is the empirical realisation of N > 1 —
+> the state accumulates usable computation across passes. The N-axis
+> is architecturally sound; the open question is whether G1i base (vs fine-tuned)
+> shows the same behaviour on task rubric.
 >
-> **eval.py bug (2026-08-07):** `prompt_cot` and `silent` are identical
-> code paths; `state_readout` discards readout tokens (state IS updated,
-> tokens thrown away). All three modes produce the same output.
-> Must fix before any sweep results are interpretable.
+> **Current baselines (2026-08-14/16):**
+> - G1i chatwrap (N=1, K=256): 41.7% (20/48) — best single-pass baseline
+> - step9b-e1 (N=1, K=256): 39.6% — regression from step9 e0 (43.8%)
+> - G1h base: 7.1% (format mismatch; not a useful baseline)
+> - Word-search nsp: G1i 0%/3.6% (baseline/np=256) — target for RL
+>
+> **eval.py mode bug (noted 2026-08-07):** `prompt_cot` and `silent` were
+> identical; `state_readout` discarded readout tokens. Status: known, not
+> yet patched. Any N-sweep must verify mode routing before interpreting results.
 >
 > **First design-time data point (2026-07-23).** Adaptive per-N budget
-> variant of H12a on G1d-0.4B (see
-> `experiments/A0_H12a_working_memory/results-g1d-n30-adaptive/REPORT.md`)
-> gave a *partial* K-axis frontier hint: at N ≤ 8, budget → recall is
-> monotone-positive; at N ≥ 32, +952 tokens above 2048 did not move recall
-> from floor. Still needs full (N, K, mode) matrix to conclude.
+> variant of H12a on G1d-0.4B:
+> at N ≤ 8, budget → recall is monotone-positive;
+> at N ≥ 32, +952 tokens above 2048 did not move recall from floor.
+> Still needs full (N, K, mode) matrix to conclude.
 
 ## Problem
 
@@ -277,22 +287,34 @@ Run the full (N, K) grid on each task *category* separately:
 loads should produce different frontier shapes:
 - Scheduling (sequential planning) is hypothesised to benefit more from N
   (state re-feed builds the plan) than from K (CoT adds overhead).
-- Arithmetic may benefit from K (step-by-step CoT) but not from N.
+- Arithmetic may benefit from K (step-by-step CoT) but not from N —
+  however H25 predicts a step-function shape: flat for K < rank(system),
+  then step up, then flat again. This is qualitatively different from
+  the smooth curves expected for extraction/symbolic tasks. If observed,
+  it confirms that K is acting as write-budget for matrix rows in WKV
+  state, not as reasoning-trace length.
 - If both are flat, the frontier is degenerate for all current tasks —
   that tells us the task set needs harder examples for H10 to be
   falsifiable.
 
 ### Cross-model comparison
 
-Once A1 verdict is in, compare:
-1. `G1d-0.4B base` — no A1 SFT, world knowledge only
-2. `step4_merged (A1 @45%)` — partial SFT, format-bleeding phase
-3. `step5_merged (A1 full)` — target checkpoint
+Compare across training stages (A1 plan superseded; current ladder):
+1. `G1d-0.4B base` — smallest scale, world knowledge only
+2. `G1h-2.9B base` — 7× scale, same training distribution
+3. `G1i-2.9B base` — same size as G1h, updated pretraining (ctx16384, think tokens in base output)
+4. `step9b-e1` — G1h + LoRA step9b (RFC QA + ε-mask); 39.6% accuracy, DE=0.15
+5. `G1i post-RL` — target (word-search GRPO, GPU-blocked)
 
-Prediction (H2, reasoning-first): A1-SFT model should show a *different*
-N-response than the base model. If H7 (understanding in weights)
-contributes, the base model's N-plateau should be at a lower rubric
-ceiling than the SFT model's.
+Prediction (H2, reasoning-first): post-RL G1i should show a *different*
+N-response than base — higher N-plateau because RL installs state-write
+behaviour that N passes can compound. G1i base already emits `<|im_start|>thought`
+tokens without fine-tuning, suggesting G1 pretraining installed latent think-routing
+that N > 1 may activate.
+
+External anchor: fleeb83's G1h 7.2B result (48/48 state-dependent stopping,
+silent ticks) bounds what G1i 2.9B should approach post-RL — same architecture,
+2.5× smaller, partially trained.
 
 ### Parameters not yet explored
 
@@ -316,3 +338,32 @@ Only after (1) and (2) are settled does the effort registry design have values t
 
 This document exists to freeze the framing. Update the status block and add
 verdict results here rather than re-litigating the framing each session.
+
+---
+
+## H25 connection — state as compute, not just memory
+
+H25 (WKV state as computational substrate for approximate algebra) reframes what
+the effort frontier measures. If the model learns to write equation coefficients
+into WKV state during think-span tokens and read them back at the answer token,
+then K (think-token budget) is not just "more time to reason" — it is "more write
+operations into numerical state". The frontier for mathematical tasks is bounded by:
+
+- **Capacity floor**: K ≥ rank(equation system) for all rows to be written before
+  decay erases earlier ones (for a 3×3 system, K ≥ 3 think-tokens minimum)
+- **Precision ceiling**: bf16 limits to ~3 significant digits regardless of K
+- **Model size**: larger head_size × n_head → less rank-1 interference → higher
+  effective precision per write
+
+This predicts a qualitatively different K-frontier shape for mathematical prompts
+vs. extraction/symbolic prompts: a step function at K = rank(problem) rather than
+a smooth curve. Measurable post-RL.
+
+ROSA (RWKV-8) eliminates the precision ceiling and the decay floor: exact writes,
+no forgetting on the ROSA channel. The effort-frontier concept still applies, but
+the bottleneck shifts from "how many think-tokens to write the matrix" to "how many
+read-back passes to refine the solution". A combined WKV+ROSA system's frontier
+for exact arithmetic is effectively flat: one pass, exact answer, K=0.
+
+Credit: fleeb83 proof-of-mechanism for state-based computation
+(symbolic domain, 2026-08-16); H25 formalised from that result.
