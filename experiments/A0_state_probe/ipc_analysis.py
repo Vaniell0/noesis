@@ -65,21 +65,30 @@ def legendre(x: np.ndarray, degree: int) -> np.ndarray:
 # Ridge regression R²
 # ---------------------------------------------------------------------------
 
-def ridge_r2(X: np.ndarray, y: np.ndarray, alpha: float = 1e-3) -> float:
-    """R² of ridge regression predicting y from X (no intercept)."""
-    # X: (T, D), y: (T,)
+def ridge_r2(X: np.ndarray, y: np.ndarray, alpha: float = 1e-3, train_frac: float = 0.8) -> float:
+    """R² of ridge regression on held-out test split (fit on train_frac, eval on rest)."""
     T, D = X.shape
-    if T < D + 2:
-        return 0.0
-    A = X.T @ X + alpha * np.eye(D)
-    b = X.T @ y
-    w = np.linalg.solve(A, b)
-    y_hat = X @ w
-    ss_res = np.sum((y - y_hat) ** 2)
-    ss_tot = np.sum((y - y.mean()) ** 2)
+    n_train = max(D + 2, int(T * train_frac))
+    if n_train >= T - 1:
+        # fallback: in-sample when trajectory too short to split
+        if T < D + 2:
+            return 0.0
+        A = X.T @ X + alpha * np.eye(D)
+        w = np.linalg.solve(A, X.T @ y)
+        y_hat = X @ w
+        ss_res = np.sum((y - y_hat) ** 2)
+        ss_tot = np.sum((y - y.mean()) ** 2)
+        return float(1.0 - ss_res / ss_tot) if ss_tot > 1e-12 else 0.0
+    X_tr, X_te = X[:n_train], X[n_train:]
+    y_tr, y_te = y[:n_train], y[n_train:]
+    A = X_tr.T @ X_tr + alpha * np.eye(D)
+    w = np.linalg.solve(A, X_tr.T @ y_tr)
+    y_hat = X_te @ w
+    ss_res = np.sum((y_te - y_hat) ** 2)
+    ss_tot = np.sum((y_te - y_te.mean()) ** 2)
     if ss_tot < 1e-12:
         return 0.0
-    return float(1.0 - ss_res / ss_tot)
+    return float(max(0.0, 1.0 - ss_res / ss_tot))
 
 
 # ---------------------------------------------------------------------------
@@ -193,6 +202,8 @@ def compute_ipc(
     u = np.array(token_ids, dtype=np.float32)
     u = (u / (vocab_size - 1)) * 2.0 - 1.0  # in [-1, 1]
 
+    basis_bound = max_lag * max_degree  # max observable IPC with this lag/degree set
+
     results = {}
     for layer, X in layer_states.items():
         # X: (T, n_proj)
@@ -213,7 +224,7 @@ def compute_ipc(
         layer_result["MC"] = round(layer_result["MC"], 4)
         results[layer] = layer_result
 
-    return results
+    return results, basis_bound
 
 
 # ---------------------------------------------------------------------------
@@ -257,15 +268,18 @@ def main():
     print(f"[ipc] collected {len(token_ids)} tokens across {len(target_layers)} layers")
 
     print("[ipc] computing IPC…")
-    ipc = compute_ipc(token_ids, layer_states, args.max_lag, args.max_degree)
+    ipc, basis_bound = compute_ipc(token_ids, layer_states, args.max_lag, args.max_degree)
 
     # Summary table
     print("\n[ipc] === RESULTS ===")
-    print(f"{'Layer':>6} {'MC':>8} {'IPC':>8} {'Util%':>8}  (upper bound={n_proj})")
+    print(f"  basis_bound = max_lag({args.max_lag}) × max_degree({args.max_degree}) = {basis_bound}")
+    print(f"  n_proj (Dambre theoretical bound) = {n_proj}")
+    print(f"  R² evaluated on held-out 20% of trajectory")
+    print(f"{'Layer':>6} {'MC':>8} {'IPC':>8} {'Util%':>8}  (of basis_bound={basis_bound})")
     for l in sorted(ipc):
         mc = ipc[l]["MC"]
         total = ipc[l]["IPC_total"]
-        util = 100.0 * total / n_proj
+        util = 100.0 * total / basis_bound
         print(f"{l:>6} {mc:>8.3f} {total:>8.3f} {util:>7.1f}%")
 
     out_path = pathlib.Path(args.out)
@@ -276,7 +290,9 @@ def main():
         "max_lag": args.max_lag,
         "max_degree": args.max_degree,
         "n_proj": n_proj,
-        "ipc_upper_bound": n_proj,
+        "basis_ipc_bound": basis_bound,
+        "dambre_theoretical_bound": n_proj,
+        "note": "R2 evaluated on held-out 20% of trajectory. basis_ipc_bound = max_lag * max_degree.",
         "layers": target_layers,
         "results": {str(l): ipc[l] for l in sorted(ipc)},
     }
