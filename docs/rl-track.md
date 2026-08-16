@@ -527,7 +527,7 @@ R-lens probe on non-task axes (e.g. narrative, arithmetic) before continuing cur
 All instruments and where they plug in:
 
 ```
-G1i base checkpoint
+G1i base checkpoint — `models/rwkv7-g1i-2.9b-20260805-ctx16384.pth` (2026-08-05)
 │
 ├── [NO SFT warm-up — skip]
 │
@@ -588,6 +588,22 @@ with H8. To measure actual state content after RL, use a nonlinear probe (2-laye
 
 **H10 gap** = requires nonlinear probe, not ridge regression. Run MLP probe after RL
 checkpoint 1 to quantify how much task-relevant content accumulates in WKV state.
+
+### MLP probe — RUNNING (2026-08-16)
+
+Nonlinear IPC via 2-layer MLP replacing ridge regression. Linear IPC≈0 (held-out)
+confirms state encodes nonlinearly. MLP probe measures how much is actually there.
+
+```bash
+python3 experiments/A0_state_probe/mlp_probe.py \
+    --model models/rwkv7-g1i-2.9b-20260805-ctx16384.pth \
+    --n-tokens 256 --layers 0,4,8,16,24,31 \
+    --out experiments/A0_state_probe/results/mlp_ipc_g1i_base.json
+```
+
+Result: `experiments/A0_state_probe/results/mlp_ipc_g1i_base.json` (pending).
+Re-run after RL checkpoint 1 on same trajectory (`--trajectory-in`) to measure
+how much task-relevant content accumulates in WKV state after training.
 
 ### L_mem — SKIP (IPC verdict 2026-08-16)
 

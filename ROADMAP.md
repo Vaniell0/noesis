@@ -196,10 +196,14 @@ separate track.
 See `docs/rl-track.md` for the full design.
 
 - **Algorithm.** GRPO (`n_samples=8`, T=0.7 rollout, greedy eval).
-- **Task family.** Unified matrix task curriculum — 5 types in one generator:
-  wordsearch (30%), crossword (10%), arithmetic (20%), pattern (20%), bits (20%).
+- **Starting checkpoint.** `models/rwkv7-g1i-2.9b-20260805-ctx16384.pth` (G1i, 2026-08-05).
+- **Task family.** Unified matrix task curriculum — 7 types, 9 categories:
+  wordsearch_position + wordsearch_name (L0 warmup, L1/L2 rare ~10%, L3-7 dominant),
+  crossword_enum + crossword_fill, arithmetic_matrix, pattern_matrix, bits_matrix.
+  Optional (needs external data): sudoku_matrix (Kaggle CSV), arc_matrix (ARC-AGI dir).
   Generator: `experiments/A0_eval/gen_tasks.py` → `training/corpus_open/matrix_tasks.jsonl`
-  (65 899 tasks, ~20M tokens). Replaces word-search-only framing and bit-decoding.
+  (66 029 tasks current; target 20M tokens with sudoku+ARC).
+  Corpus SHA-256 locked in `training/corpus_open/PROVENANCE.md`.
   Wordsearch curriculum: 7 levels × mixed orientations (see `docs/rl-track.md`).
 - **Colab notebook.** `experiments/rl/noesis_rl_colab.ipynb` — Drive mount,
   auto-detect VRAM (T4/A100), gen_tasks on-the-fly, checkpoint to Drive.
@@ -211,7 +215,9 @@ See `docs/rl-track.md` for the full design.
   contamination): L6–L7 wordsearch accuracy is a pure context-dependency proxy.
 - **State metrics and new aux losses** — see `docs/rl-track.md §State metrics`.
   IPC DONE (2026-08-16): linear IPC ≈ 0 held-out → state encodes nonlinearly (H8 confirmed).
-  L_mem skipped permanently. MLP probe after RL checkpoint 1 replaces linear IPC.
+  L_mem skipped permanently. MLP probe RUNNING (2026-08-16) on G1i base;
+  re-run after RL checkpoint 1 on same trajectory to measure state content gain.
+  Script: `experiments/A0_state_probe/mlp_probe.py`.
 - **Implementation details** (in `docs/rl-track.md`):
   binary ε-mask outside answer span (ε=0.05); entropy routing reward
   shaping (α·Δentropy_reduction in think span); Switch-GRPO curriculum
