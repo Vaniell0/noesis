@@ -49,7 +49,7 @@ def _wordsearch_gen(rng: random.Random, idx: int) -> Optional[dict]:
 
 
 def _wordsearch_name_gen(rng: random.Random, idx: int) -> Optional[dict]:
-    level = rng.randint(1, 7)
+    level = rng.randint(3, 7)  # L3+ ensures H_RL/V_TD — guessing impossible
     n, mn, mx, orients = _WS_SPECS[level]
     return _ws_make_task(rng, level, level, idx, n, mn, mx, orients, mode="name")
 
