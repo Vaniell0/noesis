@@ -2,32 +2,28 @@
 
 ## Motivation
 
-Bit-decoding (the prior RL task candidate) requires the model to learn a
-lookup-table encoding entirely absent from its pre-training distribution.
-This produces out-of-distribution signal that trains a narrow procedural
-behaviour rather than the spatial reasoning and bidirectional attention
-we actually want to strengthen.
+The RL track trains the model on a unified curriculum of matrix tasks — all
+structured as ASCII grids with verifiable answers. The design goals:
 
-Word-search puzzles are a better RL task family because:
-
-- **Verifiable reward.** The answer is `row=R col=C` — checked by regex,
-  no judge model required.
-- **Spatial reasoning.** The model must scan the grid, not memorise a
-  mapping. The state accumulates directional context as it reads each row.
-- **Natural progression.** Difficulty is a single continuous dial: grid
-  size, orientation count, and word length. The curriculum starts at what
-  the base model should already solve (short horizontal word, 5×5 grid)
-  and ends at what it demonstrably cannot yet (8-direction 12×12 with
-  longer reversed words).
-- **Reverse and diagonal perception.** The user hypothesis: models trained
-  only on left-to-right text have weak right-to-left and diagonal
-  attention. Word-search at levels 3–7 forces the model to develop these
-  pathways — and whether WKV state retains directional orientation across
-  rows is a direct test of H8 (state-as-computation).
-- **State utilisation signal.** Unlike single-token tasks, a word-search
-  query requires integrating evidence across many grid positions before
-  committing an answer. Multi-pass (N > 1) sweeps of the same grid are
-  a direct handle on H10 (multi-pass state convergence).
+- **Verifiable reward without a judge.** Every task has a rubric (regex or
+  exact match) checked deterministically. GRPO works on binary ±1 signal.
+- **Gradient diversity.** Nine task types (wordsearch, bits, arithmetic,
+  pattern, crossword, sudoku, ARC…) activate orthogonal WKV channels.
+  A single task type causes gradient collapse to one learned pattern.
+- **Self-reflection training.** `r_entropy` rewards entropy reduction inside
+  the think span — the model learns to monitor whether its WKV state is
+  resolving the task or spinning. This is the prerequisite for H16 (gated
+  externalisation) and Phase 4 (silent latent computation).
+- **Bidirectional and diagonal attention.** Wordsearch L3–L7 forces
+  right-to-left, bottom-to-top, and diagonal reading — breaking the
+  left-to-right pretraining bias. WKV state must encode directional context.
+- **Bootstrap signal from L0.** `wordsearch_name` (find the word, not its
+  position) gives the model its first positive rewards. L1–L2 appear rarely
+  (~10% each) for initial signal; L3–L7 dominate to prevent guessing.
+  Curriculum cuts L1–L2 once success rate stabilises.
+- **State utilisation measurement.** Grid tasks require accumulating
+  evidence across many positions before committing an answer — a direct
+  test of H8 (state-as-computation) and H10 (effort frontier).
 
 ---
 
@@ -212,6 +208,28 @@ isolate the slot entropy effect from the full-FT effect.
 
 Format partial credit (r_correct=0) prevents reward collapse when all G rollouts
 are wrong but structured — GRPO advantage stays non-zero, gradient continues to flow.
+
+**Self-reflection mechanism — what r_entropy actually trains.**
+
+`r_entropy = α × (H_entry − H_exit)` where H = mean(-log_prob) over the think span.
+This is not just a verbosity penalty. It trains the model to monitor the character of
+its own state changes:
+
+- **Productive think token**: k_t/v_t write content aligned with the task → WKV state
+  becomes more resolved → model grows more confident → token entropy drops.
+- **Empty think token**: k_t/v_t write noise → state quality unchanged → entropy flat.
+
+GRPO propagates gradient only through productive tokens. The model learns which
+think-span writes are useful — not from an explicit rule, but from the reward signal on
+its own entropy trajectory. Over training this becomes a quality gate: the model detects
+when its state has resolved the task and emits an answer, rather than continuing to write.
+
+CLIPO adds the second layer: correct rollouts must have similar WKV states at `</think>`.
+The model learns that there is a canonical "found-it WKV geometry" for each task type,
+and learns to steer toward it. Combined with r_entropy: the model learns both *when* it
+has found the answer (entropy drop) and *what the state should look like* when it has
+(CLIPO contrastive). This is the prerequisite for Phase 4 — a model that cannot
+self-monitor its state trajectory cannot do silent computation meaningfully.
 
 **Curriculum schedule.**
 - L0 (warmup): `wordsearch_name` — name the word, no coordinates. Rubric `\bWORD\b`.
@@ -489,7 +507,9 @@ Source: icophy Discord message, 6 months production RWKV-6 state work.
 
 **Conclusion: skip SFT warm-up, go direct RL on G1i.**
 
-Reason: SFT before RL reduces variance on *which behavior* RL reinforces — it does not improve the model's ability to do the task. For G1i at 0/56 on word-search there is no existing behavior to exploit as shortcut. This is exactly the case where skipping SFT is cleaner.
+Reason: SFT before RL reduces variance on *which behavior* RL reinforces — it does not
+improve the model's ability to do the task. For G1i at 0/56 on word-search there is no
+existing behavior to exploit as shortcut. This is exactly the case where skipping SFT is cleaner.
 
 **Mechanism of SFT-less RL risk:** GRPO on binary reward latches onto surface shortcuts early. State encodes the shortcut, not the reasoning pathway. The shortcut's verifiable output is indistinguishable from genuine task completion in reward signal.
 

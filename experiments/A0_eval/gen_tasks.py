@@ -49,7 +49,8 @@ def _wordsearch_gen(rng: random.Random, idx: int) -> Optional[dict]:
 
 
 def _wordsearch_name_gen(rng: random.Random, idx: int) -> Optional[dict]:
-    level = rng.randint(3, 7)  # L3+ ensures H_RL/V_TD — guessing impossible
+    # L1/L2 rare (~10% each) for bootstrap signal; L3-7 dominate to prevent guessing
+    level = rng.choices([1, 2, 3, 4, 5, 6, 7], weights=[1, 1, 3, 4, 4, 4, 4])[0]
     n, mn, mx, orients = _WS_SPECS[level]
     return _ws_make_task(rng, level, level, idx, n, mn, mx, orients, mode="name")
 
