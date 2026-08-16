@@ -472,16 +472,15 @@ accuracy is low, the gap is in the readout design, not the state content.
 may shift capacity budget toward nonlinear terms at the cost of linear
 memory MC. IPC decomposition shows this directly.
 
-### L_mem — future aux loss (add only if IPC reveals low MC)
+### L_mem — SKIP (IPC verdict 2026-08-16)
+
+IPC measured on G1h base, G1i base, step9b-e1: MC≈6/128 per layer (4.7% of capacity).
+Not zero — linear memory is present and roughly equal to nonlinear IPC. MC is not the
+bottleneck. L_mem not added to A1.5 RL phase.
 
 ```
-L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))
+L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))   # skipped — MC adequate
 ```
-
-Forces WKV state to retain recent tokens. Differentiable through a small
-linear head W_k per lag, co-trained and then discarded. Complementary to
-L_state: L_state rewards motion magnitude, L_mem rewards informative motion.
-Add only after IPC verdict — do not add speculatively.
 
 ### L_tPC — post-GPU, ablation required
 
