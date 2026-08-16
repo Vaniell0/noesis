@@ -53,12 +53,57 @@ def load_inference_model(model_path: str, device: str):
     return model, tokenizer
 
 
-def load_train_model(model_path: str, device: str, lora_r: int = 32):
-    """Load RWKV-PEFT model for gradient-based update."""
+class _LoraLinear(torch.nn.Module):
+    """Minimal LoRA wrapper around a frozen nn.Linear."""
+    def __init__(self, linear: torch.nn.Linear, r: int, alpha: int):
+        super().__init__()
+        self.linear = linear
+        for p in self.linear.parameters():
+            p.requires_grad_(False)
+        self.lora_A = torch.nn.Parameter(
+            torch.randn(r, linear.in_features) * 0.01)
+        self.lora_B = torch.nn.Parameter(
+            torch.zeros(linear.out_features, r))
+        self.scale = alpha / r
+
+    def forward(self, x):
+        return self.linear(x) + (x @ self.lora_A.T @ self.lora_B.T) * self.scale
+
+
+def _inject_lora(model, r: int = 32, alpha: int = 64,
+                 target_suffixes=("key", "value", "receptance", "output")):
+    """Replace matching Linear layers with LoRA wrappers in-place."""
+    for name, module in list(model.named_modules()):
+        parent_name, _, child_name = name.rpartition(".")
+        if not child_name:
+            continue
+        if not isinstance(module, torch.nn.Linear):
+            continue
+        if not any(child_name.endswith(s) for s in target_suffixes):
+            continue
+        parent = model
+        for part in parent_name.split("."):
+            if part:
+                parent = getattr(parent, part)
+        setattr(parent, child_name, _LoraLinear(module, r=r, alpha=alpha))
+    lora_params = sum(p.numel() for n, p in model.named_parameters()
+                      if "lora_A" in n or "lora_B" in n)
+    return lora_params
+
+
+def load_train_model(model_path: str, device: str, lora_r: int = 0):
+    """Load RWKV model for gradient-based update.
+
+    lora_r > 0: inject LoRA adapters (frozen backbone + trainable A/B).
+    lora_r = 0: full fine-tuning (all params trainable).
+    """
     from rwkv.model import RWKV
     os.environ["RWKV_JIT_ON"] = "0"
     os.environ["RWKV_CUDA_ON"] = "1" if device == "cuda" else "0"
     model = RWKV(model=model_path, strategy=f"{device} fp32")
+    if lora_r > 0:
+        n = _inject_lora(model, r=lora_r, alpha=lora_r * 2)
+        print(f"[train] LoRA injected: r={lora_r} trainable_params={n:,}")
     model.train()
     return model
 
@@ -87,6 +132,9 @@ def main():
     ap.add_argument("--h12bi-weight", type=float, default=0.0,
                     help="H12b.i LoRA rank-entropy aux loss weight (0=off, 1e-4 typical). "
                          "No-op unless training model has lora_A/lora_B params.")
+    ap.add_argument("--lora-r", type=int, default=0,
+                    help="LoRA rank. 0 = full fine-tune (all params). "
+                         ">0 = freeze backbone, train only lora_A/lora_B.")
     ap.add_argument("--byte-adapter", action="store_true",
                     help="Use byte-level tokenization + ByteAdapter embedding patch. "
                          "Requires nsp-format tasks (--format nsp). "
@@ -121,7 +169,7 @@ def main():
         print(f"[train] byte-adapter mode: vocab=256, trainable params={sum(p.numel() for p in byte_adapter.parameters()):,}")
 
     # Training model for gradient update
-    train_model = load_train_model(args.model, args.device)
+    train_model = load_train_model(args.model, args.device, lora_r=args.lora_r)
 
     clipo_head = None if args.no_clipo else CLIPOHead(out_dim=512).to(args.device)
 

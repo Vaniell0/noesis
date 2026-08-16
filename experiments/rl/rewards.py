@@ -25,9 +25,13 @@ from experiments.rl.rollout import RolloutGroup
 # ── r_correct ─────────────────────────────────────────────────────────────────
 
 def _score_correct(text: str, rubric: dict) -> float:
-    if rubric.get("type") == "regex":
+    rtype = rubric.get("type")
+    if rtype == "regex":
         pattern = rubric.get("value", "")
         return 1.0 if re.search(pattern, text, re.IGNORECASE) else -1.0
+    if rtype == "exact":
+        value = rubric.get("value", "")
+        return 1.0 if value.upper() in text.upper() else -1.0
     return 0.0
 
 
