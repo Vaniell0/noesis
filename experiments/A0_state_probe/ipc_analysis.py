@@ -15,8 +15,9 @@ Two quantities:
   MC (linear memory)   = Σ_k R²(x, P_1(u(t-k)))   d=1 only
   IPC_total            = Σ_{k,d} R²(x, P_d(u(t-k)))
 
-Upper bound: IPC_total ≤ N_proj (state dimensionality after projection).
-Capacity utilization ratio = IPC_total / N_proj.
+Measured basis bound: max_lag × max_degree (the basis actually evaluated).
+The separate Dambre theoretical bound remains N_proj (state dimensionality
+after projection). Capacity utilization is reported against the basis bound.
 
 H8 signal: high IPC_total = state encodes world-model info about past tokens.
 H10 signal: compare IPC at early layers vs late; gap = what readout could decode
@@ -38,6 +39,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+from typing import Optional, Sequence
 
 import numpy as np
 import torch
@@ -111,6 +113,69 @@ PROMPT = (
 )
 
 
+def load_token_trajectory(path: pathlib.Path) -> tuple[list[int], Optional[str]]:
+    """Load a saved post-prompt token trajectory.
+
+    The native format is ``{"token_ids": [...], "prompt": "..."}``, but
+    accepting a bare JSON list keeps the loader convenient for hand-built
+    fixtures. The optional prompt is returned so callers can reject a
+    trajectory recorded with a different prompt.
+    """
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    saved_prompt: Optional[str] = None
+    if isinstance(payload, dict):
+        raw_token_ids = payload.get("token_ids")
+        if isinstance(payload.get("prompt"), str):
+            saved_prompt = payload["prompt"]
+    else:
+        raw_token_ids = payload
+
+    if not isinstance(raw_token_ids, list):
+        raise ValueError(f"trajectory file {path} must contain a token_ids list")
+    if any(
+        isinstance(token_id, bool)
+        or not isinstance(token_id, int)
+        or token_id < 0
+        for token_id in raw_token_ids
+    ):
+        raise ValueError(f"trajectory file {path} contains an invalid token id")
+    return [int(token_id) for token_id in raw_token_ids], saved_prompt
+
+
+def save_token_trajectory(path: pathlib.Path, token_ids: Sequence[int], prompt: str) -> None:
+    """Save the exact post-prompt token sequence used by a probe run."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "token_ids": [int(token_id) for token_id in token_ids],
+        "n_tokens": len(token_ids),
+        "prompt": prompt,
+    }
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def _argmax_token(logits: object) -> int:
+    """Take argmax without copying a CUDA vocabulary-sized tensor to CPU."""
+    if isinstance(logits, torch.Tensor):
+        return int(torch.argmax(logits.reshape(-1)).item())
+    return int(np.argmax(np.asarray(logits).reshape(-1)))
+
+
+def _project_wkv(wkv: torch.Tensor, projection: object, device: str) -> np.ndarray:
+    """Project one WKV tensor, moving only the compact result off CUDA."""
+    if device == "cuda":
+        # Keep the large WKV tensor and projection on the GPU. The returned
+        # vector is only n_proj elements, so this is the sole device-to-host
+        # transfer in the projection path.
+        projected = torch.matmul(
+            wkv.detach().to(dtype=torch.float32).reshape(-1),
+            projection,
+        )
+        return projected.detach().cpu().numpy()
+
+    # Preserve the existing CPU path and its NumPy projection semantics.
+    return wkv.detach().to(dtype=torch.float32).numpy().reshape(-1) @ projection
+
+
 def collect_trajectory(
     model,
     tokenizer,
@@ -120,23 +185,31 @@ def collect_trajectory(
     n_proj: int,
     device: str = "cpu",
     seed: int = 42,
+    teacher_forced_tokens: Optional[Sequence[int]] = None,
 ) -> tuple[list[int], dict[int, np.ndarray]]:
     """Run model for n_tokens steps, collect WKV state projections.
 
     Returns:
         token_ids: list of generated token IDs (length = n_tokens)
         layer_states: {layer_idx: np.ndarray of shape (n_tokens, n_proj)}
+
+    If ``teacher_forced_tokens`` is provided, those exact post-prompt tokens
+    are fed to the model instead of sampling each checkpoint's own sequence.
+    This is the comparability path for cross-checkpoint runs.
     """
-    import os
-    os.environ.setdefault("RWKV_V7_ON", "1")
-    os.environ.setdefault("RWKV_JIT_ON", "1")
-    os.environ.setdefault("RWKV_CUDA_ON", "0")
+    if device not in {"cpu", "cuda"}:
+        raise ValueError(f"device must be 'cpu' or 'cuda', got {device!r}")
+    if teacher_forced_tokens is not None and len(teacher_forced_tokens) != n_tokens:
+        raise ValueError(
+            "teacher_forced_tokens length must match n_tokens "
+            f"({len(teacher_forced_tokens)} != {n_tokens})"
+        )
 
     rng = np.random.default_rng(seed)
 
     # Build random projection matrices per layer (fixed across time)
     n_state = None
-    proj_matrices: dict[int, np.ndarray] = {}
+    proj_matrices: dict[int, object] = {}
 
     token_ids: list[int] = []
     layer_states: dict[int, list[np.ndarray]] = {l: [] for l in target_layers}
@@ -158,20 +231,26 @@ def collect_trajectory(
         # Gaussian random projection: (n_state, n_proj), columns normalized
         P = rng.standard_normal((n_state, n_proj)).astype(np.float32)
         P /= np.linalg.norm(P, axis=0, keepdims=True) + 1e-8
-        proj_matrices[l] = P
+        if device == "cuda":
+            proj_matrices[l] = torch.from_numpy(P).to(device="cuda")
+        else:
+            proj_matrices[l] = P
 
-    # Autoregressive generation
-    last_token = input_ids[-1]
+    # The final prompt token has already been consumed by the prefill above.
+    # Start from its logits so it is not accidentally fed a second time.
+    next_logits = out
     for step in range(n_tokens):
-        out, state = model.forward([last_token], state)
-        logits = out.float().numpy() if hasattr(out, 'numpy') else np.array(out)
-        next_token = int(np.argmax(logits))
+        if teacher_forced_tokens is None:
+            next_token = _argmax_token(next_logits)
+        else:
+            next_token = int(teacher_forced_tokens[step])
+
+        next_logits, state = model.forward([next_token], state)
         token_ids.append(next_token)
-        last_token = next_token
 
         for l in target_layers:
-            wkv = _wkv(state, l).float().numpy().ravel()  # (n_state,)
-            proj = wkv @ proj_matrices[l]  # (n_proj,)
+            wkv = _wkv(state, l)
+            proj = _project_wkv(wkv, proj_matrices[l], device)
             layer_states[l].append(proj)
 
         if step % 32 == 0:
@@ -238,13 +317,30 @@ def main():
     ap.add_argument("--max-lag", type=int, default=8)
     ap.add_argument("--max-degree", type=int, default=2)
     ap.add_argument("--n-proj", type=int, default=128,
-                    help="Random projection dimensionality (IPC upper bound)")
+                    help="Random projection dimensionality (Dambre theoretical bound)")
+    ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu",
+                    help="Inference device (default: cpu)")
     ap.add_argument("--layers", default="0,4,8,16,24,31",
                     help="Comma-separated layer indices")
     ap.add_argument("--prompt", default=PROMPT)
     ap.add_argument("--out", default="results/ipc_analysis.json")
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--trajectory-in", type=pathlib.Path,
+                    help="JSON token trajectory to teacher-force across checkpoints")
+    ap.add_argument("--trajectory-out", type=pathlib.Path,
+                    help="Save the generated/used token trajectory as JSON")
     args = ap.parse_args()
+
+    teacher_forced_tokens: Optional[list[int]] = None
+    if args.trajectory_in is not None:
+        teacher_forced_tokens, saved_prompt = load_token_trajectory(args.trajectory_in)
+        if saved_prompt is not None and saved_prompt != args.prompt:
+            ap.error("--trajectory-in was recorded with a different prompt")
+        if len(teacher_forced_tokens) != args.n_tokens:
+            ap.error(
+                "--trajectory-in length must match --n-tokens "
+                f"({len(teacher_forced_tokens)} != {args.n_tokens})"
+            )
 
     target_layers = [int(x) for x in args.layers.split(",")]
     n_proj = args.n_proj
@@ -252,10 +348,12 @@ def main():
     print(f"[ipc] model={args.model}")
     print(f"[ipc] layers={target_layers}  n_proj={n_proj}")
     print(f"[ipc] n_tokens={args.n_tokens}  max_lag={args.max_lag}  max_degree={args.max_degree}")
-    print(f"[ipc] IPC upper bound per layer = {n_proj}")
+    print(f"[ipc] device={args.device}")
+    print(f"[ipc] n_proj (Dambre theoretical bound) = {n_proj}")
+    print(f"[ipc] trajectory mode = {'teacher-forced' if teacher_forced_tokens is not None else 'autoregressive'}")
 
     print("[ipc] loading model…")
-    model, tokenizer = load_model(args.model)
+    model, tokenizer = load_model(args.model, device=args.device)
 
     print("[ipc] collecting trajectory…")
     token_ids, layer_states = collect_trajectory(
@@ -263,9 +361,15 @@ def main():
         n_tokens=args.n_tokens,
         target_layers=target_layers,
         n_proj=n_proj,
+        device=args.device,
         seed=args.seed,
+        teacher_forced_tokens=teacher_forced_tokens,
     )
     print(f"[ipc] collected {len(token_ids)} tokens across {len(target_layers)} layers")
+
+    if args.trajectory_out is not None:
+        save_token_trajectory(args.trajectory_out, token_ids, args.prompt)
+        print(f"[ipc] saved trajectory -> {args.trajectory_out}")
 
     print("[ipc] computing IPC…")
     ipc, basis_bound = compute_ipc(token_ids, layer_states, args.max_lag, args.max_degree)
@@ -290,14 +394,16 @@ def main():
         "max_lag": args.max_lag,
         "max_degree": args.max_degree,
         "n_proj": n_proj,
+        "device": args.device,
         "basis_ipc_bound": basis_bound,
         "dambre_theoretical_bound": n_proj,
         "note": "R2 evaluated on held-out 20% of trajectory. basis_ipc_bound = max_lag * max_degree.",
         "layers": target_layers,
+        "token_ids": token_ids,
         "results": {str(l): ipc[l] for l in sorted(ipc)},
     }
     out_path.write_text(json.dumps(out, indent=2))
-    print(f"\n[ipc] saved → {out_path}")
+    print(f"\n[ipc] saved -> {out_path}")
 
 
 if __name__ == "__main__":
