@@ -84,6 +84,9 @@ def main():
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--no-clipo", action="store_true")
+    ap.add_argument("--h12bi-weight", type=float, default=0.0,
+                    help="H12b.i LoRA rank-entropy aux loss weight (0=off, 1e-4 typical). "
+                         "No-op unless training model has lora_A/lora_B params.")
     ap.add_argument("--byte-adapter", action="store_true",
                     help="Use byte-level tokenization + ByteAdapter embedding patch. "
                          "Requires nsp-format tasks (--format nsp). "
@@ -163,7 +166,8 @@ def main():
 
             # 3. GRPO update (training model, with grad)
             optimizer.zero_grad()
-            loss = grpo_loss(train_model, groups, rewards_per_group)
+            loss = grpo_loss(train_model, groups, rewards_per_group,
+                             h12bi_weight=args.h12bi_weight)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(params, 1.0)
             optimizer.step()

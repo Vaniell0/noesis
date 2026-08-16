@@ -73,10 +73,13 @@ def grpo_loss(
     rewards_per_group: List[torch.Tensor],
     clip_eps: float = 0.2,
     kl_coef: float = 0.01,
+    h12bi_weight: float = 0.0,
 ) -> torch.Tensor:
     """Compute GRPO loss over a batch of rollout groups.
 
     rewards_per_group: list of [G] tensors, one per group.
+    h12bi_weight: H12b.i LoRA rank-entropy aux loss weight (0 = disabled).
+                  No-op if model has no lora_A/lora_B parameters.
     Returns scalar loss.
     """
     total_loss = torch.tensor(0.0, requires_grad=True)
@@ -113,4 +116,28 @@ def grpo_loss(
             total_loss = total_loss + surrogate + kl_coef * kl
             n_tokens += len(rollout.output_ids)
 
-    return total_loss / max(n_tokens, 1)
+    policy_loss = total_loss / max(n_tokens, 1)
+
+    # H12b.i: LoRA rank-entropy regulariser (prevents rank collapse during RL).
+    # Requires LoRA parameters named *lora_A / *lora_B in the training model.
+    if h12bi_weight > 0.0:
+        import sys
+        from pathlib import Path
+        _root = Path(__file__).parents[2]
+        if str(_root / "training") not in sys.path:
+            sys.path.insert(0, str(_root / "training"))
+        try:
+            from state_reg import compute_h12bi_aux
+            lora_A = {n[:-len("lora_A")]: p
+                      for n, p in model.named_parameters()
+                      if n.endswith("lora_A")}
+            lora_B = {n[:-len("lora_B")]: p
+                      for n, p in model.named_parameters()
+                      if n.endswith("lora_B")}
+            lora_pairs = [(a, lora_B[k]) for k, a in lora_A.items() if k in lora_B]
+            if lora_pairs:
+                policy_loss = policy_loss + h12bi_weight * compute_h12bi_aux(lora_pairs)
+        except ImportError:
+            pass  # state_reg not on path — skip silently
+
+    return policy_loss
