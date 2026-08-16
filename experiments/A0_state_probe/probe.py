@@ -132,9 +132,17 @@ def load_model(name: str, device: str = "cpu") -> Tuple[object, _TokenizerAdapte
     # The ``rwkv`` package gates its RWKV-7 code path behind an env flag.
     # Without ``RWKV_V7_ON=1`` ``rwkv.model.RWKV`` binds to the v4/v5/v6
     # legacy class, whose state layout does not match RWKV-7 x070.
+    if device not in {"cpu", "cuda"}:
+        raise ValueError(f"device must be 'cpu' or 'cuda', got {device!r}")
+    if device == "cuda" and not torch.cuda.is_available():
+        raise RuntimeError("CUDA was requested but torch.cuda.is_available() is false")
+
     os.environ.setdefault("RWKV_V7_ON", "1")
     os.environ.setdefault("RWKV_JIT_ON", "1")
-    os.environ.setdefault("RWKV_CUDA_ON", "0")
+    # The rwkv package reads this before importing its model implementation.
+    # Make the explicit device choice authoritative, including over a stale
+    # value left in the environment by an earlier probe invocation.
+    os.environ["RWKV_CUDA_ON"] = "1" if device == "cuda" else "0"
 
     from rwkv.model import RWKV  # local import — rwkv monkeypatches jit globals
     from rwkv.utils import PIPELINE
