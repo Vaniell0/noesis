@@ -24,11 +24,20 @@ from experiments.rl.rollout import RolloutGroup
 
 # ── r_correct ─────────────────────────────────────────────────────────────────
 
+_FORMAT_POSITION = re.compile(r"row\s*=\s*\d+\b[^0-9]*col\s*=\s*\d+\b", re.IGNORECASE)
+
+
 def _score_correct(text: str, rubric: dict) -> float:
     rtype = rubric.get("type")
     if rtype == "regex":
         pattern = rubric.get("value", "")
-        return 1.0 if re.search(pattern, text, re.IGNORECASE) else -1.0
+        if re.search(pattern, text, re.IGNORECASE):
+            return 1.0
+        # correct format but wrong value → 0.0, prevents reward collapse when
+        # model learns to structure output but not yet solve the task
+        if "col" in pattern and _FORMAT_POSITION.search(text):
+            return 0.0
+        return -1.0
     if rtype == "exact":
         value = rubric.get("value", "")
         return 1.0 if value.upper() in text.upper() else -1.0

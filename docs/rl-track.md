@@ -152,21 +152,27 @@ isolate the slot entropy effect from the full-FT effect.
 
 ## RL design
 
-**Reward signal.** Binary: +1 for exact match on `row=R col=C`, 0 otherwise.
-No partial credit — the position is either right or wrong.
+**Reward signal.** Three terms combined:
+- `r_correct`: +1 exact match, 0 correct format wrong value, −1 wrong format entirely
+- `r_entropy`: α × entropy reduction inside think span
+- `r_clipo`: InfoNCE contrastive on WKV state at `</think>`
 
-**Curriculum schedule.** Start with level 1–2 only. Advance to the next
-level when accuracy on the current level crosses 80% within a batch.
-Drop back one level if accuracy falls below 50%.
+Format partial credit (r_correct=0) prevents reward collapse when all G rollouts
+are wrong but structured — GRPO advantage stays non-zero, gradient continues to flow.
 
-**Training algorithm.** GRPO (Group Relative Policy Optimisation) with
-`n_samples=8` per prompt. Temperature 0.7 during rollout, greedy for eval.
+**Curriculum schedule.**
+- L0 (warmup): `wordsearch_name` — name the word, no coordinates. Rubric `\bWORD\b`.
+  Easiest possible: model just needs to read the grid. Stays in mix throughout.
+- L1–L2: position tasks on 5×6 grids, horizontal only. Advance at 80% batch accuracy.
+- L3+: add reverse/vertical. Drop back one level if accuracy falls below 50%.
 
-**Corpus mix.** Unified matrix task curriculum via `experiments/A0_eval/gen_tasks.py`
-→ `training/corpus_open/matrix_tasks.jsonl` (65 899 tasks, ~20M tokens).
-Five types: wordsearch 30%, crossword 10%, arithmetic 20%, pattern 20%, bits 20%.
-No SFT base corpus mixed in — pure RL on verifiable matrix tasks.
-SFT phase explicitly skipped (see decision record below).
+**Training algorithm.** GRPO with G=8 rollouts per prompt. Temperature 0.7 during
+rollout, greedy for eval.
+
+**Corpus mix.** `training/corpus_open/matrix_tasks.jsonl` (66 029 tasks, ~20M tokens).
+Six types: wordsearch_position 20%, wordsearch_name 10%, crossword 10%,
+arithmetic 20%, pattern 20%, bits 20%.
+No SFT — pure RL on verifiable matrix tasks (see decision record below).
 
 **Connection to hypotheses.**
 
