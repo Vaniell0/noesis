@@ -11,9 +11,9 @@ Stack:
 Usage:
     python3 experiments/rl/train_wordsearch.py \
         --model ~/.libs/models/rwkv7/rwkv7-g1i-2.9b-20260805-ctx16384.pth \
-        --tasks experiments/A0_eval/tasks_matrix_wordsearch.jsonl \
+        --tasks training/corpus_open/matrix_tasks.jsonl \
         --out experiments/rl/runs/ws_grpo_01 \
-        --G 8 --max-new 256 --lr 1e-5 --epochs 3
+        --G 8 --max-new 256 --lr 1e-5 --epochs 3 --lora-r 32
 """
 from __future__ import annotations
 
