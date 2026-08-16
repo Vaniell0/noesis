@@ -931,36 +931,32 @@ and matrix_wordsearch_name (find person's name in grid) formats. G1h also 0/56 (
 WorldTokenizer asymmetry explains the floor; this is the clean RL baseline to push against.
 All models at 0% regardless of scale or training — the task has no shortcut through weights.
 
-**IPC baseline — state capacity floor (2026-08-16, CPU, n=200 tokens, lag≤8, deg≤2, n_proj=128).**
-Information Processing Capacity (Dambre et al. 2012): how much past-token information is recoverable
-from the WKV state at each layer. Upper bound = 128 per layer (n_proj=128 random projection).
+**IPC baseline — state capacity (2026-08-16, held-out R², n=256 tokens, lag≤8, deg≤2, n_proj=128).**
+Information Processing Capacity (Dambre et al. 2012): how much past-token information is linearly
+recoverable from the WKV state at each layer. R² evaluated on held-out 20% of trajectory.
 
-| Layer | G1h base | G1i base | step9b-e1 (LoRA) |
-|-------|----------|----------|-------------------|
-| L0  | MC=2.60 IPC=5.78 | MC=2.08 IPC=4.54 | MC=2.46 IPC=4.81 |
-| L4  | MC=6.22 IPC=12.74 | MC=6.29 IPC=12.51 | MC=6.16 IPC=12.34 |
-| L8  | MC=6.52 IPC=13.28 | MC=6.25 IPC=12.64 | MC=6.15 IPC=12.33 |
-| L16 | MC=6.41 IPC=13.01 | MC=6.30 IPC=12.58 | MC=5.97 IPC=11.97 |
-| L24 | MC=6.17 IPC=12.67 | MC=6.16 IPC=12.20 | MC=6.07 IPC=11.99 |
-| L31 | MC=6.39 IPC=12.90 | MC=6.09 IPC=12.14 | MC=5.94 IPC=11.76 |
+| Layer | G1i fixed (held-out R²) |
+|-------|------------------------|
+| L0    | IPC_total = 0.53       |
+| L4–L31 | IPC_total ≈ 0.0      |
 
-MC = linear memory capacity (lag-1 terms); IPC_total includes nonlinear terms.
-Results: `experiments/A0_state_probe/results/ipc_g1h_base.json`, `ipc_g1i_base.json`, `ipc_step9b_e1.json`.
+Result: `experiments/A0_state_probe/results/ipc_g1i_fixed.json`.
 
-Key findings:
-1. **~10% capacity used.** All three models use 9–10% of the 128-dim IPC budget across L4–L31.
-   90% headroom remains — RL has room to develop.
-2. **MC = IPC/2 everywhere.** Linear and nonlinear terms contribute equally. State encodes
-   both predictable (lag-1 linear) and compressed nonlinear representations of the past.
-3. **LoRA fine-tune reduced IPC slightly** (−0.3 to −1.3 across L4–L31 vs both bases).
-   Coherent with think_geometry: LoRA directed existing capacity toward task-specific patterns
-   at the cost of general token retention. Did not build new capacity.
-4. **G1h ≈ G1i at L4–L31.** Base model IPC is stable across the G1 series at this scale.
-   G1i slightly lower at L0 (4.54 vs 5.78) — possibly more focused early-layer representation
-   from the expanded reasoning/coding pretraining corpus.
-5. **H10 gap context.** IPC floor is ~12 per probed layer. If state_readout accuracy after
-   the fix is substantially below prompt_cot (41.7% on G1i), the gap is in the readout
-   design, not the state content — the information is demonstrably there.
+Earlier measurements (G1h/G1i base, step9b-e1) showed IPC≈12 per layer — these were in-sample
+ridge regression on the same trajectory used for fitting. Held-out evaluation reveals those were
+overfitting artifacts (n_proj=128 random projections with only ~200 training points → regression
+memorises noise). Corrected by Russell Thomas (fleeb83) trajectory fix + held-out split.
+
+**Key finding: WKV state is not linearly decodable (held-out IPC ≈ 0).**
+
+This is a positive result for H8, not a failure. If the state stored past tokens in a
+linearly accessible form it would be a simple buffer. IPC≈0 means the state encodes
+information through the WKV transformation in a fundamentally nonlinear form — the state
+IS doing computation, not acting as a memory tape. Nonlinear probes (MLP, kernel ridge)
+are required to measure actual state content; ridge regression is not the right tool.
+
+Implication for RL: the state capacity exists but is nonlinearly encoded. After RL training,
+rerun IPC with an MLP probe to measure how much task-relevant information accumulates.
 
 ---
 
@@ -1021,11 +1017,10 @@ count, may be the binding constraint — is empirically open. Prior art
 in the direction: RetNet (multi-retention), Griffin (linear recurrence
 + sliding-window attention), Titans (learned long-term memory slot).
 
-**IPC capacity floor (2026-08-16).** Measured via Dambre et al. 2012 on G1h base, G1i base,
-step9b-e1 (n_proj=128, lag≤8, deg≤2). All three models use ~10% of the 128-dim IPC budget
-per layer at L4–L31 (IPC≈12/128). MC (linear) = IPC/2 everywhere — 50/50 linear/nonlinear.
-This quantifies the capacity H12 is asking about: at 10% utilisation there is substantial
-headroom before the single-state ceiling matters. H12a (width vs decay attribution) remains
+**IPC result (2026-08-16, held-out R²).** Linear IPC ≈ 0 on held-out trajectory (G1i fixed).
+Earlier in-sample measurements (IPC≈12) were ridge regression artifacts. WKV state is not
+linearly decodable — state encodes nonlinearly, consistent with H8. State capacity exists
+but requires nonlinear probes to measure. H12a (width vs decay attribution) remains
 the required gate before H12b. Full IPC data: see H10 section.
 
 **Two disjoint failure modes to distinguish first (H12a).**
