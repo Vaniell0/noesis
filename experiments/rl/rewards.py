@@ -81,11 +81,30 @@ def _infonce_reward(
 
 # ── r_entropy ─────────────────────────────────────────────────────────────────
 
-THINK_OPEN_IDS  = {61, 35762, 63}   # <think>  (set for fast membership)
-THINK_CLOSE_IDS = {754, 35762, 63}  # </think>
+# WorldTokenizer sequences
+_THINK_OPEN_WORLD  = [61, 35762, 63]    # <think>
+_THINK_CLOSE_WORLD = [754, 35762, 63]   # </think>
+# Byte-mode UTF-8 sequences
+_THINK_OPEN_BYTES  = list("<think>".encode())   # [60,116,104,105,110,107,62]
+_THINK_CLOSE_BYTES = list("</think>".encode())  # [60,47,116,104,105,110,107,62]
+
+
+def _find_think_span(ids: List[int], open_seq: List[int], close_seq: List[int]):
+    """Return (think_start, think_end) indices or (None, None)."""
+    n, lo, lc = len(ids), len(open_seq), len(close_seq)
+    think_start = think_end = None
+    for i in range(n - lo + 1):
+        if ids[i:i + lo] == open_seq:
+            think_start = i + lo
+    for i in range(n - lc + 1):
+        if ids[i:i + lc] == close_seq:
+            think_end = i
+            break
+    return think_start, think_end
+
 
 def _entropy_reward(log_probs: List[float], output_ids: List[int],
-                    alpha: float = 0.1) -> float:
+                    alpha: float = 0.1, byte_mode: bool = False) -> float:
     """Entropy reduction inside think span.
 
     Positive reward when entropy (= −log_prob) decreases from think entry
@@ -94,15 +113,9 @@ def _entropy_reward(log_probs: List[float], output_ids: List[int],
     if not log_probs or not output_ids:
         return 0.0
 
-    # Find first <think> start and </think> end in output
-    ids = output_ids
-    think_start = think_end = None
-    for i in range(len(ids) - 2):
-        if ids[i] == 61 and ids[i+1] == 35762 and ids[i+2] == 63:
-            think_start = i + 3
-        if ids[i] == 754 and ids[i+1] == 35762 and ids[i+2] == 63:
-            think_end = i
-            break
+    open_seq  = _THINK_OPEN_BYTES  if byte_mode else _THINK_OPEN_WORLD
+    close_seq = _THINK_CLOSE_BYTES if byte_mode else _THINK_CLOSE_WORLD
+    think_start, think_end = _find_think_span(output_ids, open_seq, close_seq)
 
     if think_start is None or think_end is None or think_end <= think_start:
         return 0.0
@@ -112,9 +125,9 @@ def _entropy_reward(log_probs: List[float], output_ids: List[int],
         return 0.0
 
     mid = len(span) // 2
-    h_entry = -sum(span[:mid]) / mid          # mean entropy first half
-    h_exit  = -sum(span[mid:]) / (len(span) - mid)  # mean entropy second half
-    return alpha * (h_entry - h_exit)         # positive if entropy drops
+    h_entry = -sum(span[:mid]) / mid
+    h_exit  = -sum(span[mid:]) / (len(span) - mid)
+    return alpha * (h_entry - h_exit)
 
 
 # ── combined ──────────────────────────────────────────────────────────────────
@@ -125,6 +138,7 @@ def compute_rewards(
     clipo_weight: float = 1.0,
     entropy_weight: float = 1.0,
     tau: float = 0.05,
+    byte_mode: bool = False,
 ) -> torch.Tensor:
     """Compute total reward for each rollout in the group.
 
@@ -136,7 +150,7 @@ def compute_rewards(
 
     for i, r in enumerate(group.rollouts):
         r_correct[i] = _score_correct(r.text, group.rubric)
-        r_entropy[i] = _entropy_reward(r.log_probs, r.output_ids)
+        r_entropy[i] = _entropy_reward(r.log_probs, r.output_ids, byte_mode=byte_mode)
 
     correct_mask = r_correct > 0
 

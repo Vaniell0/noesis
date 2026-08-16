@@ -157,6 +157,7 @@ def main():
                 r = compute_rewards(
                     group, clipo_head=clipo_head,
                     clipo_weight=0.0 if args.no_clipo else 1.0,
+                    byte_mode=args.byte_adapter,
                 )
                 rewards_per_group.append(r)
 
