@@ -484,51 +484,36 @@ G1i base checkpoint
 
 ## State metrics — what to measure before and during A1.5
 
-### IPC (Information Processing Capacity) — run first, CPU-only
+### IPC (Information Processing Capacity) — DONE (2026-08-16)
 
-Offline metric: how much of the WKV state budget encodes recoverable
-past-token information. Formula (Dambre et al. 2012):
+Linear IPC (Dambre et al. 2012) measured on G1i with held-out R² (20% split):
 
-```
-IPC = Σ_{k,d} R²(x_L(t), P_d(u(t−k)))
-```
+| Layer | IPC_total (held-out) |
+|-------|----------------------|
+| L0    | 0.53                 |
+| L4–L31 | ≈ 0.0              |
 
-- x_L(t) = WKV state at layer L (random-projected to 128 dims)
-- u(t−k) = token ID at lag k, normalised to [−1, 1]
-- P_d = Legendre polynomial of degree d
-- MC (linear memory) = d=1 terms only
-- Total IPC ≤ N_proj (hard capacity bound)
+Result: `experiments/A0_state_probe/results/ipc_g1i_fixed.json`.
 
-Script: `experiments/A0_state_probe/ipc_analysis.py` — run on step9b-e1
-before RL launch to set the capacity floor.
+**WKV state is not linearly decodable.** Earlier in-sample measurements (IPC≈12)
+were ridge regression overfitting artifacts — n_proj=128 random projections with
+~200 training points memorise noise. Held-out R²≈0 is the correct reading.
 
-**H10 gap** = IPC_state − what the output head reads → quantifies headroom
-for state_readout improvement. If IPC_state is high but state_readout
-accuracy is low, the gap is in the readout design, not the state content.
+This is a positive result: IPC≈0 means the state encodes information nonlinearly,
+i.e. it is doing computation rather than acting as a linear token buffer. Consistent
+with H8. To measure actual state content after RL, use a nonlinear probe (2-layer MLP).
 
-**Memory-nonlinearity trade-off**: L_state (rewards motion and curvature)
-may shift capacity budget toward nonlinear terms at the cost of linear
-memory MC. IPC decomposition shows this directly.
+**H10 gap** = requires nonlinear probe, not ridge regression. Run MLP probe after RL
+checkpoint 1 to quantify how much task-relevant content accumulates in WKV state.
 
 ### L_mem — SKIP (IPC verdict 2026-08-16)
 
-IPC measured on G1h base, G1i base, step9b-e1 (commit 9b28b7f, held-out R²):
+Linear memory capacity ≈ 0 on held-out data. L_mem would penalise the model for
+not retaining tokens linearly — but the state encodes nonlinearly by design (H8).
+Adding L_mem would fight the architecture. Skipped permanently.
 
 ```
-basis_ipc_bound = max_lag(8) × max_degree(2) = 16   ← actual max observable
-dambre_theoretical_bound = n_proj = 128              ← limit if basis were infinite
-```
-
-| Layer | MC (linear) | IPC_total | MC/basis | IPC/basis |
-|-------|-------------|-----------|----------|-----------|
-| L0    | ~2.1–2.6    | ~4.5–5.8  | 13–16%   | 28–36%    |
-| L4–L31| ~6.0–6.5   | ~12.0–13.3| 38–41%   | 75–83%    |
-
-~80% of the measured basis is used at mid-to-late layers. MC ≈ IPC/2 (50/50
-linear/nonlinear split). MC is not the bottleneck. L_mem not added to A1.5 RL phase.
-
-```
-L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))   # skipped — MC adequate (~38% of basis)
+L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))   # skipped — linear IPC ≈ 0, wrong metric
 ```
 
 ### L_tPC — post-GPU, ablation required

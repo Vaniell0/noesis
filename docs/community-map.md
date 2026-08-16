@@ -574,22 +574,19 @@ trained = the reservoir that ESN keeps fixed. The literature gives two immediate
 applicable results:
 
 1. **IPC (Information Processing Capacity)** (Dambre et al. 2012, Sci. Reports) —
-   computable offline metric for state quality. IPC = Σ_{k,d} R²(x(t), P_d(u(t−k))),
-   summed over lag k and Legendre polynomial degree d. Total IPC ≤ N_state (hard
-   upper bound). Decomposes into linear memory MC and nonlinear capacity. Directly
-   quantifies H8 (how much world-model info is in state) and H10 (IPC_state −
-   IPC_output_head = gap state_readout should close). CPU-only, ridge regression on
-   existing trajectory. Key bridge paper: arXiv 2509.04422 (Singh & Raman, ESN as
-   SSM, ESP = ISS, frequency-domain memory spectra).
+   IPC = Σ_{k,d} R²(x(t), P_d(u(t−k))), held-out R² required. **Result (2026-08-16):**
+   linear IPC ≈ 0 on G1i held-out trajectory (L4–L31). Earlier in-sample values (≈12)
+   were ridge regression artifacts. WKV state is not linearly decodable — encodes
+   information nonlinearly, consistent with H8 (state-as-computation). Nonlinear
+   probe (MLP) required to measure actual state content. Key bridge: arXiv 2509.04422
+   (Singh & Raman, ESN as SSM, ESP = ISS, frequency-domain memory spectra).
+   Result file: `experiments/A0_state_probe/results/ipc_g1i_fixed.json`.
 
-2. **L_mem — new auxiliary loss for future training:**
-   `L_mem = −Σ_{k=1}^{5} R²(x(t), u(t−k))`. Forces WKV state to retain recent
-   tokens. Complementary to L_state (which rewards motion magnitude) — rewards
-   informative motion. Running IPC analysis before adding L_mem shows where the
-   capacity budget currently goes.
+2. **L_mem — skipped permanently.** Linear IPC ≈ 0 → state encodes nonlinearly by
+   design → L_mem would fight the architecture. Not applicable.
 
 NG-RC framing (arXiv 2106.07688): WKV state = implicit polynomial delay-embedding
-of input. Elegant formal characterisation of H8 without additional assumptions.
+of input. IPC≈0 linear but nonzero nonlinear terms expected — consistent with this framing.
 
 **Predictive Coding / Friston FEP — conditional, post-GPU.**
 The hierarchical PC energy `E = Σ_l ε_l^T Π_l ε_l` (prediction error at each layer)
@@ -604,8 +601,7 @@ closes the theoretical gap under L_state.
 Bridge paper for RNN: arXiv 2602.18131 (temporal PC + RTRL, 15M-param RNN,
 near-BPTT translation quality).
 
-**Action:** IPC analysis script (`experiments/A0_state_probe/ipc_analysis.py`) on
-step9b-e1 trajectory — CPU, no GPU needed. H8 and H10 gap quantified directly.
+**Status:** IPC DONE. Next: MLP probe after RL checkpoint 1.
 
 ### Multimodal RWKV
 

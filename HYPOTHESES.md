@@ -2844,17 +2844,20 @@ If observed post-RL, it confirms K acts as write-budget for matrix rows, not rea
 length.
 
 **Falsification.**
-- Post-RL IPC on mathematical prompts matches pre-RL (no new state dimensions activated
-  for coefficient structure) ⇒ model is pattern-matching, not writing to state.
+- Post-RL MLP probe on mathematical prompts shows no increase in nonlinear state content
+  vs pre-RL (no new dimensions activated for coefficient structure) ⇒ pattern-matching.
 - Accuracy on linear equations with out-of-distribution coefficients does not exceed random
   baseline ⇒ weight memorisation, not state-substrate computation.
 - Zeroing L16 WKV state at answer token does not degrade accuracy ⇒ state is not read.
 
+Note: linear IPC is not the right probe here (IPC≈0 baseline, H8). Use MLP probe
+(2-layer, 256 hidden) comparing pre-RL vs post-RL state on mathematical prompts.
+
 **Measurement.** Construct held-out set of 2×2 and 3×3 linear systems with integer
 coefficients, unique solutions in [-20, 20]. Compare: (1) G1i base, (2) G1i post-RL,
 (3) G1i post-RL with WKV state zeroed at answer token. If (2) > (1) and (3) < (2),
-state is causally involved. Complementary: R-lens / IPC on mathematical prompts before
-and after RL.
+state is causally involved. Complementary: MLP probe on mathematical prompts before
+and after RL (replaces linear IPC — see H10 section).
 
 **Status.** Hypothesis only. RL track blocked on GPU. Pre-RL baseline not yet measured.
 Formalised 2026-08-16; direction prompted by fleeb83's symbolic computation results

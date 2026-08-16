@@ -210,14 +210,14 @@ See `docs/rl-track.md` for the full design.
   RL on think-phase trains latent use before gate head (A4). H19 (weight-knowledge
   contamination): L6–L7 wordsearch accuracy is a pure context-dependency proxy.
 - **State metrics and new aux losses** — see `docs/rl-track.md §State metrics`.
-  IPC analysis (CPU, offline) runs before RL launch; L_mem and L_tPC are
-  post-GPU additions contingent on IPC verdict.
+  IPC DONE (2026-08-16): linear IPC ≈ 0 held-out → state encodes nonlinearly (H8 confirmed).
+  L_mem skipped permanently. MLP probe after RL checkpoint 1 replaces linear IPC.
 - **Implementation details** (in `docs/rl-track.md`):
   binary ε-mask outside answer span (ε=0.05); entropy routing reward
   shaping (α·Δentropy_reduction in think span); Switch-GRPO curriculum
   (arXiv 2606.13106) for multi-task stability.
 - **Blockers.** GPU only. G1i download DONE; G1i eval DONE (41.7%);
-  word-search baseline CONFIRMED 0/56. IPC analysis running (CPU).
+  word-search baseline CONFIRMED 0/56. IPC DONE (linear≈0, H8 confirmed).
   Next: Selectel 4090 (~₽1500/24h) or Colab A100.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
