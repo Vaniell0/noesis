@@ -1,0 +1,696 @@
+{
+  "model": "rwkv7-g1i-2.9b-q5_1",
+  "backend": "ollama",
+  "num_predict": 64,
+  "n_passes": 1,
+  "readout_mode": "silent",
+  "readout_k": 64,
+  "n_tasks": 56,
+  "elapsed_s": 1253.4978203773499,
+  "aggregate": {
+    "n_total": 56,
+    "n_correct": 0,
+    "overall_accuracy": 0.0,
+    "per_category": {
+      "matrix_wordsearch": {
+        "n": 56,
+        "correct": 0,
+        "accuracy": 0.0
+      }
+    }
+  },
+  "results": [
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"DOG\" in the given 5x5 matrix. The matrix is:\nRow0: I H H E X\nRow1: D V X R C\nRow2: S N B A C\nRow3: G H D O",
+      "expected": "row=3 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer: row=1 col=0\n\nAssistant: <think>We need to parse the problem: We have a 5x5 matrix of letters. We need to find the word \"ELK\" exactly once, placed horizontally (left-to-right). Output the position of the first letter of the",
+      "expected": "row=2 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*2\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"GIFT\" in a 5x5 matrix. The matrix is given as:\nMGIFT\nTLSGW\nCBVHY\nJCHDM\nIOULF\nWe need to find the horizontal occurrence of \"GIFT\". That means we",
+      "expected": "row=0 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"BIRD\" in the given 5x5 matrix. The matrix is:\nRow0: V I V U V\nRow1: C B I R D\nRow2: X H F O M\nRow3: I U W R",
+      "expected": "row=1 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_04",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"ZERO\" in the given 5x5 matrix. The word appears exactly once, horizontally. We need to output the row and column indices (0-indexed) of the first letter of the word.\nThe matrix:\nRow0: Z E",
+      "expected": "row=0 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_05",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"JADE\" in the given 5x5 matrix. The matrix is:\nLHEQP\nCYBDE\nUFZVN\nJADET\nOQIRA\nWe need to find the word \"JADE\" exactly as a sequence of",
+      "expected": "row=3 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_06",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"PINE\" in the given 5x5 matrix. The matrix is:\nRow0: Y I Y U K\nRow1: D J N F O\nRow2: A X X I Q\nRow3: Y F Q D",
+      "expected": "row=4 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*4\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_07",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 5x5 matrix. We need to find the word \"FIRE\" horizontally (left-to-right). The word appears exactly once. We need to output the row and column of the first letter of the word.\nLet's examine the matrix:\n",
+      "expected": "row=1 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"PLUME\" in the given 6x6 matrix. The matrix is:\nRow0: F I Q T N G\nRow1: R Y X W G W\nRow2: J M V U L O\nRow3: Q",
+      "expected": "row=4 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*4\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer: 0=0\n\nAssistant: <think>We need to parse the problem: It's a 6x6 matrix of letters. We need to find the word \"GATE\" appearing exactly once, horizontally (left-to-right). Output the position of the first letter: row and column (",
+      "expected": "row=0 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"FARM\" in the given 6x6 matrix. The word is placed vertically (top-to-bottom). So we need to find a column where the letters from top to bottom spell \"FARM\". The matrix is given as:\nRow",
+      "expected": "row=1 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer:\n1=1You are given a 6x6 grid. Your task is to place digits one by one in the empty cells. Place a digit from 1 to 6 in each empty cell. A digit that has been placed once and forever cannot be changed. The resulting grid must satisfy all constraints:",
+      "expected": "row=1 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_04",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 6x6 matrix of letters. The word \"LEAF\" appears exactly once, horizontally. We need to find its position: row and column (0-indexed). The matrix is:\nRow0: N V L E A F\nRow1: I",
+      "expected": "row=0 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_05",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 6x6 matrix of letters. We need to find the word \"STORM\" placed vertically (top-to-bottom). That means the word appears in a column, with each letter of the word in consecutive rows, and the letters must be in order.",
+      "expected": "row=0 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_06",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"CLOUD\" in the given 6x6 matrix. The word is placed vertically (top-to-bottom). So we need to find a column where the letters from top to bottom spell \"CLOUD\". The matrix is given as rows",
+      "expected": "row=0 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_07",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer: 1=1You are given a 6x6 grid representing a maze. Each cell is one of the following:\n- '#' character indicating a wall (impassable)\n- 'S' character indicating the start position\n- 'G' character indicating the goal position\n- '.' character",
+      "expected": "row=4 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*4\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_LR_nsp_03_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 7x7 letter matrix. Rows are separated by newlines; letters within each row are concatenated with no separator. Rows and columns are 0-indexed (top-left is row=0 col=0).\nThe word FIRE appears exactly once,",
+      "expected": "row=5 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*5\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_V_TD_nsp_03_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"KNEEL\" in a 7x7 matrix. The matrix is given as 7 lines of 7 letters each. We need to find the vertical placement of the word \"KNEEL\". That means we need to find a column index C such that",
+      "expected": "row=0 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_RL_nsp_03_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"NEST\" in the given 7x7 matrix. The word is placed horizontally (right-to-left). So we need to find a sequence of letters that spells \"NEST\" from right to left. That means the first letter of the",
+      "expected": "row=5 col=4",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*5\\b[^0-9]*col\\s*=\\s*4\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_LR_nsp_03_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"YOKE\" in the given 7x7 matrix. The word is placed horizontally (left-to-right). We need to output the row and column of the first letter of the word.\nGiven matrix:\nDOEZOVQ\n",
+      "expected": "row=6 col=3",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*3\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_LR_nsp_03_04",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer: 3=3You are given a 7x7 grid representing a maze. Each cell contains either an open space (indicated by `.`) or a wall (indicated by `#`). You start at a given `S` position and want to reach an exit `E` while avoiding walls.",
+      "expected": "row=3 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_V_TD_nsp_03_05",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"FIRE\" in the given 7x7 matrix. The word is placed vertically (top-to-bottom). So we need to find a column where the letters from top to bottom spell \"FIRE\". The word is 4 letters: F,",
+      "expected": "row=0 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_V_TD_nsp_03_06",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"NEST\" in the given 7x7 matrix. The word is placed vertically, meaning it goes from top to bottom, one letter per row, same column. So we need to find a column where the letters from top to bottom spell \"NES",
+      "expected": "row=2 col=5",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*2\\b[^0-9]*col\\s*=\\s*5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_RL_nsp_03_07",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"NOBLE\" in the given 7x7 matrix. The word appears exactly once, placed horizontally (right-to-left). So we need to find a contiguous sequence of letters that spells \"NOBLE\" in that order, but reversed? Actually",
+      "expected": "row=1 col=5",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"MAGNET\" in the given 8x8 matrix. The word is placed vertically (bottom-to-top). That means the letters of \"MAGNET\" appear in the matrix from bottom to top, i.e., the last letter of the",
+      "expected": "row=7 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*7\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_H_RL_nsp_04_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"XENON\" in the given 8x8 matrix. The word is placed horizontally (right-to-left). So we need to find a sequence of letters that spells \"XENON\" from right to left. That means the first letter",
+      "expected": "row=0 col=6",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*6\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_TD_nsp_04_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"SMILE\" in the given 8x8 matrix. The word is placed vertically (top-to-bottom). That means we need to find a column where the letters from top to bottom spell \"SMILE\". The word is 5 letters: S",
+      "expected": "row=1 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_TD_nsp_04_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"UMBRA\" in the given 8x8 matrix. The word is placed vertically (top-to-bottom). So we need to find a column where the letters from top to bottom spell \"UMBRA\". The matrix is given as rows",
+      "expected": "row=0 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_04",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"GLASS\" in the given 8x8 matrix. The word is placed vertically, bottom-to-top. That means the letters of \"GLASS\" appear in the matrix from bottom to top, i.e., starting from the bottom row",
+      "expected": "row=5 col=5",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*5\\b[^0-9]*col\\s*=\\s*5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_05",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 8x8 letter matrix. Rows are separated by newlines; letters within each row are concatenated with no separator. Rows and columns are 0-indexed (top-left is row=0 col=0).\nThe word SCHEMA appears exactly once,",
+      "expected": "row=6 col=7",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*7\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_H_LR_nsp_04_06",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"SNAKE\" in the given 8x8 matrix. The word is placed horizontally (left-to-right). We need to output the row and column of the first letter of the word.\nWe'll parse the matrix.\nMatrix rows",
+      "expected": "row=3 col=3",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*3\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_07",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"UMBRA\" in the given 8x8 matrix. The matrix is given as 8 lines of 8 letters. We need to find the word \"UMBRA\" placed vertically (bottom-to-top). That means the word is read from",
+      "expected": "row=7 col=5",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*7\\b[^0-9]*col\\s*=\\s*5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_H_RL_nsp_05_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"EMBER\" in the given 9x9 matrix. The word is placed horizontally (right-to-left). So we need to find a sequence of letters that spells \"EMBER\" from right to left. That means the first letter of the word (",
+      "expected": "row=6 col=8",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*8\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_D_DL_nsp_05_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"HAVEN\" in a 9x9 matrix. The word appears diagonally (down-left). That means we need to look for a sequence of letters that form \"HAVEN\" but in reverse order? Actually \"down-left\" means we",
+      "expected": "row=2 col=7",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*2\\b[^0-9]*col\\s*=\\s*7\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_D_DL_nsp_05_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"SNAKE\" in the given 9x9 matrix. The word is placed diagonally (down-left). That means the letters of \"SNAKE\" appear in the matrix such that they form a diagonal line from top-left to bottom",
+      "expected": "row=3 col=4",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*4\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_H_LR_nsp_05_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"WATER\" in the given 9x9 matrix. The word is placed horizontally (left-to-right). We need to output the row and column indices (0-indexed) of the first letter of the word.\nWe need to search",
+      "expected": "row=5 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*5\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_V_BU_nsp_05_04",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 9x9 matrix of letters. We need to find the word \"BREEZE\" placed vertically (bottom-to-top). That means the word is read from bottom row to top row, so the first letter of the word is at the bottom row,",
+      "expected": "row=6 col=1",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*1\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_V_BU_nsp_05_05",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"BELFRY\" in the given 9x9 matrix. The word is placed vertically (bottom-to-top). That means the letters of the word appear in the matrix from bottom to top, i.e., the last letter of the word",
+      "expected": "row=7 col=8",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*7\\b[^0-9]*col\\s*=\\s*8\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_H_LR_nsp_05_06",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 9x9 letter matrix. Rows are separated by newlines; letters within each row are concatenated with no separator. Rows and columns are 0-indexed (top-left is row=0 col=0).\nWe need to find the word \"ME",
+      "expected": "row=8 col=0",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*8\\b[^0-9]*col\\s*=\\s*0\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L5_9x9_V_TD_nsp_05_07",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"TIMBER\" in a 9x9 grid. The word is placed vertically, meaning it goes from top to bottom in a column. So we need to find a column where the letters spell \"TIMBER\" in order from top to bottom.\n",
+      "expected": "row=2 col=7",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*2\\b[^0-9]*col\\s*=\\s*7\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_V_BU_nsp_06_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"CANDLE\" in a 10x10 matrix. The matrix is given as 10 lines of 10 letters each. We need to find the vertical placement of the word \"CANDLE\". That means we need to find a column index C such that",
+      "expected": "row=9 col=3",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*9\\b[^0-9]*col\\s*=\\s*3\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_V_BU_nsp_06_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer: R=4 C=0\n\nAssistant: <think>We need to find the word \"LANTERN\" in the given 10x10 matrix. The matrix is given as 10 lines of 10 letters each. The word appears vertically, meaning it goes from bottom to top. So we need to find",
+      "expected": "row=6 col=9",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*9\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_D_UL_nsp_06_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer:\n1=1You are given a 2x2 matrix:\n0 1\n1 0\n\nAnd a 2-dimensional grid of numbers from 1 to 4, arranged as:\n1 2\n3 4\n\nThe grid contains the number 1 exactly once. Movement follows these rules:\n- You",
+      "expected": "row=9 col=9",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*9\\b[^0-9]*col\\s*=\\s*9\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_D_DR_nsp_06_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 10x10 matrix of letters. We need to find the word \"ICEBERG\" placed diagonally (down-right). That means we need to find a sequence of letters that form the word \"ICEBERG\" in order, but each letter is placed",
+      "expected": "row=3 col=3",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*3\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_D_DR_nsp_06_04",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 10x10 matrix of letters. We need to find the word \"MYSTERY\" placed diagonally (down-right). That means we need to find a sequence of letters that are consecutive in the matrix, moving down-right (i.e., row",
+      "expected": "row=0 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_D_UL_nsp_06_05",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"SPIRE\" in a 10x10 matrix. The word is placed diagonally (up-left). That means the letters of the word are placed along a diagonal line from top-left to bottom-right? Actually \"diagonally (up-",
+      "expected": "row=6 col=5",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_H_LR_nsp_06_06",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 10x10 matrix of letters. We need to find the word \"COMPASS\" exactly once, placed horizontally (left-to-right). The word is \"COMPASS\" which is 7 letters: C O M P A S S. Note that there are",
+      "expected": "row=7 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*7\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L6_10x10_V_TD_nsp_06_07",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"ZONAL\" in a 10x10 matrix. The matrix is given as 10 lines of 10 letters each. We need to find the position of the first letter of \"ZONAL\" (i.e., the top-left letter of the word",
+      "expected": "row=0 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_V_TD_nsp_07_00",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAnswer: row=2 col=0You are given a 12x12 matrix of integers. Please find an upper triangular matrix M and a permutation P such that:\n- M is 12x12\n- Each row and column in M contains exactly one occurrence of each integer from 1 to 12.\n-",
+      "expected": "row=3 col=7",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*3\\b[^0-9]*col\\s*=\\s*7\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_DR_nsp_07_01",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We need to find the word \"KINETIC\" in a 12x12 matrix. The matrix is given as 12 lines of 12 letters each. We need to find the word \"KINETIC\" placed diagonally (down-right). That means we need to find a sequence",
+      "expected": "row=1 col=5",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*1\\b[^0-9]*col\\s*=\\s*5\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_DL_nsp_07_02",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 12x12 matrix of letters. We need to find the word \"SPECTRUM\" placed diagonally (down-left). That means we need to find a sequence of letters that form the word SPECTRUM, but the letters are placed diagonally:",
+      "expected": "row=0 col=9",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*0\\b[^0-9]*col\\s*=\\s*9\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_H_LR_nsp_07_03",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 12x12 letter matrix. Rows are separated by newlines; letters within each row are concatenated with no separator. Rows and columns are 0-indexed (top-left is row=0 col=0).\nWe need to find the word \"HO",
+      "expected": "row=9 col=4",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*9\\b[^0-9]*col\\s*=\\s*4\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_UR_nsp_07_04",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 12x12 matrix of letters. We need to find the word \"RELATIVE\" placed diagonally (up-right). That means the word is placed such that each letter of the word is at a diagonal offset: from top-left to bottom-right,",
+      "expected": "row=7 col=4",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*7\\b[^0-9]*col\\s*=\\s*4\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_UR_nsp_07_05",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 12x12 matrix of letters. We need to find the word \"GOBELIN\" placed diagonally (up-right). That means we need to find a sequence of letters that form the word \"GOBELIN\" but read diagonally from top-left",
+      "expected": "row=6 col=4",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*6\\b[^0-9]*col\\s*=\\s*4\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_DL_nsp_07_06",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 12x12 letter matrix. Rows are separated by newlines; letters within each row are concatenated with no separator. Rows and columns are 0-indexed (top-left is row=0 col=0).\nWe need to find the word \"NA",
+      "expected": "row=4 col=6",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*4\\b[^0-9]*col\\s*=\\s*6\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    },
+    {
+      "id": "wsearch_L7_12x12_V_TD_nsp_07_07",
+      "category": "matrix_wordsearch",
+      "response": "\n\nAssistant: <think>We are given a 12x12 matrix of letters. We need to find the word \"OBLONG\" placed vertically (top-to-bottom). That means the word is read from top to bottom, left to right, but the letters are concatenated without separators. So we need",
+      "expected": "row=2 col=2",
+      "rubric": {
+        "type": "regex",
+        "value": "row\\s*=\\s*2\\b[^0-9]*col\\s*=\\s*2\\b"
+      },
+      "correct": false,
+      "detail": "regex match"
+    }
+  ]
+}
