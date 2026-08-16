@@ -48,6 +48,12 @@ def _wordsearch_gen(rng: random.Random, idx: int) -> Optional[dict]:
     return _ws_make_task(rng, level, level, idx, n, mn, mx, orients, mode="position")
 
 
+def _wordsearch_name_gen(rng: random.Random, idx: int) -> Optional[dict]:
+    level = rng.randint(1, 7)
+    n, mn, mx, orients = _WS_SPECS[level]
+    return _ws_make_task(rng, level, level, idx, n, mn, mx, orients, mode="name")
+
+
 # ── crossword ─────────────────────────────────────────────────────────────────
 
 def _crossword_gen(rng: random.Random, idx: int) -> Optional[dict]:
@@ -540,11 +546,12 @@ def main() -> int:
 
     # Registry: (name, fn, weight)
     generators: List[Tuple[str, Callable, float]] = [
-        ("wordsearch", _wordsearch_gen, 3.0),
-        ("crossword",  _crossword_gen,  1.0),
-        ("arithmetic", _arith_gen,      2.0),
-        ("pattern",    _pattern_gen,    2.0),
-        ("bits",       _bits_gen,       2.0),
+        ("wordsearch",      _wordsearch_gen,      2.0),
+        ("wordsearch_name", _wordsearch_name_gen, 1.0),
+        ("crossword",       _crossword_gen,       1.0),
+        ("arithmetic",      _arith_gen,           2.0),
+        ("pattern",         _pattern_gen,         2.0),
+        ("bits",            _bits_gen,            2.0),
     ]
     if args.sudoku_csv and Path(args.sudoku_csv).exists():
         generators.append(("sudoku", _sudoku_gen_factory(args.sudoku_csv), 4.0))
