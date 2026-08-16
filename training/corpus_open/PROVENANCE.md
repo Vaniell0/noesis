@@ -51,14 +51,21 @@ pointed at via `.gitignore`. This manifest is the traceable record.
 - **Size:** 38,310,624 bytes (36.5 MB)
 - **SHA-256:** `08886644a8b41b8015095c1ff7636944a75c31eb8ba2a014f5e3a569962cab9e`
 - **Generated:** 2026-08-16 via `experiments/A0_eval/gen_tasks.py`
-  (`python3 experiments/A0_eval/gen_tasks.py --n 66029 --seed 42 --out training/corpus_open/matrix_tasks.jsonl`)
+  Current file is the base run (no sudoku/ARC). Full 20M-token run:
+  ```bash
+  python3 experiments/A0_eval/gen_tasks.py \
+      --n-tokens 20_000_000 --seed 42 \
+      --out training/corpus_open/matrix_tasks.jsonl \
+      --sudoku-csv ~/data/sudoku.csv \
+      --arc-dir ~/data/ARC-AGI/data/training
+  ```
 - **Total tasks:** 66,029
 - **Task breakdown:**
 
   | Category | Count | RL role |
   |---|---|---|
   | `matrix_wordsearch` | 13,157 | primary task (position, L1–L7) |
-  | `matrix_wordsearch_name` | 6,619 | L0 warmup — name the word, no coordinates |
+  | `matrix_wordsearch_name` | 6,619 | bootstrap warmup — name the word; L1/L2 rare (~5% each), L3-7 dominant to prevent guessing |
   | `arithmetic_matrix` | 13,211 | auxiliary — keeps non-spatial reasoning alive |
   | `bits_matrix` | 13,075 | auxiliary — lookup / substitution |
   | `pattern_matrix` | 13,347 | auxiliary — sequence continuation |
