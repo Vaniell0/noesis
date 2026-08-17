@@ -599,12 +599,21 @@ settled.
    Likely tolerable on a 4090 for the current scale, not optimal — a real
    cost if `G`/`batch` grow or M_max is raised.
 
-3. **Hardcoded architecture assumptions.** `head_size = 64` in
-   `loader.py::_load_blink` and `dim_ffn = int(((n_embd * 3.5) // 32) * 32)`
-   in `_load_peft` both match every checkpoint currently in use (G1d/G1h/G1i,
-   all RWKV-7 "Goose" with head_size 64) but aren't derived from the
-   checkpoint — a differently-shaped checkpoint would silently misconfigure
-   rather than error.
+3. **`head_size = 64` hardcoded in `loader.py::_load_blink`** — correct for
+   every checkpoint currently in use (G1d/G1h/G1i, all RWKV-7 "Goose"), not
+   derived from the checkpoint. Could be read from `blocks.0.att.r_k.shape[1]`
+   instead (verified 2026-08-17: G1d r_k is `(16, 64)`, G1i is `(40, 64)` —
+   `(n_head, head_size)` in both). Low priority — would only matter for a
+   differently-shaped checkpoint, none exists yet.
+   ~~`dim_ffn` formula in `_load_peft`~~ **verified 2026-08-17: not actually a
+   risk.** `RWKV_CMix_x070` (`rwkvt/rwkv7/ffn.py`) hardcodes its hidden layer
+   as `args.n_embd * 4` directly — it never reads `args.dim_ffn` at all. The
+   `int(((n_embd * 3.5) // 32) * 32)` formula (copied from `train.py`'s own
+   CLI default, itself inherited from RWKV-5/6's `ffn.py`, which *do* use
+   `dim_ffn`) computes a value that doesn't even match either G1d (3584 vs.
+   actual 4096) or G1i (8960 vs. actual 10240) — and it doesn't matter,
+   because nothing in the RWKV-7 path reads it. Dead code, safe to leave or
+   delete; not a source of silent misconfiguration.
 
 4. **No unit tests for the RL stack.** `training/tests/` and
    `experiments/H18_merge/`, `experiments/byte_adapter/` have real test
