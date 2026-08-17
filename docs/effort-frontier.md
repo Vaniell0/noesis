@@ -21,18 +21,35 @@ checks). When the next GPU session starts, an M-distribution measurement
 — cheap (inference only, no training needed) and establishes the pre-RL
 floor `monitor.py`'s STATE_COL check needs to compare against later.
 
-**M ≠ N — this doc used to say "(N=M, K=0, mode=silent)," which is an
-unverified simplification, not a settled equivalence.** N (old design):
-re-feed the *same prompt* through the WKV recurrence N times — no new
-information per pass, purely compounding state on repeated input. M
-(WKV-loop, current): each step feeds the model's *own just-generated output*
-(sampled token or expected embedding, `wkv_loop.py::generate_rollout`) back
-in — the model recurring on its own internal state trajectory, not re-reading
-external input. These are mechanically different operations that might turn
-out to have similar effects on accuracy (both are "extra state-refinement
-without visible output"), but nothing has tested whether they actually
-behave alike. Treat old N-sweep results as informative context for M, not as
-substitutes for an actual M-sweep.
+**Correction (2026-08-17, second pass): M is not N. In `discrete` feed_mode,
+M is mechanically K, not N.** This doc used to say WKV-loop implements
+"(N=M, K=0, mode=silent)" — checked against the actual code
+(`wkv_loop.py::generate_rollout`) and that's wrong, not just unverified:
+
+- **N** (old design): re-feed the *same prompt* through the recurrence N
+  times — no new information per pass, purely compounding state on repeated
+  input. **No analog exists anywhere in `generate_rollout`** — the prompt is
+  prefilled exactly once; nothing re-reads it.
+- **K** (old design): "K tokens are decoded from the current state, fed back
+  through WKV one by one, updating state at each step" — invisible, not
+  human-facing.
+- **M, `feed_mode="discrete"`** (the current default): `next_id =
+  argmax(v)`, feed it back, repeat — **word-for-word K's mechanism**, just
+  renamed and given a dynamic exit condition (plateau/commit) instead of a
+  fixed budget. This is `K` with early-stopping, not a new axis.
+- **M, `feed_mode="expected"`/`"residual"`** (peft/GPU only): feeds the
+  probability-weighted expected embedding back (continuous, no discrete
+  token at all — differentiable). This genuinely has **no analog** in the
+  old (N, K, mode) framework; it's the actually-new mechanism.
+
+So: discrete-mode M ≈ K-with-early-exit (same operation, verified by
+reading the code, not a hypothesis); expected/residual-mode M is new;
+**N has no WKV-loop equivalent at all** — the old N-sweep and any new
+M-sweep are not measuring comparable things, in either mode. Old N-sweep
+results should not be read as informative about M in any feed mode; old
+K-sweep results (flat, see below) are the more relevant — if unverified —
+prior for discrete-mode M, precisely because they're likely the same
+mechanism under a different name.
 
 **N-sweep (legacy axis, for reference): NOT YET RUN either.** Target model
 back when this was written: G1i base or post-RL checkpoint.
@@ -49,6 +66,18 @@ output), K=128/512/2048 → 4/48 flat. Interpretation carries over even though
 the A1 plan and step4 checkpoint don't: K-axis flat because the model was
 never trained with a state-quality objective for intermediate tokens (see
 §CoT-as-WKV-input). Training base is now G1i 2.9B.
+
+**Relevant prior for M (discrete mode) precisely because it's likely the same
+mechanism** (see the M-sweep note above — discrete-mode M is K's decode-and-
+feed-back operation with a dynamic exit instead of a fixed budget). If K was
+flat because nothing trained the model to write anything useful into those
+intermediate steps, the same failure mode predicts discrete-mode M will also
+be flat *before* GRPO trains the `−β·M`/entropy-plateau objective into the
+model — GRPO training is exactly the "state-quality objective" this K-sweep
+found missing. Testable: an M-sweep on G1i **base** (pre-RL) should look like
+the old K-sweep (flat, low accuracy); a real divergence after RL training
+would be the first sign that `−β·M` actually taught the model to use the
+loop, not just to stop early.
 
 **Current baselines (2026-08-14/16):**
 - G1i chatwrap (N=1, K=256): 41.7% (20/48) — best single-pass baseline
