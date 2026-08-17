@@ -43,6 +43,7 @@ from typing import Callable, Dict, List, Optional, Sequence
 KNOWN_PROBE_MODULES = [
     "experiments.A0_state_probe.ipc_analysis",
     "experiments.A0_state_probe.mlp_probe",
+    "experiments.A0_state_probe.rlens_probe",
 ]
 
 

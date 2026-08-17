@@ -35,13 +35,25 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import json
 import pathlib
+import sys
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn as nn
+
+# Bootstrap repo root onto sys.path before any `experiments.*` absolute
+# import — same reason as ipc_analysis.py/mlp_probe.py: this file runs
+# both as a bare script (only its own directory on sys.path) and imported
+# as `experiments.A0_state_probe.rlens_probe` (by experiments/run.py's
+# probe registry), which needs the repo root importable.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments._common import registry
 
 
 PROMPTS = [
@@ -188,16 +200,13 @@ def rlens_saliency(
 
 
 # ── Checkpoint probe ──────────────────────────────────────────────────────────
+# `_analyze_checkpoint` assumes model/tokenizer are already loaded — the
+# registry contract (see experiments/_common/registry.py). `probe_checkpoint`
+# below adds loading on top, for standalone --base/--trained diff mode,
+# which needs two independently-loaded models and doesn't fit the
+# single-loaded-model registry pattern.
 
-def probe_checkpoint(
-    model_path: str, device: str, prompts: List[Tuple[str, str]]
-) -> Dict:
-    from probe import load_model, _extract_wkv_per_layer  # noqa: F401
-
-    print(f"  loading {model_path}")
-    model, tokenizer = load_model(model_path, device=device)
-    model.eval()
-
+def _analyze_checkpoint(model, tokenizer, prompts: List[Tuple[str, str]]) -> Dict:
     results: Dict[str, Dict] = {}
 
     for pid, prompt in prompts:
@@ -233,6 +242,58 @@ def probe_checkpoint(
         }
 
     return results
+
+
+def probe_checkpoint(model_path: str, device: str, prompts: List[Tuple[str, str]]) -> Dict:
+    """Load `model_path` and analyze it. Standalone --base/--trained diff mode only."""
+    from experiments.A0_state_probe.probe import load_model
+
+    print(f"  loading {model_path}")
+    model, tokenizer = load_model(model_path, device=device)
+    model.eval()
+    return _analyze_checkpoint(model, tokenizer, prompts)
+
+
+# ── registered probe ─────────────────────────────────────────────────────────
+
+def _add_rlens_args(ap: argparse.ArgumentParser) -> None:
+    ap.add_argument("--prompts-file", default=None,
+                     help="Plain text file, one prompt per line (default: PROMPTS above)")
+
+
+@registry.probe(
+    "rlens",
+    hypothesis=["H8", "H9"],
+    description="R-lens: LN stop-grad saliency + WKV spectral analysis "
+                "(sigma1/stable_rank/sv_entropy per layer). Single-model only "
+                "in this path — base/trained diff mode is standalone-only, "
+                "needs two independently loaded models.",
+    add_args=_add_rlens_args,
+)
+def run(model, tokenizer, args: argparse.Namespace) -> dict:
+    prompts: List[Tuple[str, str]] = PROMPTS
+    if getattr(args, "prompts_file", None):
+        with open(args.prompts_file) as f:
+            prompts = [(f"p{i}", ln.strip()) for i, ln in enumerate(f) if ln.strip()]
+
+    results = _analyze_checkpoint(model, tokenizer, prompts)
+
+    all_sigma1 = [results[p]["sigma1"] for p in results if "sigma1" in results[p]]
+    summary = {}
+    if all_sigma1:
+        mean_s1 = np.mean(all_sigma1, axis=0)
+        peak_layer = int(np.argmax(mean_s1))
+        summary = {
+            "Mean sigma1 (mid layer)": f"{mean_s1[len(mean_s1) // 2]:.3f}",
+            "Peak sigma1 layer": f"L{peak_layer} ({mean_s1[peak_layer]:.3f})",
+        }
+
+    return {
+        "model": getattr(args, "model", None),
+        "prompts": [pid for pid, _ in prompts],
+        "results": results,
+        "_summary": summary,
+    }
 
 
 # ── Diff ──────────────────────────────────────────────────────────────────────
@@ -287,10 +348,14 @@ def main() -> int:
         output["trained_model"] = args.trained
         print_diff_table(base_stats, trained_stats, label=pathlib.Path(args.trained).stem)
 
-    out = pathlib.Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(output, indent=2))
-    print(f"\n[rlens] saved → {out}")
+    from experiments._common.results import save_result
+
+    out_path = save_result(
+        args.out, output, experiment="rlens", hypothesis=["H8", "H9"],
+        model=args.base, script=__file__,
+        summary={"mode": "diff (base vs trained)" if args.trained else "single-model"},
+    )
+    print(f"\n[rlens] saved → {out_path}")
 
     # Print sigma1 summary
     print("\n=== Base σ₁ by layer (mean across prompts) ===")

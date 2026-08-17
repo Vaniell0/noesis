@@ -1,6 +1,25 @@
 #!/usr/bin/env python3
 """J-lens Jacobian probe — base vs trained checkpoint comparison.
 
+DEPRECATED (confirmed 2026-08-17, evaluating this file for framework
+migration): superseded by rlens_probe.py, which fixes two real bugs here:
+  1. State indexing: probe_checkpoint below reads `state[L]` directly.
+     State is a flat list of length 3*n_layer (state[3*i+0]=shift buffer,
+     state[3*i+1]=WKV matrix, state[3*i+2]=FFN shift buffer) — `state[L]`
+     mixes shift buffers, WKV matrices, and FFN buffers depending on L,
+     mislabeled throughout as "layer L's WKV state." Results from this
+     file are not reliable.
+  2. The docstring below describes computing an analytical Jacobian with
+     a numeric-Jacobian sanity check (cosine_sim ≥ 0.70). Neither happens:
+     `_analytical_jacobian` is defined but never called, `_numeric_jacobian`
+     raises NotImplementedError, and the forward hooks that capture
+     `time_decay`/w populate a `captured` dict that's never read. What
+     actually gets computed (see probe_checkpoint) is SVD stats on the raw
+     WKV state matrix — a different, if related, quantity from what's
+     documented above.
+Do not use for new probing; not migrated into experiments/_common/ for
+these reasons. Left in place as-is (not deleted) — kept for reference.
+
 Computes the mean-field analytical WKV-7 Jacobian at sampled token
 positions and measures its singular value spectrum. Prediction (H8):
 L_state-trained checkpoints show higher top singular values in
