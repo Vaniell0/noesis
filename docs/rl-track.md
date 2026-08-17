@@ -12,10 +12,9 @@ structured as ASCII grids with verifiable answers. The design goals:
   A single task type causes gradient collapse to one learned pattern.
 - **Self-reflection training.** In the WKV-loop design the model runs M
   internal steps without emitting tokens; the entropy trajectory over those
-  steps acts as the exit criterion. The earlier `r_entropy`-on-think-span
-  framing is superseded — see §RL design STALE block and `rewards.py`.
-
-  > **[STALE 2026-08-16 — original bullet referenced `r_entropy` on `<think>` span. WKV-loop uses entropy-plateau exit (`|H_t − H_{t-1}| < eps`) + τ_commit threshold instead.]**
+  steps acts as the exit criterion (`plateau`/`commit`/`M_max`, see §RL
+  design). No `<think>`-span tokens or `r_entropy`-on-text-span reward exist
+  in the current design — that framing is gone, not just renamed.
 - **Bidirectional and diagonal attention.** Wordsearch L3–L7 forces
   right-to-left, bottom-to-top, and diagonal reading — breaking the
   left-to-right pretraining bias. WKV state must encode directional context.
@@ -176,156 +175,136 @@ record to get per-level accuracy.
 
 ## Full FT vs LoRA for latent token training
 
-> **[STALE 2026-08-16 — this section describes a two-phase SFT→GRPO design with L_state and ε-mask. SFT was skipped (icophy decision, see §Step10 SFT). ε-mask removed in WKV-loop design. Keep as ablation reference; do not use as implementation guide.]**
+**Decision: full FT, not a runtime choice.** `experiments/rl/loader.py::_load_peft`
+hardcodes `args.peft = "none"` — there is currently no LoRA toggle in the WKV-loop
+stack at all (unlike the earlier `train_wordsearch.py`, which had `--lora-r`). The
+reasoning behind that choice still holds and predates this rewrite: LoRA modifies
+projection matrices within a low-rank subspace, and the LoRA-rank analysis
+(`experiments/A0_state_probe/lora_rank_analysis.py`, 2026-08-14, see `HYPOTHESES.md`
+§H16) found LoRA r=32 spans only ~1.25% of a 2560×2560 weight matrix — the routing
+geometry that decides emit-vs-hold (H16) lives in the other 98.75%, which LoRA never
+touches. GRPO training the M-step exit behavior is exactly this kind of routing
+decision, so full FT is the only path expected to move it.
 
-LoRA alone cannot achieve a fundamental shift toward latent-token behavior.
-LoRA modifies projection matrices within a low-rank subspace; the model's
-core decision about whether to emit or hold (the quality gate, H16) lives
-in the full weight geometry. To train the model to allocate WKV state
-budget toward latent computation rather than output generation, the full
-parameter space must be updated.
+**Cost consequence, not yet addressed.** Full FT on G1i 2.9B needs the whole
+optimizer state in VRAM — naive estimate ~18GB. **FORGE** (`dk4248/FORGE`, fuses the
+optimizer into the backward pass, tile-by-tile) was researched as the fix
+(~18GB → ~12–13GB) but was never actually wired in — no `wrap_rwkv7()` helper, no
+integration with `_load_peft`/`train_wkv_loop.py`. This is a real gap, not a
+"someday": at 24GB (4090) the naive full-FT VRAM budget leaves little room for
+`G × batch` rollout parallelism; FORGE's headroom directly trades against how many
+GRPO rollouts can run per update. Needs doing before the next GPU session, not
+during it.
 
-**Variant A — Full FT (default, latent token track):**
-- All weights updated (full_ft_parts: all, lora.enabled: false)
-- L_state mandatory: trajectory regularization + ε-mask (0.05 outside think)
-- H12b.i slot entropy optional (separate run for ablation)
-- Two-phase: (1) SFT to establish latent token style, (2) GRPO RL to shape it
-- Loss on memory: L_state penalises low-rank WKV updates, forcing the model
-  to use its state budget for reasoning before committing to output
-
-**Variant B — LoRA (ablation only):**
-- LoRA rank 32 on attention weights, full FT on time/ln
-- Cheaper; useful to quantify what LoRA alone achieves vs full FT
-- Expected: partial latent behavior, insufficient depth shift
-
-H12b.i is optional in both variants — run as a separate checkpoint to
-isolate the slot entropy effect from the full-FT effect.
+The old ε-mask / two-phase-SFT framing that used to live in this section is gone —
+SFT was skipped entirely (see §Step10 SFT below), and ε-mask doesn't exist in the
+WKV-loop design (`−β·M` replaces it, see §RL design).
 
 ---
 
 ## RL design
 
-> **[STALE 2026-08-16 — design moved to WKV-loop (no `<think>` tokens). New reward: `r = r_correct − β·M − γ·Σ ReLU(ΔH_t)`. Implementation: `experiments/rl/rewards.py::compute_wkv_loop_rewards`. Rewrite of this section pending after sweep (task #12).]**
+**No `<think>` tokens.** The design below (rewritten 2026-08-17, superseding the
+think-token/CLIPO/ε-mask design this section used to describe) replaces visible
+CoT with **M silent internal WKV-refinement steps**: the model runs the WKV
+recurrence forward up to `M_max` times with no token emitted, then commits to an
+answer. Implementation: `experiments/rl/wkv_loop.py::generate_rollout` (loop) +
+`experiments/rl/rewards.py::compute_wkv_loop_rewards` (reward) +
+`experiments/rl/train_wkv_loop.py` (GRPO training loop, entry point).
 
-**Reward signal.** Three terms combined:
-- `r_correct`: +1 exact match, 0 correct format wrong value, −1 wrong format entirely
-- `r_entropy`: α × entropy reduction inside think span
-- `r_clipo`: InfoNCE contrastive on WKV state at `</think>`
+**The M-step loop and its exit criteria.** Each step feeds the model's own
+current-position output back in (mode depends on `--feed-mode`: `discrete` samples
+a token and feeds its embedding; `expected`/`residual` feed the softmax-weighted
+embedding directly, differentiable, peft-backend only) and re-runs the WKV
+recurrence. The loop exits — and the model commits to the actual answer — on
+whichever of three conditions fires first:
 
-Format partial credit (r_correct=0) prevents reward collapse when all G rollouts
-are wrong but structured — GRPO advantage stays non-zero, gradient continues to flow.
+| Exit reason | Condition | Meaning |
+|---|---|---|
+| `plateau` | `\|H_t − H_{t-1}\| < eps_plateau` (default 0.05) | Entropy stopped moving — another step isn't changing what the model "thinks" |
+| `commit` | `max(softmax) > tau_commit` (default 0.9) | Model is already confident — no need to keep refining |
+| `M_max` | step count reached the cap (CLI default 16) | Budget exhausted, forced exit |
 
-**Self-reflection mechanism — what r_entropy actually trains.**
+`H_t` is the entropy of the next-token distribution at loop step `t` — same
+quantity as the old think-span entropy metric, just measured over internal
+WKV steps instead of emitted tokens. `exit_reason` and `M` (steps actually used)
+are recorded per rollout (`WKVLoopRollout.exit_reason`/`.M`) and drive both the
+reward and `experiments/rl/monitor.py`'s health checks (STATE_COL flags when
+`exit_reason` is almost always `M_max` — the model isn't learning to stop early).
 
-`r_entropy = α × (H_entry − H_exit)` where H = mean(-log_prob) over the think span.
-This is not just a verbosity penalty. It trains the model to monitor the character of
-its own state changes:
+**Reward signal.** `r = r_correct − β·M − γ·Σ_t ReLU(H_t − H_{t-1})`
+(`compute_wkv_loop_rewards`, defaults β=0.02, γ=0.1):
+- `r_correct`: rubric match against the task answer (binary).
+- `−β·M`: step-count penalty — same role as the old ε-mask's "every emitted
+  token has a cost," just counting internal steps instead of think-tokens.
+  This is what teaches the model to prefer `plateau`/`commit` exits over
+  riding out to `M_max` on every rollout — the emergent quality gate the old
+  ε-mask section described, now via a direct penalty on step count rather
+  than an indirect loss on non-think-span tokens.
+- `−γ·Σ ReLU(ΔH_t)`: penalises entropy going *up* between consecutive steps
+  (only the increases; `ReLU` zeroes out decreases) — a step that makes the
+  model *less* sure is actively penalised, not just uncompensated.
 
-- **Productive think token**: k_t/v_t write content aligned with the task → WKV state
-  becomes more resolved → model grows more confident → token entropy drops.
-- **Empty think token**: k_t/v_t write noise → state quality unchanged → entropy flat.
+There is no CLIPO term and no separate `r_clipo`/`r_entropy`-on-think-span
+computation in the current implementation — see §Deferred below for where
+CLIPO/L_KVB actually stand.
 
-GRPO propagates gradient only through productive tokens. The model learns which
-think-span writes are useful — not from an explicit rule, but from the reward signal on
-its own entropy trajectory. Over training this becomes a quality gate: the model detects
-when its state has resolved the task and emits an answer, rather than continuing to write.
+**Curriculum schedule** (`experiments/rl/corpus.py::CorpusScheduler`,
+confirmed matches this description 2026-08-17):
+- L0 (bootstrap, pinned): `matrix_wordsearch_name` never leaves level 1,
+  regardless of accuracy — `_L0_ANCHOR` in `corpus.py` explicitly skips it in
+  both the advance and drop loops. Gives the model early positive reward
+  before it can do positional wordsearch at all.
+- All other categories: advance one level when a 5-batch rolling average
+  accuracy ≥ 80% (`advance_thresh`), drop one level below 50%
+  (`drop_thresh`). Matches the original design's numbers exactly; the
+  5-batch averaging window is new detail worth having on record.
 
-CLIPO adds the second layer: correct rollouts must have similar WKV states at `</think>`.
-The model learns that there is a canonical "found-it WKV geometry" for each task type,
-and learns to steer toward it. Combined with r_entropy: the model learns both *when* it
-has found the answer (entropy drop) and *what the state should look like* when it has
-(CLIPO contrastive). This is the prerequisite for Phase 4 — a model that cannot
-self-monitor its state trajectory cannot do silent computation meaningfully.
+**Training algorithm.** GRPO, `G=8` rollouts per prompt, `batch=4` prompts per
+update (CLI defaults), PPO-clip surrogate (`clip_eps=0.2`) + KL penalty
+(`kl_coef=0.01`) in `train_wkv_loop.py::wkv_grpo_loss`. Temperature 0.7 during
+rollout (`wkv_loop.py` default `answer_temperature`), greedy for eval.
 
-**Curriculum schedule.**
-- L0 (warmup): `wordsearch_name` — name the word, no coordinates. Rubric `\bWORD\b`.
-  Easiest possible: model just needs to read the grid. Stays in mix throughout.
-- L1–L2: position tasks on 5×6 grids, horizontal only. Advance at 80% batch accuracy.
-- L3+: add reverse/vertical. Drop back one level if accuracy falls below 50%.
-
-**Training algorithm.** GRPO with G=8 rollouts per prompt. Temperature 0.7 during
-rollout, greedy for eval.
-
-**Corpus mix.** `training/corpus_open/matrix_tasks.jsonl` (65 797 tasks, ~20M tokens).
-Six types: wordsearch_position 20%, wordsearch_name 10%, crossword 10%,
-arithmetic 20%, pattern 20%, bits 20%.
-No SFT — pure RL on verifiable matrix tasks (see decision record below).
+**Corpus mix.** `training/corpus_open/matrix_tasks.jsonl` (65 797 tasks, ~20M
+tokens, see §Training corpus above for the up-to-date category counts).
+No SFT — pure RL on verifiable matrix tasks (see §Step10 SFT decision below).
 
 **Connection to hypotheses.**
 
 | Hypothesis | What word-search measures |
 |-----------|--------------------------|
 | H8 (state-as-computation) | Does WKV state retain directional context row-by-row? |
-| H10 (multi-pass convergence) | Does N=2 sweep improve level 4–7 accuracy? |
+| H10 (multi-pass convergence) | Does the learned M distribution shift with task difficulty? |
 | H12b.i (slot utilisation) | Do slot-entropy losses improve diagonal scanning? |
-| H16 (gated externalisation) | Word-search RL trains latent think-phase use — precursor to H16 gate head. If the model learns to scan the grid in `<think>` tokens via GRPO, that is H16-without-gate. The gate head (emit vs. hold) is a separate A4 step. |
-| H19 (weight-knowledge contamination) | Word-search is a pure context task — the grid is in the prompt, model weights cannot help. Accuracy on L6–L7 is a direct proxy for context-read vs. weight-recall. A model scoring well on L7 demonstrably reads the context window. |
+| H16 (gated externalisation, RETRACTED as a separate head) | The `−β·M` mechanism is a *direct* implementation of "every step has a cost" — if it works, H16's emergent-gate story is confirmed via M-step commit behavior rather than a dedicated MLP head, consistent with H16's retraction. |
+| H19 (weight-knowledge contamination) | Word-search is a pure context task — the grid is in the prompt, model weights cannot help. Accuracy on L6–L7 is a direct proxy for context-read vs. weight-recall. |
 | H23 (spatial state) | Level 6–7 performance before vs after RL step |
 
-> **[STALE 2026-08-16 — ε-mask relies on `<think>` tokens which are removed in the WKV-loop design. H16 gate bootstrap now comes from entropy-plateau exit + τ_commit threshold in `wkv_loop.py`. Rewrite pending (task #12).]**
+---
 
-**ε-mask as H16 bootstrap — the key insight.**
+## Deferred / not implemented
 
-The ε=0.05 outside-think loss is not just an implementation parameter.
-It is the training signal that bootstraps the model's quality gate:
+These were explored as design directions before or during the WKV-loop rewrite
+but are **not** in `rewards.py`/`train_wkv_loop.py` today. Kept here as a
+reference for what to revisit, not as a description of current behavior.
 
-- With ε=0, the model learns "emit anything outside think, it costs nothing."
-- With ε=0.05, even tokens outside the think span carry a small loss signal.
-  The model learns that *every emitted token has a cost*. It learns to be
-  selective — to prefer think-span computation over low-confidence emission.
-- After GRPO on verifiable tasks, this selectivity becomes a dynamic gate:
-  the model routes uncertain reasoning into `<think>` and emits only when
-  confident. This is H16 (gated externalisation) emerging from the training
-  signal, not from an explicit gating head.
+**CLIPO contrastive reward** (arXiv 2603.10101) — push WKV states of correct
+rollouts together, pull correct vs. incorrect apart, as a reward term
+(InfoNCE on a WKV-state projection) on top of binary correctness. Made moot in
+its original form: it was keyed on WKV state at `</think>`, and there is no
+`</think>` position in the M-step loop anymore. A re-adaptation would key on
+state at the commit step instead — not designed yet.
 
-In other words: **ε-mask teaches quality awareness → GRPO shapes it into a
-self-regulated gate → H16 emerges without a dedicated MLP head.**
+**L_KVB auxiliary SFT loss** (arXiv 2602.21204) — teach think-span tokens to
+carry KV structure the WKV state absorbs cleanly. Doesn't apply without an SFT
+phase (see §Step10 SFT — skipped entirely), and doesn't have an obvious
+M-step analog (there's no token to attach a KV-consistency loss to during
+silent steps). Not revisited since the WKV-loop rewrite.
 
-The explicit H16 gate head (A4 step) would measure and sharpen this
-emergent behavior, not create it from scratch.
-
-> **[STALE 2026-08-16 — all three subsections below reference `<think>`-span tokens removed in WKV-loop design. Entropy penalty now tracks per-step `ReLU(H_t − H_{t-1})` over the WKV loop trajectory (see `rewards.py`). CLIPO and L_KVB deferred until after α-sweep. Rewrite pending (task #12).]**
-
-**Entropy reward shaping.** During GRPO rollout, reward term:
-`α * Δentropy_reduction` (entropy before vs. after think span). Encourages
-resolving uncertainty in think-space. Tune α separately from binary reward.
-See also arXiv 2508.04349 (GTPO/GRPO-S): entropy-weight per-token advantage
-directly inside the GRPO update — weight WKV-write tokens inside `<think>`
-by their token-level entropy, focusing gradient on high-uncertainty state
-writes. Complement to the span-level entropy term above.
-
-**CLIPO contrastive reward** (arXiv 2603.10101). Add as a reward term on top
-of binary correctness:
-
-```python
-# for each prompt group of G rollouts:
-# z_i = WKV state at end of <think> span, passed through small MLP head
-r_con_i = -λ * InfoNCE(z_i, positives={z_j: correct_j}, negatives={z_k: ~correct_k})
-r_con_i = max(r_con_i, -0.5)   # clamp
-# add r_con_i to verifiable reward before computing GRPO advantages
-```
-
-τ = 0.05, λ tuned per run (start 0.01). Projection dim 512. Push WKV states
-of correct rollouts together; pull correct vs. incorrect apart — geometry-level
-signal that correct answers route through similar WKV trajectories.
-
-**L_KVB auxiliary SFT loss** (arXiv 2602.21204). Add during SFT phase (before
-RL) to teach model to emit think-span tokens whose KV structure the WKV state
-can absorb cleanly:
-
-```python
-# inside think span forward pass, per WKV layer l:
-# W_{t-1}: WKV state before token t
-# k_t, v_t: key/value projections of current token
-L_KVB += mean(‖W_{t-1} @ φ(k_t) - v_t‖²)   # over think-span tokens
-# add to SFT loss: L_total = L_CE + λ_kvb * L_KVB,  λ_kvb ≈ 0.01
-```
-
-This is the inner-loop loss the delta rule already minimises per step; training
-L_KVB end-to-end teaches the outer loop to issue self-consistent KV pairs so
-the state becomes a good compressor of think-span content.
-
-Both activate in the A1.5 RL phase; irrelevant to the SFT baseline (steps 1–9b).
+**Entropy-weighted per-token GRPO advantage** (arXiv 2508.04349, GTPO/GRPO-S) —
+weight gradient by per-step entropy inside the loop, focusing updates on
+high-uncertainty steps. Compatible in principle with the current M-step loop
+(steps replace think-tokens as the unit), not implemented.
 
 ---
 
@@ -437,17 +416,24 @@ directional-attention training.
 
 ---
 
-## Phase 4 — Switch-GRPO path to H16 (latent computation, no emitted tokens)
+## Switch-GRPO (arXiv 2606.13106) — role unclear post-WKV-loop, kept for reference
 
 Source: arXiv 2606.13106 "Switchable Latent Reasoning."
 
-> **[STALE 2026-08-16 — "Phase 3 uses visible `<think>` tokens" is no longer true: WKV-loop already operates without emitting think tokens (M internal steps, no text output). The noesis↔Switch-GRPO mapping table below is also broken: `<think>`/`</think>` are not present. Rewrite pending (task #12); keep as design intent reference.]**
+**This section's original framing is obsolete, not just its terminology.** It
+was written as "Phase 4 extends Phase 3's visible `<think>` tokens to latent
+blocks" — but current Phase 3 (WKV-loop) *already* has no emitted reasoning
+tokens at all (M internal steps, nothing decoded). There is no "text →
+`<latent>` placeholder" curriculum to run, because there was never text to
+replace. Switch-GRPO's actual contribution — a well-defined policy ratio at
+explicit block boundaries — solves a problem the M-step design doesn't have
+(WKV-loop's boundary is just "the loop exited," not a tagged token pair).
 
-The WKV-loop design (current, Phase 3) runs M internal state-refinement steps
-without emitting tokens. Switch-GRPO (Phase 4) extends this to arbitrarily
-deep latent blocks with policy-ratio defined only over visible boundary tokens
-(`<swi>`/`</swi>`) and the answer. Prerequisites and curriculum structure below
-are still architecturally correct; the noesis mapping column needs updating.
+What might still be worth revisiting from the paper: if a future design wants
+*partial* visibility (some reasoning surfaced as text, some kept in state),
+Switch-GRPO's boundary-token mechanism is the right reference. Not scheduled;
+no prerequisite chain currently points at it. The mechanism sketch below is
+left as-is for that future reference, not as a near-term plan.
 
 **Three-token vocabulary extension:**
 - `<swi>` — enter latent block
@@ -480,23 +466,16 @@ segmented backward.
 Reward = ±1 correctness + ±1 tag-format (valid `<swi>`/`</swi>` pairs) +
 {0,1} latent-usage (bonus when correct answer used the latent path).
 
-**Noesis mapping:**
+**Noesis mapping — n/a.** The table this section used to have mapped
+`<swi>`/`</swi>`/`<latent>` onto `<think>`/`</think>` tokens that don't exist
+in the WKV-loop vocabulary — removed rather than patched, since there's no
+current design that would consume it. If the partial-visibility idea above
+ever gets picked up, the mapping needs to be rebuilt against `wkv_loop.py`'s
+actual exit-reason/M mechanics, not against a think-token vocabulary.
 
-| Switch paper | noesis equivalent |
-|---|---|
-| `<swi>`/`</swi>` | `<think>`/`</think>` (already in vocab) |
-| `<latent>` placeholder | new token (add to WordTokenizer) |
-| High-entropy CoT segment | Any think-span content after word-search RL |
-| Phase 1 SFT | Annotate think spans from RL checkpoint with entropy probe |
-| Phase 2 curriculum | Progressive: think tokens → `<latent>` placeholders |
-| Phase 3 Switch-GRPO | GRPO with latent-usage reward on word-search tasks |
-
-K_min (minimum latent dwell) must be enforced; without it the trained model
-exits the latent block in one step. Start K_min = 4; ablate (arXiv 2606.13106
-Appendix I).
-
-**Prerequisite:** word-search RL (Phase 3) must first converge on visible
-think tokens before Phase 4 is useful. Do not start Phase 4 cold.
+K_min (minimum latent dwell) is still a real design point if a boundary-token
+mechanism gets revisited: without it, a trained latent-block model exits in
+one step. Start K_min = 4; ablate (arXiv 2606.13106 Appendix I).
 
 ---
 
@@ -539,46 +518,115 @@ R-lens probe on non-task axes (e.g. narrative, arithmetic) before continuing cur
 
 ## Integrated RL loop — instrument map
 
-> **[STALE 2026-08-16 — diagram below is the old think-token design. Current implementation: `train_wkv_loop.py` + `corpus.py` + `monitor.py` + `vm_watchdog.py` + `probes.py`. Reward terms `r_clipo`/`r_entropy` removed. `verl`/RWKV-PEFT not used (custom loop). TransformerLens hook on `</think>` not applicable. Rewrite pending (task #12).]**
-
-All instruments and where they plug in:
+Actual current implementation (rewritten 2026-08-17). No `verl`, no
+TransformerLens, no external CLIPO repo — this is a custom loop built directly
+on RWKV-PEFT's model class, not the tool stack the original plan assumed:
 
 ```
-G1i base checkpoint — `models/rwkv7-g1i-2.9b-20260805-ctx16384.pth` (2026-08-05)
+G1i base checkpoint — models/rwkv7-g1i-2.9b-20260805-ctx16384.pth (2026-08-05)
 │
-├── [NO SFT warm-up — skip]
+├── [NO SFT warm-up — skip, see §Step10 SFT decision]
 │
-└── Phase 3: Direct RL (GRPO, word-search L1→L7)
+└── train_wkv_loop.py — main entry point, GRPO training loop
     │
-    ├── Per batch:
-    │   ├── Sample G=8 rollouts per prompt (T=0.7)
-    │   ├── r_correct  = ±1 binary (regex match on row=R col=C)
-    │   ├── r_clipo    = -λ · InfoNCE(WKV_state_end_think) clamped -0.5
-    │   │                 [CLIPO, 2603.10101 — separates reasoning from shortcut]
-    │   ├── r_entropy  = α · Δentropy_reduction (think span entry→exit)
-    │   │                 [GTPO, 2508.04349 — weight WKV-write tokens by entropy]
-    │   └── GRPO update on combined reward
+    ├── loader.py::load_rwkv7 — dual-mode: peft (GPU, differentiable,
+    │     args.peft="none" hardcoded → full FT only, no LoRA toggle) or
+    │     blink (CPU, inference-only, used for smoke tests)
     │
-    ├── After checkpoint 1 (mandatory):
-    │   └── R-lens probe: stable_rank on task + non-task axes
-    │       → if non-task near-chance: shortcut alert, stop curriculum
-    │       → if non-task intact: proceed
+    ├── Per batch (batch=4 prompts, G=8 rollouts each, T=0.7):
+    │   ├── wkv_loop.py::generate_rollout — M-step loop per rollout,
+    │   │     exits on plateau/commit/M_max (see §RL design)
+    │   ├── rewards.py::compute_wkv_loop_rewards —
+    │   │     r = r_correct − β·M − γ·Σ ReLU(ΔH_t)
+    │   ├── grpo.py::compute_advantages — group-relative advantage from
+    │   │     the 8 rollouts per prompt (this file predates the WKV-loop
+    │   │     rewrite, reused unchanged — GRPO's advantage math didn't
+    │   │     need to change when the reward did)
+    │   └── train_wkv_loop.py::wkv_grpo_loss — PPO-clip surrogate
+    │         (clip_eps=0.2) + KL penalty (kl_coef=0.01); replays
+    │         prefill+loop+answer per rollout to get gradients
+    │         (_recompute_wkv_log_probs — see §Known risks, this is the
+    │         "32 forward passes per update" cost point)
     │
-    ├── Curriculum advance: L_k → L_{k+1} when acc > 80% on current level
+    ├── monitor.py::TrainingMonitor — sliding-window (10 batches) health
+    │     flags: SHORTCUT, HACKING, STATE_COL, MODE_COL
     │
-    └── Phase 4 (after convergence):
-        Switch-GRPO → latent tokens (<swi>/<latent></swi>)
-        [2606.13106 — boundary tokens make policy ratio well-defined]
+    ├── corpus.py::CorpusScheduler — curriculum advance/drop (see §RL design)
+    │
+    ├── probes.py — inline stable_rank + IPC, run periodically without a
+    │     separate process (shares the already-loaded model)
+    │
+    └── vm_watchdog.py::VMWatchdog — Selectel 24h deadline safety net,
+          checkpoints and exits cleanly before forced VM termination
 ```
 
-**Resolved — use existing tools:**
-1. **Training stack**: RWKV-PEFT (reliable, already used in step9/9b). GRPO via `verl`
-   (same stack CLIPO uses — `verl/trainer/ppo/ray_trainer.py`).
-2. **WKV state extraction**: TransformerLens hook on `state[3*L+1]` at `</think>` position.
-   Canonical RWKV-7 support confirmed (Lucas, 2026-08-12). No custom backward needed.
-3. **LoRA r=32** on att weights, full FT on time/ln — same as step9b. RWKV-PEFT handles this.
-4. **CLIPO projection head**: use `Qwen-Applications/CLIPO` repo directly. Their MLP head
-   (2-layer, dim 512, InfoNCE) plugs into verl reward computation unchanged.
+No R-lens/TransformerLens hook is wired into this loop — `monitor.py`'s
+STATE_COL/MODE_COL flags are the current stand-in for "is the model
+collapsing to a shortcut," not a stable_rank probe on a held-out axis. The
+R-lens-after-checkpoint-1 check the old diagram described is still a good
+idea; it just isn't automated here yet.
+
+---
+
+## Known risks — unverified, found by code review 2026-08-17
+
+None of these are known bugs; they're places the design leans on an
+assumption that hasn't been checked. Listed here instead of silently, so the
+first GPU session treats them as things to verify, not things already
+settled.
+
+1. **`_peft_forward_embeds` numerical equivalence is unverified.** It
+   hand-reimplements `RWKV7.forward_infctx`'s block loop to accept
+   pre-computed embeddings instead of token ids (needed for
+   `expected`/`residual` feed modes — see `loader.py`). Inspection (2026-08-17)
+   shows it mirrors the reference loop faithfully for the numerical path
+   (same block loop, same `ln_out`/`head`); it silently skips the
+   reference's `grad_cp` checkpointing branch (memory/speed only, not
+   numerically different) and hardcodes `attention_mask=None` (fine for
+   unpadded single-sequence rollouts, unverified with padding). **This is
+   the most dangerous thing in the stack to be wrong about** — if it
+   diverges from `forward_infctx`, gradients for `expected`/`residual` mode
+   flow through the wrong computation and training would look like it's
+   working while learning something else. Needs a unit test: same prompt
+   through both paths (`emb(input_ids)` → `forward_infctx` vs.
+   pre-computed embeddings → `_peft_forward_embeds`), assert outputs match
+   within tolerance. Not written yet — needs GPU (peft backend).
+
+2. **`_recompute_wkv_log_probs` is not batched.** Called once per rollout
+   inside `wkv_grpo_loss`'s nested loop — at `G=8`, `batch=4` that's 32
+   sequential replays of prefill + M-loop + answer per training update, each
+   one token-at-a-time (no batching across the M steps or across rollouts).
+   Likely tolerable on a 4090 for the current scale, not optimal — a real
+   cost if `G`/`batch` grow or M_max is raised.
+
+3. **Hardcoded architecture assumptions.** `head_size = 64` in
+   `loader.py::_load_blink` and `dim_ffn = int(((n_embd * 3.5) // 32) * 32)`
+   in `_load_peft` both match every checkpoint currently in use (G1d/G1h/G1i,
+   all RWKV-7 "Goose" with head_size 64) but aren't derived from the
+   checkpoint — a differently-shaped checkpoint would silently misconfigure
+   rather than error.
+
+4. **No unit tests for the RL stack.** `training/tests/` and
+   `experiments/H18_merge/`, `experiments/byte_adapter/` have real test
+   files; `experiments/rl/` has only the `_smoke()` functions in
+   `loader.py`/`wkv_loop.py` (manual `--model` invocation, not automated,
+   not run in CI). For code this size and this correctness-sensitive
+   (reward shaping, GRPO advantage, gradient path), refactoring without
+   tests risks silently breaking the reward or the gradient without any
+   signal until a training run produces visibly wrong behavior.
+
+5. **`train_wordsearch.py` (older, pre-WKV-loop script, still present for
+   its `--byte-adapter` flag) turned out to be more broken than "just
+   unported"** when actually launched 2026-08-17: an `UnboundLocalError`
+   that broke even `--help`, a doubled `.pth` path, and — not fixed —
+   `RWKV_x070.parameters()` returns 0 (weights live in a `.z` dict, never
+   registered as `nn.Parameter`), so the default full-fine-tune path has
+   probably never produced a working optimizer, and `byte_adapter`'s own
+   parameters are never added to it either. Byte-adapter *inference-time*
+   embedding-patching works; *training* the adapter does not, currently.
+   See the `fix(rl): train_wordsearch.py` commit (2026-08-17) for the fixed
+   half; the parameter-registration gap needs a real design decision, not
+   a patch.
 
 ---
 
@@ -612,10 +660,14 @@ IPC≈0 as settled.
 **H10 gap** = requires nonlinear probe, not ridge regression. Run MLP probe after RL
 checkpoint 1 to quantify how much task-relevant content accumulates in WKV state.
 
-### MLP probe — RUNNING (2026-08-16)
+### MLP probe — NOT YET RUN (was mislabeled RUNNING; corrected 2026-08-17)
 
-Nonlinear IPC via 2-layer MLP replacing ridge regression. Linear IPC≈0 (held-out)
-confirms state encodes nonlinearly. MLP probe measures how much is actually there.
+Nonlinear IPC via 2-layer MLP replacing ridge regression. Written 2026-08-16,
+never actually launched — was queued behind the H10 state_readout eval (CPU
+contention), then behind an IPC re-verification run. Linear IPC≈0 (held-out)
+on G1i was the original motivation, but that result is itself now flagged as
+unreconciled (see §State metrics above) — worth keeping in mind when reading
+whatever this probe eventually reports.
 
 ```bash
 python3 experiments/A0_state_probe/mlp_probe.py \
