@@ -1,46 +1,48 @@
 # Effort frontier — noesis-specific test-time compute knobs
 
-> **Status (2026-08-16).**
->
-> **K-sweep** (2026-08-05, step4_merged @45% epoch, A1 plan — now superseded):
-> K ∈ {0, 128, 512, 2048}, N=1, mode=prompt_cot, 48 tasks.
-> Raw: K=0 → 0/48 (no output), K=128/512/2048 → 4/48 flat.
-> Interpretation unchanged: K-axis flat because model was never trained with
-> a state-quality objective for intermediate tokens (see §CoT-as-WKV-input).
-> A1 plan abandoned; training base is now G1i 2.9B. K verdict carries over.
->
-> **WKV-loop note (2026-08-16):** The WKV-loop design (`experiments/rl/wkv_loop.py`)
-> implements the `(N=M, K=0, mode=silent)` corner of the sweep space by construction —
-> M internal state-refinement steps, no token emission, entropy-plateau exit. M-axis
-> measurements on the post-RL WKV-loop checkpoint ARE effort-frontier data points.
-> The (N, K, mode) sweep below remains the full characterisation framework; the WKV-loop
-> collapses it to one specific path and measures how far M can push accuracy before
-> the exit criterion fires.
->
-> **N-sweep**: NOT YET RUN. Target model: G1i base or post-RL checkpoint.
-> External validation of N-axis mechanism: fleeb83 (external correspondence, 2026-08-16) demonstrated
-> 48/48 state-dependent stopping and multi-step symbolic composition on G1h 7.2B
-> using frozen backbone + silent recurrent ticks (no output tokens) + causal
-> swap/replace/zero controls. This is the empirical realisation of N > 1 —
-> the state accumulates usable computation across passes. The N-axis
-> is architecturally sound; the open question is whether G1i base (vs fine-tuned)
-> shows the same behaviour on task rubric.
->
-> **Current baselines (2026-08-14/16):**
-> - G1i chatwrap (N=1, K=256): 41.7% (20/48) — best single-pass baseline
-> - step9b-e1 (N=1, K=256): 39.6% — regression from step9 e0 (43.8%)
-> - G1h base: 7.1% (format mismatch; not a useful baseline)
-> - Word-search nsp: G1i 0%/3.6% (baseline/np=256) — target for RL
->
-> **eval.py mode bug (noted 2026-08-07):** `prompt_cot` and `silent` were
-> identical; `state_readout` discarded readout tokens. Status: known, not
-> yet patched. Any N-sweep must verify mode routing before interpreting results.
->
-> **First design-time data point (2026-07-23).** Adaptive per-N budget
-> variant of H12a on G1d-0.4B:
-> at N ≤ 8, budget → recall is monotone-positive;
-> at N ≥ 32, +952 tokens above 2048 did not move recall from floor.
-> Still needs full (N, K, mode) matrix to conclude.
+## Status (updated 2026-08-17)
+
+**eval.py mode bug — FIXED (2026-08-12), not "known, not yet patched" as this
+doc previously said.** `state_readout` shared its decode path with `prompt_cot`
+prior to 2026-08-12 (see `eval.py` lines ~220-221 for the code's own note); all
+`state_readout` results from before that date are invalid. The H10 rerun
+launched 2026-08-16 (`experiments/A0_eval/results/h10_state_readout_g1i_base.json`)
+is the first run on the fixed code — see `HYPOTHESES.md` §H10 for the result
+once it lands.
+
+**WKV-loop note.** `experiments/rl/wkv_loop.py` implements the
+`(N=M, K=0, mode=silent)` corner of the sweep space by construction — M
+internal state-refinement steps, no token emission, entropy-plateau exit.
+M-axis measurements on the post-RL WKV-loop checkpoint ARE effort-frontier
+data points. The (N, K, mode) sweep below remains the full characterisation
+framework; WKV-loop collapses it to one specific path and measures how far M
+can push accuracy before the exit criterion fires.
+
+**N-sweep: NOT YET RUN.** Target model: G1i base or post-RL checkpoint.
+External validation of the N-axis mechanism: fleeb83 (2026-08-16) demonstrated
+48/48 state-dependent stopping and multi-step symbolic composition on G1h
+7.2B using a frozen backbone + silent recurrent ticks (no output tokens) +
+causal swap/replace/zero controls — an empirical realisation of N > 1, state
+accumulating usable computation across passes. Open question: does G1i base
+(vs. fine-tuned) show the same behaviour on the task rubric.
+
+**K-sweep** (2026-08-05, step4_merged @45% epoch, A1 plan — superseded):
+K ∈ {0, 128, 512, 2048}, N=1, mode=prompt_cot, 48 tasks. Raw: K=0 → 0/48 (no
+output), K=128/512/2048 → 4/48 flat. Interpretation carries over even though
+the A1 plan and step4 checkpoint don't: K-axis flat because the model was
+never trained with a state-quality objective for intermediate tokens (see
+§CoT-as-WKV-input). Training base is now G1i 2.9B.
+
+**Current baselines (2026-08-14/16):**
+- G1i chatwrap (N=1, K=256): 41.7% (20/48) — best single-pass baseline
+- step9b-e1 (N=1, K=256): 39.6% — regression from step9 e0 (43.8%)
+- G1h base: 7.1% (format mismatch; not a useful baseline)
+- Word-search nsp: G1i 0%/3.6% (baseline/np=256) — target for RL
+
+**First design-time data point (2026-07-23).** Adaptive per-N budget variant
+of H12a on G1d-0.4B: at N ≤ 8, budget → recall is monotone-positive; at
+N ≥ 32, +952 tokens above 2048 did not move recall from floor. Still needs
+the full (N, K, mode) matrix to conclude anything general.
 
 ## Problem
 
