@@ -31,7 +31,7 @@ Two sections:
 | H10 | G1h 2.9B step8 e0 | 2026-08-07 | overall acc, N=1 silent (baseline) | 27.1% | `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md` |
 | H10 | G1h 2.9B step8 e0 | 2026-08-07 | overall acc, N=2 silent (best cell) | 33.3% | `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md` |
 | H10 | G1h 2.9B step8 e0 | 2026-08-07 | overall acc, N=3 silent (collapse) | 6.3% | `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md` |
-| H10 | G1i 2.9B base | pending (PID 133922) | state_readout N=1 K=32, overall acc | TBD | `experiments/A0_eval/results/h10_state_readout_g1i_base.json` |
+| H10 | G1i 2.9B base | 2026-08-17 | state_readout N=1 K=32, overall acc (first valid, not a controlled A/B vs step8 27.1%) | 33.3% (16/48) | `experiments/A0_eval/results/h10_state_readout_g1i_base.json` |
 | H12a | G1d 0.4B | 2026-07-23 | recall vs gap, decay axis (gap 14→229) | 0.40 → 0.02 | `experiments/A0_H12a_working_memory/` (v1) |
 | H12a | G1d 0.4B | 2026-08-11 | recall vs N, width axis (tail-gap=50w fixed) | 0.40 → 0.40 → 0.05 (N=4/8/16) | `experiments/A0_H12a_working_memory/results-v2/` |
 | H12b | G1d 0.4B / G1h base / G1h step7 | 2026-08-07 | aggregated accuracy, K=2 (all P) | 18% / 60% / 36% | `experiments/A0_H12b_multislot/results/report_2026-08-07.md` |

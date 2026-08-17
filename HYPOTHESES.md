@@ -182,7 +182,7 @@ Which hypothesis has been tested on which checkpoint. SUPPORTED/PARTIAL/FAIL = v
 |---|---|---|---|---|
 | H8 | SUPPORTED (A0.5) | SUPPORTED (A0.5) | R-lens: minor SR drop | IPC≈0 (held-out) |
 | H9 | SUPPORTED vs World3 | SUPPORTED vs World3 | SR concentrated (+think routing) | — |
-| H10 | K-sweep flat (45% epoch) | N=2 silent 33.3% best | ctx_len 512 bug → regression | IPC pending |
+| H10 | K-sweep flat (45% epoch) | N=2 silent 33.3% best | ctx_len 512 bug → regression | state_readout N=1 K=32: 33.3% (first valid, not a controlled A/B) |
 | H12a | width gradient v2 (noisy) | — | — | — |
 | H12b | K=2→18%, K=8→7% | K=2→65%, K=8→26% | step7: K=2→36%, P=2+ degrades | — |
 | H18 | fork CONFIRMED; arith merge partial | — | — | — |
@@ -854,6 +854,38 @@ where eval expects direct answer. Step6 (ToolBench) produced
 
 3D eval scaffold: `experiments/A0.8_refine/run_matrix_sweep.sh` (2026-08-07).
 Full results: `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md`.
+
+**G1i base state_readout N=1 K=32 — first valid state_readout result
+(run 2026-08-16→17, PID 133922, elapsed 28.8h wall on CPU).**
+`experiments/A0_eval/results/h10_state_readout_g1i_base.json`. This is the
+first `state_readout` number computed on the fixed evaluator (post-2026-08-12
+fix) — everything in the step8 sweep table above is invalid, this is the
+replacement data point.
+
+| Category | n | correct | accuracy |
+|---|---|---|---|
+| bit_decoding | 16 | 0 | 0.0% |
+| symbolic | 8 | 4 | 50.0% |
+| extraction | 8 | 6 | 75.0% |
+| scheduling | 6 | 5 | 83.3% |
+| string_ops | 6 | 1 | 16.7% |
+| arithmetic_chain | 4 | 0 | 0.0% |
+| **overall** | **48** | **16** | **33.3%** |
+
+Comparison the original plan asked for: step8 silent N=1 was 27.1% — this
+state_readout result (33.3%) is higher. **Caveat: not a controlled A/B on the
+same checkpoint** — the 27.1% baseline is G1h 2.9B step8-epoch0 (DSL-trained),
+this run is G1i 2.9B **base** (no fine-tuning). No "G1i base silent N=1, same
+eval.py, same task set" number exists to isolate the readout-mode effect from
+the model-checkpoint effect. Directionally consistent with state_readout
+carrying signal, not a clean confirmation of the H10 readout-mode claim.
+
+bit_decoding stays at 0/16 (same failure pattern as the invalid step8 sweep:
+`bit_book_03`/`bit_book_04` show the model looping the same few binary
+tokens without ever producing readable output — a generation-collapse
+failure mode, not a near-miss). scheduling (83.3%) and extraction (75.0%)
+are the strongest categories, consistent with G1i base's other eval.2
+results (41.7% chatwrap, extraction 87.5% there too).
 
 **ctx_len regression (step9b, 2026-08-08).** Step9b trained with
 `ctx_len=512` triggered the T<3 short-circuit in `state_reg.py` —
