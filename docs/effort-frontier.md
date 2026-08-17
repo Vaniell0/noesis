@@ -10,15 +10,32 @@ launched 2026-08-16 (`experiments/A0_eval/results/h10_state_readout_g1i_base.jso
 is the first run on the fixed code — see `HYPOTHESES.md` §H10 for the result
 once it lands.
 
-**WKV-loop note.** `experiments/rl/wkv_loop.py` implements the
-`(N=M, K=0, mode=silent)` corner of the sweep space by construction — M
-internal state-refinement steps, no token emission, entropy-plateau exit.
-M-axis measurements on the post-RL WKV-loop checkpoint ARE effort-frontier
-data points. The (N, K, mode) sweep below remains the full characterisation
-framework; WKV-loop collapses it to one specific path and measures how far M
-can push accuracy before the exit criterion fires.
+**M-sweep: NOT TESTED AT ALL, on any model, ever.** This is the axis that
+actually matters now — WKV-loop (`experiments/rl/wkv_loop.py`) is the live
+design, and M is its central knob, but no M-sweep data exists: no run, no
+result file, nothing to point at. Blocked on GPU (peft backend required for
+gradient-bearing rollouts; the CPU/blink backend only does `_smoke()`-scale
+checks). When the next GPU session starts, an M-distribution measurement
+(what M values rollouts actually exit at, `exit_reason` breakdown) on the
+*base* G1i checkpoint before any RL training is the natural first data point
+— cheap (inference only, no training needed) and establishes the pre-RL
+floor `monitor.py`'s STATE_COL check needs to compare against later.
 
-**N-sweep: NOT YET RUN.** Target model: G1i base or post-RL checkpoint.
+**M ≠ N — this doc used to say "(N=M, K=0, mode=silent)," which is an
+unverified simplification, not a settled equivalence.** N (old design):
+re-feed the *same prompt* through the WKV recurrence N times — no new
+information per pass, purely compounding state on repeated input. M
+(WKV-loop, current): each step feeds the model's *own just-generated output*
+(sampled token or expected embedding, `wkv_loop.py::generate_rollout`) back
+in — the model recurring on its own internal state trajectory, not re-reading
+external input. These are mechanically different operations that might turn
+out to have similar effects on accuracy (both are "extra state-refinement
+without visible output"), but nothing has tested whether they actually
+behave alike. Treat old N-sweep results as informative context for M, not as
+substitutes for an actual M-sweep.
+
+**N-sweep (legacy axis, for reference): NOT YET RUN either.** Target model
+back when this was written: G1i base or post-RL checkpoint.
 External validation of the N-axis mechanism: fleeb83 (2026-08-16) demonstrated
 48/48 state-dependent stopping and multi-step symbolic composition on G1h
 7.2B using a frozen backbone + silent recurrent ticks (no output tokens) +
