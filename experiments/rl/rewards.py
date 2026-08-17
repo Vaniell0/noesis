@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""rewards.py — reward computation for GRPO word-search RL.
+"""rewards.py — reward computation for GRPO / WKV-loop RL.
 
-Three reward terms:
-    r_correct  — ±1 binary: regex match on task rubric
-    r_clipo    — InfoNCE contrastive over WKV state at </think> (2603.10101)
-    r_entropy  — GTPO-style: entropy reduction inside think span (2508.04349)
+Two APIs:
 
-Usage:
+  WKV-loop (current, preferred):
+    from experiments.rl.rewards import compute_wkv_loop_rewards
+    rewards, diag = compute_wkv_loop_rewards(rollouts, rubric)
+
+    r = r_correct − β·M − γ·Σ_t ReLU(ΔH_t) [+ δ·stability_bonus]
+
+  Legacy RolloutGroup (kept for compatibility while rollout.py exists):
     from experiments.rl.rewards import compute_rewards
-    rewards = compute_rewards(group, clipo_head)  # shape [G]
+    rewards = compute_rewards(group, clipo_head)
 """
 from __future__ import annotations
 
@@ -20,6 +23,7 @@ import torch
 import torch.nn.functional as F
 
 from experiments.rl.rollout import RolloutGroup
+from experiments.rl.wkv_loop import WKVLoopRollout
 
 
 # ── r_correct ─────────────────────────────────────────────────────────────────
@@ -186,3 +190,72 @@ def compute_rewards(
                 r_clipo[idx] = sub_rewards[j]
 
     return r_correct + clipo_weight * r_clipo + entropy_weight * r_entropy
+
+
+# ── WKV-loop reward (no <think> tokens) ───────────────────────────────────────
+
+def compute_wkv_loop_rewards(
+    rollouts: List["WKVLoopRollout"],
+    rubric: dict,
+    *,
+    beta: float = 0.02,
+    gamma: float = 0.1,
+    delta: float = 0.0,
+    stability_threshold: float = 1.5,
+) -> tuple:
+    """Per-rollout reward for WKV-loop trajectories.
+
+    r = r_correct − β·M − γ·Σ_t ReLU(H_t − H_{t-1}) [+ δ·stability_bonus]
+
+    Args:
+        rollouts: list of WKVLoopRollout (one per sample in the GRPO group).
+        rubric: dict with "type" and "value" keys (same format as _score_correct).
+        beta: step-count penalty coefficient.
+        gamma: entropy-increase penalty coefficient.
+        delta: WKV-stability bonus coefficient (0 = disabled).
+        stability_threshold: mean wkv_stability below this → stable bonus.
+
+    Returns:
+        rewards: float tensor [G]
+        diag: dict with per-component tensors for logging:
+              "r_correct", "r_effort", "r_entropy_penalty", "r_stability",
+              "M", "exit_reason"
+    """
+    G = len(rollouts)
+    r_correct_t        = torch.zeros(G)
+    r_effort_t         = torch.zeros(G)
+    r_entropy_penalty_t = torch.zeros(G)
+    r_stability_t      = torch.zeros(G)
+    M_t                = torch.zeros(G, dtype=torch.long)
+    exit_reasons: List[str] = []
+
+    for i, r in enumerate(rollouts):
+        r_correct_t[i] = _score_correct(r.text, rubric)
+
+        r_effort_t[i] = -beta * r.M
+        M_t[i] = r.M
+
+        # sum of entropy increases: Σ_t max(0, H_t - H_{t-1})
+        traj = r.entropy_trajectory
+        entropy_penalty = 0.0
+        for t in range(1, len(traj)):
+            entropy_penalty += max(0.0, traj[t] - traj[t - 1])
+        r_entropy_penalty_t[i] = -gamma * entropy_penalty
+
+        if delta > 0.0 and len(r.wkv_stability) > 1:
+            mean_stab = sum(r.wkv_stability[1:]) / len(r.wkv_stability[1:])
+            if mean_stab < stability_threshold:
+                r_stability_t[i] = delta
+
+        exit_reasons.append(r.exit_reason)
+
+    rewards = r_correct_t + r_effort_t + r_entropy_penalty_t + r_stability_t
+    diag = {
+        "r_correct":         r_correct_t,
+        "r_effort":          r_effort_t,
+        "r_entropy_penalty": r_entropy_penalty_t,
+        "r_stability":       r_stability_t,
+        "M":                 M_t,
+        "exit_reason":       exit_reasons,
+    }
+    return rewards, diag

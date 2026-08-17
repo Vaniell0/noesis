@@ -48,10 +48,10 @@ pointed at via `.gitignore`. This manifest is the traceable record.
 ## matrix_tasks — locally generated RL curriculum (A1.5)
 
 - **File:** `matrix_tasks.jsonl`
-- **Size:** 38,310,624 bytes (36.5 MB)
-- **SHA-256:** `08886644a8b41b8015095c1ff7636944a75c31eb8ba2a014f5e3a569962cab9e`
+- **Size:** 38,405,794 bytes (36.6 MB)
+- **SHA-256:** `0ca16df762fee70cdbd25f09bbacf138ac8ff41a2897b4c7832decaa312a20e4`
 - **Generated:** 2026-08-16 via `experiments/A0_eval/gen_tasks.py`
-  Current file is the base run (no sudoku/ARC). Full 20M-token run:
+  Current file is the base run (no sudoku/ARC), ~20M estimated tokens. Full run with external data:
   ```bash
   python3 experiments/A0_eval/gen_tasks.py \
       --n-tokens 20_000_000 --seed 42 \
@@ -59,18 +59,18 @@ pointed at via `.gitignore`. This manifest is the traceable record.
       --sudoku-csv ~/data/sudoku.csv \
       --arc-dir ~/data/ARC-AGI/data/training
   ```
-- **Total tasks:** 66,029
+- **Total tasks:** 65,797
 - **Task breakdown:**
 
   | Category | Count | RL role |
   |---|---|---|
-  | `matrix_wordsearch` | 13,157 | primary task (position, L1–L7) |
-  | `matrix_wordsearch_name` | 6,619 | bootstrap warmup — name the word; L1/L2 rare (~5% each), L3-7 dominant to prevent guessing |
-  | `arithmetic_matrix` | 13,211 | auxiliary — keeps non-spatial reasoning alive |
-  | `bits_matrix` | 13,075 | auxiliary — lookup / substitution |
-  | `pattern_matrix` | 13,347 | auxiliary — sequence continuation |
-  | `crossword_enum` | 3,258 | auxiliary — constrained word retrieval |
-  | `crossword_fill` | 3,362 | auxiliary — constrained word retrieval |
+  | `matrix_wordsearch` | 13,098 | primary task (position, L1–L7) |
+  | `matrix_wordsearch_name` | 6,679 | bootstrap warmup — name the word; L1/L2 rare (~5%), L3-7 dominant |
+  | `arithmetic_matrix` | 12,988 | auxiliary — column arithmetic, carry, error detection |
+  | `bits_matrix` | 13,126 | auxiliary — XOR/AND/OR/NOT, reverse lookup |
+  | `pattern_matrix` | 13,312 | auxiliary — sequence extrapolation, rule induction |
+  | `crossword_enum` | 3,297 | auxiliary — constrained word retrieval |
+  | `crossword_fill` | 3,297 | auxiliary — constrained word retrieval |
 
 - **Rubric types:** `regex` (wordsearch position, crossword), `exact` (wordsearch_name, bits, arithmetic, pattern).
 - **Format:** each line is `{"id":..., "category":..., "level":..., "prompt":..., "answer":..., "rubric":{...}}`.
