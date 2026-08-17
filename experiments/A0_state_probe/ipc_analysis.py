@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Fixed 2026-08-16 fleeb83 PR#1 (agent/ipc-runtime-comparability, b63e179):
+# prompt-token double-feed bug — same trajectory bug was in our own
+# reference implementation. Numbers from before this commit (IPC≈12,
+# in-sample ridge regression) are invalid; see HYPOTHESES.md H8/IPC.
 """IPC (Information Processing Capacity) analysis of WKV state trajectory.
 
 Measures how much information about the input token history is linearly
@@ -39,12 +43,24 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import sys
+from pathlib import Path
 from typing import Optional, Sequence
 
 import numpy as np
 import torch
 
-from probe import load_model
+# Bootstrap repo root onto sys.path before any `experiments.*` absolute
+# import — this file is run both as a bare script (only its own directory
+# on sys.path) and imported as `experiments.A0_state_probe.ipc_analysis`
+# (e.g. by `experiments/run.py`'s probe registry), so it can't assume
+# either is already true.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments.A0_state_probe.probe import load_model
+from experiments._common import registry
 
 # ---------------------------------------------------------------------------
 # Legendre polynomials (normalized, degree 1..max_degree)
@@ -220,6 +236,22 @@ def collect_trajectory(
     for tok in input_ids:
         out, state = model.forward([tok], state)
 
+    # State is a flat list of length 3*n_layer (shift/wkv/ffn-shift per
+    # layer) — validate requested layers against the *loaded* model before
+    # touching it, rather than crashing on a bare IndexError deep in _wkv.
+    # (Found 2026-08-17: the CLI default `--layers 0,4,8,16,24,31` assumes
+    # a 32-layer 2.9B checkpoint; running it against G1d 0.4B, which has
+    # fewer layers, crashed with an unhelpful IndexError.)
+    n_layer = len(state) // 3
+    out_of_range = [l for l in target_layers if l < 0 or l >= n_layer]
+    if out_of_range:
+        raise ValueError(
+            f"layer(s) {out_of_range} out of range for this checkpoint "
+            f"(n_layer={n_layer}, valid range 0..{n_layer - 1}) — "
+            f"pass --layers matching this model's depth, the default "
+            f"assumes a 32-layer model"
+        )
+
     # Determine state dim from first layer after prefill
     def _wkv(s, l):
         return s[3 * l + 1]  # [n_head, head_size, head_size]
@@ -307,37 +339,42 @@ def compute_ipc(
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Registered probe — shared args, then the model-independent core logic.
+# `run()` assumes `model`/`tokenizer` are already loaded (by the caller —
+# either `main()` below for standalone use, or `experiments/run.py` when
+# this is one of several probes sharing a single loaded model).
 # ---------------------------------------------------------------------------
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True)
+def _add_ipc_args(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--n-tokens", type=int, default=256)
     ap.add_argument("--max-lag", type=int, default=8)
     ap.add_argument("--max-degree", type=int, default=2)
     ap.add_argument("--n-proj", type=int, default=128,
                     help="Random projection dimensionality (Dambre theoretical bound)")
-    ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu",
-                    help="Inference device (default: cpu)")
     ap.add_argument("--layers", default="0,4,8,16,24,31",
                     help="Comma-separated layer indices")
     ap.add_argument("--prompt", default=PROMPT)
-    ap.add_argument("--out", default="results/ipc_analysis.json")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--trajectory-in", type=pathlib.Path,
                     help="JSON token trajectory to teacher-force across checkpoints")
     ap.add_argument("--trajectory-out", type=pathlib.Path,
                     help="Save the generated/used token trajectory as JSON")
-    args = ap.parse_args()
 
+
+@registry.probe(
+    "ipc",
+    hypothesis=["H8"],
+    description="Information Processing Capacity (Dambre 2012) of WKV state, held-out R².",
+    add_args=_add_ipc_args,
+)
+def run(model, tokenizer, args: argparse.Namespace) -> dict:
     teacher_forced_tokens: Optional[list[int]] = None
     if args.trajectory_in is not None:
         teacher_forced_tokens, saved_prompt = load_token_trajectory(args.trajectory_in)
         if saved_prompt is not None and saved_prompt != args.prompt:
-            ap.error("--trajectory-in was recorded with a different prompt")
+            raise ValueError("--trajectory-in was recorded with a different prompt")
         if len(teacher_forced_tokens) != args.n_tokens:
-            ap.error(
+            raise ValueError(
                 "--trajectory-in length must match --n-tokens "
                 f"({len(teacher_forced_tokens)} != {args.n_tokens})"
             )
@@ -345,15 +382,10 @@ def main():
     target_layers = [int(x) for x in args.layers.split(",")]
     n_proj = args.n_proj
 
-    print(f"[ipc] model={args.model}")
     print(f"[ipc] layers={target_layers}  n_proj={n_proj}")
     print(f"[ipc] n_tokens={args.n_tokens}  max_lag={args.max_lag}  max_degree={args.max_degree}")
     print(f"[ipc] device={args.device}")
-    print(f"[ipc] n_proj (Dambre theoretical bound) = {n_proj}")
     print(f"[ipc] trajectory mode = {'teacher-forced' if teacher_forced_tokens is not None else 'autoregressive'}")
-
-    print("[ipc] loading model…")
-    model, tokenizer = load_model(args.model, device=args.device)
 
     print("[ipc] collecting trajectory…")
     token_ids, layer_states = collect_trajectory(
@@ -374,7 +406,6 @@ def main():
     print("[ipc] computing IPC…")
     ipc, basis_bound = compute_ipc(token_ids, layer_states, args.max_lag, args.max_degree)
 
-    # Summary table
     print("\n[ipc] === RESULTS ===")
     print(f"  basis_bound = max_lag({args.max_lag}) × max_degree({args.max_degree}) = {basis_bound}")
     print(f"  n_proj (Dambre theoretical bound) = {n_proj}")
@@ -386,10 +417,11 @@ def main():
         util = 100.0 * total / basis_bound
         print(f"{l:>6} {mc:>8.3f} {total:>8.3f} {util:>7.1f}%")
 
-    out_path = pathlib.Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out = {
-        "model": args.model,
+    mean_ipc = sum(ipc[l]["IPC_total"] for l in ipc) / len(ipc) if ipc else 0.0
+    peak_layer = max(ipc, key=lambda l: ipc[l]["IPC_total"]) if ipc else None
+
+    return {
+        "model": getattr(args, "model", None),
         "n_tokens": args.n_tokens,
         "max_lag": args.max_lag,
         "max_degree": args.max_degree,
@@ -401,8 +433,36 @@ def main():
         "layers": target_layers,
         "token_ids": token_ids,
         "results": {str(l): ipc[l] for l in sorted(ipc)},
+        "_summary": {
+            f"Mean IPC_total (L{','.join(str(l) for l in sorted(ipc))})": f"{mean_ipc:.3f} / {basis_bound}",
+            "Peak layer": f"L{peak_layer} ({ipc[peak_layer]['IPC_total']:.3f})" if peak_layer is not None else "—",
+        },
     }
-    out_path.write_text(json.dumps(out, indent=2))
+
+
+# ---------------------------------------------------------------------------
+# Standalone entry point — `python ipc_analysis.py --model ... --out ...`.
+# Unchanged CLI surface from before the registry refactor (2026-08-17).
+# ---------------------------------------------------------------------------
+
+def main():
+    from experiments._common.results import save_result
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu",
+                    help="Inference device (default: cpu)")
+    ap.add_argument("--out", default="results/ipc_analysis.json")
+    _add_ipc_args(ap)
+    args = ap.parse_args()
+
+    print(f"[ipc] model={args.model}")
+    print("[ipc] loading model…")
+    model, tokenizer = load_model(args.model, device=args.device)
+
+    out = run(model, tokenizer, args)
+
+    out_path = save_result(args.out, out, experiment="ipc", hypothesis=["H8"], script=__file__)
     print(f"\n[ipc] saved -> {out_path}")
 
 

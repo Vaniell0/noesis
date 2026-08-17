@@ -64,5 +64,5 @@ expands on.
 
 | H | Model | Date | Metric | Value | Result | Code |
 |---|-------|------|--------|-------|--------|------|
-| H8 | /home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth | 2026-08-17 | Mean IPC_total (L0,4,8) | 0.000 / 16 | `experiments/_common/runs/adhoc/ipc.json` | `experiments/A0_state_probe/ipc_analysis.py` |
-| H8 | /home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth | 2026-08-17 | Peak layer | L0 (0.000) | `experiments/_common/runs/adhoc/ipc.json` | `experiments/A0_state_probe/ipc_analysis.py` |
+| H8 | /home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth | 2026-08-17 | Mean IPC_total (L0,4,8,16,23) | 12.955 / 16 | `experiments/_common/results/adhoc/ipc.json` | `experiments/A0_state_probe/ipc_analysis.py` |
+| H8 | /home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth | 2026-08-17 | Peak layer | L8 (15.307) | `experiments/_common/results/adhoc/ipc.json` | `experiments/A0_state_probe/ipc_analysis.py` |

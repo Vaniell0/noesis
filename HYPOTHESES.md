@@ -1009,6 +1009,34 @@ Bug-fixed `ipc_analysis.py` (prompt-token not fed twice; `--trajectory-in` for c
 > fleeb83's used 512. Not reconciled. **Action before trusting either headline
 > number:** re-run `ipc_analysis.py` locally at `--n-tokens 512` with held-out R² and
 > compare directly against the native-trajectory table below on the same checkpoint.
+>
+> **Confirmed 2026-08-17 (fleeb83 re-sent the same table directly, unchanged) — the
+> numbers above are transcribed correctly.** But re-reading them against our own
+> ≈0 result sharpens the puzzle rather than resolving it: **fleeb83's own G1i 2.9B
+> base number is 17.2% of ceiling, not zero** — his in-sample-or-held-out-unclear
+> measurement disagrees with our held-out `ipc_g1i_fixed.json` on the *same*
+> checkpoint regardless of the in-sample-vs-held-out question.
+>
+> **New data point (2026-08-17, via `experiments/run.py --tests ipc`, same held-out
+> methodology, same n_tokens=256 as the G1i≈0 run above): G1d 0.4B is NOT near zero.**
+> Layers 0/4/8/16/23 → IPC_total 5.06/15.17/15.31/15.01/14.23 out of 16 (32%/95%/96%/94%/89%
+> of ceiling — well above fleeb83's own G1d number at either 512 or 1024 tokens, i.e. not
+> even the same order of magnitude as *his* in-sample-or-not numbers). This rules out
+> sample-size-alone as the explanation (same 256 tokens as the G1i run that gave ≈0) and
+> means the gap is not simply "fleeb83's methodology vs. ours" — our own local held-out
+> pipeline gives wildly different answers on G1d vs. G1i. Candidates, none checked yet:
+> (a) **held-out decodability is model-size-dependent** (0.4B state more linear than 2.9B) —
+> would itself be an interesting H8/H9 result if it survives scrutiny; (b) `n_proj=128` is
+> large relative to G1d's actual per-layer WKV state dimensionality in a way that inflates
+> apparent R² — G1d's per-layer state shape needs checking against G1i's; (c) something
+> specific to the `ipc_g1i_fixed.json` run (settings, a stale/bad checkpoint path, a code
+> path exercised differently) rather than a real G1d-vs-G1i architectural difference.
+> File: `experiments/_common/results/adhoc/ipc.json` (also `experiments/RESULTS.md` live
+> index). **Next step:** re-run G1h 2.9B base and G1i 2.9B base through
+> `experiments/run.py --tests ipc` at the same 256-token held-out settings — if G1i still
+> comes back ≈0 through the *current* code path, (c) is ruled out and this becomes a real
+> scale-dependence finding; if it doesn't reproduce ≈0, the original `ipc_g1i_fixed.json`
+> run itself was the anomaly.
 
 ### Native trajectory (each model processes its own tokens)
 
