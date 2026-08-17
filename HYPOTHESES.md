@@ -57,10 +57,24 @@ form that could be shown wrong, it does not belong here.
 
 The WKV state is not a rolling summary — it is a **world model register**.
 Each delta-rule update is a write into a fixed-capacity compressed
-representation of the current situation. The `<think>` tokens in L_state
-training are not chain-of-thought for human readers; they are **sequential
-WKV state writes** — deliberate updates to the world model before the model
-commits to an action.
+representation of the current situation.
+
+**Empirical grounding for this claim (H8, IPC, IB, 2026-08-16).**
+Two independent measurements make the "world model" framing non-trivial:
+- **IPC≈0 (held-out)** — WKV state is not linearly decodable. If it were a
+  rolling buffer, linear probes would recover past tokens directly. They don't.
+  IPC≈0 means the state encodes information through the WKV transformation
+  nonlinearly — it is computing, not storing.
+- **IB reconstruction lag=1→64 → 78–96% explained variance** (G1d 0.4B) —
+  the state carries predictive information over ≥64 tokens without collapsing
+  to the baseline. A rolling average would decay; this doesn't. Together:
+  IPC=0 (not linear) + IB≠0 (not zero) = the state holds information in
+  nonlinear form across time. That is a world model register, not a tape.
+
+The WKV-loop design (current A1.5) operationalises this: M internal state-refinement
+steps, no think-token emission. The M steps ARE the "sequential world model writes"
+the model uses before committing to an answer — the think-token wrapper was a
+scaffolding artefact, not the mechanism.
 
 This is what noesis is uniquely building:
 - `L_state` loss = trains the model to maximise write bandwidth per think
@@ -150,12 +164,43 @@ touch pieces implicitly).*
 - **H23** — LoRA-added WKV rank is structured-addressable (write-here /
   read-here), not just entropy-spread. *(wager; okna / window slots in
   state; pilot pending H12b checkpoint)*
-- **H24** — ε-mask + GRPO raises decoding efficiency (DE) without
+- **H24** — WKV-loop GRPO raises decoding efficiency (DE) without
   accuracy regression. *(wager; pre-RL baseline locked 2026-08-14:
   G1i DE=0.27, step9b-e1 DE=0.15; target DE ≥ 1.0 post-RL)*
 - **H25** — WKV state is a learnable computational substrate for
   approximate linear algebra without CoT tokens. *(wager, Phase 3;
   direction prompted by fleeb83 symbolic results 2026-08-16)*
+
+---
+
+## Model coverage table
+
+Which hypothesis has been tested on which checkpoint. SUPPORTED/PARTIAL/FAIL = verdict.
+`—` = untested. `lost` = data existed but on /tmp (Selectel VM deleted).
+
+| H | G1d 0.4B | G1h 2.9B base | G1h step7/9b-e1 | G1i 2.9B |
+|---|---|---|---|---|
+| H8 | SUPPORTED (A0.5) | SUPPORTED (A0.5) | R-lens: minor SR drop | IPC≈0 (held-out) |
+| H9 | SUPPORTED vs World3 | SUPPORTED vs World3 | SR concentrated (+think routing) | — |
+| H10 | K-sweep flat (45% epoch) | N=2 silent 33.3% best | ctx_len 512 bug → regression | IPC pending |
+| H12a | width gradient v2 (noisy) | — | — | — |
+| H12b | K=2→18%, K=8→7% | K=2→65%, K=8→26% | step7: K=2→36%, P=2+ degrades | — |
+| H18 | fork CONFIRMED; arith merge partial | — | — | — |
+| H20 | pilot 30→100 items, collapse=0.54 | base collapse=0.67 (lost) | step7=0.64 (lost) | — |
+| H21 | LOO F1=0.789 | LOO F1=0.850 (lost); 0.889 held-out not LOO | step7=0.889 held-out not LOO (lost) | — |
+| H22 | LOO F1=0.947 | LOO F1=0.929 (lost) | step7=0.929 (lost) | — |
+| H24 | — | — | step9b DE=0.15 (baseline) | DE=0.27 (baseline) |
+| H25 | — | — | — | wager only |
+
+**IPC multi-model** (files in `experiments/A0_state_probe/results/`):
+`ipc_g1h_base.json`, `ipc_g1i_base.json`, `ipc_g1i_fixed.json`, `ipc_step9b_e1.json` —
+all show IPC_total≈0 on held-out data (nonlinear encoding confirmed across scales/checkpoints).
+
+**`lost` entries** — H20/H21/H22 G1h data was computed on Selectel RTX 4090 and stored in
+`/tmp/ts_results/` which was not persisted. Numbers are captured in the result text below but
+raw files are gone. Numeric summaries: H21 G1h LOO F1=0.850 (genuine LOO, 2026-07-30 pilot
+item set — the 0.889 figure elsewhere is an 8-item held-out split, not LOO, see H21 section),
+H22 G1h LOO F1=0.929, H22 distinctness ρ=−0.054. Re-run on G1i once GPU available.
 
 ---
 
@@ -207,52 +252,19 @@ policy calibration, not from a re-instantiated H1 claim).
 
 ## H2. Reasoning-first outperforms knowledge-first at this scale
 
-**Claim.** A small model (≤ 3B) fine-tuned exclusively on reasoning
-supervision, given equivalent runtime retrieval access, will match or
-exceed a same-size model trained on mixed corpora (reasoning + domain
-knowledge in weights) on the user's real held-out tasks.
-
-**Prediction.** After A1, noesis + retrieval scores at least on-par with
-the strongest reference model (Qwen-2.5-3B-Instruct or Phi-4-mini) +
-retrieval on the A0.2 eval set.
-
-**Falsification.** If noesis + retrieval trails the reference by more
-than the noise floor across three independent metrics, the reasoning-
-first thesis is at least materially weakened, and the corpus strategy
-for A3 must be re-opened.
-
-**Related.** Track A (A1), Gate 2. P14 (agility over omniscience) —
-H2 is the training-time expression of that principle. If H2
-falsifies, the "reasoning-first small model matches knowledge-first
-same-size" wager fails and P14 has to survive on substrate
-properties (H19/H20/H21) alone.
-
-**Corpus selection constraint (derived 2026-08-06 from Step 5 analysis).**
-H2 is untestable by any purely *reactive* corpus. A reactive corpus
-(e.g. glaive-v2: 1–2 tool_use calls per session, user → tool_call →
-result → answer) treats each turn as an independent lookup; it does not
-require the model to accumulate context across many steps. RWKV's
-architectural advantage — WKV state as an explicit working memory that
-compounds across token positions — is only exercised by *reflexive*
-multi-step sequences: ReAct-style think→act chains, ToolBench rollouts
-(10–50 steps), or Claude CLI action chains (10–70 tool_use calls per
-session, stripped to tool_use targets + user/result context).
-
-Training on reactive corpora cannot refute or support H2 because the
-corpus does not load the mechanism (state accumulation) that H2 depends
-on. All Step 4/5 A1 measurements on glaive-v2 are architecturally
-confounded and must be excluded from H2 evidence. Step 6 corpus must be
-reflexive-first; the corpus-architecture fit is a prerequisite for any
-valid H2 test, not a post-hoc tuning parameter.
-
-**Status.** **WITHDRAWN (2026-08-14).** A1 results make the direction obvious without the
-formal test: step9b-e1 (2.9B, reasoning LoRA) scores 39.6% overall and 87.5% on symbolic
-vs Gemma4 e4b (37.5% / 37.5%) — reasoning-tuned RWKV beats a larger mixed-corpus model on
-reasoning tasks. The formal comparison (Qwen-2.5-3B-Instruct or Phi-4-mini + retrieval vs
-noesis + retrieval) was never run. Interest in this as a standalone research question has
-faded; the sub-claims that remain live are carried by H12a (state-capacity reallocation),
-H17 (substrate absorption vs re-injection), and H24 (decoding efficiency (DE) under RL). Closing without
-scheduling a test that would add little beyond what A1 already showed.
+**WITHDRAWN (2026-08-14).** Claim was: a ≤3B model fine-tuned exclusively on
+reasoning supervision, given equivalent retrieval, matches or exceeds a
+same-size mixed-corpus (reasoning + baked domain knowledge) model. A1 made
+the direction obvious without the formal head-to-head: step9b-e1 (2.9B,
+reasoning LoRA) beats Gemma4 e4b (larger, mixed-corpus) on symbolic
+(87.5% vs 37.5%) and matches overall (39.6% vs 37.5%). The planned formal
+test (Qwen-2.5-3B-Instruct/Phi-4-mini + retrieval vs noesis + retrieval)
+was never run — interest faded, remaining sub-claims carried forward by
+H12a (state-capacity reallocation), H17 (substrate absorption), H24 (DE
+under RL). Corpus-selection lesson (reactive corpora like glaive-v2 can't
+exercise WKV state accumulation, so can't test this class of claim) is
+preserved in `FAILED.md §2026-08-06` and already acted on in the Step 6+
+corpus redesign (`ROADMAP.md` § A1 corpus evolution).
 
 ---
 
@@ -698,6 +710,8 @@ A1 full-epoch eval.
 
 ## H10. Test-time compute frontier — state × tokens × readout
 
+> **[STALE 2026-08-16 — Claim and Prediction below are superseded by WKV-loop design. N×K×mode collapses to single M axis (internal WKV steps, no decoded think-tokens). `state_readout` mode replaced by `feed_mode ∈ {discrete, expected, residual}` in `experiments/rl/wkv_loop.py`. Experimental data (table below) remains valid. Rewrite pending after α-sweep (task #12).]**
+
 **Claim.** The RWKV-7 backbone exposes three orthogonal knobs before
 final answer decode:
 
@@ -747,6 +761,13 @@ diverges).
 - If rubric decreases with N (state destabilises on re-feed),
   refinement itself is refuted — supersedes the matrix conclusion;
   register in `FAILED.md`.
+
+**WKV-loop connection (2026-08-16).** The WKV-loop design (`experiments/rl/wkv_loop.py`)
+implements the `(N=M, K=0, mode=silent)` corner of the sweep space by construction.
+M internal state-refinement steps, entropy-plateau exit — this IS the N-axis.
+Post-RL WKV-loop checkpoint M-vs-accuracy measurements are effort-frontier data points.
+The full (N, K, mode) sweep design remains the generalisation framework; WKV-loop
+collapses it to one path and validates it on word-search.
 
 **Related.** Track A (A0.8, extended 2026-07-22 from N-only sweep to
 3D matrix). Directly follows H8-causal PASS: if state does work per
@@ -958,15 +979,85 @@ Result: `experiments/A0_state_probe/results/ipc_g1i_fixed.json`.
 Earlier measurements (G1h/G1i base, step9b-e1) showed IPC≈12 per layer — these were in-sample
 ridge regression on the same trajectory used for fitting. Held-out evaluation reveals those were
 overfitting artifacts (n_proj=128 random projections with only ~200 training points → regression
-memorises noise). Corrected by Russell Thomas (fleeb83) trajectory fix + held-out split.
+memorises noise). Corrected by fleeb83 (fleeb83) trajectory fix + held-out split.
 
 **Key finding: WKV state is not linearly decodable (held-out IPC ≈ 0).**
+**Caveat (2026-08-16, unresolved):** fleeb83's independently-reported IPC numbers on
+the same checkpoints are nonzero (17–48% of ceiling) — see the "IPC multi-model"
+discrepancy flag below before citing IPC≈0 as settled.
 
 This is a positive result for H8, not a failure. If the state stored past tokens in a
 linearly accessible form it would be a simple buffer. IPC≈0 means the state encodes
 information through the WKV transformation in a fundamentally nonlinear form — the state
 IS doing computation, not acting as a memory tape. Nonlinear probes (MLP, kernel ridge)
 are required to measure actual state content; ridge regression is not the right tool.
+
+**IPC multi-model (fleeb83, 2026-08-16 — fixed trajectory, Dambre 2012 framework).**
+Bug-fixed `ipc_analysis.py` (prompt-token not fed twice; `--trajectory-in` for cross-model).
+16-term polynomial basis, mean IPC across all layers:
+
+> **⚠ Unresolved discrepancy vs. the held-out IPC≈0 result above.** These numbers
+> (received via email, no local result file / not independently reproduced in this
+> repo) report substantial nonzero IPC (2.7–7.6, i.e. 17–48% of the 16-term ceiling)
+> for the *same* checkpoints (G1h base, G1i base, step9b-e1) that our own
+> `ipc_g1i_fixed.json` run reports as IPC_total≈0 for L4–L31. Both are described as
+> using the double-feed-fixed script, but the local held-out-R² split (added in
+> `9b28b7f`, before fleeb83's PR#1 was merged) may or may not be present in whatever
+> version fleeb83 ran — if his numbers are in-sample rather than held-out, that alone
+> would explain the gap (same failure mode as the original pre-fix "IPC≈12" artifact).
+> The other candidate explanation is sample size: our local run used 256 tokens,
+> fleeb83's used 512. Not reconciled. **Action before trusting either headline
+> number:** re-run `ipc_analysis.py` locally at `--n-tokens 512` with held-out R² and
+> compare directly against the native-trajectory table below on the same checkpoint.
+
+### Native trajectory (each model processes its own tokens)
+
+| Model | Mean IPC | Peak IPC | Peak layer | % of 16-term ceiling |
+|-------|---------|---------|-----------|---------------------|
+| G1d 0.4B | 4.174 | 6.927 | L8 | 26.1% |
+| G1h 2.9B base | 2.734 | 5.625 | L4 | 17.1% |
+| G1i 2.9B base | 2.759 | 5.546 | L4 | 17.2% |
+| step9b-e1 | 3.673 | 6.090 | L4 | 23.0% |
+
+Sequence length: 512 tokens native.
+
+### Cross-model on G1h BASE reference trajectory (teacher-forced, 1024 tokens)
+
+| Model | Mean IPC | Peak IPC | Peak layer | % of 16-term ceiling |
+|-------|---------|---------|-----------|---------------------|
+| G1d 0.4B | 7.433 | 9.235 | L8 | 46.5% |
+| G1h 2.9B base | 7.440 | 8.918 | L8 | 46.5% |
+| G1i 2.9B base | 7.455 | 8.954 | L8 | 46.6% |
+| step9b-e1 | 7.655 | 9.121 | L8 | 47.8% |
+
+At 1024 tokens (same sequence): all models converge to ~7.44–7.65. step9b-e1 +0.22
+over G1i base on identical input — fine-tuning adds state computation without changing
+the WKV architecture. Δ 512→1024: G1h +4.71, G1i +4.70, step9b +3.98 — longer trajectory
+allows more structure to accumulate.
+
+### G1G (Xyra) lineage: layer-specific sensitivity at 512 tokens
+
+| Layer | BASE IPC | RDP-8 IPC | RDP-17 IPC | RDP-17 − BASE |
+|-------|---------|----------|----------|--------------|
+| L25 | 3.014 | 3.014 | 3.014 | +0.000 |
+| L28 | 2.751 | 2.892 | 3.560 | **+0.808** |
+| L31 | 0.972 | 0.643 | 3.163 | **+2.191** |
+
+Pattern: early training (RDP-8) **reduces** L31 IPC vs base (specialisation / attractor
+narrowing); extended training (RDP-17) triples L31 IPC. L25 unchanged throughout.
+This is a grokking-like dynamic: deep layers activate for computation only after sustained
+training. Relevant for word-search RL — J-lens stable_rank at L28/L31 should rise after
+extended RL, not early checkpoints.
+
+**H9 support (cross-model at 1024):** step9b-e1 7.655 > G1i base 7.455 > G1h base 7.440
+on identical token sequence. Fine-tuning (step9b) adds +0.20 IPC on the same tokens —
+the model computes more from the same input. Confirms H9: G1-line training amplifies
+state utilisation, not only output distribution.
+
+**World-model framing:** higher IPC = more of the input history recoverable from WKV state
+via nonlinear basis functions. G1G RDP-17 L31 going from 0.97 to 3.16 means the deepest
+layer goes from "barely contributing" to "active computation site" after training. The
+world model register gets richer with training, not just wider.
 
 Implication for RL: the state capacity exists but is nonlinearly encoded. After RL training,
 rerun IPC with an MLP probe to measure how much task-relevant information accumulates.
@@ -1238,45 +1329,13 @@ priority for conclusive verdict — step7.pth is corrupted, use G1i once availab
 
 **H12b behavioral probe (2026-08-07, full run).** 420 cells:
 K∈{2,4,8}, P∈{1,2,4}, n=10 per cell. Three models: G1d-0.4B base,
-G1h-2.9B base, G1h-2.9B step7-action.
-Results: `experiments/A0_H12b_multislot/results/report_2026-08-07.md`.
+G1h-2.9B base, G1h-2.9B step7-action. G1d 0.4B tested at P=1 only:
+K=2→18%, K=4→15%, K=8→7% (no depth/P data — contamination already
+visible at P=1 so P=2+ wasn't run). Results:
+`experiments/A0_H12b_multislot/results/report_2026-08-07.md` and
+`results/` dir.
 
-| Model          | K=2,P=1 | K=4,P=1 | K=8,P=1 | K=8,P=2 | K=8,P=4 |
-|----------------|---------|---------|---------|---------|---------|
-| G1d 0.4B base  | 18%     | 15%     |  7%     | —       | —       |
-| G1h 2.9B base  | 65%     | 67%     | 53%     | 21%     |  5%     |
-| G1h 2.9B step7 | 25%     | 45%     | 51%     | 11%     |  8%     |
-
-**Verdict (behavioral baseline):**
-- Architecture (G1h vs G1d) is the dominant factor — not fine-tuning.
-  G1d 0.4B shows contamination at K=8 (7%); G1h 2.9B base holds at K=8,P=1.
-- **Step7 < base on 7/9 cells.** The earlier "NO CONTAMINATION" (P=1 only,
-  quick run same day) was a depth artefact: at P=2+ step7 degrades faster
-  than base. Action-chain SFT traded multi-slot depth retention for
-  shallow one-shot retrieval. See `FAILED.md §2026-08-07`.
-- P=1 probes are insufficient for multi-slot claims; P=2+ required.
-
-Note: this is the behavioral baseline only, not the H12b architectural
-treatment (LoRA-expanded multi-slot state + H12b.i regularizer). The
-architectural intervention remains Phase 2 work.
-
-H12b = runnable treatment (independent of H12a v2 verdict); H12b.i
-regularizer expected necessary by analogy with MoE prior art (untested).
-Phase 2 architectural probe.
-
-**H12b BEHAVIORAL PROBE — full run 2026-08-07** (420 probes, K={2,4,8},
-P={1,2,4}, 10/cell, seed=42, CUDA RTX 4090). Files:
-`experiments/A0_H12b_multislot/results/`.
-
-Accuracy = correct/total across all P for given K:
-
-| Model | K=2 | K=4 | K=8 |
-|-------|-----|-----|-----|
-| G1d 0.4B base | 18% | 15% | 7% |
-| G1h 2.9B base | 60% | 45% | 26% |
-| G1h 2.9B step7 | 36% | 32% | 23% |
-
-Per-cell (G1h 2.9B):
+Per-cell (G1h 2.9B, both variants, all P):
 
 | Cell | base | step7 |
 |------|------|-------|
@@ -1290,15 +1349,38 @@ Per-cell (G1h 2.9B):
 | K=8 P=2 | 21% | 11% |
 | K=8 P=4 |  5% |  8% |
 
-Key findings: (1) Architecture dominates: G1h 2.9B base K=8 avg=26% vs
-G1d 0.4B K=8 avg=7% — G1 state-evolution training is the primary driver.
-(2) Previous "NO CONTAMINATION" claim was P=1 artefact: at P=1 step7≈base
-at K=8 (51% vs 53%), but at P=2+ step7 degrades faster. (3) Action-chain
-training (step7) does NOT improve multi-slot retention — step7 < base on
-7/9 cells. (4) Step7 changed slot-access pattern to shallow (P=1 one-fact-
-per-turn, matching action-chain structure), losing depth retention. (5)
-H12b.i (utilisation regularizer) is mandatory — training did not
-spontaneously learn balanced slot utilisation.
+Aggregated (accuracy = correct/total across all P, per K):
+
+| Model | K=2 | K=4 | K=8 |
+|-------|-----|-----|-----|
+| G1d 0.4B base | 18% | 15% | 7% |
+| G1h 2.9B base | 60% | 45% | 26% |
+| G1h 2.9B step7 | 36% | 32% | 23% |
+
+**Verdict / key findings:**
+1. **Architecture (G1h vs G1d) is the dominant factor, not fine-tuning.**
+   G1h 2.9B base K=8 aggregate 26% vs G1d 0.4B K=8 7% — G1 state-evolution
+   training is the primary driver. G1d already shows contamination at
+   K=8,P=1 (7%); G1h base holds at K=8,P=1 (53%).
+2. **Step7 < base on 7/9 cells.** The earlier "NO CONTAMINATION" claim
+   (P=1 only, quick run same day) was a depth artefact: at P=1 step7≈base
+   at K=8 (51% vs 53%), but at P=2+ step7 degrades faster than base.
+   Action-chain SFT traded multi-slot depth retention for shallow
+   one-shot retrieval. See `FAILED.md §2026-08-07`.
+3. **P=1 probes alone are insufficient for multi-slot claims; P=2+ required**
+   to see the step7 depth-retention regression at all.
+4. Step7 changed slot-access pattern to shallow (P=1 one-fact-per-turn,
+   matching action-chain structure), losing depth retention.
+5. **H12b.i (utilisation regularizer) is mandatory** — training did not
+   spontaneously learn balanced slot utilisation.
+
+Note: this is the behavioral baseline only, not the H12b architectural
+treatment (LoRA-expanded multi-slot state + H12b.i regularizer). The
+architectural intervention remains Phase 2 work.
+
+H12b = runnable treatment (independent of H12a v2 verdict); H12b.i
+regularizer expected necessary by analogy with MoE prior art (untested).
+Phase 2 architectural probe.
 
 ---
 
@@ -1540,6 +1622,7 @@ sequenced.
 ---
 
 ## H16. Gated externalisation from a rate-limited silent think-stream
+### RETRACTED (2026-08-11)
 ### *(wager, Phase 3+, informs runtime architecture)*
 
 **Claim.** A production-grade "peer" model — one that *lives*
@@ -2255,6 +2338,8 @@ collapse_cont on cf+ba but higher p(neither) on ba+ui; differences < 0.08. No cl
 SFT effect — consistent with step7 not being aporia-specific training.
 
 Files: `/tmp/ts_results/h20_g1h_base/`, `h20_g1h_step7/` (G1h 2.9B, 2026-08-07).
+**Note:** /tmp paths were on Selectel VM (deleted). Raw files lost; summary numbers captured above.
+Re-run target: G1i 2.9B on same items_100.jsonl.
 
 ---
 
@@ -2387,8 +2472,15 @@ for P14 (agility over omniscience) — the principle only holds if
 the model can *tell* what it does not know, and H19/H20/H21/H22 are
 what turns that into measurable behaviour rather than a slogan.
 
-**Status.** PILOT COMPLETE + EXTERNAL VALIDATED. G1d 0.4B LOO F1=0.789,
-G1h 2.9B LOO F1=0.889, G1h 2.9B v3_29b train/test F1=1.000. Scarletwolf
+**Status.** PILOT COMPLETE + EXTERNAL VALIDATED. G1d 0.4B LOO F1=0.789
+(pilot item set). G1h 2.9B LOO F1=0.850 (2026-07-30, same pilot item
+set as G1d — the honest LOO number). G1h 2.9B held-out F1=0.889
+(2026-08-07 N-sweep, single 8-item split on items_v4_clean.jsonl —
+**not LOO**, corrected below; this repo previously mislabeled it as
+LOO). G1h 2.9B v3_29b train/test F1=1.000 (2026-08-08, 32/8 split,
+same shape/seed as the N-sweep split but not verified to be the
+identical split — the 0.889 vs 1.000 discrepancy on what looks like
+the same config is unresolved, flagged not fixed). Scarletwolf
 pre-registered external validation (2026-08-11): data gap fill installs
 disposition, p=0.013 at 2.9B. Corpus feed-back in step10 (premise=10%).
 
@@ -2464,12 +2556,15 @@ runs — likely requires knowing the arithmetic is wrong, not just state shape.
 Feature dim 2560 (per-layer per-head mean+std). Pilot target 0.75 ✓.
 
 Files: `/tmp/ts_results/h21_g1h_{base,step7}_p{1,2}/` (G1h 2.9B, seed=13, 2026-08-07).
+**Note:** /tmp paths lost (Selectel VM deleted). Summaries above are the persisted record.
 
 **v3_29b: G1h 2.9B train/test split 2026-08-08** (`experiments/premise_validator/v3_29b/`).
 40 items (32 train / 8 test, stratified, seed=13). F1=**1.000**, acc=1.000.
-All 8 test items correct (4 invalid + 4 valid). This is more optimistic than
-LOO F1=0.889 because the 32/8 split places easy structurals in train; LOO
-is the honest number. Both pass pilot target 0.75.
+All 8 test items correct (4 invalid + 4 valid). Same split shape/seed as
+the N-sweep's 8-item held-out F1=0.889 above, but not verified to be the
+identical split or item set — the gap between the two is unresolved.
+Neither number here is LOO; the honest LOO number for G1h 2.9B is 0.850
+(2026-07-30, on the older pilot item set, not items_v4_clean.jsonl). Both pass pilot target 0.75.
 
 **External validation (Scarletwolf, 2026-08-11).** Pre-registered test on
 rwkv-toolcaller-bench: data gap identified (145 tool-calling examples,
@@ -2644,6 +2739,8 @@ SFT fine-tuning.
 H21 CM: TP=14, FP=2, FN=2, TN=14. H22 CM: TP=16, FP=2, FN=0, TN=14.
 
 Files: `/tmp/ts_results/h22_g1h_{base,step7}/`, `h22_distinctness/` (G1h 2.9B, 2026-08-07).
+**Note:** /tmp paths lost (Selectel VM deleted). Summaries above are the persisted record.
+Re-run: H22 on G1i 2.9B after GPU available — same items_v2.jsonl.
 
 ---
 
@@ -2756,15 +2853,21 @@ G1d-0.4B once H12b lands.
 
 ---
 
-## H24. ε-mask + GRPO raises decoding efficiency (DE) without accuracy regression
+## H24. WKV-loop GRPO raises decoding efficiency (DE) without accuracy regression
 ### *(wager, Phase 2, RL track)*
 
-**Claim.** After word-search RL training on G1i with ε-mask active (think=1.0 /
-non-think=0.05), the model's decoding efficiency (DE) — defined as `accuracy / mean_output_words_for_correct_answer × 100`
-— rises significantly compared to the pre-RL baseline, without accuracy regression on A0.2
-tasks. The mechanism: ε-mask makes every emitted token costly relative to correct rollouts that
-used fewer tokens; the model learns to route uncertain reasoning into WKV state and emit only when
-confident. Result: same information extracted from weights, fewer tokens spent doing it.
+> Note: original claim referenced ε-mask (think=1.0 / non-think=0.05) as the DE mechanism.
+> ε-mask is removed in WKV-loop design (2026-08-16). Updated claim below reflects the
+> new mechanism: M internal WKV steps replace think-token emission, training the model to
+> route computation into state before committing an answer.
+
+**Claim.** After word-search RL training on G1i with WKV-loop (M internal state-refinement
+steps, entropy-plateau exit, `r = r_correct − β·M`), the model's decoding efficiency (DE)
+— defined as `accuracy / mean_output_words_for_correct_answer × 100` — rises significantly
+compared to the pre-RL baseline, without accuracy regression on A0.2 tasks. The mechanism:
+`−β·M` penalises internal step count relative to correct rollouts that used fewer steps;
+the model learns to compress computation into fewer WKV cycles and emit concisely when confident.
+Result: same information, fewer output tokens, fewer internal steps.
 
 **Motivation.** Pre-RL DE measured 2026-08-14 on A0.2 tasks:
 
@@ -2783,26 +2886,39 @@ maintaining ≥ 39% accuracy — same answers, fewer tokens.
 
 **Prediction.**
 - Post-RL G1i: DE ≥ 1.0 on A0.2 tasks (7× improvement from 0.15 pre-RL baseline).
-- Think-span token count drops ≥ 50% vs pre-RL for correct answers.
+- Mean M (internal WKV-refinement steps) for correct answers stays well below
+  `M_max=16` — the `−β·M` penalty teaches the model to commit early when confident
+  rather than exhaust the step budget on every rollout. (No pre-RL baseline for M
+  exists — M is a WKV-loop-only mechanism, not something the pre-RL model does at
+  all — so this is an absolute target, not a %-drop-vs-baseline like the old
+  think-span-token framing assumed.)
 - Accuracy on A0.2 does not regress more than 3pp from pre-RL baseline.
-- J-lens stable_rank rises at L4/L16 simultaneously with think-span shortening —
-  measurable signature that WKV is doing more work per token.
+- J-lens stable_rank rises at L4/L16 simultaneously with M dropping —
+  measurable signature that WKV is doing more work per internal step, not less
+  work overall.
 
 **Falsification.**
-- DE < 0.5 post-RL with no accuracy gain ⇒ ε-mask collapses generation without
-  routing to state; model emits empty or malformed answers.
-- Accuracy regresses > 5pp ⇒ ε-mask suppresses needed output pathways; relax ε_out.
-- DE rises but J-lens stable_rank does not ⇒ DE improvement is verbosity reduction only,
-  not state-work increase; the WKV-efficiency story is not confirmed even if output is shorter.
+- DE < 0.5 post-RL with no accuracy gain ⇒ the `−β·M` step penalty collapses
+  generation without routing useful computation into state; model emits empty or
+  malformed answers regardless of M spent.
+- Accuracy regresses > 5pp ⇒ β (step-count penalty) is too aggressive, cutting off
+  M before the model has done enough state-refinement to answer correctly; relax β.
+- DE rises but J-lens stable_rank does not ⇒ DE improvement is verbosity reduction
+  only (fewer output tokens), not state-work increase; the WKV-efficiency story is
+  not confirmed even if output is shorter.
 
 **Measurement.** Run A0.2 eval on first post-RL checkpoint with `--chat-wrap --num-predict 256`.
 Compute DE from result JSON: `accuracy / mean(len(r["response"].split()) for r in results if r["correct"])`.
-J-lens probe on same checkpoint at L4/L16/L20.
+J-lens probe on same checkpoint at L4/L16/L20. Log mean M per rollout from
+`experiments/rl/monitor.py` diagnostics alongside DE.
 
 **Related.** H10 (test-time compute frontier) — DE is an orthogonal metric to the N×K×mode
-matrix; RL changes the per-token efficiency, not the number of passes. H17 ε-mask trains the
-model to prefer state computation over emission. H12a (state capacity) — if state is already
-full (H12a), RL cannot route more into it; DE ceiling is set by state capacity.
+matrix; RL changes the per-token efficiency, not the number of passes. P13 (reasoning in
+state, not tokens) — the `−β·M` mechanism is the concrete RL-trained instance of P13's
+"think without emitting" principle; H16 (retracted) previously carried a version of this
+framing via the emit-gate, now superseded by WKV-loop's M-step design directly. H12a (state
+capacity) — if state is already full (H12a), RL cannot route more into it; DE ceiling is
+set by state capacity.
 
 **Status.** Untested. RL track blocked on GPU. Pre-RL baseline locked (2026-08-14).
 

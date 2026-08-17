@@ -474,3 +474,44 @@ step7 degrades faster. G1d-0.4B aggregate: K=2: 18%, K=4: 15%, K=8: 7%.
   SFT hurt multi-slot depth); architectural treatment pending.
 - H12b.i (utilisation regularizer): mandatory confirmed — training did not
   spontaneously produce balanced slot utilisation even at 2.9B.
+
+---
+
+### 2026-08-12 — Reversal: the 2026-08-07 "state_readout axis carries no signal" entry was itself an eval-bug artifact
+
+**Was.** The 2026-08-07 entry above ("H10 state_readout axis carries no signal
+over prompt_cot") concluded that `state_readout` == `prompt_cot` at every
+(N, K) cell because the WKV state was "not yet specialised enough to contain
+information the prompt doesn't have" — i.e. a genuine finding about the
+step8-epoch0 checkpoint, with the readout axis marked FALSIFIED at that
+checkpoint pending dedicated readout-supervision training.
+
+**Refuted by.** `eval.py` bug found 2026-08-12 (credit: marty1885), fixed
+same day: `state_readout` and `prompt_cot` modes shared the same
+greedy-decoding code path, so the two modes never actually diverged at
+generation time regardless of what the readout mechanism did internally.
+The exact tie across all 20 cells was not evidence that the state carries no
+extra signal — it was evidence that the eval harness never exercised the
+`state_readout` code path differently from `prompt_cot` in the first place.
+See `HYPOTHESES.md` §H10, step8 sweep, Key Finding 3.
+
+**Learned.**
+- An exact numerical tie across every cell of a sweep should have been a red
+  flag *at the time* — real experimental results are noisy; a perfect tie is
+  a much stronger prior for "these two conditions are secretly the same code
+  path" than for "the state genuinely carries zero marginal signal." This
+  entry itself did not catch that signal when it was written 2026-08-07.
+- The step8-epoch0 checkpoint's `state_readout` capability is **untested**,
+  not refuted. The 2026-08-07 entry's causal story (state not specialised
+  enough) is unsupported — it may still turn out to be true, but the
+  2026-08-07 experiment provides no evidence for or against it.
+- Per repo convention, the original entry is left in place uncorrected (see
+  `## Entry template` — append-only, do not overwrite); this entry is the
+  pointer that supersedes it.
+
+**Changed.**
+- `HYPOTHESES.md` §H10 step8 sweep: Key Finding 3 rewritten to state the bug
+  explicitly and mark all `state_readout` data in that table invalid.
+- H10 rerun with the fixed evaluator launched on G1i 2.9B base
+  (`experiments/A0_eval/results/h10_state_readout_g1i_base.json`,
+  2026-08-16/17) — first valid `state_readout` data point once it completes.

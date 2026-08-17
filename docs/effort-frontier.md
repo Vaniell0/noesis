@@ -9,6 +9,14 @@
 > a state-quality objective for intermediate tokens (see §CoT-as-WKV-input).
 > A1 plan abandoned; training base is now G1i 2.9B. K verdict carries over.
 >
+> **WKV-loop note (2026-08-16):** The WKV-loop design (`experiments/rl/wkv_loop.py`)
+> implements the `(N=M, K=0, mode=silent)` corner of the sweep space by construction —
+> M internal state-refinement steps, no token emission, entropy-plateau exit. M-axis
+> measurements on the post-RL WKV-loop checkpoint ARE effort-frontier data points.
+> The (N, K, mode) sweep below remains the full characterisation framework; the WKV-loop
+> collapses it to one specific path and measures how far M can push accuracy before
+> the exit criterion fires.
+>
 > **N-sweep**: NOT YET RUN. Target model: G1i base or post-RL checkpoint.
 > External validation of N-axis mechanism: fleeb83 (external correspondence, 2026-08-16) demonstrated
 > 48/48 state-dependent stopping and multi-step symbolic composition on G1h 7.2B
@@ -282,11 +290,13 @@ N and K remain.
 
 ### Cross-task comparison
 
-Run the full (N, K) grid on each task *category* separately:
-`bit_decoding`, `arithmetic_chain`, `scheduling`. Different cognitive
-loads should produce different frontier shapes:
-- Scheduling (sequential planning) is hypothesised to benefit more from N
-  (state re-feed builds the plan) than from K (CoT adds overhead).
+Run the full (N, K) grid on each task *category* separately.
+Current matrix_tasks.jsonl categories: `matrix_wordsearch`, `bits_matrix`,
+`arithmetic_matrix`, `pattern_matrix`, `crossword_enum`/`crossword_fill`.
+(Old names `bit_decoding`, `arithmetic_chain`, `scheduling` are superseded.)
+Different cognitive loads should produce different frontier shapes:
+- Wordsearch (spatial scanning) is hypothesised to benefit most from N
+  (state re-feed allows multi-pass grid coverage) rather than K.
 - Arithmetic may benefit from K (step-by-step CoT) but not from N —
   however H25 predicts a step-function shape: flat for K < rank(system),
   then step up, then flat again. This is qualitatively different from
@@ -364,6 +374,9 @@ no forgetting on the ROSA channel. The effort-frontier concept still applies, bu
 the bottleneck shifts from "how many think-tokens to write the matrix" to "how many
 read-back passes to refine the solution". A combined WKV+ROSA system's frontier
 for exact arithmetic is effectively flat: one pass, exact answer, K=0.
+
+> Note: ROSA 8 deferred indefinitely (2026-08-16) — BlinkDL updating GitHub datasets.
+> ROSA architecture analysis remains valid; timeline unknown.
 
 Credit: fleeb83 proof-of-mechanism for state-based computation
 (symbolic domain, 2026-08-16); H25 formalised from that result.

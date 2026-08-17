@@ -175,7 +175,7 @@ serialize them.
   Best available: step9b-e1 (39.6%). Best ever seen locally: step9 e0 (43.75%) — irrecoverable.
 - **A0.2 eval results (2026-08-14):** G1i chatwrap 41.7% (20/48, extraction 87.5%, symbolic 75%);
   step9b-e1 39.6% (arithmetic 100%, symbolic 87.5%, scheduling 50%); Gemma4 e4b 37.5% (symbolic 37.5%, scheduling 0%).
-  RWKV step9b-e1 wins symbolic by 2.3×. КПД baseline: step9b-e1=0.15, G1i=0.27, Gemma4=7.26 (see H24).
+  RWKV step9b-e1 wins symbolic by 2.3×. DE baseline: step9b-e1=0.15, G1i=0.27, Gemma4=7.26 (see H24).
 - H7 falsifier (retrieval-parity contrast) remains open.
 - **H10 sweep (step8 epoch0, 2026-08-07).** Peak: N=2 silent 33.3% (16/48).
   N=3 collapses to 6.3% — third pass corrupts state. Prior state_readout data
@@ -214,16 +214,29 @@ See `docs/rl-track.md` for the full design.
   RL on think-phase trains latent use before gate head (A4). H19 (weight-knowledge
   contamination): L6–L7 wordsearch accuracy is a pure context-dependency proxy.
 - **State metrics and new aux losses** — see `docs/rl-track.md §State metrics`.
-  IPC DONE (2026-08-16): linear IPC ≈ 0 held-out → state encodes nonlinearly (H8 confirmed).
-  L_mem skipped permanently. MLP probe RUNNING (2026-08-16) on G1i base;
+  IPC DONE (2026-08-16): linear IPC ≈ 0 held-out on our own `ipc_g1i_fixed.json` run
+  — **unreconciled against fleeb83's independently-reported nonzero IPC on the same
+  checkpoints**, see HYPOTHESES.md H8/IPC before treating this as settled.
+  L_mem skipped permanently. MLP probe NOT YET RUN on G1i base — queued behind the
+  H10 state_readout eval (PID 133922, CPU-bound), launch once that frees the CPU;
   re-run after RL checkpoint 1 on same trajectory to measure state content gain.
   Script: `experiments/A0_state_probe/mlp_probe.py`.
-- **Implementation details** (in `docs/rl-track.md`):
-  binary ε-mask outside answer span (ε=0.05); entropy routing reward
-  shaping (α·Δentropy_reduction in think span); Switch-GRPO curriculum
-  (arXiv 2606.13106) for multi-task stability.
+- **Implementation details — WKV-loop rewrite (2026-08-16, in `docs/rl-track.md`,
+  STALE-marked pending α-sweep).** ε-mask design (binary mask outside answer span)
+  is **removed** — superseded by WKV-loop: M internal state-refinement steps
+  (entropy-plateau exit) replace `<think>`-token emission entirely, no decoded
+  think tokens at all. Reward: `r = r_correct − β·M − γ·Σ_t ReLU(H_t − H_{t-1})`
+  (`experiments/rl/rewards.py`) — step-count penalty + entropy-increase penalty,
+  not the old ε-mask/entropy-routing-in-think-span design. Switch-GRPO curriculum
+  (arXiv 2606.13106) still applies for multi-task stability. Stack: `loader.py`
+  (dual-mode LoadedModel), `wkv_loop.py` (rollout + GRPO log-probs), `rewards.py`,
+  `monitor.py` (SHORTCUT/HACKING/STATE_COL/MODE_COL), `corpus.py` (curriculum
+  scheduler), `train_wkv_loop.py` (main training script, replaces
+  `train_wordsearch.py`). CPU smoke tests pass; GPU-only paths (peft backend,
+  expected/residual feed modes) untested.
 - **Blockers.** GPU only. G1i download DONE; G1i eval DONE (41.7%);
-  word-search baseline CONFIRMED 0/56. IPC DONE (linear≈0, H8 confirmed).
+  word-search baseline CONFIRMED 0/56. IPC DONE locally (linear≈0 held-out,
+  H8 tentatively confirmed — but see the fleeb83 discrepancy flag above).
   Next: Selectel 4090 (~₽1500/24h) or Colab A100.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)

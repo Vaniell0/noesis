@@ -10,16 +10,18 @@ structured as ASCII grids with verifiable answers. The design goals:
 - **Gradient diversity.** Nine task types (wordsearch, bits, arithmetic,
   pattern, crossword, sudoku, ARC…) activate orthogonal WKV channels.
   A single task type causes gradient collapse to one learned pattern.
-- **Self-reflection training.** `r_entropy` rewards entropy reduction inside
-  the think span — the model learns to monitor whether its WKV state is
-  resolving the task or spinning. This is the prerequisite for H16 (gated
-  externalisation) and Phase 4 (silent latent computation).
+- **Self-reflection training.** In the WKV-loop design the model runs M
+  internal steps without emitting tokens; the entropy trajectory over those
+  steps acts as the exit criterion. The earlier `r_entropy`-on-think-span
+  framing is superseded — see §RL design STALE block and `rewards.py`.
+
+  > **[STALE 2026-08-16 — original bullet referenced `r_entropy` on `<think>` span. WKV-loop uses entropy-plateau exit (`|H_t − H_{t-1}| < eps`) + τ_commit threshold instead.]**
 - **Bidirectional and diagonal attention.** Wordsearch L3–L7 forces
   right-to-left, bottom-to-top, and diagonal reading — breaking the
   left-to-right pretraining bias. WKV state must encode directional context.
 - **Bootstrap signal from L0.** `wordsearch_name` (find the word, not its
   position) gives the model its first positive rewards. L1–L2 appear rarely
-  (~10% each) for initial signal; L3–L7 dominate to prevent guessing.
+  (~5% each) for initial signal; L3–L7 dominate to prevent guessing.
   Curriculum cuts L1–L2 once success rate stabilises.
 - **State utilisation measurement.** Grid tasks require accumulating
   evidence across many positions before committing an answer — a direct
@@ -104,7 +106,7 @@ python3 experiments/A0_eval/gen_matrix_wordsearch.py \
 ## Training corpus — matrix_tasks.jsonl
 
 **Generator:** `experiments/A0_eval/gen_tasks.py`  
-**Current file:** `training/corpus_open/matrix_tasks.jsonl` — 66 029 tasks, ~38 MB  
+**Current file:** `training/corpus_open/matrix_tasks.jsonl` — 65 797 tasks, ~38 MB  
 (SHA-256 in PROVENANCE.md; not committed — regenerate with `--seed 42 --n-tokens 20_000_000`
 once Sudoku CSV and ARC-AGI data are available; current 66k is the base run without them)
 
@@ -119,13 +121,13 @@ All training tasks use WorldTokenizer sp format. ByteAdapter is a separate GPU e
 
 | Category | Tasks | Level dial | Model action | Rubric | Cognitive load |
 |---|---|---|---|---|---|
-| `matrix_wordsearch` | 13 157 | L1–L7 (grid size, orientations) | Find word → `row=R col=C` | `regex row=\d+ col=\d+` | Directional spatial scanning |
-| `matrix_wordsearch_name` | 6 619 | L1–L7 | Name the word in grid | `exact \bWORD\b` | Grid reading, recognition (L0 warmup) |
-| `arithmetic_matrix` | 13 211 | L1–L7 (digit count, op, task type) | Compute sum / find missing digit / find error | `regex \bN\b` | Column-position arithmetic |
-| `bits_matrix` | 13 075 | L1–L7 (op: XOR/AND/OR/NOT, task: result/missing/error/key) | Find result bit / missing input / correct bit | `regex \b[01]\b` | Bitwise computation, reverse lookup |
-| `pattern_matrix` | 13 347 | L1–L7 (arithmetic/geometric/modular/Fibonacci) | Find missing value in sequence | `regex \bN\b` | Rule induction, sequence extrapolation |
-| `crossword_enum` | 3 258 | L8–L11 | Enumerate intersecting words | `regex` | Multi-word grid constraint |
-| `crossword_fill` | 3 362 | L8–L11 | Fill blank in crossing word | `regex` | Constraint propagation |
+| `matrix_wordsearch` | 13 098 | L1–L7 (grid size, orientations) | Find word → `row=R col=C` | `regex row=\d+ col=\d+` | Directional spatial scanning |
+| `matrix_wordsearch_name` | 6 679 | L1–L7 | Name the word in grid | `exact \bWORD\b` | Grid reading, recognition (L0 warmup) |
+| `arithmetic_matrix` | 12 988 | L1–L7 (digit count, op, task type) | Compute sum / find missing digit / find error | `regex \bN\b` | Column-position arithmetic |
+| `bits_matrix` | 13 126 | L1–L7 (op: XOR/AND/OR/NOT, task: result/missing/error/key) | Find result bit / missing input / correct bit | `regex \b[01]\b` | Bitwise computation, reverse lookup |
+| `pattern_matrix` | 13 312 | L1–L7 (arithmetic/geometric/modular/Fibonacci) | Find missing value in sequence | `regex \bN\b` | Rule induction, sequence extrapolation |
+| `crossword_enum` | 3 297 | L8–L11 | Enumerate intersecting words | `regex` | Multi-word grid constraint |
+| `crossword_fill` | 3 297 | L8–L11 | Fill blank in crossing word | `regex` | Constraint propagation |
 | `sudoku_matrix` | — (needs CSV) | fixed 9×9 | Find blank cell value | `regex \b[1-9]\b` | Row/col/box constraint reasoning |
 | `arc_matrix` | — (needs dir) | 1–5 (train examples) | Apply transformation, output one cell | `regex \b[0-9]\b` | Pattern induction from examples |
 
@@ -174,6 +176,8 @@ record to get per-level accuracy.
 
 ## Full FT vs LoRA for latent token training
 
+> **[STALE 2026-08-16 — this section describes a two-phase SFT→GRPO design with L_state and ε-mask. SFT was skipped (icophy decision, see §Step10 SFT). ε-mask removed in WKV-loop design. Keep as ablation reference; do not use as implementation guide.]**
+
 LoRA alone cannot achieve a fundamental shift toward latent-token behavior.
 LoRA modifies projection matrices within a low-rank subspace; the model's
 core decision about whether to emit or hold (the quality gate, H16) lives
@@ -200,6 +204,8 @@ isolate the slot entropy effect from the full-FT effect.
 ---
 
 ## RL design
+
+> **[STALE 2026-08-16 — design moved to WKV-loop (no `<think>` tokens). New reward: `r = r_correct − β·M − γ·Σ ReLU(ΔH_t)`. Implementation: `experiments/rl/rewards.py::compute_wkv_loop_rewards`. Rewrite of this section pending after sweep (task #12).]**
 
 **Reward signal.** Three terms combined:
 - `r_correct`: +1 exact match, 0 correct format wrong value, −1 wrong format entirely
@@ -240,7 +246,7 @@ self-monitor its state trajectory cannot do silent computation meaningfully.
 **Training algorithm.** GRPO with G=8 rollouts per prompt. Temperature 0.7 during
 rollout, greedy for eval.
 
-**Corpus mix.** `training/corpus_open/matrix_tasks.jsonl` (66 029 tasks, ~20M tokens).
+**Corpus mix.** `training/corpus_open/matrix_tasks.jsonl` (65 797 tasks, ~20M tokens).
 Six types: wordsearch_position 20%, wordsearch_name 10%, crossword 10%,
 arithmetic 20%, pattern 20%, bits 20%.
 No SFT — pure RL on verifiable matrix tasks (see decision record below).
@@ -255,6 +261,8 @@ No SFT — pure RL on verifiable matrix tasks (see decision record below).
 | H16 (gated externalisation) | Word-search RL trains latent think-phase use — precursor to H16 gate head. If the model learns to scan the grid in `<think>` tokens via GRPO, that is H16-without-gate. The gate head (emit vs. hold) is a separate A4 step. |
 | H19 (weight-knowledge contamination) | Word-search is a pure context task — the grid is in the prompt, model weights cannot help. Accuracy on L6–L7 is a direct proxy for context-read vs. weight-recall. A model scoring well on L7 demonstrably reads the context window. |
 | H23 (spatial state) | Level 6–7 performance before vs after RL step |
+
+> **[STALE 2026-08-16 — ε-mask relies on `<think>` tokens which are removed in the WKV-loop design. H16 gate bootstrap now comes from entropy-plateau exit + τ_commit threshold in `wkv_loop.py`. Rewrite pending (task #12).]**
 
 **ε-mask as H16 bootstrap — the key insight.**
 
@@ -275,6 +283,8 @@ self-regulated gate → H16 emerges without a dedicated MLP head.**
 
 The explicit H16 gate head (A4 step) would measure and sharpen this
 emergent behavior, not create it from scratch.
+
+> **[STALE 2026-08-16 — all three subsections below reference `<think>`-span tokens removed in WKV-loop design. Entropy penalty now tracks per-step `ReLU(H_t − H_{t-1})` over the WKV loop trajectory (see `rewards.py`). CLIPO and L_KVB deferred until after α-sweep. Rewrite pending (task #12).]**
 
 **Entropy reward shaping.** During GRPO rollout, reward term:
 `α * Δentropy_reduction` (entropy before vs. after think span). Encourages
@@ -388,6 +398,9 @@ training converges at chance level on word-search — L4 activation deficit conf
 (14–26% of World norm). RL proceeds on sp (space-separated) format exclusively.
 ByteAdapter training is a separate GPU experiment, not on the RL critical path.
 
+Note: `rollout.py` references in this section are the old design. Current rollout
+lives in `experiments/rl/wkv_loop.py`; no `</think>` token detection needed.
+
 ---
 
 ## WorldTokenizer asymmetry in grid tasks
@@ -428,11 +441,13 @@ directional-attention training.
 
 Source: arXiv 2606.13106 "Switchable Latent Reasoning."
 
-Current word-search RL (Phase 3) uses visible `<think>` tokens — GRPO policy
-ratio is well-defined over all emitted positions. H16 (gated externalisation)
-requires the model to eventually compute silently: no visible think tokens,
-pure WKV state accumulation. At that point, policy density is undefined over
-latent positions — Switch-GRPO fixes this.
+> **[STALE 2026-08-16 — "Phase 3 uses visible `<think>` tokens" is no longer true: WKV-loop already operates without emitting think tokens (M internal steps, no text output). The noesis↔Switch-GRPO mapping table below is also broken: `<think>`/`</think>` are not present. Rewrite pending (task #12); keep as design intent reference.]**
+
+The WKV-loop design (current, Phase 3) runs M internal state-refinement steps
+without emitting tokens. Switch-GRPO (Phase 4) extends this to arbitrarily
+deep latent blocks with policy-ratio defined only over visible boundary tokens
+(`<swi>`/`</swi>`) and the answer. Prerequisites and curriculum structure below
+are still architecturally correct; the noesis mapping column needs updating.
 
 **Three-token vocabulary extension:**
 - `<swi>` — enter latent block
@@ -524,6 +539,8 @@ R-lens probe on non-task axes (e.g. narrative, arithmetic) before continuing cur
 
 ## Integrated RL loop — instrument map
 
+> **[STALE 2026-08-16 — diagram below is the old think-token design. Current implementation: `train_wkv_loop.py` + `corpus.py` + `monitor.py` + `vm_watchdog.py` + `probes.py`. Reward terms `r_clipo`/`r_entropy` removed. `verl`/RWKV-PEFT not used (custom loop). TransformerLens hook on `</think>` not applicable. Rewrite pending (task #12).]**
+
 All instruments and where they plug in:
 
 ```
@@ -586,6 +603,12 @@ This is a positive result: IPC≈0 means the state encodes information nonlinear
 i.e. it is doing computation rather than acting as a linear token buffer. Consistent
 with H8. To measure actual state content after RL, use a nonlinear probe (2-layer MLP).
 
+**⚠ Unresolved (2026-08-16):** fleeb83's independently-reported IPC numbers on the
+same checkpoints (G1h/G1i base, step9b-e1) are nonzero (17–48% of ceiling), not ≈0.
+Not reconciled — possibly an in-sample-vs-held-out split difference, possibly sample
+size (256 vs 512 tokens). See HYPOTHESES.md H8/IPC section for detail before treating
+IPC≈0 as settled.
+
 **H10 gap** = requires nonlinear probe, not ridge regression. Run MLP probe after RL
 checkpoint 1 to quantify how much task-relevant content accumulates in WKV state.
 
@@ -626,8 +649,10 @@ full ablation budget exists on Selectel 4090.
 ### SNN/STDP — closed
 
 Checked 2026-08-15. STDP pushes toward temporal smoothness (same direction
-as SFA), opposite of L_state. ε-mask already covers the reward-modulation
-intuition. No new objective.
+as SFA), opposite of L_state. ε-mask covered the reward-modulation intuition
+in the old design; ε-mask is now removed (WKV-loop). Conclusion unchanged:
+no new objective needed — entropy-plateau exit in wkv_loop.py serves the
+same gating role without a separate loss term.
 
 ### ARC-AGI probe — spatial reasoning ceiling
 
