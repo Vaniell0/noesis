@@ -32,7 +32,7 @@ from huggingface_hub import hf_hub_download
 # Model loading
 # --------------------------------------------------------------------------- #
 
-def _resolve_weight_path(name: str) -> str:
+def resolve_weight_path(name: str) -> str:
     """Resolve ``name`` to a local .pth path (without the .pth suffix).
 
     Accepted forms:
@@ -127,7 +127,7 @@ def load_model(name: str, device: str = "cpu") -> Tuple[object, _TokenizerAdapte
     from rwkv.utils import PIPELINE
 
     torch.set_grad_enabled(False)
-    weight_path = _resolve_weight_path(name)
+    weight_path = resolve_weight_path(name)
 
     # bf16 for weights + state, matches the paper's inference precision.
     strategy = f"{device} bf16"

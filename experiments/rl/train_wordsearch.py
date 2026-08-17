@@ -98,9 +98,16 @@ def load_train_model(model_path: str, device: str, lora_r: int = 0):
     lora_r = 0: full fine-tuning (all params trainable).
     """
     from rwkv.model import RWKV
+    from experiments._common.model import resolve_weight_path
     os.environ["RWKV_JIT_ON"] = "0"
     os.environ["RWKV_CUDA_ON"] = "1" if device == "cuda" else "0"
-    model = RWKV(model=model_path, strategy=f"{device} fp32")
+    # rwkv.RWKV appends '.pth' itself — resolve_weight_path strips it (and
+    # resolves HF owner/repo:file.pth refs). Passing the raw path directly
+    # here used to double up to 'model.pth.pth' and crash with
+    # FileNotFoundError (found 2026-08-17 running this for the first time
+    # in a while — load_inference_model already did this correctly via
+    # probe.load_model, this sibling function just never matched it).
+    model = RWKV(model=resolve_weight_path(model_path), strategy=f"{device} fp32")
     if lora_r > 0:
         n = _inject_lora(model, r=lora_r, alpha=lora_r * 2)
         print(f"[train] LoRA injected: r={lora_r} trainable_params={n:,}")
@@ -159,7 +166,6 @@ def main():
     if args.byte_adapter:
         sys.path.insert(0, str(ROOT / "experiments/byte_adapter"))
         from byte_adapter import ByteAdapter
-        import torch
         byte_adapter = ByteAdapter(model_dim=1024).to(args.device)
         # Patch inference model embedding
         with torch.no_grad():
