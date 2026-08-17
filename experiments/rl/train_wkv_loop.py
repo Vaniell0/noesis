@@ -45,6 +45,7 @@ from experiments.rl.grpo import compute_advantages
 from experiments.rl.monitor import TrainingMonitor
 from experiments.rl.vm_watchdog import VMWatchdog, WatchdogHook
 from experiments.rl.probes import run_inline_probes
+from experiments._common.results import save_result
 
 
 CORPUS_PATH = ROOT / "training/corpus_open/matrix_tasks.jsonl"
@@ -351,8 +352,15 @@ def main():
                 loaded, all_rollouts_flat, label=f"step{global_step}"
             )
             probe_path = out_dir / f"probes_step{global_step:06d}.json"
-            with open(probe_path, "w") as f:
-                json.dump(probe_result, f, indent=2)
+            save_result(
+                probe_path, probe_result,
+                experiment="rl_inline_probes", hypothesis=["H8", "H10"],
+                model=args.model, script=__file__,
+                summary={
+                    "shortcut_score": f"{probe_result['shortcut_score']:.2f}",
+                    "M_mean": f"{probe_result['M_mean']:.1f}",
+                },
+            )
             print(f"  [probe] sr_reasoning_L4={probe_result.get('sr_reasoning_L4', float('nan')):.3f}  "
                   f"shortcut={probe_result['shortcut_score']:.2f}  "
                   f"M_mean={probe_result['M_mean']:.1f}")
