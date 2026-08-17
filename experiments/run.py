@@ -29,7 +29,15 @@ from experiments._common.results import save_result
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    # conflict_handler="resolve": probes that share underlying logic (e.g.
+    # ipc_analysis.py and mlp_probe.py both call collect_trajectory) share
+    # flag names with the *same* meaning — --n-tokens means the same thing
+    # in both, so one shared flag is correct, not a conflict. This assumes
+    # a shared flag name always means shared semantics across probes; if a
+    # future probe needs a same-named flag with different meaning, that
+    # probe needs a prefixed flag name instead, not a parser-level fix.
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+                                  conflict_handler="resolve")
     ap.add_argument("--model", help="checkpoint path or HF owner/repo:file.pth")
     ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     ap.add_argument("--tests", help="comma-separated probe names, or 'all'")

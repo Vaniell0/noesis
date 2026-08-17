@@ -42,6 +42,7 @@ from typing import Callable, Dict, List, Optional, Sequence
 # existing somewhere in the tree.
 KNOWN_PROBE_MODULES = [
     "experiments.A0_state_probe.ipc_analysis",
+    "experiments.A0_state_probe.mlp_probe",
 ]
 
 

@@ -22,14 +22,26 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import sys
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
 import torch
 import torch.nn as nn
 
-from ipc_analysis import collect_trajectory, legendre, PROMPT
-from probe import load_model
+# Bootstrap repo root onto sys.path before any `experiments.*` absolute
+# import — same reason as ipc_analysis.py: this file is run both as a bare
+# script (only its own directory on sys.path) and imported as
+# `experiments.A0_state_probe.mlp_probe` (by experiments/run.py's probe
+# registry), which needs the repo root importable.
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments.A0_state_probe.ipc_analysis import collect_trajectory, legendre, PROMPT
+from experiments.A0_state_probe.probe import load_model
+from experiments._common import registry
 
 
 # ── MLP head ─────────────────────────────────────────────────────────────────
@@ -70,11 +82,19 @@ def mlp_r2(
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
 
-    for _ in range(epochs):
-        model.train()
-        opt.zero_grad()
-        loss_fn(model(X_t), y_t).backward()
-        opt.step()
+    # experiments._common.model.load_model (the loader every caller of this
+    # function goes through) sets torch.set_grad_enabled(False) globally —
+    # correct for the read-only probes it's meant for, wrong here, where an
+    # MLP actually needs to train. Without this, .backward() below raises
+    # "element 0 of tensors does not require grad and does not have a
+    # grad_fn" — found 2026-08-17 running this function for the first time
+    # ever (mlp_probe.py was written 2026-08-16, never successfully run).
+    with torch.enable_grad():
+        for _ in range(epochs):
+            model.train()
+            opt.zero_grad()
+            loss_fn(model(X_t), y_t).backward()
+            opt.step()
 
     model.eval()
     with torch.no_grad():
@@ -125,25 +145,33 @@ def compute_mlp_ipc(
     return results, basis_bound
 
 
-# ── main ──────────────────────────────────────────────────────────────────────
+# ── registered probe ─────────────────────────────────────────────────────────
+# Shared args, then the model-independent core logic. `run()` assumes
+# `model`/`tokenizer` are already loaded — see ipc_analysis.py's equivalent
+# split for the convention this follows.
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True)
+def _add_mlp_args(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--n-tokens", type=int, default=256)
     ap.add_argument("--max-lag", type=int, default=8)
     ap.add_argument("--max-degree", type=int, default=2)
     ap.add_argument("--n-proj", type=int, default=128)
     ap.add_argument("--hidden", type=int, default=256)
     ap.add_argument("--epochs", type=int, default=200)
-    ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     ap.add_argument("--layers", default="0,4,8,16,24,31")
     ap.add_argument("--prompt", default=PROMPT)
-    ap.add_argument("--out", default="results/mlp_ipc.json")
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--trajectory-in", type=pathlib.Path)
-    args = ap.parse_args()
 
+
+@registry.probe(
+    "mlp_ipc",
+    hypothesis=["H8"],
+    description="Nonlinear IPC via 2-layer MLP replacing ridge regression — "
+                "measures whether WKV state carries information the linear "
+                "ipc probe can't see.",
+    add_args=_add_mlp_args,
+)
+def run(model, tokenizer, args: argparse.Namespace) -> dict:
     target_layers = [int(x) for x in args.layers.split(",")]
 
     teacher_forced_tokens: Optional[list[int]] = None
@@ -151,12 +179,9 @@ def main():
         payload = json.loads(args.trajectory_in.read_text())
         teacher_forced_tokens = payload["token_ids"] if isinstance(payload, dict) else payload
 
-    print(f"[mlp_probe] model={args.model}")
     print(f"[mlp_probe] layers={target_layers}  n_proj={args.n_proj}")
     print(f"[mlp_probe] n_tokens={args.n_tokens}  max_lag={args.max_lag}  deg={args.max_degree}")
     print(f"[mlp_probe] MLP hidden={args.hidden}  epochs={args.epochs}")
-
-    model, tokenizer = load_model(args.model, device=args.device)
 
     token_ids, layer_states = collect_trajectory(
         model, tokenizer, args.prompt,
@@ -184,10 +209,11 @@ def main():
     for l in sorted(ipc):
         print(f"{l:>6} {ipc[l]['MC']:>8.3f} {ipc[l]['IPC_total']:>8.3f}")
 
-    out_path = pathlib.Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps({
-        "model": args.model,
+    mean_ipc = sum(ipc[l]["IPC_total"] for l in ipc) / len(ipc) if ipc else 0.0
+    peak_layer = max(ipc, key=lambda l: ipc[l]["IPC_total"]) if ipc else None
+
+    return {
+        "model": getattr(args, "model", None),
         "probe": "mlp_2layer",
         "hidden": args.hidden,
         "epochs": args.epochs,
@@ -199,7 +225,33 @@ def main():
         "note": "Nonlinear IPC via 2-layer MLP. R2 on held-out 20%.",
         "layers": target_layers,
         "results": {str(l): ipc[l] for l in sorted(ipc)},
-    }, indent=2))
+        "_summary": {
+            f"Mean nonlinear IPC_total (L{','.join(str(l) for l in sorted(ipc))})": f"{mean_ipc:.3f} / {basis_bound}",
+            "Peak layer": f"L{peak_layer} ({ipc[peak_layer]['IPC_total']:.3f})" if peak_layer is not None else "—",
+        },
+    }
+
+
+# ── standalone entry point ───────────────────────────────────────────────────
+# `python mlp_probe.py --model ... --out ...`. Unchanged CLI surface from
+# before the registry refactor (2026-08-17).
+
+def main():
+    from experiments._common.results import save_result
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    ap.add_argument("--out", default="results/mlp_ipc.json")
+    _add_mlp_args(ap)
+    args = ap.parse_args()
+
+    print(f"[mlp_probe] model={args.model}")
+    model, tokenizer = load_model(args.model, device=args.device)
+
+    out = run(model, tokenizer, args)
+
+    out_path = save_result(args.out, out, experiment="mlp_ipc", hypothesis=["H8"], script=__file__)
     print(f"\n[mlp_probe] saved -> {out_path}")
 
 
