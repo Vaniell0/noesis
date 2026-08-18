@@ -659,19 +659,19 @@ settled.
    real improvements (correct grad-accumulation semantics, lower peak
    memory even without `--forge`) but do not make `--forge` itself work.
 
-7. **First real (non-`--no-update`, non-`--forge`) gradient-update step
-   ran clean on GPU 2026-08-18** — no crash, checkpoint correctly written
-   with real (attempted) weight updates. But the specific 3-step smoke
-   test (G1d, G=4/batch=2/M_max=4, lr=1e-5) happened to hit `loss=0.0` on
-   every step — verified by diffing checkpoint weights against the
-   original: **exact** zero change on every parameter checked
-   (`emb.weight`, several `att`/`ffn` tensors). Consistent with a
-   degenerate batch where every rollout in a group got an identical
-   reward (advantage normalizes to exactly 0 → surrogate exactly 0), not a
-   bug — but it means backward()/optimizer.step() executing without error
-   is confirmed, while an actual *nonzero* gradient update changing
-   weights is still not directly observed. Needs a run that lands on a
-   step with real reward variance to close this out.
+7. **RESOLVED 2026-08-18 — first real (non-`--no-update`, non-`--forge`)
+   gradient-update run, confirmed with actual nonzero signal.** First
+   attempt (G1d, G=4/batch=2/M_max=4, lr=1e-5, 3 steps) ran clean but hit
+   a degenerate all-identical-reward batch on every step (loss=0.0 exactly,
+   confirmed via zero-diff checkpoint comparison — not a bug, just bad
+   luck with such a small batch). Second attempt (G=8/batch=2/M_max=4,
+   lr=1e-4, 5 steps) landed real signal: step 1 loss=0.4337, accuracy=6.25%
+   (1/16 rollouts correct). Checkpoint-diffed 20 parameters against the
+   original weights: **18/20 changed**, max diff 0.00049 (sane magnitude
+   for lr=1e-4 over a few steps). The full pipeline — forward → per-rollout
+   backward → optimizer.step() → checkpoint — is confirmed working
+   end-to-end with real gradient flow, not just "doesn't crash." This was
+   the single largest open item before trusting a real training launch.
 
 ---
 
