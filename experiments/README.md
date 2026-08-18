@@ -99,3 +99,39 @@ live:
 - Every script here should work both as `python path/to/script.py` (bare)
   and as `experiments.X.Y` module import (what `run.py` needs) — see
   `_common/README.md`'s sys.path bootstrap snippet.
+
+## Known gaps (found during the 2026-08-18 GPU-VM session, not yet fixed)
+
+- **No schema version on probe output formats.** `a05_run.py`'s
+  `summary.json`/`seed_N.json` shape changed (old: `delta_pooled`/
+  `curvature_pooled`/`sr_step_mean`; current: `checkpoints`) with no
+  version marker anywhere — `a05_analyze.py` just crashes with a raw
+  `KeyError` on an old-format cell instead of a clear "this cell predates
+  format vX" message. Same risk applies to any other probe whose JSON
+  shape might drift over time; nothing here currently guards against it.
+- **`_TokenizerAdapter` has two incompatible definitions.** The one in
+  `experiments/rl/loader.py` has a real `.encode()`; the one in
+  `experiments/_common/model.py` only implements `__call__`/`.decode()`
+  (HF-style). Not a bug today (each is only ever used through its own
+  loader), but a trap for anyone assuming the two are interchangeable.
+- **FORGE's `wrap_rwkv7()` has no exclude-list.** It wraps every
+  `nn.Linear` in the model with no way to opt individual layers out — see
+  `experiments/rl/loader.py::wrap_rwkv7_excluding_head`'s docstring for
+  why the WKV-loop's per-token-forward/single-backward pattern needs
+  that (confirmed the issue isn't `head`-specific: excluding it just
+  moved the same crash to an `ffn` layer deeper in the network).
+- **`ib_probe/run.py`'s nonlinear (`--nonlinear`) decoder needed real
+  hyperparameter tuning, not just wiring.** It reused the linear
+  decoder's `epochs=200`/`lr=1e-3` — fine for the convex linear case,
+  not enough for a many-class classification MLP (nonconvex, thousands
+  of output classes) — held-out CE came back worse than the unigram
+  baseline and got worse at longer lags (diverging, not just
+  undertrained). Bumped epochs 10x and lowered lr for the nonlinear path
+  (`experiments/ib_probe/run.py::probe_lag`) — re-verify against a
+  second corpus before trusting the numbers.
+- **No system-load-aware job scheduling for the GPU VM.** Every
+  multi-job GPU session tonight was manual (watch `nvidia-smi`/`uptime`,
+  decide by eye when to launch the next probe). Fine for a few jobs,
+  won't scale to the full execution matrix across more models — worth a
+  small script that queues jobs against a VRAM/CPU-load budget instead
+  of eyeballing it.
