@@ -132,55 +132,103 @@ def wkv_grpo_loss(
     alpha: float,
     clip_eps: float = 0.2,
     kl_coef: float = 0.01,
-) -> torch.Tensor:
-    """PPO-clip GRPO loss over batch."""
-    total_loss = torch.tensor(0.0, device=loaded.device if loaded.backend == "peft" else "cpu",
-                              requires_grad=True)
-    n_tokens = 0
+    forge_manager=None,
+    lr: Optional[float] = None,
+) -> float:
+    """PPO-clip GRPO loss over batch. Calls `.backward()` once per (prompt,
+    rollout) pair internally and returns a plain float (the mean loss, for
+    logging) instead of a tensor — callers must NOT call `.backward()` again.
 
+    Previously built one shared graph across the whole batch (every rollout's
+    forward calls accumulated into one `total_loss` tensor) and called
+    `.backward()` once, outside this function. That broke `--forge`: FORGE's
+    FusedLinear applies its optimizer update *inside* backward(), on the
+    assumption that a given layer's weight is touched by backward at most
+    once per training step. Every FusedLinear layer here (att/ffn
+    projections, formerly `head` too) is invoked once per generated token,
+    across every rollout in the batch — with one shared backward() call,
+    each of those per-token invocations independently triggers another
+    premature in-place weight update before autograd reaches an earlier
+    invocation's saved-for-backward tensor: "modified by an inplace
+    operation ... version N; expected version 1" (confirmed 2026-08-18 on a
+    real GPU — moved from `head` to an `ffn` layer after excluding `head`
+    alone, i.e. not a single-layer bug).
+
+    Fix: call `.backward()` once per rollout instead, right after computing
+    its surrogate loss (scaled to match the original mean-over-all-answer-
+    tokens normalisation), then let that rollout's graph be freed before the
+    next one is built. This keeps every layer's per-backward-call invocation
+    count at the same "once per token position in *this* rollout" scale
+    `forward_infctx` itself already has — not "once per rollout, all rollouts
+    sharing one call." `forge_manager.pre_step(is_accumulating=...)` is
+    called once per rollout too, using FORGE's own native gradient-
+    accumulation support (see `FusedOptimizerManager.pre_step`) so the
+    fused optimizer only actually writes the update on the last rollout in
+    the batch, not after every one.
+
+    This is correct for the non-FORGE path too, not a FORGE-only hack:
+    standard autograd accumulates `.grad` correctly across multiple
+    `.backward()` calls with no `zero_grad()` between them (that's the
+    ordinary gradient-accumulation pattern). It's also lower peak memory
+    either way, since only one rollout's graph is ever alive at a time
+    instead of the whole batch's.
+    """
+    micro_steps: List[Tuple["WKVLoopRollout", float]] = []
     for rollouts, rewards in zip(batch_rollouts, batch_rewards):
         advantages = compute_advantages(rewards)  # [G]
-
         for rollout, adv in zip(rollouts, advantages.tolist()):
-            if not rollout.answer_ids:
-                continue
+            if rollout.answer_ids:
+                micro_steps.append((rollout, adv))
 
-            log_pi_theta = _recompute_wkv_log_probs(
-                loaded, rollout, feed_mode, mlp_delta, alpha
-            )  # [T_ans], grad
+    n_tokens_total = sum(len(r.answer_ids) for r, _ in micro_steps)
+    if not micro_steps or n_tokens_total == 0:
+        return 0.0
 
-            # Old log-probs (stored at rollout time)
-            if rollout.answer_log_probs:
-                log_pi_old = torch.tensor(
-                    rollout.answer_log_probs[:len(rollout.answer_ids)],
-                    dtype=torch.float32, device=log_pi_theta.device,
-                )
-            else:
-                # answer_log_probs should always be populated by generate_rollout
-                # (wkv_loop.py) for a non-empty answer — an empty/None value here
-                # means rollout generation likely dropped log-probs due to a bug,
-                # not a deliberate on-policy mode. ratio collapses to 1 (REINFORCE-
-                # equivalent: gradient flows only through log_pi_theta), which is a
-                # safe fallback but should not happen silently.
-                print(f"[train] WARNING: rollout missing answer_log_probs "
-                      f"({len(rollout.answer_ids)} answer tokens) — falling back "
-                      f"to on-policy ratio=1", file=sys.stderr)
-                log_pi_old = log_pi_theta.detach()  # on-policy fallback
+    total_loss_val = 0.0
+    n_micro = len(micro_steps)
+    for i, (rollout, adv) in enumerate(micro_steps):
+        if forge_manager is not None:
+            forge_manager.pre_step(lr=lr, is_accumulating=(i < n_micro - 1))
 
-            ratio = torch.exp(log_pi_theta - log_pi_old)
-            adv_t = torch.full_like(ratio, adv)
-            unclipped = ratio * adv_t
-            clipped = torch.clamp(ratio, 1 - clip_eps, 1 + clip_eps) * adv_t
-            surrogate = -torch.min(unclipped, clipped).mean()
+        log_pi_theta = _recompute_wkv_log_probs(
+            loaded, rollout, feed_mode, mlp_delta, alpha
+        )  # [T_ans], grad
 
-            # KL penalty
-            kl = (ratio - 1 - (log_pi_theta - log_pi_old)).mean()
-            surrogate = surrogate + kl_coef * kl
+        # Old log-probs (stored at rollout time)
+        if rollout.answer_log_probs:
+            log_pi_old = torch.tensor(
+                rollout.answer_log_probs[:len(rollout.answer_ids)],
+                dtype=torch.float32, device=log_pi_theta.device,
+            )
+        else:
+            # answer_log_probs should always be populated by generate_rollout
+            # (wkv_loop.py) for a non-empty answer — an empty/None value here
+            # means rollout generation likely dropped log-probs due to a bug,
+            # not a deliberate on-policy mode. ratio collapses to 1 (REINFORCE-
+            # equivalent: gradient flows only through log_pi_theta), which is a
+            # safe fallback but should not happen silently.
+            print(f"[train] WARNING: rollout missing answer_log_probs "
+                  f"({len(rollout.answer_ids)} answer tokens) — falling back "
+                  f"to on-policy ratio=1", file=sys.stderr)
+            log_pi_old = log_pi_theta.detach()  # on-policy fallback
 
-            total_loss = total_loss + surrogate
-            n_tokens += len(rollout.answer_ids)
+        ratio = torch.exp(log_pi_theta - log_pi_old)
+        adv_t = torch.full_like(ratio, adv)
+        unclipped = ratio * adv_t
+        clipped = torch.clamp(ratio, 1 - clip_eps, 1 + clip_eps) * adv_t
+        surrogate = -torch.min(unclipped, clipped).mean()
 
-    return total_loss / max(n_tokens, 1)
+        # KL penalty
+        kl = (ratio - 1 - (log_pi_theta - log_pi_old)).mean()
+        surrogate = surrogate + kl_coef * kl
+
+        # Weight to match the original total_loss/n_tokens_total mean —
+        # each rollout contributes proportionally to its own answer length.
+        weight = len(rollout.answer_ids) / n_tokens_total
+        (surrogate * weight).backward()
+        total_loss_val += float(surrogate.item()) * weight
+
+    return total_loss_val
 
 
 # ------------------------------------------------------------------
@@ -405,15 +453,18 @@ def main():
         loss_val = float("nan")
         if not args.no_update and optimizer is not None:
             optimizer.zero_grad()
-            if forge_manager is not None:
-                forge_manager.pre_step(lr=args.lr)
-            loss = wkv_grpo_loss(
+            # wkv_grpo_loss calls .backward() internally, once per rollout
+            # (not once here) — see its docstring for why --forge needs that.
+            # forge_manager.pre_step() is likewise called per-rollout inside
+            # it now, not once here.
+            loss_val = wkv_grpo_loss(
                 loaded, batch_rollouts, batch_rewards,
                 feed_mode=args.feed_mode,
                 mlp_delta=mlp_delta,
                 alpha=args.alpha,
+                forge_manager=forge_manager,
+                lr=args.lr,
             )
-            loss.backward()
             if loaded.backend == "peft":
                 if forge_manager is not None:
                     # FusedLinear layers apply their AdamW update *inside*
@@ -430,7 +481,6 @@ def main():
                         [p for p in loaded.model.parameters() if p.requires_grad], 1.0
                     )
             optimizer.step()
-            loss_val = float(loss.item())
 
         # Curriculum update
         accuracy = float((all_rewards_flat > 0).float().mean().item())

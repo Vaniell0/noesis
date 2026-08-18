@@ -199,12 +199,28 @@ def probe_lag(
     X_te = (X_te - mu) / sd
 
     m = MLPDecoder(X_tr.shape[1], hidden, n_cls) if nonlinear else LinearDecoder(X_tr.shape[1], n_cls)
-    opt = torch.optim.Adam(m.parameters(), lr=lr)
+    # nonlinear=True is a much more overfitting-prone problem than
+    # mlp_probe.py's MLPDecoder counterpart (scalar MSE regression there vs
+    # n_cls-way classification here, n_cls in the thousands on real corpora —
+    # e.g. 3252 classes over ~10.7k training examples on the default corpus,
+    # ~3 examples/class on average). A synthetic sanity check confirmed
+    # MLPDecoder's training loop itself is correct (100% held-out accuracy on
+    # an easy 20-class task) — the real corpus's failure (held-out CE worse
+    # than the unigram baseline, 2026-08-18) is severe overfitting from too
+    # little data per class relative to the ~256*n_cls-parameter output
+    # layer, not a training bug. First attempted fix (10x epochs, 0.3x lr)
+    # made it *worse* (more time to overfit) — reverted. weight_decay is the
+    # right lever for this failure mode; epochs/lr left at the LinearDecoder
+    # defaults. Not fully resolved — early stopping on a held-out-within-train
+    # slice would likely help further but isn't implemented.
+    train_epochs = epochs
+    opt = torch.optim.Adam(m.parameters(), lr=lr,
+                           weight_decay=0.05 if nonlinear else 0.0)
     loss_fn = nn.CrossEntropyLoss()
 
     torch.set_grad_enabled(True)
     m.train()
-    for _ in range(epochs):
+    for _ in range(train_epochs):
         opt.zero_grad()
         logits = m(X_tr)
         loss = loss_fn(logits, y_tr)
