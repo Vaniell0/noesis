@@ -199,6 +199,26 @@ def call_ollama(host: str, model: str, prompt: str,
     return data.get("response", "")
 
 
+def call_rwkv_mloop(loaded, prompt: str, num_predict: int, m_max: int,
+                    feed_mode: str = "discrete") -> str:
+    """M-loop decode via experiments.rl.wkv_loop.generate_rollout.
+
+    H10's N/K/readout_mode axes collapse to this single M axis (internal
+    WKV-loop steps, no decoded think-tokens) — see HYPOTHESES.md H10's
+    stale-marker note. `loaded` comes from experiments.rl.loader.load_rwkv7,
+    not experiments._common.model.load_model (different LoadedModel
+    interface — this is the same loader/rollout machinery
+    train_wkv_loop.py uses for RL, applied here as a pure eval with no
+    reward/gradient computation).
+    """
+    from experiments.rl.wkv_loop import generate_rollout
+    rollout = generate_rollout(
+        loaded, prompt, feed_mode=feed_mode, M_max=m_max,
+        max_answer_tokens=num_predict, answer_temperature=0.0,
+    )
+    return rollout.text
+
+
 def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
               num_predict: int, n_passes: int = 1,
               readout_mode: str = "silent", readout_k: int = 64) -> str:
@@ -324,6 +344,18 @@ def main() -> int:
                     help="Ollama model name or path to .pth for rwkv backend.")
     ap.add_argument("--num-predict", type=int, default=64,
                     help="Answer token budget (separate from --readout-k).")
+    ap.add_argument("--axis", choices=["h10", "m"], default="h10",
+                    help="rwkv backend only. 'h10': legacy N/K/readout_mode axes "
+                         "(--n-passes/--readout-mode/--readout-k). 'm': current "
+                         "WKV-loop M axis via experiments.rl.wkv_loop.generate_rollout "
+                         "(--m-max/--feed-mode) — H10's own stale-marker note says "
+                         "N x K x mode collapsed to this single axis.")
+    ap.add_argument("--m-max", type=int, default=16,
+                    help="--axis=m only: max internal WKV-loop steps before forced exit.")
+    ap.add_argument("--feed-mode", choices=["discrete", "expected", "residual"],
+                    default="discrete",
+                    help="--axis=m only: how loop-step logits feed back into WKV. "
+                         "expected/residual need --device cuda (peft backend).")
     ap.add_argument("--n-passes", type=int, default=1,
                     help="WKV cycling passes before decoding (N axis in H10). "
                          "Each pass re-feeds the prompt through WKV accumulating "
@@ -343,6 +375,11 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=120,
                     help="Per-request timeout (seconds).")
     ap.add_argument("--out", required=True, help="Path to output JSON.")
+    ap.add_argument("--device", default=None, choices=["cpu", "cuda"],
+                    help="rwkv backend only. Was env-var-only (NOESIS_EVAL_DEVICE, "
+                         "silently defaulting to cpu) — the existing G1i state_readout "
+                         "result took ~29h because of this. --device wins if set; "
+                         "NOESIS_EVAL_DEVICE still works as a fallback.")
     ap.add_argument("--limit", type=int, default=None,
                     help="Cap number of tasks (for smoke tests).")
     ap.add_argument("--chat-wrap", action="store_true",
@@ -358,10 +395,17 @@ def main() -> int:
     print(f"[eval] backend={args.backend} model={args.model} tasks={len(tasks)}",
           file=sys.stderr, flush=True)
 
-    tok = mdl = None
-    if args.backend == "rwkv":
+    tok = mdl = loaded = None
+    device = args.device or os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
+    if args.backend == "rwkv" and args.axis == "m":
+        from experiments.rl.loader import load_rwkv7
+        # backend=None: load_rwkv7's own auto-select (peft on cuda, blink on
+        # cpu) — discrete feed_mode works on either; expected/residual need
+        # peft specifically and will raise from generate_rollout if not.
+        loaded = load_rwkv7(args.model, device=device)
+    elif args.backend == "rwkv":
         from experiments._common.model import load_model
-        mdl, tok = load_model(args.model, device=os.environ.get("NOESIS_EVAL_DEVICE", "cpu"))
+        mdl, tok = load_model(args.model, device=device)
 
     t0 = time.time()
     results: List[Dict[str, Any]] = []
@@ -374,6 +418,9 @@ def main() -> int:
                 resp = call_ollama(args.host, args.model, task["prompt"],
                                    args.num_predict, args.timeout,
                                    chat_wrap=args.chat_wrap)
+            elif args.axis == "m":
+                resp = call_rwkv_mloop(loaded, task["prompt"], args.num_predict,
+                                       args.m_max, args.feed_mode)
             else:
                 resp = call_rwkv(args.model, tok, mdl, task["prompt"],
                                  args.num_predict, args.n_passes,
@@ -404,9 +451,12 @@ def main() -> int:
         "model": args.model,
         "backend": args.backend,
         "num_predict": args.num_predict,
+        "axis": args.axis,
         "n_passes": args.n_passes,
         "readout_mode": args.readout_mode,
         "readout_k": args.readout_k,
+        "m_max": args.m_max if args.axis == "m" else None,
+        "feed_mode": args.feed_mode if args.axis == "m" else None,
         "n_tasks": len(tasks),
         "elapsed_s": elapsed,
         "aggregate": agg,
@@ -414,10 +464,13 @@ def main() -> int:
         "_summary": {"overall accuracy": f"{agg['overall_accuracy']:.3f}",
                      "n_correct/n_total": f"{agg['n_correct']}/{agg['n_total']}"},
     }
+    if args.axis == "m":
+        status = f"backend={args.backend} axis=m M_max={args.m_max} feed_mode={args.feed_mode}"
+    else:
+        status = f"backend={args.backend} N={args.n_passes} mode={args.readout_mode} K={args.readout_k}"
     out_path = save_result(
         args.out, payload, experiment="a02_eval", hypothesis=["H10"],
-        model=args.model, script=__file__,
-        status=f"backend={args.backend} N={args.n_passes} mode={args.readout_mode} K={args.readout_k}",
+        model=args.model, script=__file__, status=status,
     )
 
     print(md_report(agg, args.model, elapsed))

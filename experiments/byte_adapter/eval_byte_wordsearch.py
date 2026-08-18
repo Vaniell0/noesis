@@ -59,6 +59,9 @@ def main():
     ap.add_argument("--max-new", type=int, default=128)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out", default="experiments/A0_eval/results/g1d_wordsearch_nsp_byte.json")
+    ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"],
+                    help="was hardcoded to cpu — fine for G1d (0.4B) but too slow "
+                         "for 2.9B models over many tasks (found 2026-08-18)")
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -67,11 +70,14 @@ def main():
     from byte_adapter import ByteAdapter
 
     print(f"Loading {args.model} ...")
-    model, _ = load_model(args.model, device="cpu")
+    model, _ = load_model(args.model, device=args.device)
 
-    adapter = ByteAdapter(model_dim=1024)
     with torch.no_grad():
         emb = model.z["emb.weight"]
+        # model_dim=1024 was hardcoded to G1d's n_embd — broke on any other
+        # model size (found running G1i, n_embd=2560, for the first time,
+        # 2026-08-18: "expanded size 2560 must match existing size 1024").
+        adapter = ByteAdapter(model_dim=emb.shape[1])
         emb[:256] = adapter.embed.weight.to(emb.dtype)
     print(f"Patched emb[:256] with random ByteAdapter (dtype={emb.dtype})")
 
