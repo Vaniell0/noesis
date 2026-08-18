@@ -318,12 +318,13 @@ def main():
         if loaded.backend != "peft":
             raise ValueError("--forge requires --device cuda (backend='peft') — "
                               "FORGE's kernels are CUDA-only")
-        from fused_grad_optimizer.model_wrappers import wrap_rwkv7
-        loaded.model, forge_manager = wrap_rwkv7(
+        from experiments.rl.loader import wrap_rwkv7_excluding_head
+        loaded.model, forge_manager = wrap_rwkv7_excluding_head(
             loaded.model, optimizer_type="adamw", state_mode=args.forge_state_mode,
             weight_decay=0.01,
         )
-        print(f"[train] FORGE enabled: state_mode={args.forge_state_mode}")
+        print(f"[train] FORGE enabled: state_mode={args.forge_state_mode} "
+              f"(head excluded — see wrap_rwkv7_excluding_head docstring)")
 
     # Optimiser (only for peft backend with grad)
     optimizer = None

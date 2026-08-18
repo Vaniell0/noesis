@@ -55,6 +55,7 @@ import a05_intervene as C
 import prompts as PROMPT_BANK
 from probe import _sample_top_p, load_model
 from experiments._common.layers import default_layers
+from experiments._common.heartbeat import write_heartbeat
 
 
 # --------------------------------------------------------------------------- #
@@ -368,6 +369,10 @@ def main() -> int:
             file=sys.stderr, flush=True,
         )
 
+    total_checkpoints = args.seeds * args.k_checkpoints
+    done_checkpoints = 0
+    heartbeat_path = os.path.join(args.out, "status.json")
+
     for seed in range(args.seeds):
         print(f"[a05] seed {seed} — decoding {args.max_new_tokens} tokens ...",
               file=sys.stderr, flush=True)
@@ -411,6 +416,11 @@ def main() -> int:
                 f"({len(results)} corruptions) done",
                 file=sys.stderr, flush=True,
             )
+            done_checkpoints += 1
+            write_heartbeat(
+                heartbeat_path, progress=(done_checkpoints, total_checkpoints),
+                message=f"seed {seed} cp{cp_idx} step={cp['step']}",
+            )
         corrupt_wall = time.time() - c0
 
         seed_out = {
@@ -448,6 +458,10 @@ def main() -> int:
     with open(os.path.join(args.out, "summary.json"), "w") as f:
         json.dump(summary, f, indent=2)
     print(f"[a05] wrote {args.out}/summary.json", file=sys.stderr, flush=True)
+    write_heartbeat(
+        heartbeat_path, progress=(total_checkpoints, total_checkpoints),
+        message=f"done — {args.seeds} seeds, {total_checkpoints} checkpoints",
+    )
     return 0
 
 

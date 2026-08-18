@@ -64,6 +64,53 @@ def _prime_env() -> None:
     os.environ.setdefault("WKV", "fla")
 
 
+def wrap_rwkv7_excluding_head(model, **wrap_kwargs):
+    """wrap_rwkv7() from FORGE, then revert `head` back to plain nn.Linear.
+
+    FORGE's fused-into-backward update assumes one forward call per training
+    step per layer — the optimizer step for a FusedLinear's weight happens
+    as a side effect of ITS OWN local backward, the first (and only) time
+    autograd expects to touch that weight. Our WKV-loop calls the model
+    (and therefore `head`) many times per training step — once per
+    generated token, across every rollout in the batch — all accumulated
+    into one shared loss, backed by one `loss.backward()` call. Each of
+    those `head` invocations independently triggers another premature
+    in-place weight update inside that single backward pass, so by the
+    time autograd reaches an EARLIER invocation's saved-for-backward
+    weight, it has already been mutated by a LATER one:
+    `RuntimeError: one of the variables needed for gradient computation
+    has been modified by an inplace operation ... version 290; expected
+    version 1` (found running --forge on real GPU for the first time,
+    2026-08-18). `att`/`ffn` sublayers don't have this problem — each is
+    called at most once per token per layer per step, same as the
+    single-forward-per-step case FORGE is designed for; only `head` (and
+    only because of the WKV-loop's per-token decode structure) is reused
+    within one backward. wrap_rwkv7() itself takes no exclude-list
+    (asked FORGE upstream isn't an option we control), so this reverts
+    just that one layer after the fact and rebuilds the manager so
+    `get_non_fused_params()` correctly picks up head's weight/bias for
+    the regular optimizer instead.
+    """
+    from fused_grad_optimizer.model_wrappers import wrap_rwkv7
+    from fused_grad_optimizer.module import FusedLinear, FusedOptimizerManager
+    import torch.nn as nn
+
+    model, _ = wrap_rwkv7(model, **wrap_kwargs)
+
+    head = model.head
+    if isinstance(head, FusedLinear):
+        plain = nn.Linear(head.in_features, head.out_features,
+                           bias=head.bias is not None)
+        plain.weight.data = head.weight.data
+        if head.bias is not None:
+            plain.bias.data = head.bias.data
+        plain = plain.to(device=head.weight.device, dtype=head.weight.dtype)
+        model.head = plain
+
+    manager = FusedOptimizerManager(model)
+    return model, manager
+
+
 def _stub_deepspeed_if_missing() -> None:
     """rwkvt/rwkv7/model.py does `import deepspeed` at module scope.
 
