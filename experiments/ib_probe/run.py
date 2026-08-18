@@ -36,15 +36,21 @@ import json
 import os
 import sys
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_HERE, "..", "A0_state_probe"))
+_REPO_ROOT = os.path.dirname(os.path.dirname(_HERE))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
 import numpy as np
 import torch
 import torch.nn as nn
-from probe import _extract_wkv_per_layer, load_model
+
+from experiments._common import registry
+from experiments._common.model import load_model
+from experiments._common.results import save_result
+from experiments.A0_state_probe.probe import _extract_wkv_per_layer
 
 
 DEFAULT_MODEL = "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth"
@@ -89,14 +95,20 @@ def collect_token_states(model, tokenizer, text: str, max_tokens: int = 512):
 # Reconstruction probe
 # ---------------------------------------------------------------------------
 
-def _unigram_ce(token_ids: List[int], vocab_size: int) -> float:
-    """CE of predicting by unigram frequency (baseline)."""
+def _unigram_ce_heldout(train_token_ids: List[int], test_token_ids: List[int]) -> float:
+    """CE of predicting held-out tokens using unigram frequencies fit on train only.
+
+    Mirrors the probe's own train/test discipline (see `probe_lag`) — the
+    baseline must be fit-then-scored the same way the probe is, otherwise
+    "fraction explained" compares a held-out number against an in-sample
+    one and the ratio is not meaningful.
+    """
     from collections import Counter
-    counts = Counter(token_ids)
-    total = len(token_ids)
-    probs = {t: c / total for t, c in counts.items()}
-    ce = -sum(probs[t] * np.log(probs[t] + 1e-12) for t in probs)
-    return float(ce)
+    counts = Counter(train_token_ids)
+    vocab = set(train_token_ids) | set(test_token_ids)
+    smoothed_total = len(train_token_ids) + len(vocab)  # +1 Laplace smoothing
+    log_probs = [np.log((counts.get(t, 0) + 1) / smoothed_total) for t in test_token_ids]
+    return float(-np.mean(log_probs)) if log_probs else float("nan")
 
 
 class LinearDecoder(nn.Module):
@@ -108,6 +120,31 @@ class LinearDecoder(nn.Module):
         return self.fc(x)
 
 
+class MLPDecoder(nn.Module):
+    """2-layer classifier — the nonlinear counterpart to LinearDecoder.
+
+    Added 2026-08-18, same motivation as mlp_probe.py's nonlinear IPC:
+    on G1d, linear IPC found ~0 held-out signal at short trajectories
+    while an MLP probe (same held-out discipline) found real, consistent
+    structure (up to R^2~=0.86) — the state carries information nonlinearly,
+    invisible to a linear decoder. `probe_lag` below tests whether the
+    same gap exists for IB's reconstruction task (predict token[t-lag]
+    from state[t]) — linear IB came back ~=0 beyond lag=2 (see FAILED.md/
+    HYPOTHESES.md note 2026-08-18); this is the direct check for whether
+    that's a real absence of structure or the same linear-decoder blindness.
+    """
+    def __init__(self, in_dim: int, hidden: int, n_classes: int):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(in_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, n_classes),
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+
 def probe_lag(
     states: np.ndarray,
     token_ids: List[int],
@@ -116,14 +153,29 @@ def probe_lag(
     epochs: int = 200,
     lr: float = 1e-3,
     seed: int = 42,
-) -> float:
-    """Train linear decoder from state[t] → token[t-lag]. Return probe CE."""
+    train_frac: float = 0.8,
+    nonlinear: bool = False,
+    hidden: int = 256,
+) -> Dict[str, float]:
+    """Train a decoder from state[t] -> token[t-lag]. Held-out CE (probe and
+    matching unigram baseline, both scored on the same test slice — see
+    `_unigram_ce_heldout`). Contiguous split (first train_frac = train, tail =
+    test), same convention as `ridge_r2` in ipc_analysis.py.
+
+    `nonlinear=True` swaps LinearDecoder for a 2-layer MLPDecoder — see its
+    docstring for why.
+
+    Previously trained and evaluated on the same data (no split) — that made
+    the "78-96% explained variance" numbers in-sample overfitting artifacts,
+    the same class of bug fixed for linear IPC in 9b28b7f. Fixed 2026-08-17.
+    """
     if len(states) <= lag:
-        return float("nan")
+        return {"probe_ce": float("nan"), "baseline_ce": float("nan"), "n_train": 0, "n_test": 0}
 
     torch.manual_seed(seed)
     X = torch.from_numpy(states[lag:]).float()
-    y = torch.tensor(token_ids[:len(states) - lag], dtype=torch.long)
+    tok_targets = token_ids[:len(states) - lag]
+    y = torch.tensor(tok_targets, dtype=torch.long)
 
     # Restrict to known classes (tokens that actually appear)
     unique = sorted(set(token_ids))
@@ -131,12 +183,22 @@ def probe_lag(
     y_cls = torch.tensor([tok2cls[t.item()] for t in y], dtype=torch.long)
     n_cls = len(unique)
 
-    # Normalise features
-    mu = X.mean(0, keepdim=True)
-    sd = X.std(0, keepdim=True).clamp_min(1e-6)
-    X = (X - mu) / sd
+    T = X.shape[0]
+    n_train = max(1, min(T - 1, int(T * train_frac)))
+    if n_train < 1 or n_train >= T:
+        return {"probe_ce": float("nan"), "baseline_ce": float("nan"), "n_train": n_train, "n_test": T - n_train}
 
-    m = LinearDecoder(X.shape[1], n_cls)
+    X_tr, X_te = X[:n_train], X[n_train:]
+    y_tr, y_te = y_cls[:n_train], y_cls[n_train:]
+
+    # Normalise using train-split stats only — fitting mu/sd on data that
+    # includes the test slice would leak test information into the features.
+    mu = X_tr.mean(0, keepdim=True)
+    sd = X_tr.std(0, keepdim=True).clamp_min(1e-6)
+    X_tr = (X_tr - mu) / sd
+    X_te = (X_te - mu) / sd
+
+    m = MLPDecoder(X_tr.shape[1], hidden, n_cls) if nonlinear else LinearDecoder(X_tr.shape[1], n_cls)
     opt = torch.optim.Adam(m.parameters(), lr=lr)
     loss_fn = nn.CrossEntropyLoss()
 
@@ -144,16 +206,18 @@ def probe_lag(
     m.train()
     for _ in range(epochs):
         opt.zero_grad()
-        logits = m(X)
-        loss = loss_fn(logits, y_cls)
+        logits = m(X_tr)
+        loss = loss_fn(logits, y_tr)
         loss.backward()
         opt.step()
 
     m.eval()
     with torch.no_grad():
-        ce = loss_fn(m(X), y_cls).item()
+        probe_ce = loss_fn(m(X_te), y_te).item()
     torch.set_grad_enabled(False)
-    return ce
+
+    baseline_ce = _unigram_ce_heldout(tok_targets[:n_train], tok_targets[n_train:])
+    return {"probe_ce": probe_ce, "baseline_ce": baseline_ce, "n_train": n_train, "n_test": T - n_train}
 
 
 def reconstruction_curve(
@@ -161,29 +225,33 @@ def reconstruction_curve(
     all_token_ids: List[int],
     lags: List[int],
     epochs: int = 200,
+    nonlinear: bool = False,
+    hidden: int = 256,
 ) -> Dict[int, Dict[str, float]]:
-    """Compute reconstruction CE at each lag across all collected sequences."""
+    """Compute held-out reconstruction CE at each lag across all collected sequences."""
     states = np.stack(all_states)
     n_classes = len(set(all_token_ids))
-
-    # Unigram baseline CE (log of vocab size in the corpus)
-    baseline_ce = _unigram_ce(all_token_ids, n_classes)
 
     results: Dict[int, Dict[str, float]] = {}
     for lag in lags:
         t0 = time.time()
-        probe_ce = probe_lag(states, all_token_ids, lag=lag,
-                              n_classes=n_classes, epochs=epochs)
-        frac_explained = max(0.0, 1.0 - probe_ce / baseline_ce) if not np.isnan(probe_ce) else float("nan")
+        r = probe_lag(states, all_token_ids, lag=lag, n_classes=n_classes, epochs=epochs,
+                       nonlinear=nonlinear, hidden=hidden)
+        probe_ce, baseline_ce = r["probe_ce"], r["baseline_ce"]
+        frac_explained = (max(0.0, 1.0 - probe_ce / baseline_ce)
+                           if not (np.isnan(probe_ce) or np.isnan(baseline_ce) or baseline_ce == 0)
+                           else float("nan"))
         results[lag] = {
             "lag": lag,
             "probe_ce": probe_ce,
             "baseline_ce": baseline_ce,
             "frac_explained": frac_explained,
+            "n_train": r["n_train"],
+            "n_test": r["n_test"],
             "wall_s": time.time() - t0,
         }
         print(f"  lag={lag:3d}: CE={probe_ce:.3f} baseline={baseline_ce:.3f} "
-              f"explained={frac_explained:.3f} ({time.time()-t0:.1f}s)",
+              f"explained={frac_explained:.3f} (held-out n={r['n_test']}, {time.time()-t0:.1f}s)",
               file=sys.stderr, flush=True)
     return results
 
@@ -226,35 +294,15 @@ def load_corpus_texts(corpus_path: str, max_chars_per_chunk: int = 2000) -> List
 
 
 # ---------------------------------------------------------------------------
-# Main
+# Core probe (loading-free — usable both standalone and via the registry)
 # ---------------------------------------------------------------------------
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--model", default=DEFAULT_MODEL)
-    ap.add_argument("--corpus", default=DEFAULT_CORPUS,
-                    help="text file or .jsonl with prompt/text/content fields")
-    ap.add_argument("--out", default=os.path.join(_HERE, "results"))
-    ap.add_argument("--lags", default="1,2,4,8,16,32,64",
-                    help="comma-separated reconstruction lags")
-    ap.add_argument("--max-tokens-per-chunk", type=int, default=400,
-                    help="max tokens to process per corpus chunk")
-    ap.add_argument("--epochs", type=int, default=200,
-                    help="linear probe training epochs per lag")
-    ap.add_argument("--labels", default=None,
-                    help="jsonl with {prompt, label} for downstream probe")
-    args = ap.parse_args()
-
-    lags = [int(x) for x in args.lags.split(",")]
-    os.makedirs(args.out, exist_ok=True)
-
-    device = os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
-    print(f"[ib] loading model {args.model} on {device}", file=sys.stderr)
-    model, tokenizer = load_model(args.model, device=device)
-
-    # --- Reconstruction probe ---
-    print(f"[ib] loading corpus {args.corpus}", file=sys.stderr)
-    texts = load_corpus_texts(args.corpus)
+def _run_ib_probe(model, tokenizer, corpus: str, lags: List[int],
+                   max_tokens_per_chunk: int, epochs: int,
+                   labels: Optional[str] = None,
+                   nonlinear: bool = False, hidden: int = 256) -> Dict:
+    print(f"[ib] loading corpus {corpus}", file=sys.stderr)
+    texts = load_corpus_texts(corpus)
     print(f"[ib] {len(texts)} corpus chunks", file=sys.stderr)
 
     all_states: List[np.ndarray] = []
@@ -262,7 +310,7 @@ def main() -> int:
     t0 = time.time()
     for i, text in enumerate(texts):
         tok_ids, states = collect_token_states(model, tokenizer, text,
-                                               max_tokens=args.max_tokens_per_chunk)
+                                               max_tokens=max_tokens_per_chunk)
         all_states.extend(states)
         all_token_ids.extend(tok_ids)
         print(f"[ib] chunk {i+1}/{len(texts)} tokens={len(tok_ids)} "
@@ -271,36 +319,33 @@ def main() -> int:
 
     print(f"\n[ib] reconstruction probe: {len(all_token_ids)} tokens, "
           f"feature_dim={len(all_states[0])}", file=sys.stderr)
-    rec_results = reconstruction_curve(all_states, all_token_ids,
-                                        lags=lags, epochs=args.epochs)
+    rec_results = reconstruction_curve(all_states, all_token_ids, lags=lags, epochs=epochs,
+                                        nonlinear=nonlinear, hidden=hidden)
 
-    # --- Summary output ---
-    print(f"\n=== IB reconstruction curve ===")
-    print(f"model: {os.path.basename(args.model)}")
-    print(f"corpus: {os.path.basename(args.corpus)}  ({len(all_token_ids)} tokens)")
+    print(f"\n=== IB reconstruction curve (held-out, {'nonlinear MLP' if nonlinear else 'linear'} decoder) ===")
+    print(f"corpus: {os.path.basename(corpus)}  ({len(all_token_ids)} tokens)")
     print(f"feature_dim: {len(all_states[0])}")
-    print(f"\n{'lag':>6}  {'probe_CE':>9}  {'baseline_CE':>11}  {'explained':>10}")
-    print("-" * 45)
+    print(f"\n{'lag':>6}  {'probe_CE':>9}  {'baseline_CE':>11}  {'explained':>10}  {'n_test':>7}")
+    print("-" * 55)
     for lag in lags:
         r = rec_results[lag]
-        print(f"{lag:>6}  {r['probe_ce']:>9.4f}  {r['baseline_ce']:>11.4f}  {r['frac_explained']:>10.4f}")
+        print(f"{lag:>6}  {r['probe_ce']:>9.4f}  {r['baseline_ce']:>11.4f}  "
+              f"{r['frac_explained']:>10.4f}  {r['n_test']:>7d}")
 
-    # Save results
-    out_rec = os.path.join(args.out, "reconstruction.json")
-    with open(out_rec, "w", encoding="utf-8") as f:
-        json.dump({
-            "model": args.model,
-            "corpus": args.corpus,
-            "n_tokens": len(all_token_ids),
-            "feature_dim": len(all_states[0]),
-            "lags": rec_results,
-        }, f, indent=2)
-    print(f"\n[ib] saved {out_rec}", file=sys.stderr)
+    decoder_tag = "MLP" if nonlinear else "linear"
+    result: Dict = {
+        "corpus": corpus,
+        "n_tokens": len(all_token_ids),
+        "feature_dim": len(all_states[0]),
+        "decoder": decoder_tag,
+        "lags": rec_results,
+        "_summary": {f"lag={lag} frac_explained (held-out, {decoder_tag})": f"{rec_results[lag]['frac_explained']:.3f}"
+                     for lag in lags},
+    }
 
-    # --- Downstream probe (optional) ---
-    if args.labels:
-        print(f"\n[ib] downstream probe from {args.labels}", file=sys.stderr)
-        label_items = [json.loads(l) for l in open(args.labels, encoding="utf-8") if l.strip()]
+    if labels:
+        print(f"\n[ib] downstream probe from {labels}", file=sys.stderr)
+        label_items = [json.loads(l) for l in open(labels, encoding="utf-8") if l.strip()]
         X_ds, y_ds = [], []
         for item in label_items:
             prompt = item.get("prompt", "")
@@ -324,10 +369,88 @@ def main() -> int:
             cv_scores = cross_val_score(clf, X_arr, y_ds, cv=5, scoring="f1")
             print(f"\n=== IB downstream probe ===")
             print(f"n={len(y_ds)}  5-fold F1: mean={cv_scores.mean():.3f} std={cv_scores.std():.3f}")
-            with open(os.path.join(args.out, "downstream.json"), "w") as f:
-                json.dump({"f1_mean": float(cv_scores.mean()), "f1_std": float(cv_scores.std()),
-                           "n": len(y_ds)}, f)
+            result["downstream"] = {"f1_mean": float(cv_scores.mean()), "f1_std": float(cv_scores.std()),
+                                     "n": len(y_ds)}
+            result["_summary"]["downstream F1 (5-fold)"] = f"{cv_scores.mean():.3f} ± {cv_scores.std():.3f}"
 
+    return result
+
+
+def _add_ib_args(ap: argparse.ArgumentParser) -> None:
+    ap.add_argument("--corpus", default=DEFAULT_CORPUS,
+                    help="text file or .jsonl with prompt/text/content fields")
+    ap.add_argument("--lags", default="1,2,4,8,16,32,64",
+                    help="comma-separated reconstruction lags")
+    ap.add_argument("--max-tokens-per-chunk", type=int, default=400,
+                    help="max tokens to process per corpus chunk")
+    ap.add_argument("--epochs", type=int, default=200,
+                    help="linear probe training epochs per lag")
+    ap.add_argument("--labels", default=None,
+                    help="jsonl with {prompt, label} for downstream probe")
+    ap.add_argument("--nonlinear", action="store_true",
+                    help="Use a 2-layer MLP decoder instead of linear — the "
+                         "nonlinear-IB counterpart to mlp_ipc's nonlinear IPC. "
+                         "Linear IB came back ~=0 held-out beyond lag=2 "
+                         "(2026-08-18); this checks whether that's a real "
+                         "absence of structure or linear-decoder blindness.")
+    ap.add_argument("--hidden", type=int, default=256,
+                    help="MLP hidden width, only used with --nonlinear")
+
+
+@registry.probe(
+    "ib_probe", hypothesis=["H8"],
+    description="Held-out WKV state reconstruction (predict token[t-lag] from state[t]) + optional downstream label probe. "
+                "--nonlinear swaps in a 2-layer MLP decoder (linear came back ~=0 beyond lag=2). "
+                "SLOW (~10h/model on CPU, full corpus) and does NOT respect --n-tokens (scale is --corpus + "
+                "--max-tokens-per-chunk instead) — the only probe in the registry where 'small --n-tokens for a "
+                "quick check' silently doesn't apply. Pass --corpus pointing at a small file to actually go fast.",
+    add_args=_add_ib_args,
+)
+def run(model, tokenizer, args) -> Dict:
+    lags = [int(x) for x in args.lags.split(",")]
+    result = _run_ib_probe(model, tokenizer, args.corpus, lags,
+                            args.max_tokens_per_chunk, args.epochs, args.labels,
+                            nonlinear=args.nonlinear, hidden=args.hidden)
+    return {"model": args.model, **result}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--corpus", default=DEFAULT_CORPUS,
+                    help="text file or .jsonl with prompt/text/content fields")
+    ap.add_argument("--out", default=os.path.join(_HERE, "results"))
+    ap.add_argument("--lags", default="1,2,4,8,16,32,64",
+                    help="comma-separated reconstruction lags")
+    ap.add_argument("--max-tokens-per-chunk", type=int, default=400,
+                    help="max tokens to process per corpus chunk")
+    ap.add_argument("--epochs", type=int, default=200,
+                    help="linear probe training epochs per lag")
+    ap.add_argument("--labels", default=None,
+                    help="jsonl with {prompt, label} for downstream probe")
+    ap.add_argument("--nonlinear", action="store_true",
+                    help="Use a 2-layer MLP decoder instead of linear")
+    ap.add_argument("--hidden", type=int, default=256,
+                    help="MLP hidden width, only used with --nonlinear")
+    args = ap.parse_args()
+
+    lags = [int(x) for x in args.lags.split(",")]
+    os.makedirs(args.out, exist_ok=True)
+
+    device = os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
+    print(f"[ib] loading model {args.model} on {device}", file=sys.stderr)
+    model, tokenizer = load_model(args.model, device=device)
+
+    result = _run_ib_probe(model, tokenizer, args.corpus, lags,
+                            args.max_tokens_per_chunk, args.epochs, args.labels,
+                            nonlinear=args.nonlinear, hidden=args.hidden)
+    result["model"] = args.model
+
+    out_path = save_result(
+        os.path.join(args.out, "reconstruction.json"), result,
+        experiment="ib_probe", hypothesis=["H8"], model=args.model, script=__file__,
+    )
+    print(f"\n[ib] saved {out_path}", file=sys.stderr)
     return 0
 
 
