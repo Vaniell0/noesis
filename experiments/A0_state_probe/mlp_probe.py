@@ -157,7 +157,9 @@ def _add_mlp_args(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--n-proj", type=int, default=128)
     ap.add_argument("--hidden", type=int, default=256)
     ap.add_argument("--epochs", type=int, default=200)
-    ap.add_argument("--layers", default="0,4,8,16,24,31")
+    ap.add_argument("--layers", default=None,
+                    help="Comma-separated layer indices (default: picked by fractional "
+                         "depth from the loaded model — same as ipc_analysis.py)")
     ap.add_argument("--prompt", default=PROMPT)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--trajectory-in", type=pathlib.Path)
@@ -172,14 +174,13 @@ def _add_mlp_args(ap: argparse.ArgumentParser) -> None:
     add_args=_add_mlp_args,
 )
 def run(model, tokenizer, args: argparse.Namespace) -> dict:
-    target_layers = [int(x) for x in args.layers.split(",")]
+    target_layers = [int(x) for x in args.layers.split(",")] if args.layers else None
 
     teacher_forced_tokens: Optional[list[int]] = None
     if args.trajectory_in is not None:
         payload = json.loads(args.trajectory_in.read_text())
         teacher_forced_tokens = payload["token_ids"] if isinstance(payload, dict) else payload
 
-    print(f"[mlp_probe] layers={target_layers}  n_proj={args.n_proj}")
     print(f"[mlp_probe] n_tokens={args.n_tokens}  max_lag={args.max_lag}  deg={args.max_degree}")
     print(f"[mlp_probe] MLP hidden={args.hidden}  epochs={args.epochs}")
 
@@ -192,6 +193,9 @@ def run(model, tokenizer, args: argparse.Namespace) -> dict:
         seed=args.seed,
         teacher_forced_tokens=teacher_forced_tokens,
     )
+    # collect_trajectory resolves None -> default_layers(n_layer) internally.
+    target_layers = sorted(layer_states.keys())
+    print(f"[mlp_probe] layers={target_layers}  n_proj={args.n_proj}")
     print(f"[mlp_probe] collected {len(token_ids)} tokens")
 
     print("[mlp_probe] training MLP probes…")

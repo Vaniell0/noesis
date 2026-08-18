@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
-"""Rich WKV-state probe — per-head spectral analysis + gradient saliency.
+"""Rich WKV-state probe — per-head spectral analysis.
 
 CPU-compatible (BlinkDL rwkv package, no triton). Serves as a
 TransformerLens-equivalent for RWKV7 when GPU is not available.
+
+Fixed 2026-08-18: the original docstring also promised a third metric,
+"gradient saliency (R-lens proxy)" — `gradient_saliency()` was defined but
+never called from `probe_prompt`/`run_probes`, the same
+promised-vs-actual gap pattern found in `jlens_probe.py` the same night.
+Removed rather than wired up (nobody asked for it; `rlens_probe.py`
+already covers saliency via a different, working mechanism). `--work-layers`
+CLI flag removed for the same reason — defined, never read; every layer is
+already reported unconditionally by `per_head_spectrum`.
 
 ## Metrics
 
@@ -17,14 +26,7 @@ For each prompt, at each layer l, for each head h:
   - `layer_delta[l]`     : ||WKV[l] - WKV[l-1]||_F / ||WKV[l-1]||_F
                              — how much state changes per layer
 
-### Gradient saliency (R-lens proxy)
-After prefilling a prompt:
-  - Enable grad on embedded token positions (via model's embedding lookup)
-  - Backward from the final-position log-prob of the top token
-  - `saliency[t]`         : ||∂logit/∂embed_t||_2 per input token
-                             — which tokens drove the model's next prediction
-
-All three metrics can be compared across base vs trained checkpoints.
+Both metrics can be compared across base vs trained checkpoints.
 
 ## Usage
 
@@ -60,9 +62,14 @@ import numpy as np
 import torch
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, _HERE)
+_REPO_ROOT = os.path.dirname(os.path.dirname(_HERE))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
-from probe import load_model, _extract_wkv_per_layer  # noqa: E402
+from experiments._common import registry
+from experiments._common.model import load_model
+from experiments._common.results import save_result
+from experiments.A0_state_probe.probe import _extract_wkv_per_layer
 
 
 # ── WKV spectral analysis ──────────────────────────────────────────────────────
@@ -112,64 +119,19 @@ def layer_trajectory(wkv_per_layer: List[torch.Tensor]) -> np.ndarray:
     return np.array(deltas, dtype=np.float32)
 
 
-# ── Gradient saliency ─────────────────────────────────────────────────────────
-
-def gradient_saliency(model, tokenizer, prompt: str) -> Optional[np.ndarray]:
-    """Compute per-token gradient saliency (R-lens proxy).
-
-    Returns array of shape [n_tokens] with ||∂logit/∂embed||_2 per token,
-    or None if the model doesn't support grad (some rwkv builds disable it).
-    """
-    try:
-        import rwkv.model as rwkv_mod
-    except ImportError:
-        return None
-
-    ids = tokenizer.encode(prompt)
-    if not ids:
-        return None
-
-    # Try to get embedding weights and compute saliency
-    try:
-        # Access the raw nn.Module under the rwkv wrapper
-        inner = model.model if hasattr(model, "model") else model
-        emb_weight = None
-        for name, param in inner.named_parameters():
-            if "emb.weight" in name or "embedding" in name.lower():
-                emb_weight = param
-                break
-        if emb_weight is None:
-            return None
-
-        ids_t = torch.tensor(ids, dtype=torch.long)
-        embeds = emb_weight[ids_t]  # [n_tok, d_model]
-        embeds = embeds.detach().requires_grad_(True)
-
-        # Run with grad enabled
-        with torch.enable_grad():
-            logits, _ = model.forward(ids, None)
-            # logits: [vocab_size] — last-token prediction
-            if logits.dim() > 1:
-                logits = logits[-1]
-            top_idx = int(logits.argmax())
-            score = logits[top_idx]
-            score.backward()
-
-        if embeds.grad is None:
-            return None
-
-        saliency = embeds.grad.float().norm(dim=-1).numpy()  # [n_tok]
-        return saliency
-
-    except Exception:
-        return None
-
-
 # ── Item probing ──────────────────────────────────────────────────────────────
 
 def probe_prompt(model, tokenizer, prompt: str) -> Dict:
-    """Full probe on a single prompt: spectrum + trajectory + saliency."""
-    ids = tokenizer.encode(prompt)
+    """Full probe on a single prompt: spectrum + trajectory.
+
+    Uses tokenizer(prompt)["input_ids"], not tokenizer.encode(prompt) —
+    _TokenizerAdapter (experiments/_common/model.py) only implements the
+    HF-style __call__ + decode(), no bare .encode(). Found 2026-08-18: this
+    was broken (AttributeError) the first time it actually ran through the
+    shared loader — probe_prompt/run_probes were written against a
+    different tokenizer interface and never exercised end-to-end since.
+    """
+    ids = tokenizer(prompt)["input_ids"]
     t0 = time.time()
     logits, state = model.forward(ids, None)
     elapsed = time.time() - t0
@@ -218,7 +180,8 @@ def run_probes(model, tokenizer, prompts: List[Tuple[str, str]]) -> Dict:
         try:
             stats = probe_prompt(model, tokenizer, prompt)
             results[pid] = stats
-            print(f"[rich]   sigma1_L16={stats['sigma1_by_layer'][16]:.3f} "
+            mid_L = min(16, len(stats["sigma1_by_layer"]) - 1)
+            print(f"[rich]   sigma1_L{mid_L}={stats['sigma1_by_layer'][mid_L]:.3f} "
                   f"traj_mean={np.mean(stats['layer_trajectory']):.3f} "
                   f"t={stats['elapsed_s']:.1f}s")
         except Exception as e:
@@ -245,6 +208,50 @@ DEFAULT_PROMPTS = [
 ]
 
 
+def _load_prompt_list(items_path: Optional[str], prompts_path: Optional[str]) -> List[Tuple[str, str]]:
+    prompts: List[Tuple[str, str]] = []
+    if items_path:
+        with open(items_path) as f:
+            for line in f:
+                it = json.loads(line)
+                pid = it.get("id", f"item_{len(prompts)}")
+                text = it.get("prompt") or it.get("text", "")
+                if text:
+                    prompts.append((pid, text))
+    elif prompts_path:
+        with open(prompts_path) as f:
+            for i, line in enumerate(f):
+                line = line.strip()
+                if line:
+                    prompts.append((f"prompt_{i}", line))
+    else:
+        prompts = DEFAULT_PROMPTS
+    return prompts
+
+
+def _add_rich_args(ap: argparse.ArgumentParser) -> None:
+    ap.add_argument("--items", default=None,
+                    help="JSONL with {id, prompt} or H21/H22 items.jsonl (uses 'prompt' field).")
+    ap.add_argument("--prompts", default=None, help="Plain text file, one prompt per line.")
+
+
+@registry.probe(
+    "rich", hypothesis=["H8"],
+    description="Per-head WKV spectral analysis (sigma1/stable_rank/sv_entropy) + cross-layer trajectory.",
+    add_args=_add_rich_args,
+)
+def run(model, tokenizer, args) -> Dict:
+    prompts = _load_prompt_list(args.items, args.prompts)
+    base_stats = run_probes(model, tokenizer, prompts)
+    return {
+        "model": args.model,
+        "base": base_stats,
+        "_summary": {pid: f"sigma1={np.mean(s['sigma1_by_layer']):.3f} "
+                          f"stable_rank={np.mean(s['stable_rank_by_layer']):.1f}"
+                     for pid, s in base_stats.items() if "error" not in s},
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Rich per-head WKV spectral probe.")
     ap.add_argument("--model", required=True, help="Path to .pth (base or single model).")
@@ -254,28 +261,9 @@ def main() -> int:
     ap.add_argument("--prompts", default=None, help="Plain text file, one prompt per line.")
     ap.add_argument("--out", required=True, help="Output JSON path.")
     ap.add_argument("--device", default="cpu")
-    ap.add_argument("--work-layers", default=None,
-                    help="Comma-separated layer indices to report in detail (default: all).")
     args = ap.parse_args()
 
-    # Build prompt list
-    prompts: List[Tuple[str, str]] = []
-    if args.items:
-        with open(args.items) as f:
-            for line in f:
-                it = json.loads(line)
-                pid = it.get("id", f"item_{len(prompts)}")
-                text = it.get("prompt") or it.get("text", "")
-                if text:
-                    prompts.append((pid, text))
-    elif args.prompts:
-        with open(args.prompts) as f:
-            for i, line in enumerate(f):
-                line = line.strip()
-                if line:
-                    prompts.append((f"prompt_{i}", line))
-    else:
-        prompts = DEFAULT_PROMPTS
+    prompts = _load_prompt_list(args.items, args.prompts)
 
     print(f"[rich] loading base model {args.model}")
     model, tokenizer = load_model(args.model, device=args.device)
@@ -294,9 +282,11 @@ def main() -> int:
                                               [p[0] for p in prompts])
         del model_t  # free RAM
 
-    with open(args.out, "w") as f:
-        json.dump(output, f, indent=2)
-    print(f"[rich] wrote {args.out}")
+    out_path = save_result(
+        args.out, output, experiment="rich", hypothesis=["H8"],
+        model=args.trained or args.model, script=__file__,
+    )
+    print(f"[rich] wrote {out_path}")
 
     # Print summary
     print("\n=== Summary (sigma1 mean across layers) ===")

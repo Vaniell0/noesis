@@ -40,6 +40,12 @@ import urllib.request
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+from experiments._common.results import save_result
+
 
 # --------------------------------------------------------------------------- #
 # Rubric scoring
@@ -354,8 +360,7 @@ def main() -> int:
 
     tok = mdl = None
     if args.backend == "rwkv":
-        sys.path.insert(0, os.path.join(here, "..", "A0_state_probe"))
-        from probe import load_model
+        from experiments._common.model import load_model
         mdl, tok = load_model(args.model, device=os.environ.get("NOESIS_EVAL_DEVICE", "cpu"))
 
     t0 = time.time()
@@ -406,11 +411,17 @@ def main() -> int:
         "elapsed_s": elapsed,
         "aggregate": agg,
         "results": results,
+        "_summary": {"overall accuracy": f"{agg['overall_accuracy']:.3f}",
+                     "n_correct/n_total": f"{agg['n_correct']}/{agg['n_total']}"},
     }
-    with open(args.out, "w") as f:
-        json.dump(payload, f, indent=2)
+    out_path = save_result(
+        args.out, payload, experiment="a02_eval", hypothesis=["H10"],
+        model=args.model, script=__file__,
+        status=f"backend={args.backend} N={args.n_passes} mode={args.readout_mode} K={args.readout_k}",
+    )
 
     print(md_report(agg, args.model, elapsed))
+    print(f"[eval] saved -> {out_path}", file=sys.stderr)
     return 0
 
 

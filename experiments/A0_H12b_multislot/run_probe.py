@@ -17,13 +17,12 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
-def load_model(model_path: str, device: str = "cpu"):
-    here = Path(__file__).parent
-    probe_dir = here.parent / "A0_state_probe"
-    sys.path.insert(0, str(probe_dir))
-    from probe import load_model as _load
-    return _load(model_path, device=device)
+from experiments._common.model import load_model
+from experiments._common.results import save_result
 
 
 def greedy_decode(model, tokenizer, prompt: str, max_tokens: int = 16) -> str:
@@ -104,17 +103,22 @@ def main():
     else:
         print("→ H12b: NO CONTAMINATION (multi-slot holds)")
 
+    by_cell_summary = {f"k{k}_p{p}": {"n": len(v), "correct": sum(v),
+                                        "accuracy": sum(v) / len(v) if v else 0.0}
+                       for (k, p), v in by_cell.items()}
     payload = {
         "model": args.model,
         "n_probes": len(results),
-        "by_cell": {f"k{k}_p{p}": {"n": len(v), "correct": sum(v),
-                                     "accuracy": sum(v) / len(v) if v else 0.0}
-                    for (k, p), v in by_cell.items()},
+        "by_cell": by_cell_summary,
         "results": results,
+        "_summary": {cell: f"{s['accuracy']:.3f} ({s['correct']}/{s['n']})"
+                     for cell, s in by_cell_summary.items()},
     }
-    with open(args.out, "w") as f:
-        json.dump(payload, f, indent=2)
-    print(f"\n[H12b] results → {args.out}", file=sys.stderr)
+    out_path = save_result(
+        args.out, payload, experiment="h12b_multislot", hypothesis=["H12b"],
+        model=args.model, script=__file__,
+    )
+    print(f"\n[H12b] results -> {out_path}", file=sys.stderr)
 
 
 if __name__ == "__main__":

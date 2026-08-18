@@ -15,11 +15,17 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import pathlib
+import sys
 from typing import Dict, List
 
 import torch
+
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments._common.results import save_result
 
 
 def _effective_rank(sv: torch.Tensor, threshold: float = 0.01) -> int:
@@ -144,11 +150,16 @@ def main() -> int:
     args = ap.parse_args()
 
     result = analyze(args.base, args.trained, args.lora_rank)
+    result["_summary"] = {
+        f"{wtype} mean effective_rank": f"{v['mean_effective_rank']:.1f}"
+        for wtype, v in result["by_type"].items()
+    }
 
-    out = pathlib.Path(args.out)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, indent=2))
-    print(f"\nSaved → {out}")
+    out_path = save_result(
+        args.out, result, experiment="lora_rank", hypothesis=["H16"],
+        model=args.trained, script=__file__,
+    )
+    print(f"\nSaved -> {out_path}")
     return 0
 
 

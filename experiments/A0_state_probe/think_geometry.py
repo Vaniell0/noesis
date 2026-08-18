@@ -25,15 +25,20 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import pathlib
 import sys
 from typing import Dict, List, Optional, Tuple
 
 import torch
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from probe import load_model
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments._common import registry
+from experiments._common.layers import default_layers
+from experiments._common.model import load_model
+from experiments._common.results import save_result
 
 THINK_OPEN = "<think>"
 THINK_CLOSE = "</think>"
@@ -100,9 +105,7 @@ def _find_think_spans(token_ids: List[int], tokenizer) -> List[bool]:
     return inside
 
 
-def run_probe(model_path: str, layers: List[int], prompt: str,
-              device: str = "cpu") -> Dict:
-    model, tokenizer = load_model(model_path, device=device)
+def _analyze(model, tokenizer, layers: Optional[List[int]], prompt: str) -> Dict:
     model.eval()
 
     enc = tokenizer(prompt)
@@ -121,6 +124,13 @@ def run_probe(model_path: str, layers: List[int], prompt: str,
         state = None
         for pos, tok_id in enumerate(token_ids):
             _, state = model.forward([tok_id], state)
+
+            if layers is None:
+                # First token's state reveals real n_layer — resolve once,
+                # by fractional depth, instead of a hardcoded list (was
+                # "4,16,31", silently skipped out-of-range layers on
+                # smaller models with no warning — fixed 2026-08-18).
+                layers = default_layers(len(state) // 3)
 
             # Extract WKV state per target layer: state[3*L + 1]
             wkv_now: Dict[int, torch.Tensor] = {}
@@ -155,6 +165,10 @@ def run_probe(model_path: str, layers: List[int], prompt: str,
             prev_state = {L: wkv_now[L].clone() for L in layers if L in wkv_now}
 
     # Aggregate: mean stats inside vs outside think
+    def _mean(lst):
+        return sum(lst) / len(lst) if lst else None
+
+    per_layer_summary: Dict[str, Dict] = {}
     for L in layers:
         key = str(L)
         think_frobs = [t["layers"][key]["frob"] for t in per_token
@@ -166,37 +180,74 @@ def run_probe(model_path: str, layers: List[int], prompt: str,
         nothink_srs = [t["layers"][key]["stable_rank"] for t in per_token
                        if key in t["layers"] and not t["in_think"]]
 
-        def _mean(lst):
-            return sum(lst) / len(lst) if lst else None
-
+        think_mean, nothink_mean = _mean(think_frobs), _mean(nothink_frobs)
+        ratio = (think_mean or 0) / (nothink_mean or 1e-9)
+        per_layer_summary[key] = {
+            "think_frob": think_mean, "nothink_frob": nothink_mean, "ratio": ratio,
+            "think_stable_rank": _mean(think_srs), "nothink_stable_rank": _mean(nothink_srs),
+        }
         print(f"\nLayer {L}:")
-        print(f"  mean delta frob  — think: {_mean(think_frobs):.4f}  "
-              f"non-think: {_mean(nothink_frobs):.4f}  "
-              f"ratio: {(_mean(think_frobs) or 0) / ((_mean(nothink_frobs) or 1e-9)):.2f}×")
+        print(f"  mean delta frob  — think: {think_mean:.4f}  "
+              f"non-think: {nothink_mean:.4f}  ratio: {ratio:.2f}×")
         print(f"  mean stable_rank — think: {_mean(think_srs):.4f}  "
               f"non-think: {_mean(nothink_srs):.4f}")
 
     return {
-        "model_path": str(model_path),
         "prompt_len": len(token_ids),
         "think_tokens": sum(think_mask),
         "non_think_tokens": len(think_mask) - sum(think_mask),
         "layers": layers,
+        "per_layer_summary": per_layer_summary,
         "per_token": per_token,
+        "_summary": {f"L{L} think/non-think ratio": f"{per_layer_summary[str(L)]['ratio']:.2f}×" for L in layers},
     }
+
+
+def run_probe(model_path: str, layers: List[int], prompt: str,
+              device: str = "cpu") -> Dict:
+    """Standalone entry point: loads its own model (for base/--compare CLI usage)."""
+    model, tokenizer = load_model(model_path, device=device)
+    result = _analyze(model, tokenizer, layers, prompt)
+    return {"model_path": str(model_path), **result}
+
+
+def _add_think_geometry_args(ap: argparse.ArgumentParser) -> None:
+    ap.add_argument("--layers", default=None,
+                     help="Comma-separated layer indices (default: picked by fractional "
+                          "depth from the loaded model)")
+    # Prefixed, not shared with ipc_analysis's --prompt: different default,
+    # different contract (must contain <think>...</think>), so the shared
+    # parser's conflict_handler="resolve" assumption (shared name = shared
+    # semantics, see run.py) does not hold here.
+    ap.add_argument("--tg-prompt", dest="tg_prompt", default=None,
+                     help="Custom prompt (must contain <think>...</think>)")
+
+
+@registry.probe(
+    "think_geometry", hypothesis=["H8"],
+    description="Per-token WKV state delta (frob, stable rank) inside vs outside <think> spans",
+    add_args=_add_think_geometry_args,
+)
+def run(model, tokenizer, args) -> Dict:
+    layers = [int(x) for x in args.layers.split(",")] if args.layers else None
+    prompt = args.tg_prompt or DEFAULT_PROMPT
+    result = _analyze(model, tokenizer, layers, prompt)
+    return {"model": args.model, **result}
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--compare", default=None, help="Optional second checkpoint")
-    ap.add_argument("--layers", default="4,16,31")
+    ap.add_argument("--layers", default=None,
+                     help="Comma-separated layer indices (default: picked by fractional "
+                          "depth from the loaded model)")
     ap.add_argument("--prompt", default=None, help="Custom prompt (must contain <think>...</think>)")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
-    layers = [int(x) for x in args.layers.split(",")]
+    layers = [int(x) for x in args.layers.split(",")] if args.layers else None
     prompt = args.prompt or DEFAULT_PROMPT
     out = pathlib.Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -222,7 +273,10 @@ def main() -> int:
             rb = _think_mean(result_b)
             print(f"  L{L}: base={ra:.4f}  trained={rb:.4f}  ratio={rb/(ra+1e-9):.2f}×")
 
-    out.write_text(json.dumps(result, indent=2))
+    save_result(
+        out, result, experiment="think_geometry", hypothesis=["H8"],
+        model=args.compare or args.model, script=__file__,
+    )
     print(f"\nSaved → {out}")
     return 0
 

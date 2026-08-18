@@ -34,6 +34,12 @@ import urllib.error
 import urllib.request
 from typing import Any, Dict, List, Set, Tuple
 
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments._common.results import save_result
+
 
 ITEM_RE = re.compile(r"item-[a-z0-9]+-\d{2}")
 
@@ -176,6 +182,7 @@ def run_one_file(host: str, model: str, num_predict: int, timeout_s: int,
         mark = "OK" if scored["exact_match"] else f"F1={scored['f1']:.2f}"
         print(f"[probe {tag}]  {mark:>7}  {task['id']}", file=sys.stderr, flush=True)
 
+    agg = _aggregate(rows)
     payload = {
         "tasks_file": str(tasks_path),
         "model": model,
@@ -184,12 +191,18 @@ def run_one_file(host: str, model: str, num_predict: int, timeout_s: int,
         "num_predict_cap": num_predict_cap,
         "n_tasks": len(rows),
         "elapsed_s": time.time() - t0,
-        "aggregate": _aggregate(rows),
+        "aggregate": agg,
         "results": rows,
+        "_summary": {
+            "accuracy_exact": f"{agg.get('accuracy_exact', float('nan')):.3f}",
+            "mean_f1": f"{agg.get('mean_f1', float('nan')):.3f}",
+        } if agg.get("n", 0) else {},
     }
     out_path = results_dir / f"{tasks_path.stem.replace('tasks-', '')}.json"
-    with out_path.open("w") as f:
-        json.dump(payload, f, indent=2)
+    out_path = save_result(
+        out_path, payload, experiment=f"h12a_{tag}", hypothesis=["H12a"],
+        model=model, script=__file__,
+    )
     print(f"[probe {tag}]  wrote {out_path.name}  acc_exact={payload['aggregate']['accuracy_exact']:.2f}",
           file=sys.stderr, flush=True)
     return payload

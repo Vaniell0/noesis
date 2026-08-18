@@ -61,6 +61,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from experiments.A0_state_probe.probe import load_model
 from experiments._common import registry
+from experiments._common.layers import default_layers, validate_layers
 
 # ---------------------------------------------------------------------------
 # Legendre polynomials (normalized, degree 1..max_degree)
@@ -197,7 +198,7 @@ def collect_trajectory(
     tokenizer,
     prompt: str,
     n_tokens: int,
-    target_layers: list[int],
+    target_layers: Optional[list[int]],
     n_proj: int,
     device: str = "cpu",
     seed: int = 42,
@@ -228,7 +229,6 @@ def collect_trajectory(
     proj_matrices: dict[int, object] = {}
 
     token_ids: list[int] = []
-    layer_states: dict[int, list[np.ndarray]] = {l: [] for l in target_layers}
 
     # Prefill
     input_ids = tokenizer(prompt, return_tensors="pt")["input_ids"][0].tolist()
@@ -237,20 +237,20 @@ def collect_trajectory(
         out, state = model.forward([tok], state)
 
     # State is a flat list of length 3*n_layer (shift/wkv/ffn-shift per
-    # layer) — validate requested layers against the *loaded* model before
+    # layer) — resolve requested layers against the *loaded* model before
     # touching it, rather than crashing on a bare IndexError deep in _wkv.
-    # (Found 2026-08-17: the CLI default `--layers 0,4,8,16,24,31` assumes
-    # a 32-layer 2.9B checkpoint; running it against G1d 0.4B, which has
-    # fewer layers, crashed with an unhelpful IndexError.)
+    # (Found 2026-08-17: the old CLI default `--layers 0,4,8,16,24,31`
+    # assumed a 32-layer 2.9B checkpoint; running it against G1d 0.4B, which
+    # has fewer layers, crashed with an unhelpful IndexError. Fixed properly
+    # 2026-08-18: `target_layers=None` now picks layers by fractional depth
+    # via `default_layers`, so there's no hardcoded-list mismatch left to
+    # hit at all — an explicit `--layers` is still validated the same way.)
     n_layer = len(state) // 3
-    out_of_range = [l for l in target_layers if l < 0 or l >= n_layer]
-    if out_of_range:
-        raise ValueError(
-            f"layer(s) {out_of_range} out of range for this checkpoint "
-            f"(n_layer={n_layer}, valid range 0..{n_layer - 1}) — "
-            f"pass --layers matching this model's depth, the default "
-            f"assumes a 32-layer model"
-        )
+    if target_layers is None:
+        target_layers = default_layers(n_layer)
+    else:
+        validate_layers(target_layers, n_layer, context="--layers")
+    layer_states: dict[int, list[np.ndarray]] = {l: [] for l in target_layers}
 
     # Determine state dim from first layer after prefill
     def _wkv(s, l):
@@ -351,8 +351,9 @@ def _add_ipc_args(ap: argparse.ArgumentParser) -> None:
     ap.add_argument("--max-degree", type=int, default=2)
     ap.add_argument("--n-proj", type=int, default=128,
                     help="Random projection dimensionality (Dambre theoretical bound)")
-    ap.add_argument("--layers", default="0,4,8,16,24,31",
-                    help="Comma-separated layer indices")
+    ap.add_argument("--layers", default=None,
+                    help="Comma-separated layer indices (default: picked by fractional "
+                         "depth from the loaded model via experiments._common.layers)")
     ap.add_argument("--prompt", default=PROMPT)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--trajectory-in", type=pathlib.Path,
@@ -379,10 +380,10 @@ def run(model, tokenizer, args: argparse.Namespace) -> dict:
                 f"({len(teacher_forced_tokens)} != {args.n_tokens})"
             )
 
-    target_layers = [int(x) for x in args.layers.split(",")]
+    target_layers = [int(x) for x in args.layers.split(",")] if args.layers else None
     n_proj = args.n_proj
 
-    print(f"[ipc] layers={target_layers}  n_proj={n_proj}")
+    print(f"[ipc] layers={target_layers if target_layers is not None else '(auto, by depth)'}  n_proj={n_proj}")
     print(f"[ipc] n_tokens={args.n_tokens}  max_lag={args.max_lag}  max_degree={args.max_degree}")
     print(f"[ipc] device={args.device}")
     print(f"[ipc] trajectory mode = {'teacher-forced' if teacher_forced_tokens is not None else 'autoregressive'}")
@@ -397,6 +398,11 @@ def run(model, tokenizer, args: argparse.Namespace) -> dict:
         seed=args.seed,
         teacher_forced_tokens=teacher_forced_tokens,
     )
+    # collect_trajectory resolves `None` -> default_layers(n_layer) internally;
+    # re-derive the resolved list from its return value rather than the
+    # possibly-still-None local, so downstream logging/output reflect what
+    # was actually used.
+    target_layers = sorted(layer_states.keys())
     print(f"[ipc] collected {len(token_ids)} tokens across {len(target_layers)} layers")
 
     if args.trajectory_out is not None:

@@ -44,9 +44,17 @@ from typing import Any, Dict, List, Optional
 
 import torch
 
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)  # a05_intervene/prompts/probe are bare local imports
+_REPO_ROOT = os.path.dirname(os.path.dirname(_HERE))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
 import a05_intervene as C
 import prompts as PROMPT_BANK
 from probe import _sample_top_p, load_model
+from experiments._common.layers import default_layers
 
 
 # --------------------------------------------------------------------------- #
@@ -277,8 +285,9 @@ def main() -> int:
         help="Comma-separated multiplicative α values. 1.0 is redundant with noise_floor.",
     )
     ap.add_argument(
-        "--sample-layers", default="0,8,16",
-        help="Comma-separated layer indices (ignored if --full-layer-profile).",
+        "--sample-layers", default=None,
+        help="Comma-separated layer indices (default: picked by fractional depth "
+             "from the loaded model; ignored if --full-layer-profile).",
     )
     ap.add_argument(
         "--full-layer-profile", action="store_true",
@@ -304,7 +313,8 @@ def main() -> int:
 
     sigmas = [float(x) for x in args.sigmas.split(",") if x.strip()]
     scales = [float(x) for x in args.scales.split(",") if x.strip()]
-    sample_layers = [int(x) for x in args.sample_layers.split(",") if x.strip()]
+    sample_layers = ([int(x) for x in args.sample_layers.split(",") if x.strip()]
+                      if args.sample_layers else None)
 
     os.makedirs(args.out, exist_ok=True)
     prompt_text = PROMPT_BANK.ALL[args.prompt]
@@ -317,7 +327,6 @@ def main() -> int:
         f"seeds={args.seeds} tokens={args.max_new_tokens} k={args.k_checkpoints} "
         f"cont_N={args.continuation_steps} "
         f"sigmas={sigmas} scales={scales} "
-        f"layers={'ALL' if args.full_layer_profile else sample_layers} "
         f"device={args.device} out={args.out}",
         file=sys.stderr, flush=True,
     )
@@ -327,16 +336,20 @@ def main() -> int:
     print(f"[a05] model loaded in {time.time() - t0:.1f}s", file=sys.stderr, flush=True)
 
     # Resolve layer index list: probe the first checkpoint to count layers.
-    # (n_layer = len(state) // 3; probe expects a real checkpoint.)
+    # (n_layer = len(state) // 3; probe expects a real checkpoint.) Both
+    # branches now depth-aware — --sample-layers used to default to the
+    # hardcoded "0,8,16" (harmless today, since every model in current use
+    # has >=24 layers, but the same class of bug fixed elsewhere tonight
+    # in ipc_analysis/mlp_probe/think_geometry for models that don't).
+    dummy_logits, dummy_state = model.forward([0], None)
+    n_layer = len(dummy_state) // 3
+    del dummy_logits, dummy_state
     if args.full_layer_profile:
-        # Do a tiny probe: prefill 1 token to get initial state, count layers.
-        dummy_logits, dummy_state = model.forward([0], None)
-        n_layer = len(dummy_state) // 3
         layer_indices = list(range(n_layer))
-        del dummy_logits, dummy_state
         print(f"[a05] full layer profile: {n_layer} layers", file=sys.stderr, flush=True)
     else:
-        layer_indices = sample_layers
+        layer_indices = sample_layers if sample_layers is not None else default_layers(n_layer)
+        print(f"[a05] layers={layer_indices} (of {n_layer})", file=sys.stderr, flush=True)
 
     # Optional cross-prompt donor decode (once, seed 0).
     donor_by_step: Dict[int, List[torch.Tensor]] = {}

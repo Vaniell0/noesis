@@ -33,6 +33,12 @@ import sys
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
+
+from experiments._common.results import save_result
+
 
 # --------------------------------------------------------------------------- #
 # Load
@@ -313,29 +319,43 @@ def report_cell(cell: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _grid_row_data(cell: Dict[str, Any]) -> Dict[str, Any]:
+    """Compute the same H8-causal-A/B/C numbers used in both the markdown
+    grid table and the JSON summary — one computation, two renderings."""
+    tag = os.path.basename(cell["dir"].rstrip("/"))
+    buckets = bucket_seeds(cell)
+    h8a = h8a_sigma_response(buckets)
+    h8b_z = h8b_layer_profile(buckets, "zero_layer")
+    h8b_s = h8b_layer_profile(buckets, "shuffle_heads")
+    h8c = h8c_cross_ratio(buckets)
+    fp = buckets.get("freeze_prev", [])
+    fp_kl = statistics.fmean([float(r["kl_next"]) for r in fp]) if fp else float("nan")
+    return {
+        "tag": tag,
+        "sigma_slope": h8a.get("loglog_slope") if h8a["status"] == "ok" else None,
+        "monotonic": h8a.get("monotonic") if h8a["status"] == "ok" else None,
+        "zero_layer_cv": h8b_z.get("cv") if h8b_z["status"] == "ok" else None,
+        "shuffle_heads_cv": h8b_s.get("cv") if h8b_s["status"] == "ok" else None,
+        "cross_over_base_ratio": h8c.get("ratio") if h8c["status"] == "ok" else None,
+        "freeze_prev_kl": fp_kl,
+    }
+
+
 def report_grid(cells: List[Dict[str, Any]]) -> str:
     """Compact 2×2 grid comparison across cells."""
     lines = ["### H8-causal grid summary", ""]
     lines.append("| cell | σ-slope | monot | zero_L CV | shuf_L CV | cross/base | freeze_prev KL |")
     lines.append("|---|---|---|---|---|---|---|")
     for cell in cells:
-        tag = os.path.basename(cell["dir"].rstrip("/"))
-        buckets = bucket_seeds(cell)
-        h8a = h8a_sigma_response(buckets)
-        h8b_z = h8b_layer_profile(buckets, "zero_layer")
-        h8b_s = h8b_layer_profile(buckets, "shuffle_heads")
-        h8c = h8c_cross_ratio(buckets)
-        fp = buckets.get("freeze_prev", [])
-        fp_kl = statistics.fmean([float(r["kl_next"]) for r in fp]) if fp else float("nan")
-
+        r = _grid_row_data(cell)
         row = [
-            tag,
-            _fmt(h8a.get("loglog_slope", float("nan")), 2) if h8a["status"] == "ok" else "—",
-            str(h8a.get("monotonic", "—")) if h8a["status"] == "ok" else "—",
-            _fmt(h8b_z.get("cv", float("nan")), 2) if h8b_z["status"] == "ok" else "—",
-            _fmt(h8b_s.get("cv", float("nan")), 2) if h8b_s["status"] == "ok" else "—",
-            _fmt(h8c.get("ratio", float("nan")), 2) if h8c["status"] == "ok" else "—",
-            _fmt(fp_kl),
+            r["tag"],
+            _fmt(r["sigma_slope"], 2) if r["sigma_slope"] is not None else "—",
+            str(r["monotonic"]) if r["monotonic"] is not None else "—",
+            _fmt(r["zero_layer_cv"], 2) if r["zero_layer_cv"] is not None else "—",
+            _fmt(r["shuffle_heads_cv"], 2) if r["shuffle_heads_cv"] is not None else "—",
+            _fmt(r["cross_over_base_ratio"], 2) if r["cross_over_base_ratio"] is not None else "—",
+            _fmt(r["freeze_prev_kl"]),
         ]
         lines.append("| " + " | ".join(row) + " |")
     lines.append("")
@@ -350,6 +370,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="A0.5 aggregator — H8-causal verdicts.")
     ap.add_argument("cells", nargs="+", help="Cell dirs (each must contain summary.json + seed_*.json).")
     ap.add_argument("--out", default=None, help="If set, write report to this file. Else stdout.")
+    ap.add_argument("--json-out", default=None,
+                    help="If set, also write the grid numbers as a _meta-stamped JSON "
+                         "(via save_result) so they land in RESULTS.md's auto index — "
+                         "the markdown report stays the detailed artifact, this is the "
+                         "indexable summary.")
     args = ap.parse_args()
 
     cells = [load_cell(d) for d in args.cells]
@@ -369,6 +394,17 @@ def main() -> int:
         print(f"[a05_analyze] wrote {args.out}", file=sys.stderr)
     else:
         print(text)
+
+    if args.json_out:
+        grid = [_grid_row_data(cell) for cell in cells]
+        models = {c["summary"].get("model", "?") for c in cells}
+        payload = {"cells": grid}
+        save_result(
+            args.json_out, payload, experiment="a05_causal", hypothesis=["H8"],
+            model=" / ".join(sorted(models)), script=__file__,
+            summary={f"{r['tag']} sigma-slope": _fmt(r["sigma_slope"], 2) for r in grid},
+        )
+        print(f"[a05_analyze] wrote {args.json_out}", file=sys.stderr)
     return 0
 
 

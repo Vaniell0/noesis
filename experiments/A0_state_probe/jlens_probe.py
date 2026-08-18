@@ -1,42 +1,27 @@
 #!/usr/bin/env python3
-"""J-lens Jacobian probe — base vs trained checkpoint comparison.
+"""J-lens — WKV state spectral probe, base vs trained checkpoint comparison.
 
-DEPRECATED (confirmed 2026-08-17, evaluating this file for framework
-migration): superseded by rlens_probe.py, which fixes two real bugs here:
-  1. State indexing: probe_checkpoint below reads `state[L]` directly.
-     State is a flat list of length 3*n_layer (state[3*i+0]=shift buffer,
-     state[3*i+1]=WKV matrix, state[3*i+2]=FFN shift buffer) — `state[L]`
-     mixes shift buffers, WKV matrices, and FFN buffers depending on L,
-     mislabeled throughout as "layer L's WKV state." Results from this
-     file are not reliable.
-  2. The docstring below describes computing an analytical Jacobian with
-     a numeric-Jacobian sanity check (cosine_sim ≥ 0.70). Neither happens:
-     `_analytical_jacobian` is defined but never called, `_numeric_jacobian`
-     raises NotImplementedError, and the forward hooks that capture
-     `time_decay`/w populate a `captured` dict that's never read. What
-     actually gets computed (see probe_checkpoint) is SVD stats on the raw
-     WKV state matrix — a different, if related, quantity from what's
-     documented above.
-Do not use for new probing; not migrated into experiments/_common/ for
-these reasons. Left in place as-is (not deleted) — kept for reference.
+Computes SVD statistics (sigma1, stable_rank, Frobenius norm) of the raw
+per-head WKV state matrix at the end of a prompt, per layer. Prediction
+(H8): L_state-trained checkpoints show higher top singular values in
+work_layers than base, corresponding to larger state updates accumulated
+per token.
 
-Computes the mean-field analytical WKV-7 Jacobian at sampled token
-positions and measures its singular value spectrum. Prediction (H8):
-L_state-trained checkpoints show higher top singular values in
-work_layers than base, corresponding to larger state updates per token.
-
-Analytical mean-field WKV-7 Jacobian (from J-lens gemlog):
-  s_t = s_{t-1} ⊙ w + k_t^T ⊗ v_t          (simplified WKV-7 update)
-  J_t ≈ diag(vec(w)) + (k_t ⊗ v_t) term
-
-In mean-field, averaging over the data-dependent k·v term, the dominant
-signal comes from the structured singular values of the per-position
-k_t · v_t^T outer product added to the diagonal decay.
-
-We capture per-layer:
-  - sigma1: largest singular value of J_t (proxy for state amplification)
-  - stable_rank: (‖J‖_F / ‖J‖_2)^2 (multi-slot capacity)
-  - cosine_sim: analytical vs numeric Jacobian (sanity check, ≥0.70 = valid)
+Fixed 2026-08-18 (previously mislabeled "Jacobian probe", left unmigrated
+as deprecated 2026-08-17): two real bugs, both from the original version.
+1. State indexing: read `state[L]` directly. State is a flat list of
+   length 3*n_layer (state[3*i+0]=shift buffer, state[3*i+1]=WKV matrix,
+   state[3*i+2]=FFN shift buffer) — `state[L]` mixed shift buffers, WKV
+   matrices, and FFN buffers depending on L. Fixed to `state[3*L+1]`.
+2. The old docstring promised an analytical WKV-7 Jacobian with a
+   numeric-Jacobian sanity check. Neither was ever wired up —
+   `_analytical_jacobian` was defined but never called, `_numeric_jacobian`
+   raised `NotImplementedError`, and forward hooks that captured
+   `time_decay` populated a dict nothing read. Removed rather than
+   completed: what this probe actually measures (SVD of the raw WKV state,
+   not a literal per-token Jacobian) is still a valid, useful signal for
+   the H8 prediction above — the fix is describing it honestly, not
+   building out an unrequested Jacobian implementation.
 
 Usage:
     python jlens_probe.py \
@@ -50,11 +35,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import json
 import pathlib
+import sys
 from typing import Dict, List
 
 import torch
+
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments._common import registry
+from experiments._common.model import load_model
+from experiments._common.results import save_result
 
 
 PROMPT = (
@@ -63,44 +56,6 @@ PROMPT = (
     "discussed the project timeline. Key points: the deadline is March 15, "
     "the budget is $50,000, and the team lead is Carol.\n</think>"
 )
-
-
-def load_model(path: str, device: str = "cpu"):
-    from probe import load_model as _load
-    return _load(path, device=device)
-
-
-def _analytical_jacobian(w: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
-                          head_size: int) -> torch.Tensor:
-    """Mean-field WKV-7 Jacobian for one head.
-
-    w: (head_size,) time decay for this head
-    k: (head_size,) key vector at this position
-    v: (head_size,) value vector at this position
-
-    Returns J: (head_size, head_size) — Jacobian of s_t w.r.t. s_{t-1}
-    interpreted as acting on the flattened [head_size × head_size] state.
-    We compute the H×H sub-Jacobian for the dominant vk^T slice.
-    """
-    # Outer product term: each row of s_t is updated by v * (k . s_{t-1,row})
-    # Mean-field: J ≈ diag(w) for the "decay" part + rank-1 for the "write" part
-    w_clamp = w.abs().clamp(min=1e-6)
-    J_decay = torch.diag(w_clamp)                  # (H, H) diagonal decay
-    # rank-1 data term: k normalised
-    k_norm = k / (k.norm() + 1e-8)
-    J_write = torch.outer(v, k_norm)               # (H, H) rank-1 write
-    return J_decay + J_write
-
-
-def _numeric_jacobian(model, layer_idx: int, state_in: torch.Tensor,
-                      token_id: int, eps: float = 1e-3) -> torch.Tensor:
-    """Numeric Jacobian via finite differences (slow, for validation only).
-
-    Returns flattened (H*H, H*H) Jacobian for one head of one layer.
-    Only computes a (H, H) sub-block for speed.
-    """
-    # This is expensive — only run on small heads for validation
-    raise NotImplementedError("numeric Jacobian too slow for full probe; use analytical")
 
 
 def _svd_stats(J: torch.Tensor) -> Dict[str, float]:
@@ -114,69 +69,25 @@ def _svd_stats(J: torch.Tensor) -> Dict[str, float]:
         return {"sigma1": 0.0, "stable_rank": 0.0, "frob": 0.0, "error": str(e)}
 
 
-def probe_checkpoint(model_path: str, work_layers: List[int],
-                     n_tokens: int, device: str) -> Dict:
-    model, tokenizer = load_model(model_path, device=device)
-    model.eval()
-
+def _analyze(model, tokenizer, work_layers: List[int], n_tokens: int) -> Dict:
+    """Loading-free core: run the prompt, SVD the WKV state per work layer."""
     enc = tokenizer(PROMPT, return_tensors="pt")
     ids = enc["input_ids"][0].tolist()[:n_tokens]
 
-    results: Dict[int, List[Dict]] = {L: [] for L in work_layers}
-
-    # Hook: capture (w, k, v) at each work layer during forward
-    hooks = []
-    captured: Dict[int, Dict[str, torch.Tensor]] = {}
-
-    def make_hook(layer_i: int):
-        def hook(module, inp, out):
-            # RWKV-7 TimeMix: capture time_decay (w), key (k), value (v)
-            # Attribute names vary by implementation — try common names
-            w = getattr(module, 'time_decay', None) or getattr(module, 'w', None)
-            # If not directly accessible, skip silently
-            if w is None:
-                return
-            captured[layer_i] = {"w": w.detach().cpu()}
-        return hook
-
-    for L in work_layers:
-        try:
-            block = model.blocks[L].att  # type: ignore[attr-defined]
-            h = block.register_forward_hook(make_hook(L))
-            hooks.append(h)
-        except AttributeError:
-            pass
-
     with torch.no_grad():
-        # Run token by token, capturing state + intermediate tensors
         state = None
         for tok_id in ids:
-            logits, state = model.forward([tok_id], state)
+            _, state = model.forward([tok_id], state)
 
-    for h in hooks:
-        h.remove()
-
-    # Since we can't easily get per-token k/v from hooks without patching,
-    # compute the Jacobian from the final state geometry instead:
-    # use the WKV state itself to derive the k·v structure analytically.
     layer_stats: Dict[int, Dict] = {}
     for L in work_layers:
-        if state is None:
-            break
+        idx = 3 * L + 1
+        if state is None or idx >= len(state):
+            continue
         try:
-            # state is a list of per-layer tensors [n_head, head_size, head_size]
-            s_L = state[L].float().cpu()   # (n_head, H, H)
+            s_L = state[idx].float().cpu()  # (n_head, H, H) WKV matrix
             n_head, H, _ = s_L.shape
-
-            per_head_stats = []
-            for h_idx in range(n_head):
-                s_h = s_L[h_idx]  # (H, H)
-                # Approximate: singular values of the state matrix itself
-                # reflect the accumulated k·v writes. The Jacobian singular
-                # values correlate with the state's stable rank.
-                stats = _svd_stats(s_h)
-                per_head_stats.append(stats)
-
+            per_head_stats = [_svd_stats(s_L[h]) for h in range(n_head)]
             layer_stats[L] = {
                 "mean_sigma1": sum(x["sigma1"] for x in per_head_stats) / n_head,
                 "mean_stable_rank": sum(x["stable_rank"] for x in per_head_stats) / n_head,
@@ -187,15 +98,39 @@ def probe_checkpoint(model_path: str, work_layers: List[int],
             layer_stats[L] = {"error": str(e)}
 
     return {
-        "model_path": str(model_path),
         "n_tokens": len(ids),
         "work_layers": work_layers,
         "layer_stats": {str(k): v for k, v in layer_stats.items()},
     }
 
 
+def probe_checkpoint(model_path: str, work_layers: List[int],
+                     n_tokens: int, device: str) -> Dict:
+    """Standalone entry point: loads its own model (for base/--trained CLI usage)."""
+    model, tokenizer = load_model(model_path, device=device)
+    model.eval()
+    result = _analyze(model, tokenizer, work_layers, n_tokens)
+    return {"model_path": str(model_path), **result}
+
+
+def _add_jlens_args(ap: argparse.ArgumentParser) -> None:
+    ap.add_argument("--work-layers", default="0,4,8,12,16,20,24,28")
+    ap.add_argument("--jlens-n-tokens", dest="jlens_n_tokens", type=int, default=32)
+
+
+@registry.probe(
+    "jlens", hypothesis=["H8"],
+    description="SVD spectrum (sigma1/stable_rank/frob) of raw per-head WKV state at end of prompt.",
+    add_args=_add_jlens_args,
+)
+def run(model, tokenizer, args) -> Dict:
+    work_layers = [int(x) for x in args.work_layers.split(",")]
+    result = _analyze(model, tokenizer, work_layers, args.jlens_n_tokens)
+    return {"model": args.model, **result}
+
+
 def main() -> int:
-    ap = argparse.ArgumentParser(description="J-lens WKV Jacobian probe.")
+    ap = argparse.ArgumentParser(description="J-lens WKV state spectral probe.")
     ap.add_argument("--base", required=True, help="Base model .pth path")
     ap.add_argument("--trained", required=True, help="Trained model .pth path")
     ap.add_argument("--work-layers", default="0,4,8,12,16,20,24,28")
@@ -214,10 +149,9 @@ def main() -> int:
     print(f"Probing trained: {args.trained}")
     trained_result = probe_checkpoint(args.trained, work_layers, args.n_tokens, args.device)
 
-    # Diff table
-    print("\n=== J-lens Jacobian comparison (base vs trained) ===")
-    print(f"{'layer':>6}  {'base σ₁':>10}  {'step7 σ₁':>10}  {'Δσ₁':>8}  "
-          f"{'base SR':>8}  {'step7 SR':>8}")
+    print("\n=== J-lens WKV state spectrum comparison (base vs trained) ===")
+    print(f"{'layer':>6}  {'base σ₁':>10}  {'trained σ₁':>10}  {'Δσ₁':>8}  "
+          f"{'base SR':>8}  {'trained SR':>8}")
     print("-" * 60)
     for L in work_layers:
         bL = base_result["layer_stats"].get(str(L), {})
@@ -230,8 +164,11 @@ def main() -> int:
         print(f"{L:>6}  {b1:>10.4f}  {t1:>10.4f}  {delta:>+8.4f}  {bsr:>8.2f}  {tsr:>8.2f}")
 
     result = {"base": base_result, "trained": trained_result}
-    out.write_text(json.dumps(result, indent=2))
-    print(f"\nSaved → {out}")
+    save_result(
+        out, result, experiment="jlens", hypothesis=["H8"],
+        model=args.trained, script=__file__,
+    )
+    print(f"\nSaved -> {out}")
     return 0
 
 
