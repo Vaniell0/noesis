@@ -575,29 +575,26 @@ assumption that hasn't been checked. Listed here instead of silently, so the
 first GPU session treats them as things to verify, not things already
 settled.
 
-1. **`_peft_forward_embeds` numerical equivalence is unverified.** It
-   hand-reimplements `RWKV7.forward_infctx`'s block loop to accept
-   pre-computed embeddings instead of token ids (needed for
-   `expected`/`residual` feed modes — see `loader.py`). Inspection (2026-08-17)
-   shows it mirrors the reference loop faithfully for the numerical path
-   (same block loop, same `ln_out`/`head`); it silently skips the
-   reference's `grad_cp` checkpointing branch (memory/speed only, not
-   numerically different) and hardcodes `attention_mask=None` (fine for
-   unpadded single-sequence rollouts, unverified with padding). **This is
-   the most dangerous thing in the stack to be wrong about** — if it
-   diverges from `forward_infctx`, gradients for `expected`/`residual` mode
-   flow through the wrong computation and training would look like it's
-   working while learning something else. Needs a unit test: same prompt
-   through both paths (`emb(input_ids)` → `forward_infctx` vs.
-   pre-computed embeddings → `_peft_forward_embeds`), assert outputs match
-   within tolerance. Not written yet — needs GPU (peft backend).
+1. **`_peft_forward_embeds` numerical equivalence — RESOLVED, verified
+   2026-08-18.** `experiments/rl/test_forward_embeds_equivalence.py` run for
+   real on a T4: single-token and multi-token (T=5) sub-tests both pass with
+   **exact** match (`max_abs_diff=0`). `_peft_forward_embeds` does not diverge
+   from `forward_infctx` — `expected`/`residual` feed-mode gradients flow
+   through the correct computation. (Two real, unrelated bugs found and
+   fixed getting the peft backend to load at all on this run —
+   `TrainingArgs` missing `my_testing`, and `RWKV_TRAIN_TYPE` defaulting to
+   `""` instead of `"infctx"` — see `loader.py`'s `_prime_env`.)
 
-2. **`_recompute_wkv_log_probs` is not batched.** Called once per rollout
-   inside `wkv_grpo_loss`'s nested loop — at `G=8`, `batch=4` that's 32
-   sequential replays of prefill + M-loop + answer per training update, each
-   one token-at-a-time (no batching across the M steps or across rollouts).
-   Likely tolerable on a 4090 for the current scale, not optimal — a real
-   cost if `G`/`batch` grow or M_max is raised.
+2. **`_recompute_wkv_log_probs` is not batched — confirmed real, still
+   unbatched.** Called once per rollout inside `wkv_grpo_loss`'s nested loop
+   — at `G=8`, `batch=4` that's 32 sequential replays of prefill + M-loop +
+   answer per training update, each one token-at-a-time (no batching across
+   the M steps or across rollouts). Confirmed as a real wall-clock cost
+   2026-08-18 running the first actual gradient-update step on a T4 (G1d
+   0.4B, G=4/batch=2/M_max=4 — 8 rollouts, each already several minutes of
+   CPU-bound sequential replay before the first `optimizer.step()`). Not
+   fixed — the actual lever for a first real training run, more than model
+   size or GPU choice.
 
 3. **`head_size = 64` hardcoded in `loader.py::_load_blink`** — correct for
    every checkpoint currently in use (G1d/G1h/G1i, all RWKV-7 "Goose"), not
@@ -624,18 +621,57 @@ settled.
    tests risks silently breaking the reward or the gradient without any
    signal until a training run produces visibly wrong behavior.
 
-5. **`train_wordsearch.py` (older, pre-WKV-loop script, still present for
-   its `--byte-adapter` flag) turned out to be more broken than "just
-   unported"** when actually launched 2026-08-17: an `UnboundLocalError`
-   that broke even `--help`, a doubled `.pth` path, and — not fixed —
-   `RWKV_x070.parameters()` returns 0 (weights live in a `.z` dict, never
-   registered as `nn.Parameter`), so the default full-fine-tune path has
-   probably never produced a working optimizer, and `byte_adapter`'s own
-   parameters are never added to it either. Byte-adapter *inference-time*
-   embedding-patching works; *training* the adapter does not, currently.
-   See the `fix(rl): train_wordsearch.py` commit (2026-08-17) for the fixed
-   half; the parameter-registration gap needs a real design decision, not
-   a patch.
+5. **byte_adapter's parameter-registration gap — still open, `train_wordsearch.py`
+   itself deleted 2026-08-18** (superseded per its own successor's
+   docstring, unrelated to this gap). `RWKV_x070.parameters()` still
+   returns 0 (weights live in a `.z` dict, never registered as
+   `nn.Parameter`), confirmed again 2026-08-18 — byte_adapter's own
+   parameters have never been wired into any optimizer. Only
+   *inference-time* embedding-patching (`eval_byte_wordsearch.py`, run for
+   real 2026-08-18 on G1i: 0/56 = 0.0% with a random-init adapter, the
+   expected floor before training) works; *training* the adapter is still
+   not implemented. Needs a real design decision (how to expose `.z`
+   tensors as trainable `nn.Parameter`s for this one component without
+   touching the frozen backbone), not a patch.
+
+6. **FORGE (`--forge`) does not work — structural incompatibility with
+   BPTT, found 2026-08-18.** FORGE's fused-into-backward optimizer update
+   assumes each layer's weight is touched by `backward()` at most once per
+   step. `wkv_grpo_loss` builds a differentiable graph across the *whole*
+   rollout (prefill → M-loop → answer tokens) so gradient flows through the
+   WKV-loop's reasoning state, not just the final tokens — that's the
+   actual design intent. Any rollout with >1 answer token already touches
+   each FusedLinear layer more than once within one backward() call (BPTT
+   weight-reuse across timesteps), which FORGE doesn't tolerate — confirmed
+   structural, not per-layer, by excluding `head` from the fused wrapping
+   and watching the same crash reappear on an `ffn` layer instead.
+   Rejected fix: truncated BPTT (detach state every step) — would satisfy
+   FORGE but zeroes gradient into the M-loop entirely, silently defeating
+   the whole state-carries-reasoning design. Real fix identified, not yet
+   implemented: FORGE exposes `optimizer_only_adamw_int8state()` as a
+   *standalone* function — apply it to gradients from ordinary
+   (non-fused) `backward()` instead of using FORGE's fused path at all.
+   Keeps the int8-optimizer-state memory win (the larger of FORGE's two
+   savings) without touching backward() or truncating BPTT. Full writeup:
+   memory `project_noesis_forge_bptt.md`.
+   `experiments/rl/loader.py::wrap_rwkv7_excluding_head` and the
+   per-rollout-backward rewrite of `wkv_grpo_loss` are both committed and
+   real improvements (correct grad-accumulation semantics, lower peak
+   memory even without `--forge`) but do not make `--forge` itself work.
+
+7. **First real (non-`--no-update`, non-`--forge`) gradient-update step
+   ran clean on GPU 2026-08-18** — no crash, checkpoint correctly written
+   with real (attempted) weight updates. But the specific 3-step smoke
+   test (G1d, G=4/batch=2/M_max=4, lr=1e-5) happened to hit `loss=0.0` on
+   every step — verified by diffing checkpoint weights against the
+   original: **exact** zero change on every parameter checked
+   (`emb.weight`, several `att`/`ffn` tensors). Consistent with a
+   degenerate batch where every rollout in a group got an identical
+   reward (advantage normalizes to exactly 0 → surrogate exactly 0), not a
+   bug — but it means backward()/optimizer.step() executing without error
+   is confirmed, while an actual *nonzero* gradient update changing
+   weights is still not directly observed. Needs a run that lands on a
+   step with real reward variance to close this out.
 
 ---
 

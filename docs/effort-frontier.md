@@ -22,23 +22,30 @@ not as a frontier data point.
 
 ## Status
 
-**M-sweep: zero data, on any model, ever.** Blocked on GPU — `feed_mode`
-requires the peft backend for anything beyond `discrete` mode, and even
-`discrete`-mode M needs a real rollout loop, not just `_smoke()`-scale
-checks. First thing to run once GPU is available: an M-distribution
-measurement (`exit_reason` histogram, mean M) on **G1i base, pre-RL** —
-inference only, no training needed, and it's the natural pre-RL floor for
-`monitor.py`'s STATE_COL/SHORTCUT checks to compare against later.
+**M-sweep: first real data landed 2026-08-18 — prediction confirmed.**
+`experiments/A0_eval/eval.py --axis m` (new — routes through
+`experiments.rl.wkv_loop.generate_rollout` instead of the retired H10
+N/K/readout_mode axes) run on **G1i base, pre-RL**, discrete feed_mode,
+M_max=16: **12.5% (6/48)**, vs. the `state_readout` baseline's 33.3%
+(16/48) on the identical task set. Both `bit_decoding` and `extraction`
+dropped to 0% under M. Single run, no seed variation — not a controlled
+sweep yet — but directionally exactly the predicted pattern (see below):
+flat and low pre-RL, because nothing has trained the model to write
+anything useful during the M-loop steps yet. `mean_M` measured separately
+on G1d/G1i via `--no-update` M-baseline runs (G1d: M=3 deterministic;
+G1i: 7.0→2.0→2.0 across 3 steps, real GPU data, no controlled sweep over
+seeds/prompts yet either).
 
-**Prediction, stated plainly:** discrete-mode M on G1i base (pre-RL) should
-look like the old K-sweep — flat, low accuracy — because K-sweep was flat
-for a reason (`step4_merged`, 2026-08-05: K=0→0/48, K=128/512/2048→4/48
-flat) that has nothing to do with which checkpoint or axis-name is in use:
-nothing had trained the model to write anything useful into those
-intermediate steps. GRPO's `−β·M − γ·Σ ReLU(ΔH_t)` reward is exactly the
-"write something useful" objective that was missing. A real divergence from
-flat *after* RL training is the actual signal to watch for — not the
-pre-RL number itself.
+**Prediction, stated plainly (confirmed directionally 2026-08-18):**
+discrete-mode M on G1i base (pre-RL) should look like the old K-sweep —
+flat, low accuracy — because K-sweep was flat for a reason (`step4_merged`,
+2026-08-05: K=0→0/48, K=128/512/2048→4/48 flat) that has nothing to do with
+which checkpoint or axis-name is in use: nothing had trained the model to
+write anything useful into those intermediate steps. GRPO's
+`−β·M − γ·Σ ReLU(ΔH_t)` reward is exactly the "write something useful"
+objective that was missing. A real divergence from flat *after* RL
+training is the actual signal to watch for — not the pre-RL number itself,
+which is now measured (12.5%) rather than merely predicted.
 
 **eval.py mode bug: FIXED 2026-08-12.** `state_readout` shared a decode path
 with `prompt_cot` before that date; results from before are invalid — moot
