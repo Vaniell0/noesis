@@ -1,0 +1,62 @@
+{
+  "_meta": {
+    "experiment": "jlens",
+    "hypothesis": [
+      "H8"
+    ],
+    "date": "2026-08-18",
+    "status": "done",
+    "model": "models/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/A0_state_probe/jlens_probe.py"
+  },
+  "model": "models/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "n_tokens": 32,
+  "work_layers": [
+    0,
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28
+  ],
+  "layer_stats": {
+    "0": {
+      "mean_sigma1": 0.2778984413598664,
+      "mean_stable_rank": 1.6738080052301751,
+      "mean_frob": 0.2870488712360384,
+      "n_head": 16
+    },
+    "4": {
+      "mean_sigma1": 3.015513129532337,
+      "mean_stable_rank": 1.1911613706654651,
+      "mean_frob": 3.217457003891468,
+      "n_head": 16
+    },
+    "8": {
+      "mean_sigma1": 3.8153922259807587,
+      "mean_stable_rank": 1.285700940804409,
+      "mean_frob": 4.218948930501938,
+      "n_head": 16
+    },
+    "12": {
+      "mean_sigma1": 6.70193999633193,
+      "mean_stable_rank": 1.2606235433247281,
+      "mean_frob": 7.111194904893637,
+      "n_head": 16
+    },
+    "16": {
+      "mean_sigma1": 7.4542026817798615,
+      "mean_stable_rank": 1.301107844156627,
+      "mean_frob": 8.391391217708588,
+      "n_head": 16
+    },
+    "20": {
+      "mean_sigma1": 6.974098026752472,
+      "mean_stable_rank": 1.0978893096153575,
+      "mean_frob": 7.2913327887654305,
+      "n_head": 16
+    }
+  }
+}

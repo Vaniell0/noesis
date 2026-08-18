@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "experiment": "a05_causal",
+    "hypothesis": [
+      "H8"
+    ],
+    "date": "2026-08-18",
+    "status": "done",
+    "model": "/root/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth / models/rwkv7-g1d-0.4b-20260210-ctx8192.pth / models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/A0_state_probe/a05_analyze.py",
+    "summary": {
+      "a05_g1d_new sigma-slope": "2.07",
+      "medium sigma-slope": "1.67",
+      "a05_g1i sigma-slope": "1.76"
+    }
+  },
+  "cells": [
+    {
+      "tag": "a05_g1d_new",
+      "sigma_slope": 2.070250947047834,
+      "monotonic": true,
+      "zero_layer_cv": 1.0932991253078068,
+      "shuffle_heads_cv": 0.9524024142306864,
+      "cross_over_base_ratio": null,
+      "freeze_prev_kl": 0.7243264172847073
+    },
+    {
+      "tag": "medium",
+      "sigma_slope": 1.6651135340211713,
+      "monotonic": true,
+      "zero_layer_cv": 0.722275510605896,
+      "shuffle_heads_cv": 0.6453261936785776,
+      "cross_over_base_ratio": 34.433932375501016,
+      "freeze_prev_kl": 0.2926282111244897
+    },
+    {
+      "tag": "a05_g1i",
+      "sigma_slope": 1.7645613262638997,
+      "monotonic": true,
+      "zero_layer_cv": 1.5081498989966922,
+      "shuffle_heads_cv": 1.2225830743746129,
+      "cross_over_base_ratio": null,
+      "freeze_prev_kl": 0.6483543260488659
+    }
+  ]
+}
