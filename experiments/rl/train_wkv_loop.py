@@ -646,28 +646,43 @@ def main():
             print(f"  step {global_step:5d}: loss={loss_val:.4f} acc={accuracy:.2%} "
                   f"level={cur_level} {('!!! ' + str(flags)) if flags else ''}")
 
-        # Inline probes
-        if global_step % args.probe_every == 0:
-            probe_result = run_inline_probes(
-                loaded, all_rollouts_flat, label=f"step{global_step}"
-            )
-            probe_path = out_dir / f"probes_step{global_step:06d}.json"
-            save_result(
-                probe_path, probe_result,
-                experiment="rl_inline_probes", hypothesis=["H8", "H10"],
-                model=args.model, script=__file__,
-                summary={
-                    "shortcut_score": f"{probe_result['shortcut_score']:.2f}",
-                    "M_mean": f"{probe_result['M_mean']:.1f}",
-                },
-            )
-            print(f"  [probe] sr_reasoning_L4={probe_result.get('sr_reasoning_L4', float('nan')):.3f}  "
-                  f"shortcut={probe_result['shortcut_score']:.2f}  "
-                  f"M_mean={probe_result['M_mean']:.1f}")
-
-        # Checkpoint
+        # Checkpoint — moved ahead of inline probes 2026-08-18: a probe
+        # crash (real incident: stable_rank shape mismatch on the first
+        # real peft-backend inline-probe run) used to take down the whole
+        # process *before* reaching the checkpoint check below, silently
+        # discarding every step since the last save even though training
+        # itself was fine. Saving first means a probe bug costs at most
+        # that one probe, never real training progress.
         if global_step % args.ckpt_every == 0:
             _checkpoint()
+
+        # Inline probes — wrapped 2026-08-18 for the same reason: this is
+        # a diagnostic side-channel, not part of the training loop proper,
+        # and shouldn't be able to crash a real run (checkpoint above is
+        # now safe either way, but no reason to lose the rest of the run
+        # over a probe-only bug).
+        if global_step % args.probe_every == 0:
+            try:
+                probe_result = run_inline_probes(
+                    loaded, all_rollouts_flat, label=f"step{global_step}"
+                )
+                probe_path = out_dir / f"probes_step{global_step:06d}.json"
+                save_result(
+                    probe_path, probe_result,
+                    experiment="rl_inline_probes", hypothesis=["H8", "H10"],
+                    model=args.model, script=__file__,
+                    summary={
+                        "shortcut_score": f"{probe_result['shortcut_score']:.2f}",
+                        "M_mean": f"{probe_result['M_mean']:.1f}",
+                    },
+                )
+                print(f"  [probe] sr_reasoning_L4={probe_result.get('sr_reasoning_L4', float('nan')):.3f}  "
+                      f"shortcut={probe_result['shortcut_score']:.2f}  "
+                      f"M_mean={probe_result['M_mean']:.1f}")
+            except Exception as e:
+                print(f"[train] WARNING: inline probe failed at step {global_step}, "
+                      f"skipping this probe only: {type(e).__name__}: {e}",
+                      file=sys.stderr)
 
         # VM watchdog
         if hook.tick():

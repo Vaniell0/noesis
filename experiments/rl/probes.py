@@ -79,8 +79,18 @@ def stable_rank_probe(
         with torch.no_grad():
             _, state = loaded.forward_stateful(inp, state)
 
-        # wkv_stack returns [L, n_head, head_size, head_size]
-        wkv = loaded.wkv_stack(state)   # [L, n_head, h, h]
+        # wkv_stack's actual shape is backend-dependent (see loader.py
+        # docstring): peft returns [n_layer, B, n_head, h, h] (keeps the
+        # batch dim), blink returns [n_layer, n_head, h, h] (already
+        # collapsed). Assuming the peft shape unconditionally crashed
+        # stable_rank with an unsqueezed [1, n_head, h, h] per-layer slice
+        # — found 2026-08-18 on the first real inline-probe run against a
+        # peft-backend RL training loop (G1i). batch=1 always here
+        # (new_state(batch=1) above), so squeeze it generically rather
+        # than branching on backend.
+        wkv = loaded.wkv_stack(state)
+        if wkv.dim() == 5:
+            wkv = wkv.squeeze(1)
         # stable_rank expects list of [n_head, h, h] tensors
         wkv_layers = [wkv[i] for i in range(wkv.shape[0])]
 
