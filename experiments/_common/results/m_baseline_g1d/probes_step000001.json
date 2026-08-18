@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "experiment": "rl_inline_probes",
+    "hypothesis": [
+      "H8",
+      "H10"
+    ],
+    "date": "2026-08-18",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/train_wkv_loop.py",
+    "summary": {
+      "shortcut_score": "0.00",
+      "M_mean": "3.0"
+    }
+  },
+  "label": "step1",
+  "shortcut_score": 0.0,
+  "M_mean": 3.0,
+  "M_max": 3,
+  "M_min": 3,
+  "M_hist": {
+    "3": 32
+  },
+  "exit_reason": {
+    "commit": 32
+  },
+  "sr_reasoning_L0": 1.6613887614973528,
+  "sr_reasoning_L3": 1.1101137589145709,
+  "sr_reasoning_L12": 1.3280189400620799,
+  "sr_reasoning_L20": 1.0876500068392396,
+  "sr_reasoning_L23": 1.124636335341779,
+  "sr_math_L0": 1.4814975636482326,
+  "sr_math_L3": 1.104963885430032,
+  "sr_math_L12": 1.2934955848334742,
+  "sr_math_L20": 1.0768425431424047,
+  "sr_math_L23": 1.1064440418070618,
+  "sr_narrative_L0": 1.5981677235369494,
+  "sr_narrative_L3": 1.0846797126156156,
+  "sr_narrative_L12": 1.3433704071201176,
+  "sr_narrative_L20": 1.0954365312988241,
+  "sr_narrative_L23": 1.1167659364786031
+}

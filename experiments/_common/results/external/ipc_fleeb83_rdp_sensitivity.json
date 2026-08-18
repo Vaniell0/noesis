@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "experiment": "ipc_fleeb83_rdp_sensitivity",
+    "hypothesis": ["H8"],
+    "date": "2026-08-16",
+    "status": "external-reported",
+    "model": "Xyra G1G lineage",
+    "script": "external — reported by fleeb83 via email 2026-08-16, own local run, not committed",
+    "summary": {
+      "L25 BASE/RDP-8/RDP-17": "3.0138 / 3.0138 / 3.0138 (+0.0000)",
+      "L28 BASE/RDP-8/RDP-17": "2.7512 / 2.8915 / 3.5595 (+0.8083)",
+      "L31 BASE/RDP-8/RDP-17": "0.9718 / 0.6431 / 3.1632 (+2.1914)"
+    }
+  },
+  "n_tokens": 512,
+  "layers": [25, 28, 31]
+}

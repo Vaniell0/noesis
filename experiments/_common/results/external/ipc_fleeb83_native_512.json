@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "experiment": "ipc_fleeb83_native_512",
+    "hypothesis": ["H8"],
+    "date": "2026-08-16",
+    "status": "external-reported",
+    "model": "G1d 0.4B / G1h 2.9B BASE / G1i 2.9B BASE / step9b-e1",
+    "script": "external — reported by fleeb83 via email 2026-08-16, own local run, not committed",
+    "summary": {
+      "mean IPC": "4.174 / 2.734 / 2.759 / 3.673",
+      "peak IPC (layer)": "6.927(L8) / 5.625(L4) / 5.546(L4) / 6.090(L4)",
+      "16-term ceiling %": "26.1% / 17.1% / 17.2% / 23.0%"
+    }
+  },
+  "n_tokens": 512,
+  "trajectory": "autoregressive, own trajectory per model"
+}

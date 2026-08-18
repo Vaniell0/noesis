@@ -1,0 +1,90 @@
+{
+  "_meta": {
+    "experiment": "ib_probe",
+    "hypothesis": [
+      "H8"
+    ],
+    "date": "2026-08-18",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/ib_probe/run.py",
+    "summary": {
+      "lag=1 frac_explained (held-out)": "0.251",
+      "lag=2 frac_explained (held-out)": "0.068",
+      "lag=4 frac_explained (held-out)": "0.000",
+      "lag=8 frac_explained (held-out)": "0.000",
+      "lag=16 frac_explained (held-out)": "0.000",
+      "lag=32 frac_explained (held-out)": "0.000",
+      "lag=64 frac_explained (held-out)": "0.000"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "corpus": "/home/vaniello/Desktop/projects/noesis/experiments/ib_probe/corpus.txt",
+  "n_tokens": 13393,
+  "feature_dim": 768,
+  "lags": {
+    "1": {
+      "lag": 1,
+      "probe_ce": 5.200448513031006,
+      "baseline_ce": 6.943675732098782,
+      "frac_explained": 0.2510525096973202,
+      "n_train": 10713,
+      "n_test": 2679,
+      "wall_s": 97.23538661003113
+    },
+    "2": {
+      "lag": 2,
+      "probe_ce": 6.471923351287842,
+      "baseline_ce": 6.943440937056673,
+      "frac_explained": 0.06790834545050617,
+      "n_train": 10712,
+      "n_test": 2679,
+      "wall_s": 97.59108519554138
+    },
+    "4": {
+      "lag": 4,
+      "probe_ce": 7.75576114654541,
+      "baseline_ce": 6.942144302257392,
+      "frac_explained": 0.0,
+      "n_train": 10711,
+      "n_test": 2678,
+      "wall_s": 96.03386402130127
+    },
+    "8": {
+      "lag": 8,
+      "probe_ce": 8.52137565612793,
+      "baseline_ce": 6.941263882794369,
+      "frac_explained": 0.0,
+      "n_train": 10708,
+      "n_test": 2677,
+      "wall_s": 103.1741189956665
+    },
+    "16": {
+      "lag": 16,
+      "probe_ce": 8.820051193237305,
+      "baseline_ce": 6.942045470721383,
+      "frac_explained": 0.0,
+      "n_train": 10701,
+      "n_test": 2676,
+      "wall_s": 102.55840802192688
+    },
+    "32": {
+      "lag": 32,
+      "probe_ce": 9.015009880065918,
+      "baseline_ce": 6.940126786208024,
+      "frac_explained": 0.0,
+      "n_train": 10688,
+      "n_test": 2673,
+      "wall_s": 106.13228154182434
+    },
+    "64": {
+      "lag": 64,
+      "probe_ce": 9.210355758666992,
+      "baseline_ce": 6.939236070961015,
+      "frac_explained": 0.0,
+      "n_train": 10663,
+      "n_test": 2666,
+      "wall_s": 107.09275484085083
+    }
+  }
+}

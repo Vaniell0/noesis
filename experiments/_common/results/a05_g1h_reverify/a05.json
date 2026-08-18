@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "experiment": "a05_causal",
+    "hypothesis": [
+      "H8"
+    ],
+    "date": "2026-08-18",
+    "status": "done",
+    "model": "/root/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth",
+    "script": "experiments/A0_state_probe/a05_analyze.py",
+    "summary": {
+      "medium sigma-slope": "1.67",
+      "narrative sigma-slope": "1.58"
+    }
+  },
+  "cells": [
+    {
+      "tag": "medium",
+      "sigma_slope": 1.6651135340211713,
+      "monotonic": true,
+      "zero_layer_cv": 0.722275510605896,
+      "shuffle_heads_cv": 0.6453261936785776,
+      "cross_over_base_ratio": 34.433932375501016,
+      "freeze_prev_kl": 0.2926282111244897
+    },
+    {
+      "tag": "narrative",
+      "sigma_slope": 1.5838536667410281,
+      "monotonic": true,
+      "zero_layer_cv": 0.7565234903956789,
+      "shuffle_heads_cv": 0.5010667561169714,
+      "cross_over_base_ratio": 35.940395305315896,
+      "freeze_prev_kl": 1.1989123166228335
+    }
+  ]
+}
