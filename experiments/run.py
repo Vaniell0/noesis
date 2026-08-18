@@ -26,6 +26,7 @@ if str(_REPO_ROOT) not in sys.path:
 from experiments._common import registry
 from experiments._common.model import load_model
 from experiments._common.results import save_result
+from experiments._common.heartbeat import write_heartbeat
 
 
 def main() -> None:
@@ -80,9 +81,15 @@ def main() -> None:
     print(f"[run] model loaded — running {len(selected)} probe(s): {', '.join(selected)}")
 
     out_dir = Path(args.out_dir)
-    for name in selected:
+    status_path = out_dir / "status.json"
+    for i, name in enumerate(selected):
         spec = registry.get(name)
         print(f"[run] --- {name} ---")
+        write_heartbeat(
+            status_path, progress=(i, len(selected)),
+            probe=name, probe_index=i + 1, probe_total=len(selected),
+            model=args.model, message=f"running {name} ({i + 1}/{len(selected)})",
+        )
         result = spec.fn(model, tokenizer, args)
         out_path = save_result(
             out_dir / f"{name}.json", result,
@@ -90,6 +97,11 @@ def main() -> None:
             script=inspect.getfile(spec.fn),
         )
         print(f"[run]     -> {out_path}")
+    write_heartbeat(
+        status_path, progress=(len(selected), len(selected)),
+        probe=None, probe_index=len(selected), probe_total=len(selected),
+        model=args.model, message=f"done — {len(selected)}/{len(selected)} probes finished",
+    )
 
 
 if __name__ == "__main__":

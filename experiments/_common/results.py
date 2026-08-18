@@ -207,28 +207,42 @@ def regenerate_index(
 
     rows = []
     for path, meta in sorted(_iter_meta_stamped(root)):
-        rel = path.relative_to(_REPO_ROOT)
+        try:
+            rel = path.relative_to(_REPO_ROOT)
+        except ValueError:
+            # `root` wasn't under the repo (e.g. a tempdir in tests, or any
+            # future caller pointing this at an external directory) — same
+            # fallback as save_result's script_rel, found via test_core.py.
+            rel = path
         h = ", ".join(meta.get("hypothesis") or []) or "—"
         model = meta.get("model") or "—"
         date = meta.get("date") or "—"
         status = meta.get("status") or "—"
         script = meta.get("script")
         code_cell = f"`{script}`" if script else "—"
+        # `status != "done"` gets its own column instead of being silent
+        # once a summary exists — added 2026-08-18 after noticing
+        # externally-reported results (status="external-reported", e.g.
+        # fleeb83's emailed numbers) render identically to a real local
+        # run the moment they have a `summary`, which is exactly the case
+        # that matters (a bare row with no summary already shows
+        # `status=X` as its "value" — only the summary branch was silent).
+        status_flag = status if status not in ("done", "—") else ""
         summary = meta.get("summary") or {}
         if summary:
             for metric, value in summary.items():
-                rows.append((h, model, date, metric, value, f"`{rel}`", code_cell))
+                rows.append((h, model, date, status_flag, metric, value, f"`{rel}`", code_cell))
         else:
-            rows.append((h, model, date, "—", f"status={status}", f"`{rel}`", code_cell))
+            rows.append((h, model, date, status_flag, "—", f"status={status}", f"`{rel}`", code_cell))
 
     table_lines = [
-        "| H | Model | Date | Metric | Value | Result | Code |",
-        "|---|-------|------|--------|-------|--------|------|",
+        "| H | Model | Date | Status | Metric | Value | Result | Code |",
+        "|---|-------|------|--------|--------|-------|--------|------|",
     ]
-    for h, model, date, metric, value, rel, code_cell in rows:
-        table_lines.append(f"| {h} | {model} | {date} | {metric} | {value} | {rel} | {code_cell} |")
+    for h, model, date, status_flag, metric, value, rel, code_cell in rows:
+        table_lines.append(f"| {h} | {model} | {date} | {status_flag} | {metric} | {value} | {rel} | {code_cell} |")
     if not rows:
-        table_lines.append("| — | — | — | — | *(no self-registered results yet)* | — | — |")
+        table_lines.append("| — | — | — | — | — | *(no self-registered results yet)* | — | — |")
 
     text = out_path.read_text() if out_path.exists() else "# Results index\n"
     if _AUTO_MARKER in text:

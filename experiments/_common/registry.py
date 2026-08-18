@@ -44,6 +44,10 @@ KNOWN_PROBE_MODULES = [
     "experiments.A0_state_probe.ipc_analysis",
     "experiments.A0_state_probe.mlp_probe",
     "experiments.A0_state_probe.rlens_probe",
+    "experiments.A0_state_probe.think_geometry",
+    "experiments.ib_probe.run",
+    "experiments.A0_state_probe.jlens_probe",
+    "experiments.A0_state_probe.rich_probe",
 ]
 
 
