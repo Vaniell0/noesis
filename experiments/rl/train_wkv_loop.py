@@ -465,6 +465,7 @@ def main():
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     log_path = out_dir / "train_log.jsonl"
+    answers_log_path = out_dir / "answers_log.jsonl"
 
     backend = "peft" if args.device != "cpu" else "blink"
     loaded = load_rwkv7(args.model, device=args.device, backend=backend,
@@ -532,6 +533,22 @@ def main():
     global_step = 0
     if args.resume is not None:
         global_step = _load_checkpoint(args.resume, loaded, mlp_delta, sched)
+        # train_log.jsonl is append-only, so a run that crashes and gets
+        # resumed leaves behind log lines for steps that got redone from
+        # the checkpoint — same step number appearing twice with
+        # different (stale) values, confusing to read back. Found
+        # 2026-08-18 debugging exactly that after two resumes of the
+        # same run. Trim anything past the resume point before this
+        # run starts appending its own — the checkpoint is the source
+        # of truth for "what actually happened," not a log line for
+        # a step whose weights were never saved.
+        for p in (log_path, answers_log_path):
+            if p.exists():
+                kept = [
+                    line for line in p.read_text().splitlines()
+                    if line.strip() and json.loads(line)["step"] <= global_step
+                ]
+                p.write_text("\n".join(kept) + ("\n" if kept else ""))
 
     print(f"[train] feed_mode={args.feed_mode} alpha={args.alpha} "
           f"G={args.G} M_max={args.M_max} device={args.device} "
@@ -633,6 +650,21 @@ def main():
         }
         with open(log_path, "a") as f:
             f.write(json.dumps(log_entry) + "\n")
+        # Full rollout texts, every step — not just on a monitor flag.
+        # Aggregate accuracy alone doesn't say what the model is actually
+        # producing; added 2026-08-18 after wanting to see a specific
+        # high-accuracy step's real answers and finding nothing was
+        # logged for it (only flagged batches got a text sample before).
+        with open(answers_log_path, "a") as f:
+            f.write(json.dumps({
+                "step": global_step,
+                "rollouts": [
+                    {"prompt": r.prompt_text, "text": r.text, "M": r.M,
+                     "exit_reason": r.exit_reason,
+                     "correct": bool(c > 0)}
+                    for r, c in zip(all_rollouts_flat, combined_diag["r_correct"].tolist())
+                ],
+            }) + "\n")
         write_heartbeat(
             out_dir / "status.json",
             progress=(global_step, start_step + args.steps),
