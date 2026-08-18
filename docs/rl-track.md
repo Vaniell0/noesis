@@ -659,6 +659,22 @@ settled.
    real improvements (correct grad-accumulation semantics, lower peak
    memory even without `--forge`) but do not make `--forge` itself work.
 
+8. **RESOLVED 2026-08-18 — `feed_mode="expected"` verified end-to-end,
+   real gradient flow confirmed.** Previously zero coverage beyond the
+   isolated `_peft_forward_embeds` equivalence test. Full
+   `generate_rollout(feed_mode="expected")` → `wkv_grpo_loss` →
+   per-rollout `backward()` → `optimizer.step()` run on GPU (G1d,
+   G=8/batch=2/M_max=4, lr=1e-4): step 1 loss=0.4337 acc=12.5%, step 2
+   loss=-0.4337 acc=0%, both nonzero/no-NaN. Checkpoint-diffed 20
+   parameters — 18/20 changed, max diff 0.00037 (sane for lr=1e-4).
+   `residual` mode (needs `mlp_delta`) still untested — lower priority,
+   same code path as `expected` plus one extra module. Step 3 triggered
+   `TrainingMonitor`'s emergency stop (`SHORTCUT` flag, mean_M=0 — every
+   rollout in the batch committed to an answer with zero internal WKV-loop
+   steps) — the safety mechanism working exactly as designed, not a bug;
+   real, worth noting that `expected` mode hit a degenerate high-confidence
+   collapse this quickly on an undertrained 0.4B model with random tasks.
+
 7. **RESOLVED 2026-08-18 — first real (non-`--no-update`, non-`--forge`)
    gradient-update run, confirmed with actual nonzero signal.** First
    attempt (G1d, G=4/batch=2/M_max=4, lr=1e-5, 3 steps) ran clean but hit

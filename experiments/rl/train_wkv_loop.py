@@ -333,12 +333,19 @@ def main():
     ap.add_argument("--forge", action="store_true",
                     help="Wrap the model's nn.Linear layers with FORGE "
                          "(dk4248/FORGE, fused optimizer-into-backward) for "
-                         "lower full-FT VRAM. UNVERIFIED — this machine has no "
-                         "CUDA GPU to test against; written from FORGE's own "
-                         "rwkv7_example.py and API docs, not run. Default off "
-                         "so normal --device cuda usage is unaffected. See the "
-                         "gradient-clipping note below before trusting this on "
-                         "a real run — verify a few steps on real GPU first.")
+                         "lower full-FT VRAM. DOES NOT WORK YET (verified on "
+                         "real GPU 2026-08-18) — FORGE's fused-into-backward "
+                         "assumes each layer is touched by backward() at most "
+                         "once per step; BPTT through the WKV-loop's recurrent "
+                         "state touches every FusedLinear layer once per "
+                         "timestep, which FORGE can't tolerate (structural, "
+                         "not a single-layer bug — see "
+                         "wrap_rwkv7_excluding_head's docstring and memory "
+                         "project_noesis_forge_bptt.md for the real fix, not "
+                         "yet implemented: FORGE's standalone "
+                         "optimizer_only_adamw_int8state() on ordinary "
+                         "non-fused backward() gradients). Default off so "
+                         "normal --device cuda usage is unaffected.")
     ap.add_argument("--forge-state-mode", default="int8", choices=["int8", "bf16", "fp8"],
                     help="FORGE optimizer moment precision (only with --forge)")
     args = ap.parse_args()
