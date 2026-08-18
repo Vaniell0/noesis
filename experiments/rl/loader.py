@@ -111,6 +111,74 @@ def wrap_rwkv7_excluding_head(model, **wrap_kwargs):
     return model, manager
 
 
+class Int8AdamW:
+    """AdamW with FORGE's int8-quantized moment state, applied to gradients
+    from ordinary (non-fused) `backward()` — not FORGE's fused-into-backward
+    path.
+
+    This is the actual fix for `--forge` (wrap_rwkv7_excluding_head and the
+    per-rollout-backward rewrite in train_wkv_loop.py get partway there but
+    don't resolve it — see that docstring). FORGE's fused-into-backward
+    mechanism assumes each layer is touched by backward() at most once per
+    step; BPTT through the WKV-loop's recurrent state touches every
+    FusedLinear layer once per timestep, which the fused path can't
+    tolerate no matter how the outer batch loop is structured. This class
+    sidesteps that entirely: don't fuse anything into backward, just run
+    ordinary autograd (so BPTT gradients are exactly as correct as the
+    non-FORGE path), then apply FORGE's standalone
+    `optimizer_only_adamw_int8state()` kernel to the resulting `.grad`
+    tensors. Keeps the larger of FORGE's two memory wins (int8 optimizer
+    state: ~4x smaller than fp32 AdamW moments) without touching backward()
+    or truncating gradient flow into the M-loop.
+
+    Only 2D parameters whose last dim is divisible by `qblock` are
+    int8-optimized (the kernel's own constraint — matches FusedLinear
+    weights: att/ffn projections). Everything else (biases, LayerNorm,
+    embeddings, time_decay/time_first) needs a regular optimizer — see
+    `other_params`.
+    """
+
+    def __init__(self, params, lr: float = 1e-4, beta1: float = 0.9,
+                 beta2: float = 0.999, eps: float = 1e-8,
+                 weight_decay: float = 0.01, qblock: int = 64):
+        from fused_grad_optimizer.state import FusedOptimizerState, OptimizerConfig
+
+        params = list(params)
+        self.fused_params = [p for p in params
+                             if p.dim() == 2 and p.shape[1] % qblock == 0]
+        fused_ids = {id(p) for p in self.fused_params}
+        self.other_params = [p for p in params if id(p) not in fused_ids]
+
+        self.lr = lr
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.eps = eps
+        self.weight_decay = weight_decay
+        self._step = 0
+        self._states = {
+            id(p): FusedOptimizerState(p, optimizer_type="adamw",
+                                       state_mode="int8", qblock_size=qblock)
+            for p in self.fused_params
+        }
+        self._OptimizerConfig = OptimizerConfig
+
+    def zero_grad(self, set_to_none: bool = True) -> None:
+        for p in self.fused_params:
+            p.grad = None if set_to_none else (p.grad.zero_() if p.grad is not None else None)
+
+    def step(self) -> None:
+        from fused_grad_optimizer.autograd import _apply_precomputed
+        self._step += 1
+        config = self._OptimizerConfig(
+            optimizer_type="adamw", lr=self.lr, beta1=self.beta1,
+            beta2=self.beta2, eps=self.eps, weight_decay=self.weight_decay,
+        )
+        for p in self.fused_params:
+            if p.grad is None:
+                continue
+            _apply_precomputed(p.grad.float(), p.data, self._states[id(p)], config)
+
+
 def _stub_deepspeed_if_missing() -> None:
     """rwkvt/rwkv7/model.py does `import deepspeed` at module scope.
 

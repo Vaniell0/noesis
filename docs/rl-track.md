@@ -634,30 +634,39 @@ settled.
    tensors as trainable `nn.Parameter`s for this one component without
    touching the frozen backbone), not a patch.
 
-6. **FORGE (`--forge`) does not work — structural incompatibility with
-   BPTT, found 2026-08-18.** FORGE's fused-into-backward optimizer update
+6. **RESOLVED 2026-08-18 — `--forge` now works, via a different mechanism
+   than originally planned.** FORGE's fused-into-backward optimizer update
    assumes each layer's weight is touched by `backward()` at most once per
-   step. `wkv_grpo_loss` builds a differentiable graph across the *whole*
+   step; `wkv_grpo_loss` builds a differentiable graph across the *whole*
    rollout (prefill → M-loop → answer tokens) so gradient flows through the
-   WKV-loop's reasoning state, not just the final tokens — that's the
-   actual design intent. Any rollout with >1 answer token already touches
-   each FusedLinear layer more than once within one backward() call (BPTT
-   weight-reuse across timesteps), which FORGE doesn't tolerate — confirmed
-   structural, not per-layer, by excluding `head` from the fused wrapping
-   and watching the same crash reappear on an `ffn` layer instead.
-   Rejected fix: truncated BPTT (detach state every step) — would satisfy
-   FORGE but zeroes gradient into the M-loop entirely, silently defeating
-   the whole state-carries-reasoning design. Real fix identified, not yet
-   implemented: FORGE exposes `optimizer_only_adamw_int8state()` as a
-   *standalone* function — apply it to gradients from ordinary
-   (non-fused) `backward()` instead of using FORGE's fused path at all.
-   Keeps the int8-optimizer-state memory win (the larger of FORGE's two
-   savings) without touching backward() or truncating BPTT. Full writeup:
-   memory `project_noesis_forge_bptt.md`.
-   `experiments/rl/loader.py::wrap_rwkv7_excluding_head` and the
-   per-rollout-backward rewrite of `wkv_grpo_loss` are both committed and
-   real improvements (correct grad-accumulation semantics, lower peak
-   memory even without `--forge`) but do not make `--forge` itself work.
+   WKV-loop's reasoning state, and BPTT weight-reuse across timesteps
+   touches every FusedLinear layer more than once per backward() call —
+   confirmed structural (not per-layer) by excluding `head` from the fused
+   wrapping and watching the crash reappear on an `ffn` layer instead.
+   Truncated BPTT would satisfy FORGE's assumption but zeroes gradient into
+   the M-loop entirely, defeating the state-carries-reasoning design —
+   rejected. **Real fix: `experiments/rl/loader.py::Int8AdamW`** — don't
+   fuse anything into backward at all; run ordinary `backward()` (full
+   BPTT, unmodified) and apply FORGE's standalone
+   `optimizer_only_adamw_int8state()` kernel to the resulting `.grad`
+   tensors afterward, same as any other optimizer.step(). Verified on G1d,
+   5 real training steps, no crash, checkpoint-diffed 16/20 params changed
+   (max diff 0.00049) — genuine gradient flow through the int8-quantized
+   optimizer path. `wrap_rwkv7_excluding_head`/`FusedOptimizerManager`
+   (the fused-into-backward approach) are unused by `--forge` now, kept in
+   `loader.py` as a documented dead end, not deleted.
+
+   **VRAM measurement, G1i, real not estimated (2026-08-18):** single-step
+   at G=4/batch=2/M_max=4 — 13713 MiB without `--forge`, 13655 MiB with.
+   **Essentially no difference at this scale** — the WKV-loop's own
+   unbatched per-rollout activation memory (risk #2 above) dominates total
+   usage at this batch size, not optimizer state. This does not confirm
+   the earlier informal "~18GB→~12-13GB for G1i full-FT" estimate from
+   before any real measurement existed — that number should be treated as
+   unverified/likely wrong until tested at real training scale
+   (G=8/batch=4/M_max=16), not retested tonight (each step already took
+   several minutes at the tiny scale above). Full writeup: memory
+   `project_noesis_forge_bptt.md`.
 
 8. **RESOLVED 2026-08-18 — `feed_mode="expected"` verified end-to-end,
    real gradient flow confirmed.** Previously zero coverage beyond the

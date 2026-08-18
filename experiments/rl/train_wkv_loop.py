@@ -364,32 +364,32 @@ def main():
         from experiments.rl.sweep_alpha import _MLPDelta
         mlp_delta = _MLPDelta(D).to(args.device)
 
-    # FORGE — replaces loaded.model's nn.Linear layers with FusedLinear.
-    # The optimizer update for those layers happens *inside* backward(), so
-    # `forge_manager.get_non_fused_params()` (time_decay/time_first/LayerNorm/
-    # Embedding) is the only thing left for a regular optimizer to handle.
-    forge_manager = None
+    # FORGE — NOT fused into backward (see loader.py::Int8AdamW's docstring
+    # for why: FORGE's fused path assumes each layer is touched by
+    # backward() at most once per step, BPTT through the WKV-loop's
+    # recurrent state violates that no matter how the batch loop is
+    # structured). Instead: ordinary backward() (full BPTT, unmodified),
+    # then FORGE's standalone int8-quantized-state AdamW kernel applied to
+    # the resulting .grad tensors — same optimizer-state memory win,
+    # without touching backward() or truncating gradient flow.
+    int8_optimizer = None
     if args.forge:
         if loaded.backend != "peft":
             raise ValueError("--forge requires --device cuda (backend='peft') — "
                               "FORGE's kernels are CUDA-only")
-        from experiments.rl.loader import wrap_rwkv7_excluding_head
-        loaded.model, forge_manager = wrap_rwkv7_excluding_head(
-            loaded.model, optimizer_type="adamw", state_mode=args.forge_state_mode,
-            weight_decay=0.01,
-        )
-        print(f"[train] FORGE enabled: state_mode={args.forge_state_mode} "
-              f"(head excluded — see wrap_rwkv7_excluding_head docstring)")
+        print(f"[train] FORGE enabled (int8-optimizer-only path, "
+              f"NOT fused-into-backward — see loader.py::Int8AdamW)")
 
     # Optimiser (only for peft backend with grad)
     optimizer = None
     if not args.no_update and loaded.backend == "peft":
-        if forge_manager is not None:
-            params = list(forge_manager.get_non_fused_params())
-        else:
-            params = [p for p in loaded.model.parameters() if p.requires_grad]
+        params = [p for p in loaded.model.parameters() if p.requires_grad]
         if mlp_delta:
             params += list(mlp_delta.parameters())
+        if args.forge:
+            from experiments.rl.loader import Int8AdamW
+            int8_optimizer = Int8AdamW(params, lr=args.lr, weight_decay=0.01)
+            params = int8_optimizer.other_params
         optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
 
     # Corpus + curriculum
@@ -468,34 +468,29 @@ def main():
         loss_val = float("nan")
         if not args.no_update and optimizer is not None:
             optimizer.zero_grad()
+            if int8_optimizer is not None:
+                int8_optimizer.zero_grad()
             # wkv_grpo_loss calls .backward() internally, once per rollout
-            # (not once here) — see its docstring for why --forge needs that.
-            # forge_manager.pre_step() is likewise called per-rollout inside
-            # it now, not once here.
+            # (not once here) — see its docstring. Ordinary autograd
+            # (no forge_manager passed) — --forge no longer fuses anything
+            # into backward, see loader.py::Int8AdamW's docstring for why.
             loss_val = wkv_grpo_loss(
                 loaded, batch_rollouts, batch_rewards,
                 feed_mode=args.feed_mode,
                 mlp_delta=mlp_delta,
                 alpha=args.alpha,
-                forge_manager=forge_manager,
-                lr=args.lr,
             )
             if loaded.backend == "peft":
-                if forge_manager is not None:
-                    # FusedLinear layers apply their AdamW update *inside*
-                    # backward() — by the time backward() returns there is no
-                    # gradient left to clip for those parameters, only for
-                    # the non-fused ones. Clipping only non-fused params here
-                    # is a real simplification, not a verified equivalent of
-                    # the pre-FORGE full-model clip — flagged, not resolved;
-                    # check whether this matters for training stability once
-                    # this actually runs on GPU, don't assume it's fine.
-                    torch.nn.utils.clip_grad_norm_(forge_manager.get_non_fused_params(), 1.0)
-                else:
-                    torch.nn.utils.clip_grad_norm_(
-                        [p for p in loaded.model.parameters() if p.requires_grad], 1.0
-                    )
+                # Clip across every trainable param together (same threshold
+                # regardless of which optimizer will consume each .grad) —
+                # clipping mutates .grad in place before either optimizer
+                # reads it.
+                torch.nn.utils.clip_grad_norm_(
+                    [p for p in loaded.model.parameters() if p.requires_grad], 1.0
+                )
             optimizer.step()
+            if int8_optimizer is not None:
+                int8_optimizer.step()
 
         # Curriculum update
         accuracy = float((all_rewards_flat > 0).float().mean().item())
