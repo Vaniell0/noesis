@@ -26,6 +26,7 @@ CPU smoke (discrete only, no grad update):
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import sys
 from pathlib import Path
@@ -33,6 +34,7 @@ from typing import List, Optional
 
 import torch
 import torch.nn.functional as F
+import torch.utils.checkpoint
 
 ROOT = Path(__file__).parents[2]
 sys.path.insert(0, str(ROOT))
@@ -71,7 +73,39 @@ def _recompute_wkv_log_probs(
     Gradient flows through answer-token forward passes. Loop steps are
     replayed deterministically (same argmax choices); their WKV state
     influence propagates through the answer-phase forward passes.
+
+    Per-timestep `torch.utils.checkpoint` (`use_checkpoint`, peft backend
+    only): each `forward_stateful`/`forward_stateful_embeds` call
+    recomputes its own forward during backward instead of keeping every
+    timestep's activations alive for the whole BPTT chain.
+
+    First tried 2026-08-18 and reverted the same day — measured WORSE
+    peak memory than no checkpointing at a config that "used to succeed
+    at 13.66GB." That comparison was misleading: at the time, Int8AdamW's
+    optimizer state (~5.8GB) plus full-FT grad buffers (~5.9GB) plus
+    weights (~5.9GB) already summed to ~17.4GB — over the 16GB T4's
+    capacity regardless of activation-memory tuning, so checkpointing's
+    real per-step benefit was invisible under an already-blown fixed
+    budget (and the "13.66GB success" was luck: a curriculum-sampled
+    rollout short enough to land under the ceiling by chance, not a
+    stable operating point). `Int8AdamW(offload_state=True)` (loader.py)
+    fixed the fixed-cost side the same day (weights+grad alone now
+    ~11.8GB, confirmed via direct measurement), which is what makes
+    checkpointing's transient per-backward-call memory (measured
+    separately at ~1.8-3GB per micro-step, task-length-dependent — the
+    actual proximate OOM trigger once the fixed cost was already fixed)
+    worth cutting now. Re-added the same day once the fixed-cost fix
+    made the transient cost the binding constraint.
     """
+    use_checkpoint = loaded.backend == "peft"
+
+    def _step(fwd_fn, inp, state):
+        if use_checkpoint:
+            return torch.utils.checkpoint.checkpoint(
+                fwd_fn, inp, state, use_reentrant=False
+            )
+        return fwd_fn(inp, state)
+
     state = loaded.new_state(batch=1)
 
     # Prefill
@@ -80,7 +114,7 @@ def _recompute_wkv_log_probs(
                            device=loaded.device)
     else:
         inp = rollout.prompt_ids
-    logits, state = loaded.forward_stateful(inp, state)
+    logits, state = _step(loaded.forward_stateful, inp, state)
 
     # WKV loop replay (deterministic, same choices as rollout)
     emb_w = loaded.embedding_weight if feed_mode != "discrete" else None
@@ -93,14 +127,15 @@ def _recompute_wkv_log_probs(
                                         device=loaded.device)
             else:
                 step_inp = [next_id]
-            logits, state = loaded.forward_stateful(step_inp, state)
+            logits, state = _step(loaded.forward_stateful, step_inp, state)
         else:
             probs = F.softmax(v.float(), dim=-1)
             expected = (probs.unsqueeze(0) @ emb_w.float()).to(loaded.dtype)
             if feed_mode == "residual" and mlp_delta is not None:
                 expected = expected + alpha * mlp_delta(expected)
-            logits, state = loaded.forward_stateful_embeds(
-                expected.unsqueeze(1), state)
+            logits, state = _step(
+                loaded.forward_stateful_embeds, expected.unsqueeze(1), state
+            )
 
     # Answer tokens: compute log-probs with grad
     log_probs: List[torch.Tensor] = []
@@ -113,7 +148,7 @@ def _recompute_wkv_log_probs(
                                     device=loaded.device)
         else:
             step_inp = [tok_id]
-        logits, state = loaded.forward_stateful(step_inp, state)
+        logits, state = _step(loaded.forward_stateful, step_inp, state)
 
     if not log_probs:
         return torch.tensor(0.0, requires_grad=True)
@@ -186,47 +221,79 @@ def wkv_grpo_loss(
 
     total_loss_val = 0.0
     n_micro = len(micro_steps)
+    n_skipped = 0
     for i, (rollout, adv) in enumerate(micro_steps):
         if forge_manager is not None:
             forge_manager.pre_step(lr=lr, is_accumulating=(i < n_micro - 1))
 
-        log_pi_theta = _recompute_wkv_log_probs(
-            loaded, rollout, feed_mode, mlp_delta, alpha
-        )  # [T_ans], grad
+        try:
+            log_pi_theta = _recompute_wkv_log_probs(
+                loaded, rollout, feed_mode, mlp_delta, alpha
+            )  # [T_ans], grad
 
-        # Old log-probs (stored at rollout time)
-        if rollout.answer_log_probs:
-            log_pi_old = torch.tensor(
-                rollout.answer_log_probs[:len(rollout.answer_ids)],
-                dtype=torch.float32, device=log_pi_theta.device,
-            )
-        else:
-            # answer_log_probs should always be populated by generate_rollout
-            # (wkv_loop.py) for a non-empty answer — an empty/None value here
-            # means rollout generation likely dropped log-probs due to a bug,
-            # not a deliberate on-policy mode. ratio collapses to 1 (REINFORCE-
-            # equivalent: gradient flows only through log_pi_theta), which is a
-            # safe fallback but should not happen silently.
-            print(f"[train] WARNING: rollout missing answer_log_probs "
-                  f"({len(rollout.answer_ids)} answer tokens) — falling back "
-                  f"to on-policy ratio=1", file=sys.stderr)
-            log_pi_old = log_pi_theta.detach()  # on-policy fallback
+            # Old log-probs (stored at rollout time)
+            if rollout.answer_log_probs:
+                log_pi_old = torch.tensor(
+                    rollout.answer_log_probs[:len(rollout.answer_ids)],
+                    dtype=torch.float32, device=log_pi_theta.device,
+                )
+            else:
+                # answer_log_probs should always be populated by generate_rollout
+                # (wkv_loop.py) for a non-empty answer — an empty/None value here
+                # means rollout generation likely dropped log-probs due to a bug,
+                # not a deliberate on-policy mode. ratio collapses to 1 (REINFORCE-
+                # equivalent: gradient flows only through log_pi_theta), which is a
+                # safe fallback but should not happen silently.
+                print(f"[train] WARNING: rollout missing answer_log_probs "
+                      f"({len(rollout.answer_ids)} answer tokens) — falling back "
+                      f"to on-policy ratio=1", file=sys.stderr)
+                log_pi_old = log_pi_theta.detach()  # on-policy fallback
 
-        ratio = torch.exp(log_pi_theta - log_pi_old)
-        adv_t = torch.full_like(ratio, adv)
-        unclipped = ratio * adv_t
-        clipped = torch.clamp(ratio, 1 - clip_eps, 1 + clip_eps) * adv_t
-        surrogate = -torch.min(unclipped, clipped).mean()
+            ratio = torch.exp(log_pi_theta - log_pi_old)
+            adv_t = torch.full_like(ratio, adv)
+            unclipped = ratio * adv_t
+            clipped = torch.clamp(ratio, 1 - clip_eps, 1 + clip_eps) * adv_t
+            surrogate = -torch.min(unclipped, clipped).mean()
 
-        # KL penalty
-        kl = (ratio - 1 - (log_pi_theta - log_pi_old)).mean()
-        surrogate = surrogate + kl_coef * kl
+            # KL penalty
+            kl = (ratio - 1 - (log_pi_theta - log_pi_old)).mean()
+            surrogate = surrogate + kl_coef * kl
 
-        # Weight to match the original total_loss/n_tokens_total mean —
-        # each rollout contributes proportionally to its own answer length.
-        weight = len(rollout.answer_ids) / n_tokens_total
-        (surrogate * weight).backward()
-        total_loss_val += float(surrogate.item()) * weight
+            # Weight to match the original total_loss/n_tokens_total mean —
+            # each rollout contributes proportionally to its own answer length.
+            weight = len(rollout.answer_ids) / n_tokens_total
+            (surrogate * weight).backward()
+            total_loss_val += float(surrogate.item()) * weight
+        except torch.cuda.OutOfMemoryError:
+            # G1i (2.9B) full-FT on a 16GB T4 runs with a thin activation
+            # margin (see docs/rl-track.md, added 2026-08-18): the fixed
+            # cost (weights+grad+optimizer-state) plus per-timestep
+            # checkpointing already claws most of the way there, but an
+            # unusually long rollout (curriculum task-length variance:
+            # M near M_max together with a long pre-EOS answer) can still
+            # occasionally exceed the remaining ~2-4GB budget. Rather than
+            # crash an hours-long run over one unlucky rollout, drop this
+            # rollout's contribution and continue — GRPO/PPO gradients are
+            # already noisy-tolerant, and a skip is a minor sample-count
+            # reduction for this micro-batch, not a correctness bug.
+            #
+            # gc.collect() before empty_cache() is load-bearing here, NOT
+            # the dead end it was for the *successful*-backward case
+            # earlier this session: a backward() that raises mid-computation
+            # abandons `torch.utils.checkpoint`'s pack/unpack hook state and
+            # the autograd engine's partially-built graph, which — same
+            # root cause as before, reference cycles between checkpoint's
+            # hooks and the graph nodes — CPython's refcounting won't
+            # collect without a cycle-detection pass. Measured 2026-08-18:
+            # without this, one real OOM cascaded into 13/16 rollouts
+            # failing in the same training step (each retry saw ~10-30MB
+            # free, empty_cache() alone never recovered it).
+            n_skipped += 1
+            print(f"[train] WARNING: OOM on rollout {i+1}/{n_micro} "
+                  f"(M={rollout.M}, answer_len={len(rollout.answer_ids)}) — "
+                  f"skipping, {n_skipped} skipped this step", file=sys.stderr)
+            gc.collect()
+            torch.cuda.empty_cache()
 
     return total_loss_val
 
@@ -237,23 +304,49 @@ def wkv_grpo_loss(
 def _save_checkpoint(out_dir: Path, loaded: LoadedModel, step: int,
                      mlp_delta: Optional[torch.nn.Module] = None,
                      sched=None) -> None:
-    ckpt = {"step": step}
+    """Saves to a `ckpt_step{step:06d}/` directory, one file per trainable
+    parameter, instead of one `.pt` with a single in-memory dict of all
+    CPU-copied tensors.
+
+    The old single-dict-comprehension version (`{n: p.detach().cpu() for
+    n, p in trainable.items()}`) built a full second CPU-resident copy of
+    every trainable parameter (~5.9GB for G1i 2.9B) before `torch.save`
+    even started writing — on top of `Int8AdamW(offload_state=True)`'s
+    already-resident ~5.8GB of CPU-side optimizer state, this pushed
+    system RAM (15GB, no swap) over the edge. Confirmed 2026-08-18 via
+    `dmesg`: kernel oom-killer SIGKILLed the training process
+    (anon-rss=14.9GB) at exactly this point, silently — no Python
+    traceback, no checkpoint file, process just vanished. Writing one
+    parameter at a time bounds peak checkpoint-save memory to the single
+    largest parameter (tens–hundreds of MB), not the whole model.
+    """
+    ckpt_dir = out_dir / f"ckpt_step{step:06d}"
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    model_dir = ckpt_dir / "model"
+    n_saved = 0
     if loaded.backend == "peft":
         # Save only trainable params (LoRA A/B or full diff)
-        trainable = {n: p for n, p in loaded.model.named_parameters()
-                     if p.requires_grad}
-        ckpt["model"] = {n: p.detach().cpu() for n, p in trainable.items()}
+        model_dir.mkdir(exist_ok=True)
+        for n, p in loaded.model.named_parameters():
+            if not p.requires_grad:
+                continue
+            torch.save(p.detach().cpu(), model_dir / f"{n}.pt")
+            n_saved += 1
     else:
         # blink (CPU) backend has no trainable params — --no-update smoke
         # runs are the only thing that should ever hit this path. Flagged
-        # loudly rather than silently: a checkpoint with no "model" key
+        # loudly rather than silently: a checkpoint with no model/ dir
         # looks identical to a real one until someone tries to resume from
         # it and finds nothing to load.
         print(f"[train] WARNING: checkpoint at step {step} has no model "
               f"weights (backend={loaded.backend!r}, not 'peft') — only "
               f"step count is saved, nothing to resume from")
+    meta = {"step": step, "param_names": None}
+    if loaded.backend == "peft":
+        meta["param_names"] = [n for n, p in loaded.model.named_parameters()
+                               if p.requires_grad]
     if mlp_delta is not None:
-        ckpt["mlp_delta"] = {n: p.detach().cpu()
+        meta["mlp_delta"] = {n: p.detach().cpu()
                              for n, p in mlp_delta.named_parameters()}
     if sched is not None:
         # Curriculum progress (per-category level + accuracy history) —
@@ -262,17 +355,16 @@ def _save_checkpoint(out_dir: Path, loaded: LoadedModel, step: int,
         # curriculum progress from scratch. Added 2026-08-18 alongside the
         # model resume path, same reasoning: interruptible instance means
         # resumes are the expected case, not a rare edge case.
-        ckpt["sched"] = sched.state_dict()
-    path = out_dir / f"ckpt_step{step:06d}.pt"
-    torch.save(ckpt, path)
-    print(f"[train] checkpoint → {path}")
+        meta["sched"] = sched.state_dict()
+    torch.save(meta, ckpt_dir / "meta.pt")
+    print(f"[train] checkpoint → {ckpt_dir} ({n_saved} tensors)")
 
 
 def _load_checkpoint(path: Path, loaded: LoadedModel,
                      mlp_delta: Optional[torch.nn.Module] = None,
                      sched=None) -> int:
-    """Resume from a checkpoint written by `_save_checkpoint`. Returns the
-    saved step (caller should continue from `step + 1`).
+    """Resume from a checkpoint directory written by `_save_checkpoint`.
+    Returns the saved step (caller should continue from `step + 1`).
 
     Written 2026-08-18 — `_save_checkpoint` existed with no corresponding
     load path at all; a checkpoint could be written but never read back.
@@ -281,27 +373,31 @@ def _load_checkpoint(path: Path, loaded: LoadedModel,
     without this, that would mean restarting training from scratch on
     every preemption, not just resuming.
     """
-    ckpt = torch.load(path, map_location=loaded.device)
-    if "model" not in ckpt:
+    meta = torch.load(path / "meta.pt", map_location=loaded.device)
+    if meta["param_names"] is None:
         raise ValueError(
-            f"{path} has no 'model' key — it was saved on a non-'peft' "
-            f"backend and has no weights to resume from (see the WARNING "
-            f"printed when it was saved)"
+            f"{path} has no saved model weights — it was saved on a "
+            f"non-'peft' backend and has nothing to resume from (see the "
+            f"WARNING printed when it was saved)"
         )
-    missing, unexpected = loaded.model.load_state_dict(ckpt["model"], strict=False)
+    state_dict = {
+        n: torch.load(path / "model" / f"{n}.pt", map_location=loaded.device)
+        for n in meta["param_names"]
+    }
+    missing, unexpected = loaded.model.load_state_dict(state_dict, strict=False)
     # `strict=False` is required: only trainable params were saved, so the
     # frozen backbone is expected to show up as "missing" here — that's
     # correct, not an error. Genuinely unexpected keys would still be real.
     if unexpected:
         raise ValueError(f"{path}: unexpected keys in checkpoint not present "
                           f"in model: {unexpected}")
-    if mlp_delta is not None and "mlp_delta" in ckpt:
-        mlp_delta.load_state_dict(ckpt["mlp_delta"], strict=True)
-    if sched is not None and "sched" in ckpt:
-        sched.load_state_dict(ckpt["sched"])
-    step = ckpt["step"]
+    if mlp_delta is not None and "mlp_delta" in meta:
+        mlp_delta.load_state_dict(meta["mlp_delta"], strict=True)
+    if sched is not None and "sched" in meta:
+        sched.load_state_dict(meta["sched"])
+    step = meta["step"]
     print(f"[train] resumed from {path} at step {step} "
-          f"({len(ckpt['model'])} trainable tensors loaded)")
+          f"({len(state_dict)} trainable tensors loaded)")
     return step
 
 
@@ -324,30 +420,46 @@ def main():
     ap.add_argument("--ckpt-every", type=int, default=100)
     ap.add_argument("--probe-every", type=int, default=50)
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--grad-cp", action="store_true",
+                    help="Gradient checkpointing (peft backend only) — recompute "
+                         "block activations during backward instead of storing "
+                         "the whole M-loop+answer BPTT chain. Needs deepspeed "
+                         "installed (rwkvt/rwkv7/model.py's grad_cp path calls "
+                         "deepspeed.checkpointing.checkpoint). Trades compute for "
+                         "memory — the real lever if full-FT OOMs even at small "
+                         "G/batch/M_max (found 2026-08-18: G1i full-FT was "
+                         "hitting the 16GB T4 ceiling even at G=2/batch=2/M_max=4).")
     ap.add_argument("--no-update", action="store_true",
                     help="Rollout + reward only, no gradient update (CPU smoke)")
     ap.add_argument("--vm-lifetime", type=float, default=24.0,
                     help="Selectel VM lifetime in hours (default 24)")
     ap.add_argument("--resume", type=Path, default=None,
-                    help="Path to a ckpt_step*.pt to resume from (peft backend only)")
+                    help="Path to a ckpt_step*/ directory to resume from (peft backend only)")
     ap.add_argument("--forge", action="store_true",
-                    help="Wrap the model's nn.Linear layers with FORGE "
-                         "(dk4248/FORGE, fused optimizer-into-backward) for "
-                         "lower full-FT VRAM. DOES NOT WORK YET (verified on "
-                         "real GPU 2026-08-18) — FORGE's fused-into-backward "
-                         "assumes each layer is touched by backward() at most "
-                         "once per step; BPTT through the WKV-loop's recurrent "
-                         "state touches every FusedLinear layer once per "
-                         "timestep, which FORGE can't tolerate (structural, "
-                         "not a single-layer bug — see "
-                         "wrap_rwkv7_excluding_head's docstring and memory "
-                         "project_noesis_forge_bptt.md for the real fix, not "
-                         "yet implemented: FORGE's standalone "
-                         "optimizer_only_adamw_int8state() on ordinary "
-                         "non-fused backward() gradients). Default off so "
-                         "normal --device cuda usage is unaffected.")
+                    help="Use FORGE's (dk4248/FORGE) standalone int8-quantized "
+                         "AdamW kernel (loader.py::Int8AdamW) for lower full-FT "
+                         "optimizer-state VRAM. NOT FORGE's fused-into-backward "
+                         "path — that assumes each layer is touched by "
+                         "backward() at most once per step, which BPTT through "
+                         "the WKV-loop's recurrent state structurally violates "
+                         "(see project_noesis_forge_bptt.md). Int8AdamW instead "
+                         "runs ordinary backward() (full BPTT, unmodified) then "
+                         "applies FORGE's standalone optimizer_only_adamw_int8state() "
+                         "kernel to the resulting .grad tensors — same optimizer-"
+                         "state memory win, no backward()-compatibility issue.")
     ap.add_argument("--forge-state-mode", default="int8", choices=["int8", "bf16", "fp8"],
                     help="FORGE optimizer moment precision (only with --forge)")
+    ap.add_argument("--forge-offload-state", action="store_true",
+                    help="Keep Int8AdamW's moment state (m_q/v_q/scales) in "
+                         "CPU RAM, only staging one parameter's state onto GPU "
+                         "at a time during step() (frees ~5.8GB VRAM for G1i "
+                         "2.9B at the cost of PCIe transfer time per param per "
+                         "step). Added 2026-08-18: G1i's fixed cost (weights + "
+                         "first-backward grad buffers + this state) measured "
+                         "at ~17.4GB on a 16GB T4 — over capacity at ANY batch/"
+                         "G/M_max/answer-length, confirmed down to the most "
+                         "minimal config tried, so activation-memory tuning "
+                         "alone could never close the gap.")
     args = ap.parse_args()
 
     out_dir = Path(args.out)
@@ -355,7 +467,8 @@ def main():
     log_path = out_dir / "train_log.jsonl"
 
     backend = "peft" if args.device != "cpu" else "blink"
-    loaded = load_rwkv7(args.model, device=args.device, backend=backend)
+    loaded = load_rwkv7(args.model, device=args.device, backend=backend,
+                        grad_cp=1 if args.grad_cp else 0)
 
     # MLP_delta for residual mode
     mlp_delta: Optional[torch.nn.Module] = None
@@ -388,7 +501,8 @@ def main():
             params += list(mlp_delta.parameters())
         if args.forge:
             from experiments.rl.loader import Int8AdamW
-            int8_optimizer = Int8AdamW(params, lr=args.lr, weight_decay=0.01)
+            int8_optimizer = Int8AdamW(params, lr=args.lr, weight_decay=0.01,
+                                        offload_state=args.forge_offload_state)
             params = int8_optimizer.other_params
         optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
 
@@ -463,6 +577,17 @@ def main():
         all_rewards_flat = torch.cat(batch_rewards)
         combined_diag = {"r_correct": torch.cat(all_r_correct)}
         stop, flags = monitor.step(all_rollouts_flat, all_rewards_flat, combined_diag)
+        if flags:
+            # Diagnostic sample so a flagged batch is actually inspectable
+            # afterward — added 2026-08-18 after a MODE_COL emergency stop
+            # whose actual collapsed text was never printed anywhere and
+            # the model weights that produced it were lost to an unrelated
+            # checkpoint-save OOM-kill, leaving nothing to diagnose with.
+            print(f"[train] flagged batch sample (up to 5 of {len(all_rollouts_flat)} rollouts):",
+                  file=sys.stderr)
+            for r in all_rollouts_flat[:5]:
+                print(f"    prompt={r.prompt_text[:80]!r} M={r.M} "
+                      f"exit={r.exit_reason} text={r.text[:80]!r}", file=sys.stderr)
 
         # Gradient update
         loss_val = float("nan")

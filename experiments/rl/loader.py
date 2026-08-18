@@ -136,11 +136,30 @@ class Int8AdamW:
     weights: att/ffn projections). Everything else (biases, LayerNorm,
     embeddings, time_decay/time_first) needs a regular optimizer — see
     `other_params`.
+
+    `offload_state=True` (added 2026-08-18, chasing real-scale G1i OOMs
+    on a 16GB T4): keeps every parameter's int8 moment state (m_q, v_q,
+    scales — ~5.8GB total for G1i 2.9B) in CPU RAM instead of GPU VRAM.
+    `step()` processes params one at a time anyway (existing loop
+    structure), so moving one param's state to GPU, applying the update,
+    then moving it back costs only that one param's state on GPU at any
+    instant (tens of MB) instead of the full 5.8GB resident the whole
+    time. Confirmed necessary: measured G1i's *fixed* cost alone (weights
+    + first-backward grad buffers + this state, before any activation
+    memory) at ~17.4GB — over the card's 15.56GB usable capacity at ANY
+    batch/G/M_max/answer-length, including the most minimal one tried
+    (G=2,batch=1,M_max=1,max-answer=2 still OOM'd at the same ~14.7GB
+    mark) — so no amount of activation-memory tuning could ever have
+    closed the gap; this had to come from the fixed costs themselves.
+    Costs PCIe transfer time per param per step — acceptable per-run
+    tradeoff (VRAM for time), not per-token, so overhead is small
+    relative to the forward/backward cost it's paired with.
     """
 
     def __init__(self, params, lr: float = 1e-4, beta1: float = 0.9,
                  beta2: float = 0.999, eps: float = 1e-8,
-                 weight_decay: float = 0.01, qblock: int = 64):
+                 weight_decay: float = 0.01, qblock: int = 64,
+                 offload_state: bool = False):
         from fused_grad_optimizer.state import FusedOptimizerState, OptimizerConfig
 
         params = list(params)
@@ -154,6 +173,7 @@ class Int8AdamW:
         self.beta2 = beta2
         self.eps = eps
         self.weight_decay = weight_decay
+        self.offload_state = offload_state
         self._step = 0
         self._states = {
             id(p): FusedOptimizerState(p, optimizer_type="adamw",
@@ -161,6 +181,13 @@ class Int8AdamW:
             for p in self.fused_params
         }
         self._OptimizerConfig = OptimizerConfig
+        if offload_state:
+            for state in self._states.values():
+                state.ensure_buffers()  # allocates on the weight's device (GPU)
+                state.m_q = state.m_q.to("cpu")
+                state.v_q = state.v_q.to("cpu")
+                state.m_scale = state.m_scale.to("cpu")
+                state.v_scale = state.v_scale.to("cpu")
 
     def zero_grad(self, set_to_none: bool = True) -> None:
         for p in self.fused_params:
@@ -176,7 +203,19 @@ class Int8AdamW:
         for p in self.fused_params:
             if p.grad is None:
                 continue
-            _apply_precomputed(p.grad.float(), p.data, self._states[id(p)], config)
+            state = self._states[id(p)]
+            if self.offload_state:
+                dev = p.device
+                state.m_q = state.m_q.to(dev)
+                state.v_q = state.v_q.to(dev)
+                state.m_scale = state.m_scale.to(dev)
+                state.v_scale = state.v_scale.to(dev)
+            _apply_precomputed(p.grad.float(), p.data, state, config)
+            if self.offload_state:
+                state.m_q = state.m_q.to("cpu")
+                state.v_q = state.v_q.to("cpu")
+                state.m_scale = state.m_scale.to("cpu")
+                state.v_scale = state.v_scale.to("cpu")
 
 
 def _stub_deepspeed_if_missing() -> None:

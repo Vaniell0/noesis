@@ -110,6 +110,18 @@ def generate_rollout(
 
     All internal state (logits, embeds, wkv) is kept on the model's
     device. Numeric outputs (entropy, stability) are floats.
+
+    Runs entirely under `torch.no_grad()`: only token ids and Python
+    floats (via `.item()`) leave this function (see `WKVLoopRollout` —
+    no tensors), and GRPO recomputes log π_θ separately, with gradients,
+    in `train_wkv_loop.py::_recompute_wkv_log_probs`. Before this was
+    added (found 2026-08-18 while chasing real-scale OOMs), every
+    rollout built a full, live BPTT autograd graph across the whole
+    prompt+M-loop+answer chain purely to be thrown away — the same cost
+    as the later gradient recompute, paid twice per rollout for no
+    reason. This was the actual dominant memory cost the whole session's
+    checkpointing/gc.collect() investigation never touched, since both
+    only targeted `_recompute_wkv_log_probs`.
     """
     if feed_mode not in {"discrete", "expected", "residual"}:
         raise ValueError(f"unknown feed_mode {feed_mode!r}")
@@ -123,88 +135,103 @@ def generate_rollout(
     tok = loaded.tokenizer
     prompt_ids = tok.encode(prompt)
 
-    # --- prefill ------------------------------------------------------
-    state = loaded.new_state(batch=1)
-    if loaded.backend == "peft":
-        input_ids = torch.tensor([prompt_ids], dtype=torch.long,
-                                 device=loaded.device)
-    else:
-        input_ids = prompt_ids
-    logits, state = loaded.forward_stateful(input_ids, state)
+    with torch.no_grad():
+        # --- prefill ----------------------------------------------------
+        state = loaded.new_state(batch=1)
+        if loaded.backend == "peft":
+            input_ids = torch.tensor([prompt_ids], dtype=torch.long,
+                                     device=loaded.device)
+        else:
+            input_ids = prompt_ids
+        logits, state = loaded.forward_stateful(input_ids, state)
 
-    # --- internal WKV loop -------------------------------------------
-    entropy_traj: List[float] = []
-    stability_traj: List[float] = []
-    prev_H: Optional[float] = None
-    prev_wkv: Optional[torch.Tensor] = None
-    exit_reason = "M_max"
-    M_used = 0
+        # --- internal WKV loop -------------------------------------------
+        entropy_traj: List[float] = []
+        stability_traj: List[float] = []
+        prev_H: Optional[float] = None
+        prev_wkv: Optional[torch.Tensor] = None
+        exit_reason = "M_max"
+        M_used = 0
 
-    for step in range(M_max):
-        # Metrics on the current logits (before feeding back)
-        v = _last_vec(logits)
-        H_t = _entropy_of_logits(v)
-        entropy_traj.append(H_t)
-        cur_wkv = loaded.wkv_stack(state)
-        stability_traj.append(_wkv_delta_norm(cur_wkv, prev_wkv))
-        prev_wkv = cur_wkv
+        for step in range(M_max):
+            # Metrics on the current logits (before feeding back)
+            v = _last_vec(logits)
+            H_t = _entropy_of_logits(v)
+            entropy_traj.append(H_t)
+            cur_wkv = loaded.wkv_stack(state)
+            stability_traj.append(_wkv_delta_norm(cur_wkv, prev_wkv))
+            prev_wkv = cur_wkv
 
-        # Exit criteria
-        max_p = float(F.softmax(v.float(), dim=-1).max().item())
-        if max_p > tau_commit:
-            exit_reason = "commit"
-            break
-        if prev_H is not None and abs(H_t - prev_H) < eps_plateau:
-            exit_reason = "plateau"
-            break
-        prev_H = H_t
+            # Exit criteria
+            max_p = float(F.softmax(v.float(), dim=-1).max().item())
+            if max_p > tau_commit:
+                exit_reason = "commit"
+                break
+            if prev_H is not None and abs(H_t - prev_H) < eps_plateau:
+                exit_reason = "plateau"
+                break
+            prev_H = H_t
 
-        # Feed next input into WKV
-        if feed_mode == "discrete":
-            next_id = int(v.argmax().item())
+            # Feed next input into WKV
+            if feed_mode == "discrete":
+                next_id = int(v.argmax().item())
+                if loaded.backend == "peft":
+                    step_input = torch.tensor([[next_id]], dtype=torch.long,
+                                              device=loaded.device)
+                else:
+                    step_input = [next_id]
+                logits, state = loaded.forward_stateful(step_input, state)
+            else:
+                # expected or residual (peft only, differentiable)
+                emb_w = loaded.embedding_weight       # [V, D]
+                probs = F.softmax(v.float(), dim=-1)  # [V]
+                expected = (probs.unsqueeze(0) @ emb_w.float()).to(loaded.dtype)  # [1, D]
+                if feed_mode == "residual":
+                    delta = mlp_delta(expected)                # [1, D]
+                    feed = expected + alpha * delta
+                else:
+                    feed = expected
+                feed = feed.unsqueeze(1)                        # [1, 1, D]
+                logits, state = loaded.forward_stateful_embeds(feed, state)
+
+            M_used = step + 1
+
+        # --- decode answer (single commit) --------------------------------
+        answer_ids: List[int] = []
+        answer_log_probs: List[float] = []
+        for _ in range(max_answer_tokens):
+            v = _last_vec(logits)
+            lp_vec = F.log_softmax(v.float(), dim=-1)
+            next_id = _sample_token(v, answer_temperature)
+            answer_ids.append(next_id)
+            answer_log_probs.append(float(lp_vec[next_id].item()))
+            if next_id == eos_id:
+                break
             if loaded.backend == "peft":
                 step_input = torch.tensor([[next_id]], dtype=torch.long,
                                           device=loaded.device)
             else:
                 step_input = [next_id]
             logits, state = loaded.forward_stateful(step_input, state)
-        else:
-            # expected or residual (peft only, differentiable)
-            emb_w = loaded.embedding_weight       # [V, D]
-            probs = F.softmax(v.float(), dim=-1)  # [V]
-            expected = (probs.unsqueeze(0) @ emb_w.float()).to(loaded.dtype)  # [1, D]
-            if feed_mode == "residual":
-                delta = mlp_delta(expected)                # [1, D]
-                feed = expected + alpha * delta
-            else:
-                feed = expected
-            feed = feed.unsqueeze(1)                        # [1, 1, D]
-            logits, state = loaded.forward_stateful_embeds(feed, state)
-
-        M_used = step + 1
-
-    # --- decode answer (single commit) --------------------------------
-    answer_ids: List[int] = []
-    answer_log_probs: List[float] = []
-    for _ in range(max_answer_tokens):
-        v = _last_vec(logits)
-        lp_vec = F.log_softmax(v.float(), dim=-1)
-        next_id = _sample_token(v, answer_temperature)
-        answer_ids.append(next_id)
-        answer_log_probs.append(float(lp_vec[next_id].item()))
-        if next_id == eos_id:
-            break
-        if loaded.backend == "peft":
-            step_input = torch.tensor([[next_id]], dtype=torch.long,
-                                      device=loaded.device)
-        else:
-            step_input = [next_id]
-        logits, state = loaded.forward_stateful(step_input, state)
 
     assert len(answer_log_probs) == len(answer_ids), (
         f"answer_log_probs/answer_ids length mismatch: "
         f"{len(answer_log_probs)} != {len(answer_ids)}"
     )
+    # `answer_ids` keeps the trailing eos_id (needed downstream —
+    # _recompute_wkv_log_probs replays every id in this list, including
+    # eos, to score the model's decision to stop). `text` must NOT
+    # include it: found 2026-08-18 that `tok.decode([eos_id])` alone is
+    # `'�'` (not a real vocabulary token, just a stop marker) — decoding
+    # it as part of the string corrupted `.text` for every rollout that
+    # ended in eos right after a short correct answer (exactly what
+    # "Output only 0 or 1"-style prompts ask for), which in turn (a)
+    # broke TrainingMonitor's MODE_COL diversity check (many distinct
+    # short answers all collapsed to the same '�' string — the false
+    # trigger behind two same-day emergency stops) and (b) broke
+    # rewards.py's regex rubric matching against `.text` directly,
+    # silently zeroing reward for correct-but-terse answers.
+    text_ids = answer_ids[:-1] if answer_ids and answer_ids[-1] == eos_id else answer_ids
     return WKVLoopRollout(
         prompt_ids=prompt_ids,
         prompt_text=prompt,
@@ -214,7 +241,7 @@ def generate_rollout(
         entropy_trajectory=entropy_traj,
         wkv_stability=stability_traj,
         exit_reason=exit_reason,
-        text=tok.decode(answer_ids),
+        text=tok.decode(text_ids),
     )
 
 

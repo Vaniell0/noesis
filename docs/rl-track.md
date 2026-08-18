@@ -698,6 +698,100 @@ settled.
    end-to-end with real gradient flow, not just "doesn't crash." This was
    the single largest open item before trusting a real training launch.
 
+9. **RESOLVED 2026-08-18 — G1i (2.9B) full-FT's real memory ceiling on a
+   16GB T4 root-caused: a FIXED cost (weights + first-backward grad
+   buffers), not activation/BPTT memory.** Direct `torch.cuda.
+   memory_allocated()` tracing (not the earlier informal estimates):
+   weights 5.896GB + grad buffers 5.895GB (bf16, allocated in full on the
+   *first* `backward()` regardless of workload — one `.grad` tensor per
+   trainable param, sized by the param) = ~11.8GB baseline. Confirmed via
+   an extreme minimal-chain test (G=2/batch=1/M_max=1/max-answer=2) that
+   OOM'd at the *same* ~14.7GB mark as every larger config tested that
+   day — chain length wasn't the driver across the whole 8–36 step range.
+   **Fix: `Int8AdamW(offload_state=True)`** — keeps the ~5.8GB int8
+   optimizer-state buffers in CPU RAM, staging one parameter's state onto
+   GPU at a time inside the existing per-param `step()` loop. Measured
+   fixed cost with offload: 11.8GB (matches weights+grad only). Combined
+   with per-timestep `torch.utils.checkpoint` (re-added — see below) and
+   `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, a real G=8/batch=2
+   /M_max=4 training step can complete, though typically only 1–9 of 16
+   rollouts survive per step (curriculum task-length variance against a
+   thin remaining margin) — accepted as the real operating ceiling for
+   this card/model/method, not a bug left to chase. Full narrative
+   (including two separate `gc.collect()` hypotheses tested and
+   disproven, and why the earlier "checkpointing measured worse" finding
+   was an artifact of testing it before the fixed-cost fix existed) in
+   memory `project_noesis_forge_bptt.md`.
+
+   **OOM-catch-and-skip resilience added** to `wkv_grpo_loss`'s
+   micro-step loop (`try/except torch.cuda.OutOfMemoryError` around each
+   rollout's recompute+backward) — an hours-long run no longer crashes
+   over one unlucky rollout. Advantages are computed from the *full*
+   no-grad-generated group before any OOM filtering (`generate_rollout`
+   always succeeds — see next item), so GRPO's per-prompt advantage
+   estimate is never starved by the skip rate; only which rollouts get to
+   *contribute gradient* is affected.
+
+   **`generate_rollout()` (`wkv_loop.py`) was missing `torch.no_grad()`**
+   — independent real bug, fixed same day. Every rollout generation was
+   building a full, live, unused BPTT autograd graph (thrown away — GRPO
+   recomputes log π_θ separately, with grad, in
+   `_recompute_wkv_log_probs`), paying the BPTT cost twice per rollout
+   for nothing. Confirmed post-fix: generation now adds ~9MB, not
+   gigabytes.
+
+   **Second real bug found via a live `MODE_COL` emergency stop**
+   (real training run, step 8, `<20%` unique decoded texts in the group —
+   `TrainingMonitor` correctly caught and cleanly `break`'d out, not a
+   crash): the OLD `_save_checkpoint` built the entire trainable-param
+   state_dict as one CPU-resident dict comprehension before writing
+   anything — a full second ~5.9GB CPU copy on top of Int8AdamW's
+   already-resident ~5.8GB offloaded state. Confirmed via `dmesg`/
+   `journalctl -k`: Linux OOM-killer SIGKILLed the process (anon-rss=
+   14.9GB, no swap) at exactly that moment — silently, no Python
+   traceback, no checkpoint file. Would have broken checkpointing on
+   *every* save, not just this one. **Fixed**: rewrote to a
+   `ckpt_step{N}/` directory, one `.pt` file per trainable parameter,
+   written in the existing per-param loop — verified via isolated RAM
+   trace: checkpoint save now costs ~109MB, not ~5.9GB. Also added:
+   on any monitor flag, print up to 5 sample rollout texts to stderr —
+   the MODE_COL collapse's actual output text was never captured
+   anywhere before this fix, so there was nothing to diagnose *why* it
+   collapsed once the process (and its weights) were gone.
+
+10. **RESOLVED 2026-08-18, same evening — the "MODE_COL collapse" above
+    was a false alarm: `.text` construction bug, not a real model
+    collapse.** The flagged-batch sample logging (item 9) immediately
+    showed the cause: answers decoded to `'�'` (U+FFFD). Root cause,
+    confirmed via `experiments/rl/_debug_modecol.py` replaying the exact
+    prompt against both base weights and `ckpt_step000007`:
+    `tok.decode([eos_id])` is `'�'` on its own (not a real vocabulary
+    token), and `wkv_loop.py`'s answer-decode loop appended the sampled
+    `eos_id` to `answer_ids` *then* decoded the whole list into `.text`
+    — so every rollout that correctly and tersely answered (exactly what
+    "Output only 0 or 1"-style prompts ask for) and stopped got its
+    `.text` corrupted, while `answer_ids`/`answer_log_probs` were always
+    fine. Two real consequences from one bug: (a) `TrainingMonitor`'s
+    MODE_COL diversity check saw every terse-correct answer collapse to
+    the same `'�'` string — a guaranteed false trigger, confirmed by
+    re-running the identical prompt pre/post fix on the *same*
+    `ckpt_step000007` weights: real answers were `'0','1','0','0','1'`
+    (2 unique, 40% diversity, well above the 20% threshold — would never
+    have fired), 3/5 *correct* (true answer for that prompt is `0`).
+    (b) `rewards.py::compute_wkv_loop_rewards` scores
+    `_score_correct(r.text, rubric)` against this same corrupted
+    `.text` via regex — reward computation itself was silently zeroing
+    correct-but-terse answers all session, plausibly a meaningful
+    contributor to every low/noisy accuracy number logged that day, not
+    just the two emergency-stop incidents. **Fix**: `generate_rollout`
+    now decodes `text` from `answer_ids` with any trailing `eos_id`
+    stripped (`answer_ids` itself unchanged — log-prob replay still
+    needs the full sequence including eos). Real lesson: the WKV-loop
+    mechanism and the model itself were working correctly and giving
+    sensible answers the whole session, base weights included — every
+    "collapse" signal traced back to text construction, not training
+    instability.
+
 ---
 
 ## State metrics — what to measure before and during A1.5

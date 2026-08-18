@@ -104,14 +104,31 @@ def compute_wkv_loop_rewards(
     rollouts: List["WKVLoopRollout"],
     rubric: dict,
     *,
-    beta: float = 0.02,
-    gamma: float = 0.1,
+    beta: float = 0.005,
+    gamma: float = 0.02,
     delta: float = 0.0,
     stability_threshold: float = 1.5,
 ) -> tuple:
     """Per-rollout reward for WKV-loop trajectories.
 
     r = r_correct − β·M − γ·Σ_t ReLU(H_t − H_{t-1}) [+ δ·stability_bonus]
+
+    `beta`/`gamma` reduced from the original 0.02/0.1 on 2026-08-18 after a
+    real `HACKING` monitor stop at step 20 of a real G1i training run:
+    reward rose while accuracy fell over the trailing window. Two
+    contributing mechanisms, both addressed by shrinking these weights:
+    (1) genuine over-optimization of the effort/entropy terms at
+    correctness's expense is plausible with the old weights large enough
+    to matter; (2) a metric-divergence artifact — `TrainingMonitor`
+    computes its accuracy from raw `r_correct>0` (ignoring the penalty
+    terms), while `train_wkv_loop.py::main()`'s logged accuracy uses
+    `reward>0` (penalty-inclusive) — with `beta·M + gamma·entropy_penalty`
+    large enough to occasionally flip a correct answer's *reward* negative
+    without touching `r_correct`, the two accuracy figures can diverge
+    even with no real hacking behavior. Shrinking beta/gamma narrows that
+    gap either way without removing the shaping terms entirely (they still
+    encourage concise, stable reasoning, just no longer dominate over
+    correctness).
 
     Args:
         rollouts: list of WKVLoopRollout (one per sample in the GRPO group).
