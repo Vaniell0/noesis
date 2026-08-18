@@ -38,8 +38,25 @@ _PEFT_ROOT = _NOESIS_ROOT / "training/rwkv-peft"
 
 def _prime_env() -> None:
     """Env vars read at import time by RWKV-PEFT modules."""
+    # rwkvfla decorates some ops (e.g. rwkv7/chunk.py::cal_log_w) with
+    # @torch.compile(fullgraph=True). Turing (sm_75, e.g. T4) has no native
+    # bf16 compile support, so fullgraph compilation of those ops hard-fails
+    # ("BF16 is not supported") even though the op itself (here, -exp(w)) is
+    # trivial and gains nothing from compilation on this GPU. fullgraph=True
+    # raises a hard RuntimeError on failure by design — suppress_errors only
+    # catches ordinary graph breaks, not this — so dynamo needs to be fully
+    # disabled (torch.compile becomes a plain passthrough) rather than just
+    # told to tolerate errors.
+    os.environ.setdefault("TORCHDYNAMO_DISABLE", "1")
+    import torch._dynamo
+    torch._dynamo.config.disable = True
+
     os.environ.setdefault("RWKV_MY_TESTING", "x070")
-    os.environ.setdefault("RWKV_TRAIN_TYPE", "")
+    # forward_stateful/forward_stateful_embeds always call model.forward_infctx —
+    # every downstream module (block/att/ffn/rwkvop) branches off this exact env
+    # var to reach the infctx codepath; "" silently fell through to forward_normal
+    # (wrong arg count → crash) instead of forward_infctx.
+    os.environ.setdefault("RWKV_TRAIN_TYPE", "infctx")
     os.environ.setdefault("RWKV_JIT_ON", "0")
     os.environ.setdefault("FUSED_KERNEL", "0")
     os.environ.setdefault("RWKV_FLOAT_MODE", "bf16")
@@ -164,10 +181,11 @@ class LoadedModel:
                 "forward_stateful_embeds requires peft backend "
                 "(differentiable, GPU). CPU/blink is inference-only."
             )
-        return _peft_forward_embeds(
+        logits, shift, wkv = _peft_forward_embeds(
             self.model, self._peft_bsl, inputs_embeds,
             state.shift, state.wkv,
         )
+        return logits, _PeftState(shift, wkv)
 
     def wkv_stack(self, state) -> torch.Tensor:
         """Extract WKV state as tensor [n_layer, ...] for CLIPO/probe use.
@@ -243,6 +261,9 @@ def _load_peft(model_path: str, device: str, dtype: torch.dtype,
     args.peft = "none"
     args.train_type = "none"
     args.rwkv_version = "x070"
+    args.my_testing = "x070"  # read but unused by RWKV_Tmix_x070.__init__ — TrainingArgs
+                               # doesn't declare the field at all (train.py's argparse
+                               # namespace has it via a CLI default, this dataclass never did)
     args.dropout = 0.0
 
     model = RWKV7(args)

@@ -88,6 +88,29 @@ class CorpusScheduler:
         self._acc_window = 5    # batches to average before deciding to advance/drop
 
     # ------------------------------------------------------------------
+    # Checkpoint state — added 2026-08-18. `_save_checkpoint` in
+    # train_wkv_loop.py saved model weights but not curriculum progress;
+    # resuming would silently reset every category back to start_level=1
+    # and drop the accuracy history that drives advance/drop decisions —
+    # correct model weights, but re-earning curriculum progress from
+    # scratch on every resume. Matters given the interruptible-instance
+    # plan (frequent, unplanned resumes are the expected case, not rare).
+
+    def state_dict(self) -> dict:
+        return {
+            "cur_level": dict(self._cur_level),
+            "acc_history": {k: list(v) for k, v in self._acc_history.items()},
+            "rng_state": self._rng.getstate(),
+        }
+
+    def load_state_dict(self, state: dict) -> None:
+        self._cur_level.update(state["cur_level"])
+        self._acc_history = defaultdict(list, {
+            int(k): list(v) for k, v in state["acc_history"].items()
+        })
+        self._rng.setstate(state["rng_state"])
+
+    # ------------------------------------------------------------------
     # Public API
 
     @property

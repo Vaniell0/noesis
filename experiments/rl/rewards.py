@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
 """rewards.py — reward computation for GRPO / WKV-loop RL.
 
-Two APIs:
+  from experiments.rl.rewards import compute_wkv_loop_rewards
+  rewards, diag = compute_wkv_loop_rewards(rollouts, rubric)
 
-  WKV-loop (current, preferred):
-    from experiments.rl.rewards import compute_wkv_loop_rewards
-    rewards, diag = compute_wkv_loop_rewards(rollouts, rubric)
+  r = r_correct − β·M − γ·Σ_t ReLU(ΔH_t) [+ δ·stability_bonus]
 
-    r = r_correct − β·M − γ·Σ_t ReLU(ΔH_t) [+ δ·stability_bonus]
-
-  Legacy RolloutGroup (kept for compatibility while rollout.py exists):
-    from experiments.rl.rewards import compute_rewards
-    rewards = compute_rewards(group, clipo_head)
+Trimmed 2026-08-18 alongside `rollout.py`/`train_wordsearch.py`'s
+deletion: the legacy `compute_rewards(group: RolloutGroup, ...)` combiner
+and the `<think>`/`</think>`-span entropy reward (`_entropy_reward`,
+`_find_think_span`, `_THINK_*` constants) are gone — both were built
+around token spans that don't exist in the WKV-loop's M-step design
+(see `docs/rl-track.md` §Deferred). `_infonce_reward` was kept, paired
+with `clipo_head.py` — CLIPO is explicitly flagged there as a real
+"revisit later" item, not dead code, even though its current integration
+(this file's deleted `compute_rewards`) doesn't apply anymore.
 """
 from __future__ import annotations
 
 import math
 import re
-from typing import List, Optional
+from typing import List
 
 import torch
 import torch.nn.functional as F
 
-from experiments.rl.rollout import RolloutGroup
 from experiments.rl.wkv_loop import WKVLoopRollout
 
 
@@ -94,102 +96,6 @@ def _infonce_reward(
         rewards[i] = max(float(-loss), clamp_min)
 
     return rewards
-
-
-# ── r_entropy ─────────────────────────────────────────────────────────────────
-
-# WorldTokenizer sequences
-_THINK_OPEN_WORLD  = [61, 35762, 63]    # <think>
-_THINK_CLOSE_WORLD = [754, 35762, 63]   # </think>
-# Byte-mode UTF-8 sequences
-_THINK_OPEN_BYTES  = list("<think>".encode())   # [60,116,104,105,110,107,62]
-_THINK_CLOSE_BYTES = list("</think>".encode())  # [60,47,116,104,105,110,107,62]
-
-
-def _find_think_span(ids: List[int], open_seq: List[int], close_seq: List[int]):
-    """Return (think_start, think_end) indices or (None, None)."""
-    n, lo, lc = len(ids), len(open_seq), len(close_seq)
-    think_start = think_end = None
-    for i in range(n - lo + 1):
-        if ids[i:i + lo] == open_seq:
-            think_start = i + lo
-    for i in range(n - lc + 1):
-        if ids[i:i + lc] == close_seq:
-            think_end = i
-            break
-    return think_start, think_end
-
-
-def _entropy_reward(log_probs: List[float], output_ids: List[int],
-                    alpha: float = 0.1, byte_mode: bool = False) -> float:
-    """Entropy reduction inside think span.
-
-    Positive reward when entropy (= −log_prob) decreases from think entry
-    to think exit, i.e. model becomes more confident during state accumulation.
-    """
-    if not log_probs or not output_ids:
-        return 0.0
-
-    open_seq  = _THINK_OPEN_BYTES  if byte_mode else _THINK_OPEN_WORLD
-    close_seq = _THINK_CLOSE_BYTES if byte_mode else _THINK_CLOSE_WORLD
-    think_start, think_end = _find_think_span(output_ids, open_seq, close_seq)
-
-    if think_start is None or think_end is None or think_end <= think_start:
-        return 0.0
-
-    span = log_probs[think_start:think_end]
-    if len(span) < 2:
-        return 0.0
-
-    mid = len(span) // 2
-    h_entry = -sum(span[:mid]) / mid
-    h_exit  = -sum(span[mid:]) / (len(span) - mid)
-    return alpha * (h_entry - h_exit)
-
-
-# ── combined ──────────────────────────────────────────────────────────────────
-
-def compute_rewards(
-    group: RolloutGroup,
-    clipo_head: Optional[torch.nn.Module] = None,
-    clipo_weight: float = 1.0,
-    entropy_weight: float = 1.0,
-    tau: float = 0.05,
-    byte_mode: bool = False,
-) -> torch.Tensor:
-    """Compute total reward for each rollout in the group.
-
-    Returns shape [G] tensor.
-    """
-    G = len(group.rollouts)
-    r_correct = torch.zeros(G)
-    r_entropy = torch.zeros(G)
-
-    for i, r in enumerate(group.rollouts):
-        r_correct[i] = _score_correct(r.text, group.rubric)
-        r_entropy[i] = _entropy_reward(r.log_probs, r.output_ids, byte_mode=byte_mode)
-
-    correct_mask = r_correct > 0
-
-    # CLIPO contrastive reward
-    r_clipo = torch.zeros(G)
-    if clipo_head is not None:
-        states = []
-        valid = []
-        for i, r in enumerate(group.rollouts):
-            if r.wkv_state_think is not None:
-                flat = r.wkv_state_think.flatten().unsqueeze(0)
-                states.append(flat)
-                valid.append(i)
-        if len(states) >= 2:
-            with torch.no_grad():
-                proj = clipo_head(torch.cat(states, dim=0))  # [n_valid, D]
-            valid_mask = correct_mask[valid]
-            sub_rewards = _infonce_reward(proj, valid_mask, tau=tau)
-            for j, idx in enumerate(valid):
-                r_clipo[idx] = sub_rewards[j]
-
-    return r_correct + clipo_weight * r_clipo + entropy_weight * r_entropy
 
 
 # ── WKV-loop reward (no <think> tokens) ───────────────────────────────────────

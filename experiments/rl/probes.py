@@ -33,6 +33,7 @@ import torch
 from experiments.rl.loader import LoadedModel
 from experiments.rl.wkv_loop import WKVLoopRollout
 from experiments.A0_state_probe.metrics import stable_rank
+from experiments._common.layers import default_layers
 
 
 _DIAG_PROMPTS = {
@@ -47,10 +48,6 @@ _DIAG_PROMPTS = {
         "Every evening he climbed the spiral stairs and lit the great lamp.",
 }
 
-# Default layers to probe (matches rl-track.md §stable_rank tracking)
-_DEFAULT_LAYERS = [4, 16, 28]
-
-
 # ------------------------------------------------------------------
 # 1. stable_rank probe
 
@@ -60,10 +57,16 @@ def stable_rank_probe(
 ) -> Dict[str, Dict[int, float]]:
     """Compute mean stable-rank per requested layer for each diagnostic prompt.
 
+    `layers=None` (the common case) picks layers by fractional depth via
+    `experiments._common.layers.default_layers`, computed from the actual
+    loaded model's depth — not a hardcoded list. Previously hardcoded
+    `[4, 16, 28]`, which assumed >=29 layers (true for G1h/G1i's 32, false
+    for G1d's 24 — silently produced NaN for L28 on G1d, found 2026-08-18
+    via the first real M-baseline run).
+
     Returns:
         {prompt_name: {layer_idx: mean_SR_over_heads}}
     """
-    target_layers = layers or _DEFAULT_LAYERS
     results: Dict[str, Dict[int, float]] = {}
 
     for name, text in _DIAG_PROMPTS.items():
@@ -83,6 +86,7 @@ def stable_rank_probe(
 
         # Compute SR per layer for the requested layers
         sr_per_layer = stable_rank(wkv_layers)   # list[list[float]]: [layer][head]
+        target_layers = layers if layers is not None else default_layers(len(sr_per_layer))
 
         layer_mean: Dict[int, float] = {}
         for l in target_layers:
@@ -90,6 +94,11 @@ def stable_rank_probe(
                 heads = sr_per_layer[l]
                 layer_mean[l] = sum(heads) / len(heads) if heads else 0.0
             else:
+                # Only reachable when `layers` was explicitly passed with an
+                # out-of-range index (default_layers never picks one) —
+                # still flagged loudly rather than silently NaN-ing.
+                print(f"[probes] layer {l} out of range (model has {len(sr_per_layer)} "
+                      f"layers) — sr_{name}_L{l} will be NaN")
                 layer_mean[l] = float("nan")
 
         results[name] = layer_mean

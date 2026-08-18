@@ -46,6 +46,7 @@ from experiments.rl.monitor import TrainingMonitor
 from experiments.rl.vm_watchdog import VMWatchdog, WatchdogHook
 from experiments.rl.probes import run_inline_probes
 from experiments._common.results import save_result
+from experiments._common.heartbeat import write_heartbeat
 
 
 CORPUS_PATH = ROOT / "training/corpus_open/matrix_tasks.jsonl"
@@ -152,7 +153,7 @@ def wkv_grpo_loss(
             if rollout.answer_log_probs:
                 log_pi_old = torch.tensor(
                     rollout.answer_log_probs[:len(rollout.answer_ids)],
-                    dtype=torch.float32,
+                    dtype=torch.float32, device=log_pi_theta.device,
                 )
             else:
                 # answer_log_probs should always be populated by generate_rollout
@@ -186,19 +187,74 @@ def wkv_grpo_loss(
 # Checkpoint
 
 def _save_checkpoint(out_dir: Path, loaded: LoadedModel, step: int,
-                     mlp_delta: Optional[torch.nn.Module] = None) -> None:
+                     mlp_delta: Optional[torch.nn.Module] = None,
+                     sched=None) -> None:
     ckpt = {"step": step}
     if loaded.backend == "peft":
         # Save only trainable params (LoRA A/B or full diff)
         trainable = {n: p for n, p in loaded.model.named_parameters()
                      if p.requires_grad}
         ckpt["model"] = {n: p.detach().cpu() for n, p in trainable.items()}
+    else:
+        # blink (CPU) backend has no trainable params — --no-update smoke
+        # runs are the only thing that should ever hit this path. Flagged
+        # loudly rather than silently: a checkpoint with no "model" key
+        # looks identical to a real one until someone tries to resume from
+        # it and finds nothing to load.
+        print(f"[train] WARNING: checkpoint at step {step} has no model "
+              f"weights (backend={loaded.backend!r}, not 'peft') — only "
+              f"step count is saved, nothing to resume from")
     if mlp_delta is not None:
         ckpt["mlp_delta"] = {n: p.detach().cpu()
                              for n, p in mlp_delta.named_parameters()}
+    if sched is not None:
+        # Curriculum progress (per-category level + accuracy history) —
+        # without this, a resume restores model weights correctly but
+        # silently resets every category back to start_level=1, re-earning
+        # curriculum progress from scratch. Added 2026-08-18 alongside the
+        # model resume path, same reasoning: interruptible instance means
+        # resumes are the expected case, not a rare edge case.
+        ckpt["sched"] = sched.state_dict()
     path = out_dir / f"ckpt_step{step:06d}.pt"
     torch.save(ckpt, path)
     print(f"[train] checkpoint → {path}")
+
+
+def _load_checkpoint(path: Path, loaded: LoadedModel,
+                     mlp_delta: Optional[torch.nn.Module] = None,
+                     sched=None) -> int:
+    """Resume from a checkpoint written by `_save_checkpoint`. Returns the
+    saved step (caller should continue from `step + 1`).
+
+    Written 2026-08-18 — `_save_checkpoint` existed with no corresponding
+    load path at all; a checkpoint could be written but never read back.
+    Matters specifically because the planned GPU rental is a preemptible
+    (interruptible) instance, which the provider can reclaim mid-run —
+    without this, that would mean restarting training from scratch on
+    every preemption, not just resuming.
+    """
+    ckpt = torch.load(path, map_location=loaded.device)
+    if "model" not in ckpt:
+        raise ValueError(
+            f"{path} has no 'model' key — it was saved on a non-'peft' "
+            f"backend and has no weights to resume from (see the WARNING "
+            f"printed when it was saved)"
+        )
+    missing, unexpected = loaded.model.load_state_dict(ckpt["model"], strict=False)
+    # `strict=False` is required: only trainable params were saved, so the
+    # frozen backbone is expected to show up as "missing" here — that's
+    # correct, not an error. Genuinely unexpected keys would still be real.
+    if unexpected:
+        raise ValueError(f"{path}: unexpected keys in checkpoint not present "
+                          f"in model: {unexpected}")
+    if mlp_delta is not None and "mlp_delta" in ckpt:
+        mlp_delta.load_state_dict(ckpt["mlp_delta"], strict=True)
+    if sched is not None and "sched" in ckpt:
+        sched.load_state_dict(ckpt["sched"])
+    step = ckpt["step"]
+    print(f"[train] resumed from {path} at step {step} "
+          f"({len(ckpt['model'])} trainable tensors loaded)")
+    return step
 
 
 # ------------------------------------------------------------------
@@ -224,6 +280,19 @@ def main():
                     help="Rollout + reward only, no gradient update (CPU smoke)")
     ap.add_argument("--vm-lifetime", type=float, default=24.0,
                     help="Selectel VM lifetime in hours (default 24)")
+    ap.add_argument("--resume", type=Path, default=None,
+                    help="Path to a ckpt_step*.pt to resume from (peft backend only)")
+    ap.add_argument("--forge", action="store_true",
+                    help="Wrap the model's nn.Linear layers with FORGE "
+                         "(dk4248/FORGE, fused optimizer-into-backward) for "
+                         "lower full-FT VRAM. UNVERIFIED — this machine has no "
+                         "CUDA GPU to test against; written from FORGE's own "
+                         "rwkv7_example.py and API docs, not run. Default off "
+                         "so normal --device cuda usage is unaffected. See the "
+                         "gradient-clipping note below before trusting this on "
+                         "a real run — verify a few steps on real GPU first.")
+    ap.add_argument("--forge-state-mode", default="int8", choices=["int8", "bf16", "fp8"],
+                    help="FORGE optimizer moment precision (only with --forge)")
     args = ap.parse_args()
 
     out_dir = Path(args.out)
@@ -240,10 +309,29 @@ def main():
         from experiments.rl.sweep_alpha import _MLPDelta
         mlp_delta = _MLPDelta(D).to(args.device)
 
+    # FORGE — replaces loaded.model's nn.Linear layers with FusedLinear.
+    # The optimizer update for those layers happens *inside* backward(), so
+    # `forge_manager.get_non_fused_params()` (time_decay/time_first/LayerNorm/
+    # Embedding) is the only thing left for a regular optimizer to handle.
+    forge_manager = None
+    if args.forge:
+        if loaded.backend != "peft":
+            raise ValueError("--forge requires --device cuda (backend='peft') — "
+                              "FORGE's kernels are CUDA-only")
+        from fused_grad_optimizer.model_wrappers import wrap_rwkv7
+        loaded.model, forge_manager = wrap_rwkv7(
+            loaded.model, optimizer_type="adamw", state_mode=args.forge_state_mode,
+            weight_decay=0.01,
+        )
+        print(f"[train] FORGE enabled: state_mode={args.forge_state_mode}")
+
     # Optimiser (only for peft backend with grad)
     optimizer = None
     if not args.no_update and loaded.backend == "peft":
-        params = [p for p in loaded.model.parameters() if p.requires_grad]
+        if forge_manager is not None:
+            params = list(forge_manager.get_non_fused_params())
+        else:
+            params = [p for p in loaded.model.parameters() if p.requires_grad]
         if mlp_delta:
             params += list(mlp_delta.parameters())
         optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
@@ -257,18 +345,23 @@ def main():
     wd.print_status()
 
     def _checkpoint():
-        _save_checkpoint(out_dir, loaded, global_step, mlp_delta)
+        _save_checkpoint(out_dir, loaded, global_step, mlp_delta, sched)
 
     hook = WatchdogHook(wd, _checkpoint,
                         force_ckpt_hours=2.0, stop_hours=0.25,
                         check_interval_steps=50)
 
     global_step = 0
-    print(f"[train] feed_mode={args.feed_mode} alpha={args.alpha} "
-          f"G={args.G} M_max={args.M_max} device={args.device}")
+    if args.resume is not None:
+        global_step = _load_checkpoint(args.resume, loaded, mlp_delta, sched)
 
+    print(f"[train] feed_mode={args.feed_mode} alpha={args.alpha} "
+          f"G={args.G} M_max={args.M_max} device={args.device} "
+          f"resume_step={global_step}")
+
+    start_step = global_step  # 0, or the resumed checkpoint's step
     for step in range(args.steps):
-        global_step = step + 1
+        global_step = start_step + step + 1
 
         # Sample batch
         tasks = sched.sample_batch(args.batch)
@@ -311,6 +404,8 @@ def main():
         loss_val = float("nan")
         if not args.no_update and optimizer is not None:
             optimizer.zero_grad()
+            if forge_manager is not None:
+                forge_manager.pre_step(lr=args.lr)
             loss = wkv_grpo_loss(
                 loaded, batch_rollouts, batch_rewards,
                 feed_mode=args.feed_mode,
@@ -319,9 +414,20 @@ def main():
             )
             loss.backward()
             if loaded.backend == "peft":
-                torch.nn.utils.clip_grad_norm_(
-                    [p for p in loaded.model.parameters() if p.requires_grad], 1.0
-                )
+                if forge_manager is not None:
+                    # FusedLinear layers apply their AdamW update *inside*
+                    # backward() — by the time backward() returns there is no
+                    # gradient left to clip for those parameters, only for
+                    # the non-fused ones. Clipping only non-fused params here
+                    # is a real simplification, not a verified equivalent of
+                    # the pre-FORGE full-model clip — flagged, not resolved;
+                    # check whether this matters for training stability once
+                    # this actually runs on GPU, don't assume it's fine.
+                    torch.nn.utils.clip_grad_norm_(forge_manager.get_non_fused_params(), 1.0)
+                else:
+                    torch.nn.utils.clip_grad_norm_(
+                        [p for p in loaded.model.parameters() if p.requires_grad], 1.0
+                    )
             optimizer.step()
             loss_val = float(loss.item())
 
@@ -341,6 +447,14 @@ def main():
         }
         with open(log_path, "a") as f:
             f.write(json.dumps(log_entry) + "\n")
+        write_heartbeat(
+            out_dir / "status.json",
+            progress=(global_step, start_step + args.steps),
+            step=global_step, total_planned=start_step + args.steps,
+            loss=loss_val, accuracy=accuracy, current_level=cur_level,
+            mean_M=log_entry["mean_M"], flags=flags,
+            message=f"step {global_step}: loss={loss_val:.4f} acc={accuracy:.2%} level={cur_level}",
+        )
 
         if global_step % 10 == 0 or flags:
             print(f"  step {global_step:5d}: loss={loss_val:.4f} acc={accuracy:.2%} "
