@@ -394,6 +394,14 @@ def main():
     wd.print_status()
 
     def _checkpoint():
+        # --no-update means no gradient step ever ran — weights are still
+        # exactly what was loaded, nothing new to persist. Was writing a
+        # full checkpoint anyway on every run (smoke tests included) —
+        # for a 2.9B model that's a ~4.9GB no-op write every time, found
+        # 2026-08-18 when a --no-update M-baseline run's checkpoint
+        # accidentally got pulled over rsync.
+        if args.no_update:
+            return
         _save_checkpoint(out_dir, loaded, global_step, mlp_delta, sched)
 
     hook = WatchdogHook(wd, _checkpoint,
