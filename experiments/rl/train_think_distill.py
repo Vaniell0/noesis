@@ -51,6 +51,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import shutil
 import signal
 import sys
 import time
@@ -58,6 +59,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -68,6 +70,37 @@ from experiments.rl.loader import load_rwkv7
 from experiments.rl.checkpoint import save_checkpoint, load_checkpoint
 from experiments.rl.wkv_loop import _last_vec
 from training.state_reg import DEFAULT_WORK_LAYERS, default_layer_weights
+
+
+class ThinkMarker(nn.Module):
+    """A single trainable embedding-space vector marking "entering the
+    self-feed phase," fed via loader.py's forward_stateful_embeds (the
+    same continuous-embedding path RL's feed_mode=expected/residual
+    already uses, verified end-to-end 2026-08-18 — see docs/rl-track.md).
+
+    Added 2026-08-19 after five straight distillation runs (RFC corpus,
+    G1i-native/M=1, M=2 chunked, fixed-8-token-budget full-FT, same
+    budget under LoRA) all eventually hit the same failure signature —
+    state_loss pinned exactly at the per-layer clamp ceiling, later with
+    each fix but never prevented. Since LoRA (which cannot drift the
+    frozen base at all) still failed, the cause isn't full-FT weight
+    drift. Working hypothesis instead: the self-fed span has no
+    structural input-side signal distinguishing "this is my own
+    continued thought" from anything else a token stream could be — the
+    old N mechanism (re-feed the same prompt) never had this ambiguity,
+    it re-reads known content; M's self-generated content has nothing
+    marking what it IS. This vector is fed once, right before the
+    self-feed loop starts, so the model has an explicit, dedicated
+    signal instead of relying on the state-distillation target alone to
+    teach the distinction implicitly. Real vocabulary tokens were
+    avoided deliberately: RWKV's tokenizer is fixed (65536 pretrained
+    ids), and reusing existing text tokens (e.g. literal `<think>` as
+    step9 did) risks colliding with genuine occurrences of that text in
+    a real prompt — a dedicated embedding has no such collision.
+    """
+    def __init__(self, n_embd: int):
+        super().__init__()
+        self.embed = nn.Parameter(torch.randn(n_embd) * 0.02)
 
 
 # --------------------------------------------------------------------------- #
@@ -117,6 +150,7 @@ def distill_step(
     state_loss_clamp: float = 100.0,
     M: int = 1,
     max_phase_tokens: int = 4,
+    think_marker: Optional["ThinkMarker"] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, int]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
     n_answer_tokens) — caller combines/weights/backwards.
@@ -150,6 +184,9 @@ def distill_step(
     with torch.no_grad():
         state_t = loaded.new_state(batch=1)
         _, state_t = loaded.forward_stateful(prompt, state_t)
+        if think_marker is not None:
+            marker = think_marker.embed.detach().to(dtype=loaded.embedding_weight.dtype).view(1, 1, -1)
+            _, state_t = loaded.forward_stateful_embeds(marker, state_t)
         pos = 0
         for i in range(M_eff):
             end = min(n, max(bounds[i + 1], pos + 1))  # each chunk gets >=1 token, never past n
@@ -173,6 +210,9 @@ def distill_step(
     # sampling/reward here.
     state_s = loaded.new_state(batch=1)
     logits, state_s = loaded.forward_stateful(prompt, state_s)
+    if think_marker is not None:
+        marker = think_marker.embed.to(dtype=loaded.embedding_weight.dtype).view(1, 1, -1)
+        logits, state_s = loaded.forward_stateful_embeds(marker, state_s)
     state_loss = torch.zeros((), device=device, dtype=torch.float32)
     for i in range(M_eff):
         for _ in range(max_phase_tokens):
@@ -259,19 +299,52 @@ def main() -> int:
                           "reduce pressure, not fight for a tight budget too.")
     ap.add_argument("--resume", type=Path, default=None)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--lora-r", type=int, default=0,
+                     help="LoRA rank. 0 (default) = full-FT, all params "
+                          "trainable. >0 = LoRA on receptance/key/value/output "
+                          "(same target_modules as pilot_step9.yaml), base "
+                          "weights frozen — added 2026-08-19 after repeated "
+                          "full-FT divergence (all 3 tracked layers blowing "
+                          "the state-loss clamp simultaneously by ~step 150-300 "
+                          "regardless of M/phase-budget tuning — see "
+                          "project_noesis_think_distill_experiments memory). "
+                          "LoRA can't drift the base model at all, only its "
+                          "own tiny adapter — tests whether full-FT itself "
+                          "was the destabilizing factor.")
+    ap.add_argument("--lora-alpha", type=int, default=0,
+                     help="LoRA alpha. 0 (default) = 2*lora_r.")
+    ap.add_argument("--keep-last-n", type=int, default=3,
+                     help="Delete all but the last N checkpoint directories "
+                          "on every save — unattended runs must not be able "
+                          "to fill the disk regardless of --ckpt-every/--steps.")
+    ap.add_argument("--think-marker", action="store_true",
+                     help="Feed a dedicated trainable embedding (not a "
+                          "vocabulary token) before the self-feed phase "
+                          "starts — an explicit input-side signal for "
+                          "'this is my own continued thought,' instead of "
+                          "relying on the state-distillation target alone "
+                          "to teach that distinction implicitly. See "
+                          "ThinkMarker docstring.")
     args = ap.parse_args()
 
     layers = tuple(int(x) for x in args.work_layers.split(","))
     layer_weights = default_layer_weights(layers)
 
     loaded = load_rwkv7(args.model, device=args.device, backend="peft",
-                         grad_cp=1 if args.grad_cp else 0)
+                         grad_cp=1 if args.grad_cp else 0,
+                         lora_r=args.lora_r, lora_alpha=args.lora_alpha)
     examples = load_examples(Path(args.data))
     print(f"[distill] {len(examples)} usable examples from {args.data}")
     rng = random.Random(args.seed)
 
+    think_marker = ThinkMarker(loaded.n_embd).to(args.device) if args.think_marker else None
+    if think_marker is not None:
+        print(f"[distill] think-marker enabled ({loaded.n_embd}-dim trainable embedding)")
+
     int8_optimizer = None
     params = [p for p in loaded.model.parameters() if p.requires_grad]
+    if think_marker is not None:
+        params += list(think_marker.parameters())
     if args.forge:
         from experiments.rl.loader import Int8AdamW
         int8_optimizer = Int8AdamW(params, lr=args.lr, weight_decay=0.01,
@@ -285,7 +358,7 @@ def main() -> int:
 
     global_step = 0
     if args.resume is not None:
-        global_step = load_checkpoint(args.resume, loaded)
+        global_step = load_checkpoint(args.resume, loaded, mlp_delta=think_marker)
         if log_path.exists():
             kept = [l for l in log_path.read_text().splitlines()
                     if l.strip() and json.loads(l)["step"] <= global_step]
@@ -294,7 +367,21 @@ def main() -> int:
     stop = {"flag": False}
 
     def _checkpoint():
-        save_checkpoint(args.out, loaded, global_step)
+        save_checkpoint(args.out, loaded, global_step, mlp_delta=think_marker)
+        # Retention: save_checkpoint (checkpoint.py) never deletes old
+        # directories on its own — every call is a brand-new ckpt_step*/
+        # dir. Fine for a short interactive run someone is watching, not
+        # for unattended overnight operation: an earlier full-FT run's
+        # unbounded accumulation (many 5.5GB checkpoints across several
+        # runs) filled the VM disk and corrupted an in-progress
+        # checkpoint write (see project_noesis_forge_bptt memory).
+        # LoRA+marker checkpoints are far smaller (~180MB), but "small
+        # enough this time" isn't a fix — keep only the last N so this
+        # class of failure can't recur regardless of run length.
+        ckpts = sorted(args.out.glob("ckpt_step*"),
+                        key=lambda p: p.stat().st_mtime)
+        for old in ckpts[:-args.keep_last_n]:
+            shutil.rmtree(old, ignore_errors=True)
 
     def _sigterm_handler(signum, frame):
         print(f"[distill] SIGTERM received — checkpointing at step {global_step} before exit")
@@ -326,7 +413,8 @@ def main() -> int:
             ce, state_loss, n_tok = distill_step(loaded, ex, layers, layer_weights,
                                                   state_loss_clamp=args.state_loss_clamp,
                                                   M=args.M,
-                                                  max_phase_tokens=args.max_phase_tokens)
+                                                  max_phase_tokens=args.max_phase_tokens,
+                                                  think_marker=think_marker)
             total = (ce + args.l_state_weight * state_loss) / args.batch
             total.backward()
             ce_sum += float(ce.item())

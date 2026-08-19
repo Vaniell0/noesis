@@ -386,7 +386,8 @@ class _BlinkState:
 # --------------------------------------------------------------------- #
 
 def _load_peft(model_path: str, device: str, dtype: torch.dtype,
-               ctx_len: int, grad_cp: int) -> LoadedModel:
+               ctx_len: int, grad_cp: int, lora_r: int = 0,
+               lora_alpha: int = 0) -> LoadedModel:
     if str(_PEFT_ROOT) not in sys.path:
         sys.path.insert(0, str(_PEFT_ROOT))
     _prime_env()
@@ -428,6 +429,32 @@ def _load_peft(model_path: str, device: str, dtype: torch.dtype,
         print(f"[loader/peft] missing keys (zero-init): {len(missing)}")
 
     model = model.to(dtype=dtype, device=device)
+
+    if lora_r > 0:
+        # Real LoRA path, added 2026-08-19 — training/rwkv-peft's own
+        # peft_loading.py already has this wired (get_peft_model +
+        # LoraConfig), but that path goes through the Lightning
+        # TrainingArgs/JSON-config machinery this loader doesn't use.
+        # Same target_modules as the proven pilot_step9.yaml recipe
+        # (rank 32, alpha 64 there) — reused, not re-guessed.
+        # get_peft_model mutates `model`'s submodules in place (LoRA
+        # Linear wrappers replace the plain nn.Linear ones inside the
+        # SAME object) and freezes everything else — `model` (not the
+        # returned PeftModel wrapper) still has forward_infctx and now
+        # only its LoRA A/B matrices are trainable.
+        from peft import get_peft_model, LoraConfig, TaskType
+        lora_config = LoraConfig(
+            task_type=TaskType.CAUSAL_LM,
+            r=lora_r,
+            lora_alpha=lora_alpha or lora_r * 2,
+            lora_dropout=0.0,
+            target_modules=["receptance", "key", "value", "output"],
+        )
+        get_peft_model(model, lora_config)
+        n_trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        n_total = sum(p.numel() for p in model.parameters())
+        print(f"[loader/peft] LoRA r={lora_r} alpha={lora_alpha or lora_r * 2}: "
+              f"{n_trainable:,}/{n_total:,} trainable ({100*n_trainable/n_total:.2f}%)")
 
     n_head = n_embd // args.head_size_a
     tokenizer = _load_world_tokenizer()
@@ -566,6 +593,8 @@ def load_rwkv7(
     ctx_len: int = 16384,
     grad_cp: int = 0,
     backend: Optional[str] = None,
+    lora_r: int = 0,
+    lora_alpha: int = 0,
 ) -> LoadedModel:
     """Build a LoadedModel from a .pth checkpoint.
 
@@ -576,11 +605,14 @@ def load_rwkv7(
         ctx_len: context length (peft only, ignored by blink)
         grad_cp: gradient checkpointing (peft only). Keep 0 for CPU.
         backend: "peft" | "blink" | None. None = auto: peft on cuda, blink on cpu.
+        lora_r: LoRA rank (peft only). 0 (default) = full-FT, no LoRA —
+            all params trainable, prior behavior unchanged.
+        lora_alpha: LoRA alpha. 0 (default) = 2*lora_r (common convention).
     """
     if backend is None:
         backend = "peft" if device == "cuda" else "blink"
     if backend == "peft":
-        return _load_peft(model_path, device, dtype, ctx_len, grad_cp)
+        return _load_peft(model_path, device, dtype, ctx_len, grad_cp, lora_r, lora_alpha)
     if backend == "blink":
         return _load_blink(model_path, device)
     raise ValueError(f"backend must be 'peft' | 'blink' | None, got {backend!r}")
