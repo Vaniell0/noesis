@@ -53,6 +53,20 @@ now that `readout_mode` itself is retired, kept here only because `eval.py`
 (the A0.2 harness, unrelated to `wkv_loop.py`) still has the flag and old
 results referencing it exist in HYPOTHESES.md §H10.
 
+**Post-RL M-sweep: blocked behind a prerequisite, not just "not run yet"
+(2026-08-19).** The "real divergence from flat after RL training" signal
+this section calls for can't be collected — RL itself is currently
+paused. A content decoder found the M-loop's internal step was never
+real task content on any checkpoint tested, RL-trained or not, and
+`mean_M` was frozen at a constant across an entire run with zero
+variance — i.e. there was nothing for M to correlate against, on either
+side of the flat-vs-divergent question this section poses. Think-loop
+state distillation (`experiments/rl/train_think_distill.py`) is the
+prerequisite now being worked — see `docs/rl-track.md`'s "RL status"
+section for the real experimental history. The 12.5%/33.3% numbers
+above remain the valid pre-RL baseline; nothing here is retroactively
+wrong, the *next* data point just isn't a post-RL M-sweep yet.
+
 **Current baselines (2026-08-14/17), for reference, not M data:**
 - G1i chatwrap: 41.7% (20/48) — best single-pass baseline
 - G1i base, `state_readout` (eval.py, post-fix, 2026-08-17): 33.3% (16/48) — see HYPOTHESES.md §H10

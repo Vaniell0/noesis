@@ -649,6 +649,107 @@ knowledge contamination — different question, about corpus-leaked facts,
 not calibration). Neither is a clean match. Candidate for its own
 hypothesis once there's a stable checkpoint worth probing this on.
 
+## RL status: PAUSED — think-loop state distillation prerequisite (2026-08-19)
+
+**RL training is paused, by explicit decision, not by crash or budget.**
+The M-loop content decoder (a one-off diagnostic, not kept in the repo)
+showed that even a directly-verified-clean G1i RL checkpoint's internal
+M-step was never real task content — just chat-template scaffolding
+(`"\n\nAnswer"`, `"\n\nAssistant"`), and this degraded *further* toward
+contest-boilerplate under only 17 steps of further M_max=1-constrained
+training. `mean_M` was also found frozen at exactly 2.0 across every
+step of one full run — no variance to correlate "amount of internal
+work" against quality at all. Conclusion: RL has nothing to select for
+inside the M-loop when the loop has no content to begin with — tighter
+M_max or reward tuning treats a symptom, not the cause. "RL запускать
+рано, модель не готова" — RL resumes once the loop reliably carries
+genuine, task-relevant content, not on a fixed calendar date.
+
+**Prerequisite: `experiments/rl/train_think_distill.py`** — not RL (no
+GRPO, no reward, no sampling). Teacher pass reads real explicit
+`<think>` text and its resulting WKV state (layers L12/L16/L20, weights
+from `training/state_reg.py`'s A0.5 profile) becomes the target; student
+pass reads only the prompt, then self-feeds (argmax → feed back,
+repeated) to approach that target, before being scored on the real
+answer via CE. β/γ/δ/ζ all stay at their existing off defaults
+throughout this phase.
+
+**"Latent overshooting" (M phases, arXiv 2007.14535's J^k_KL).** The
+teacher's think span is sliced into `M` chunks; student phase `i` is
+scored against teacher-state-after-chunk-`i`, not one distant endpoint.
+Each phase self-feeds a *fixed* `--max-phase-tokens` (default 8,
+deliberately generous, not squeezed — compression/efficiency is already
+RL's job via β·M and the entropy-plateau exit; this phase's job is
+correctness and stability, not budget). `M=1` collapses to a single
+phase.
+
+**Real experimental history, in order, all on
+`training/corpus_open/matrix_tasks.jsonl`-derived data (65k tasks, 7
+balanced categories) — not guessed, each run's actual failure inspected
+before the next attempt:**
+
+1. **Teacher text from `step9_combined_train.pt` (existing step9 SFT
+   corpus) — mode collapse.** Mechanically stable (a state-loss runaway,
+   25→4493 over ~10 steps, was fixed with a per-layer clamp at 100,
+   `training/state_reg.py`-style — same convention as its existing
+   `layer_loss.clamp(min=-10.0)`), but the trained self-fed token
+   converged to `"Binary: ..."` on *every* prompt tested, including
+   wordsearch/arithmetic/XOR with zero relation to binary content.
+   Root cause confirmed directly: 235/269 (87%) of that corpus mentions
+   "Binary" — the model took the cheapest average-loss shortcut across
+   an 87%-skewed target distribution, not a genuine per-task response.
+2. **step9b-e1 as a balanced-corpus generator — abandoned by design,
+   not by failure.** Planned to regenerate a balanced self-CoT corpus
+   via step9b-e1 (a G1h-lineage checkpoint confirmed capable of genuine
+   `<think>` reasoning) over `matrix_tasks.jsonl`. Overridden: WKV state
+   differs materially model-to-model, so borrowing another checkpoint's
+   generated text imports a real distortion into the distillation, not
+   just a style difference. Separately, the real pre-RL DE table (§H24
+   below) showed step9b-e1 has the *worst* DE (0.15, 270 tok/correct)
+   of anything measured — G1i's own raw chatwrap output is already more
+   concise (DE 0.27, 154 tok/correct) — so borrowing step9b-e1's text
+   would also import a specifically bad-DE habit, not a neutral one.
+3. **G1i as its own generator, SFT-style `<think>` prompting —
+   confirmed non-functional.** G1i was never SFT'd on explicit
+   `<think>` spans (only the step9/step9b, G1h lineage, was); prompted
+   the same way, it produced **zero** `<think>...</think>` output in a
+   tiny test (5/5 "no `<think>` found," not garbage-but-present —
+   structurally absent, since it never saw the convention in training).
+4. **Procedural G1i-native warm-up corpus, M=1, one self-fed token per
+   example — diverged at step ~287/585.** Built 585 short (1-sentence,
+   2-3 varied phrasings per category, not one universal template)
+   `<think>` examples directly from each task's own ground-truth answer
+   — zero foreign-model text. `state_loss` ran clean to ~step 280 (even
+   *dropping* early on), then pinned at the 100.0 clamp ceiling for
+   13+ consecutive steps while `answer_ce` climbed in lockstep
+   (2.5→3.5→8.7→11.8) — real degradation, not noise. Working diagnosis:
+   short think content means the teacher's post-think state is
+   dominated by the *prompt's* structural diversity (7 very different
+   task shapes: letter grid vs. crossword vs. arithmetic table) rather
+   than smoothed by long homogeneous think text (as in run 1) — high-
+   variance targets against a 1-token student channel.
+5. **M=2 chunked overshooting, still 1 self-fed token per phase —
+   diverged later (~step 321) but still diverged.** Confirmed the
+   divergence isn't purely about target distance (M=2's chunked
+   checkpoints are closer than M=1's single endpoint) — it's also a
+   token-budget mismatch: each teacher chunk represents several real
+   tokens' worth of state update; one self-fed token is a much smaller
+   update, asking the student to close the same distance in far fewer
+   steps.
+6. **Fixed 8-token phase budget, M=1 — in progress at time of writing,
+   healthier than any prior attempt through the same step range** (step
+   ~100: state_loss 29-74, no clamp-pinning; contrast run 4's
+   predecessor runs, which were already showing early instability
+   signs by comparable steps). Not yet past the ~280-330 step range
+   where every prior attempt broke — not claimed stable until it is.
+
+Full narrative, including the "why 1 token per step is too little"
+reasoning and the DE-table correction (an earlier claim that G1i's own
+output was *more* verbose than step9b-e1's got the real numbers
+backwards until checked), in memory `project_noesis_think_distill_experiments`.
+
+---
+
 ## Known risks — unverified, found by code review 2026-08-17
 
 None of these are known bugs; they're places the design leans on an
