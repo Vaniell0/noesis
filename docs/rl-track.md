@@ -10,11 +10,22 @@ structured as ASCII grids with verifiable answers. The design goals:
 - **Gradient diversity.** Nine task types (wordsearch, bits, arithmetic,
   pattern, crossword, sudoku, ARC…) activate orthogonal WKV channels.
   A single task type causes gradient collapse to one learned pattern.
-- **Self-reflection training.** In the WKV-loop design the model runs M
-  internal steps without emitting tokens; the entropy trajectory over those
-  steps acts as the exit criterion (`plateau`/`commit`/`M_max`, see §RL
-  design). No `<think>`-span tokens or `r_entropy`-on-text-span reward exist
-  in the current design — that framing is gone, not just renamed.
+- **Internal iteration (M-loop) — mechanism exists, "self-reflection" as a
+  capability is not yet demonstrated.** The model runs M internal steps
+  without emitting tokens; the entropy trajectory over those steps acts as
+  the exit criterion (`plateau`/`commit`/`M_max`, see §RL design). No
+  `<think>`-span tokens or `r_entropy`-on-text-span reward exist in the
+  current design — that framing is gone, not just renamed. What's verified:
+  the mechanism runs and the exit criteria fire as designed. What's *not*
+  verified, and as of 2026-08-19 actively in question: whether training
+  shapes this into anything resembling reflection rather than just an
+  internal loop that sometimes helps and sometimes doesn't — real
+  pathologies found the same day (unconditional reward-shaping collapsing
+  the loop to 100% M_max-saturation between step20 and step50; a rubric
+  scoring bug letting the model get "correct" credit for echoing its input
+  verbatim) show concrete ways this can go wrong before it goes right. A
+  clean, bug-fixed baseline was only just established (see §Mechanisms and
+  their relationships) — not yet run long enough to claim more than that.
 - **Bidirectional and diagonal attention.** Wordsearch L3–L7 forces
   right-to-left, bottom-to-top, and diagonal reading — breaking the
   left-to-right pretraining bias. WKV state must encode directional context.
@@ -533,23 +544,34 @@ G1i base checkpoint — models/rwkv7-g1i-2.9b-20260805-ctx16384.pth (2026-08-05)
     │     args.peft="none" hardcoded → full FT only, no LoRA toggle) or
     │     blink (CPU, inference-only, used for smoke tests)
     │
-    ├── Per batch (batch=4 prompts, G=8 rollouts each, T=0.7):
+    ├── Per batch (design default batch=4; real 16GB-T4 runs use batch=2,
+    │   │     G=8 rollouts each, T=0.7 — see §Known risks #9 for why):
     │   ├── wkv_loop.py::generate_rollout — M-step loop per rollout,
     │   │     exits on plateau/commit/M_max (see §RL design)
     │   ├── rewards.py::compute_wkv_loop_rewards —
-    │   │     r = r_correct − β·M − γ·Σ ReLU(ΔH_t)
+    │   │     r = r_correct − β·M − γ·Σ ReLU(ΔH_t) [+ δ·stability, off]
+    │   │         [+ ζ·info-density, grafted 2026-08-19, off by default]
+    │   │     gate_on_correct (default on): β/γ/δ/ζ only apply when
+    │   │     r_correct > 0 — see §Mechanisms and their relationships
     │   ├── grpo.py::compute_advantages — group-relative advantage from
     │   │     the 8 rollouts per prompt (this file predates the WKV-loop
     │   │     rewrite, reused unchanged — GRPO's advantage math didn't
     │   │     need to change when the reward did)
     │   └── train_wkv_loop.py::wkv_grpo_loss — PPO-clip surrogate
-    │         (clip_eps=0.2) + KL penalty (kl_coef=0.01); replays
-    │         prefill+loop+answer per rollout to get gradients
+    │         (clip_eps=0.2) + KL penalty (kl_coef=0.01)
+    │         [+ L_state motion/curvature term, grafted 2026-08-19, off
+    │           by default — see §Mechanisms and their relationships];
+    │         replays prefill+loop+answer per rollout to get gradients
     │         (_recompute_wkv_log_probs — see §Known risks, this is the
     │         "32 forward passes per update" cost point)
     │
-    ├── monitor.py::TrainingMonitor — sliding-window (10 batches) health
-    │     flags: SHORTCUT, HACKING, STATE_COL, MODE_COL
+    ├── monitor.py::TrainingMonitor — per-batch health flags: SHORTCUT,
+    │     NO_COMMIT, ECHO (both added 2026-08-19), HACKING (sliding
+    │     10-batch window), STATE_COL, MODE_COL
+    │
+    ├── checkpoint.py::save_checkpoint/load_checkpoint — directory-based,
+    │     one file per trainable tensor (extracted from train_wkv_loop.py
+    │     2026-08-19; see §Known risks #9 for the OOM-kill this replaced)
     │
     ├── corpus.py::CorpusScheduler — curriculum advance/drop (see §RL design)
     │
@@ -567,6 +589,65 @@ R-lens-after-checkpoint-1 check the old diagram described is still a good
 idea; it just isn't automated here yet.
 
 ---
+
+## Mechanisms and their relationships
+
+Living section, started 2026-08-19 — fill in as mechanisms are added or
+their interactions get understood, not a one-time writeup.
+
+**Reward-shaping terms** (`rewards.py::compute_wkv_loop_rewards`) —
+β (effort/M penalty), γ (entropy-rise penalty), δ (stability bonus,
+default 0), ζ (info-density reward, default 0, grafted 2026-08-19). All
+four gated by `gate_on_correct` (default on): shaping only ranks *among*
+already-correct rollouts, never lets a wrong-but-"efficient" rollout
+outscore a wrong-but-verbose one. Found necessary the hard way — an
+*unconditional* shaping term dominates GRPO's within-group gradient
+whenever a whole group scores identically on raw correctness (near-zero
+accuracy, common early in training), because that's the only source of
+reward variance left for the group. This is the actual mechanism behind
+`g1i_real_run6`'s collapse (100% commit-at-M=2 at step20 → 100%
+M_max-saturated boilerplate by step50) — see `docs/rl-track.md`'s own
+history and `project_noesis_forge_bptt` memory for the full bisection.
+
+**δ vs. L_state — opposite directions, don't stack blindly.** δ rewards
+LOW WKV state motion (`mean_stability < threshold` → bonus). L_state
+(`train_wkv_loop.py::_recompute_wkv_log_probs`'s
+`l_state_delta_weight`/`l_state_kappa_weight`, grafted 2026-08-19, both
+default 0) rewards HIGH motion and curvature (inverted-SFA, revived from
+the old A1-pilot SFT stack's loss design). Turning both on together
+without resolving which direction is wanted would fight itself.
+
+**ζ inherits the same correctness-trust dependency as β/γ/δ.** It's
+gated by `gate_on_correct` the same way, which means it's only as honest
+as `r_correct` is. The 2026-08-19 rubric echo-exploit (a model echoing
+its input verbatim got scored correct=True whenever the target digit
+happened to appear in the copy — 45/153, ~29%, of correct=True rollouts
+in one run) would have let ζ reward "efficiency" on rollouts that never
+actually solved anything, same as β/γ/δ would have. Partially mitigated
+by the rubric fix (`_score_correct` now anchors to the first number
+token, not "anywhere in the text") and the new `ECHO` monitor flag
+(structural, rubric-independent — catches the behavior even for rubric
+families the anchor fix doesn't cover, e.g. word-lookahead rubrics where
+a genuinely correct answer can legitimately overlap the prompt).
+
+**gate_on_correct ↔ NO_COMMIT.** Gating shaping is the fix that (so far,
+pending the run8 step150-200 verification gate) prevents the M_max-
+saturation collapse `NO_COMMIT` was added to catch. Not proven causally
+independent of other same-day changes yet — both landed close together.
+
+**Open question, not yet tested — gate_on_correct as a "know vs. don't
+know" signal.** Because shaping only activates on already-correct
+rollouts, the gradient a rollout receives differs qualitatively depending
+on whether the model got the task right: correct rollouts get a
+secondary, effort-shaped signal; wrong rollouts get pure ±1 with no
+further discrimination. Whether this actually trains the model to
+distinguish "I know this" from "I don't know this" in any usable,
+measurable sense is a real prediction, not a confirmed finding — closest
+existing hypotheses are H21 (premise-validity readout — different axis,
+detects malformed *questions*, not answer confidence) and H19 (weight-
+knowledge contamination — different question, about corpus-leaked facts,
+not calibration). Neither is a clean match. Candidate for its own
+hypothesis once there's a stable checkpoint worth probing this on.
 
 ## Known risks — unverified, found by code review 2026-08-17
 

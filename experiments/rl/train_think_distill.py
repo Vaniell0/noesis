@@ -1,0 +1,356 @@
+#!/usr/bin/env python3
+"""train_think_distill.py — state-distillation stabilization pass for the M-loop.
+
+Not RL (no GRPO, no reward, no sampling). Plain supervised training: for
+each step9-corpus example, a *teacher* pass sees the real explicit
+`<think>...</think>` text and reaches a real WKV state; a *student* pass
+sees only the prompt, then takes ONE self-feed step (M=1, mirroring the
+M-loop's own mechanism in wkv_loop.py::generate_rollout) and is pulled
+toward the teacher's state before decoding the real answer.
+
+Why this exists (2026-08-19): the M-loop content decoder
+(_diag_think_content.py, deleted after use) showed that even a "clean"
+G1i checkpoint's M-loop was only ever producing chat-template scaffolding
+("\n\nAnswer") — never real task content — and this degraded further
+toward contest-boilerplate under RL. There is no ground truth for what an
+invisible M-loop token *should* be, so RL alone has nothing to select
+for beyond "whatever the reward shapes" — that's the actual cause,
+not a symptom to patch with tighter M_max. This script gives the loop
+a real target: the state a genuine explicit-think pass reaches for the
+same prompt. RL (β/γ/ζ) stays off until this stabilizes — see
+docs/rl-track.md and project_noesis_info_density_reward memory.
+
+Loss:  L = -log_prob(answer | student_state_after_M1)
+           + l_state_weight * state_distillation_loss
+
+state_distillation_loss = weighted L2 between student's post-M1 WKV state
+and the teacher's post-think WKV state (teacher detached — gradient only
+flows through the student path). Layer selection and weights are the
+already-validated A0.5 set from training/state_reg.py (L12/L16/L20,
+KL-profile-derived) — not re-guessed here.
+
+M is fixed at 1 for this phase (not commit/plateau-adaptive) — a single
+self-feed step is small enough that the model can plausibly learn to
+treat it as "keep thinking," not "the user asked a new question,"
+which is the failure mode a larger M risks at this untrained stage.
+
+Data: training/tokenised/step9_combined_train.pt — already-built step9
+SFT corpus (real <think> spans, real answers), reused as-is. Each
+rollout carries `state_mask` (1 = inside <think>) and `loss_mask`
+(1 = inside the assistant turn, think+answer together) — this script
+splits on those exactly as combine_step9_corpus.py wrote them, no new
+data generation.
+
+Text-format drift (the model settling on *some* internal token pattern
+during M's self-feed step, whatever it turns out to be) is an accepted
+side effect of this training, not a supervised target — only the WKV
+state is supervised, never the specific token chosen at the M-loop step.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import random
+import signal
+import sys
+import time
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+import torch
+import torch.nn.functional as F
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from experiments.rl.loader import load_rwkv7
+from experiments.rl.checkpoint import save_checkpoint, load_checkpoint
+from experiments.rl.wkv_loop import _last_vec
+from training.state_reg import DEFAULT_WORK_LAYERS, default_layer_weights
+
+
+# --------------------------------------------------------------------------- #
+# Data
+# --------------------------------------------------------------------------- #
+
+def load_examples(path: Path) -> List[Dict[str, List[int]]]:
+    """Split a step9-style combined_train.pt into per-example
+    prompt/think/answer token-id lists, using its own state_mask/loss_mask
+    to find the boundaries (no re-derivation from text).
+    """
+    blob = torch.load(path, map_location="cpu", weights_only=False)
+    ids, sm, lm = blob["ids"], blob["state_mask"], blob["loss_mask"]
+    starts = blob["starts"].tolist()
+
+    examples = []
+    for i in range(len(starts) - 1):
+        s, e = starts[i], starts[i + 1]
+        seq, smask, lmask = ids[s:e], sm[s:e], lm[s:e]
+        think_idx = (smask == 1).nonzero(as_tuple=True)[0]
+        loss_idx = (lmask == 1).nonzero(as_tuple=True)[0]
+        if think_idx.numel() == 0 or loss_idx.numel() == 0:
+            continue  # no think span or no supervised tokens — not usable here
+        prompt_end = int(think_idx[0].item())
+        think_end = int(think_idx[-1].item())
+        after_think = loss_idx[loss_idx > think_end]
+        if after_think.numel() == 0:
+            continue  # think fills the whole loss span — no answer to teacher-force
+        answer_start = int(after_think[0].item())
+        examples.append({
+            "prompt_ids": seq[:prompt_end].tolist(),
+            "think_ids": seq[prompt_end:think_end + 1].tolist(),
+            "answer_ids": seq[answer_start:].tolist(),
+        })
+    return examples
+
+
+# --------------------------------------------------------------------------- #
+# Per-example step
+# --------------------------------------------------------------------------- #
+
+def distill_step(
+    loaded,
+    ex: Dict[str, List[int]],
+    layers: Tuple[int, ...],
+    layer_weights: Dict[int, float],
+    state_loss_clamp: float = 100.0,
+    M: int = 1,
+    max_phase_tokens: int = 4,
+) -> Tuple[torch.Tensor, torch.Tensor, int]:
+    """One teacher+student forward pair. Returns (answer_ce, state_loss,
+    n_answer_tokens) — caller combines/weights/backwards.
+
+    M>1 (added 2026-08-19, "latent overshooting", see Dreaming arXiv
+    2007.14535's J^k_KL): the teacher's think span is sliced into M
+    chunks; the student's self-feed step m is pulled toward the
+    teacher's state after chunk m, not the single far-away endpoint.
+    First cut used ONE self-fed token per chunk regardless of chunk
+    size — still diverged (state_loss clamp-pinned by step ~321 vs
+    ~287 for the M=1/single-endpoint version — delayed, not fixed).
+    Root cause: 1 token is a much smaller state-update than the several
+    real tokens each teacher chunk represents — the student was asked
+    to close the same distance in far fewer updates. Fixed by matching
+    budgets: student now self-feeds the SAME token count as the
+    corresponding teacher chunk before each comparison, not a fixed 1.
+    See project_noesis_think_distill_experiments memory. M=1 with a
+    1-token think span reduces to the exact original behavior.
+    """
+    device = loaded.device
+    prompt = torch.tensor([ex["prompt_ids"]], dtype=torch.long, device=device)
+    think_ids = ex["think_ids"]
+    n = len(think_ids)
+    M_eff = max(1, min(M, n)) if n > 0 else 1
+
+    # Teacher: real explicit think text, teacher-forced, incrementally —
+    # capture the state after each of M_eff roughly-equal chunks. No
+    # grad — these are fixed targets, not a trainable path.
+    bounds = [round(i * n / M_eff) for i in range(M_eff + 1)]
+    teacher_states = []
+    with torch.no_grad():
+        state_t = loaded.new_state(batch=1)
+        _, state_t = loaded.forward_stateful(prompt, state_t)
+        pos = 0
+        for i in range(M_eff):
+            end = min(n, max(bounds[i + 1], pos + 1))  # each chunk gets >=1 token, never past n
+            chunk = think_ids[pos:end]
+            pos = end
+            chunk_t = torch.tensor([chunk], dtype=torch.long, device=device)
+            _, state_t = loaded.forward_stateful(chunk_t, state_t)
+            teacher_states.append(state_t.wkv)
+
+    # Student: prompt, then M_eff self-feed PHASES — each phase feeds
+    # back a FIXED max_phase_tokens self-generated tokens (argmax →
+    # feed back, repeated), deterministic, not tied to the teacher
+    # chunk's own (variable, per-example) length. Deliberately generous
+    # (default 8) rather than squeezed — compression/efficiency is RL's
+    # job (β·M penalty + entropy-plateau exit already exist for that);
+    # this stabilization phase should "unfold the chain" and reduce
+    # pressure, not fight for a tight budget on top of everything else.
+    # The teacher target is still the real chunk-end state; the student
+    # approaches it within this budget, not necessarily reaches it
+    # exactly. Same generate_rollout mechanism (argmax → feed back), no
+    # sampling/reward here.
+    state_s = loaded.new_state(batch=1)
+    logits, state_s = loaded.forward_stateful(prompt, state_s)
+    state_loss = torch.zeros((), device=device, dtype=torch.float32)
+    for i in range(M_eff):
+        for _ in range(max_phase_tokens):
+            v = _last_vec(logits)
+            next_id = int(v.argmax().item())
+            step_inp = torch.tensor([[next_id]], dtype=torch.long, device=device)
+            logits, state_s = loaded.forward_stateful(step_inp, state_s)
+        student_wkv = state_s.wkv
+        teacher_wkv = teacher_states[i]
+        for L in layers:
+            d = student_wkv[L].float() - teacher_wkv[L].float().detach()
+            # Clamp, same convention as training/state_reg.py's per-layer
+            # cap (there: -10.0, "≈2× typical pretrained baseline").
+            # Found 2026-08-19: an unclamped run's state_loss ran away
+            # (25 → 4493 over ~10 steps, answer_ce rising in lockstep) —
+            # a few outlier examples with naturally large gaps produced
+            # gradient strong enough to push weights toward states that
+            # diverge *further* next step. Cap set empirically from the
+            # pre-blowup stable range (weighted-sum ~25-40).
+            dist = torch.linalg.vector_norm(d.flatten()).clamp(max=state_loss_clamp)
+            state_loss = state_loss + layer_weights[L] * dist
+    state_loss = state_loss / M_eff  # keep scale comparable across M
+
+    answer_ids = ex["answer_ids"]
+    logits_last = logits
+    if len(answer_ids) == 1:
+        all_logits = logits_last
+    else:
+        answer_t = torch.tensor([answer_ids], dtype=torch.long, device=device)
+        logits_rest, _ = loaded.forward_stateful(answer_t[:, :-1], state_s)
+        all_logits = torch.cat([logits_last, logits_rest], dim=1)
+
+    log_probs = F.log_softmax(all_logits.float(), dim=-1)
+    target = torch.tensor(answer_ids, dtype=torch.long, device=device)
+    token_lp = log_probs[0, torch.arange(len(answer_ids), device=device), target]
+    answer_ce = -token_lp.mean()
+
+    return answer_ce, state_loss, len(answer_ids)
+
+
+# --------------------------------------------------------------------------- #
+# Main
+# --------------------------------------------------------------------------- #
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--model", required=True)
+    ap.add_argument("--out", required=True, type=Path)
+    ap.add_argument("--data", default=str(_REPO_ROOT / "training/tokenised/step9_combined_train.pt"))
+    ap.add_argument("--l-state-weight", type=float, default=0.01,
+                     help="Weight on the state-distillation term (λ_state). "
+                          "Not swept yet — start small, watch state_loss trend "
+                          "before raising (same lesson as l_state_delta_weight "
+                          "in train_wkv_loop.py: 0.01 turned out too large there "
+                          "for the unconditional-motion version; this is a "
+                          "distillation target instead, may tolerate more, but "
+                          "don't assume it without checking).")
+    ap.add_argument("--work-layers", default=",".join(str(x) for x in DEFAULT_WORK_LAYERS))
+    ap.add_argument("--batch", type=int, default=4, help="Examples per optimizer step (grad accum)")
+    ap.add_argument("--lr", type=float, default=1e-5)
+    ap.add_argument("--steps", type=int, default=500)
+    ap.add_argument("--ckpt-every", type=int, default=50)
+    ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--grad-cp", action="store_true",
+                     help="Gradient checkpointing (peft backend only) — needed for "
+                          "full-FT G1i on a 16GB T4, same lesson as train_wkv_loop.py "
+                          "(full-FT hit the ceiling even at G=2/batch=2/M_max=4 there).")
+    ap.add_argument("--forge", action="store_true")
+    ap.add_argument("--forge-offload-state", action="store_true")
+    ap.add_argument("--state-loss-clamp", type=float, default=100.0,
+                     help="Per-layer cap on the distillation distance before "
+                          "weighting — see distill_step docstring comment "
+                          "(found 2026-08-19: unbounded state_loss ran away, "
+                          "25→4493 over ~10 steps, dragging answer_ce up with it).")
+    ap.add_argument("--M", type=int, default=1,
+                     help="Number of self-feed steps, each scored against its "
+                          "own slice of the teacher's think trajectory (latent "
+                          "overshooting) instead of one far endpoint. M=1 is "
+                          "the original single-step behavior.")
+    ap.add_argument("--max-phase-tokens", type=int, default=8,
+                     help="Fixed self-fed token count per M phase, deliberately "
+                          "generous rather than squeezed — compression is RL's "
+                          "job (β·M + entropy-plateau exit), this phase should "
+                          "reduce pressure, not fight for a tight budget too.")
+    ap.add_argument("--resume", type=Path, default=None)
+    ap.add_argument("--seed", type=int, default=42)
+    args = ap.parse_args()
+
+    layers = tuple(int(x) for x in args.work_layers.split(","))
+    layer_weights = default_layer_weights(layers)
+
+    loaded = load_rwkv7(args.model, device=args.device, backend="peft",
+                         grad_cp=1 if args.grad_cp else 0)
+    examples = load_examples(Path(args.data))
+    print(f"[distill] {len(examples)} usable examples from {args.data}")
+    rng = random.Random(args.seed)
+
+    int8_optimizer = None
+    params = [p for p in loaded.model.parameters() if p.requires_grad]
+    if args.forge:
+        from experiments.rl.loader import Int8AdamW
+        int8_optimizer = Int8AdamW(params, lr=args.lr, weight_decay=0.01,
+                                    offload_state=args.forge_offload_state)
+        params = int8_optimizer.other_params
+        print("[distill] FORGE enabled (int8-optimizer-only path)")
+    optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
+
+    args.out.mkdir(parents=True, exist_ok=True)
+    log_path = args.out / "distill_log.jsonl"
+
+    global_step = 0
+    if args.resume is not None:
+        global_step = load_checkpoint(args.resume, loaded)
+        if log_path.exists():
+            kept = [l for l in log_path.read_text().splitlines()
+                    if l.strip() and json.loads(l)["step"] <= global_step]
+            log_path.write_text("\n".join(kept) + ("\n" if kept else ""))
+
+    stop = {"flag": False}
+
+    def _checkpoint():
+        save_checkpoint(args.out, loaded, global_step)
+
+    def _sigterm_handler(signum, frame):
+        print(f"[distill] SIGTERM received — checkpointing at step {global_step} before exit")
+        _checkpoint()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, _sigterm_handler)
+
+    print(f"[distill] work_layers={layers} l_state_weight={args.l_state_weight} "
+          f"batch={args.batch} device={args.device} resume_step={global_step}")
+
+    order = list(range(len(examples)))
+    idx = 0
+    step = global_step
+    while step < args.steps:
+        step += 1
+        global_step = step
+        optimizer.zero_grad()
+        if args.forge and int8_optimizer is not None:
+            int8_optimizer.zero_grad()
+
+        ce_sum, state_sum, n_tok_sum = 0.0, 0.0, 0
+        for _ in range(args.batch):
+            if idx >= len(order):
+                rng.shuffle(order)
+                idx = 0
+            ex = examples[order[idx]]
+            idx += 1
+            ce, state_loss, n_tok = distill_step(loaded, ex, layers, layer_weights,
+                                                  state_loss_clamp=args.state_loss_clamp,
+                                                  M=args.M,
+                                                  max_phase_tokens=args.max_phase_tokens)
+            total = (ce + args.l_state_weight * state_loss) / args.batch
+            total.backward()
+            ce_sum += float(ce.item())
+            state_sum += float(state_loss.item())
+            n_tok_sum += n_tok
+
+        if args.forge and int8_optimizer is not None:
+            int8_optimizer.step()
+        optimizer.step()
+
+        mean_ce = ce_sum / args.batch
+        mean_state = state_sum / args.batch
+        print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
+              f"n_answer_tok={n_tok_sum}")
+        with open(log_path, "a") as f:
+            f.write(json.dumps({"step": step, "answer_ce": mean_ce,
+                                 "state_loss": mean_state}) + "\n")
+
+        if step % args.ckpt_every == 0:
+            _checkpoint()
+
+    _checkpoint()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

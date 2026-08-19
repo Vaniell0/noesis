@@ -232,6 +232,22 @@ def generate_rollout(
     # rewards.py's regex rubric matching against `.text` directly,
     # silently zeroing reward for correct-but-terse answers.
     text_ids = answer_ids[:-1] if answer_ids and answer_ids[-1] == eos_id else answer_ids
+    # Found 2026-08-19 (answers_log.jsonl, once it started capturing real
+    # text): the model sometimes spends its small max_answer_tokens
+    # budget on chat-template preamble ("istant: <think>Okay, I need to
+    # find...") instead of the answer — pretrained IT-corpus habit
+    # leaking through, unrelated to the M-loop itself (which stays
+    # latent/untokenized by design). Truncating `.text` at the leak
+    # marker is the safe fix (same pattern as the eos_id strip above):
+    # doesn't change what gets sampled or what answer_ids/log_probs
+    # record for GRPO — just stops the leaked chat text from polluting
+    # what gets scored/logged/diversity-checked. Does NOT recover an
+    # answer the model never actually generated; a generation-time
+    # token mask would, but that's a bigger, riskier change deliberately
+    # not made here without discussing it first.
+    raw_text = tok.decode(text_ids)
+    think_idx = raw_text.find("<think")
+    text = raw_text[:think_idx] if think_idx != -1 else raw_text
     return WKVLoopRollout(
         prompt_ids=prompt_ids,
         prompt_text=prompt,
@@ -241,7 +257,7 @@ def generate_rollout(
         entropy_trajectory=entropy_traj,
         wkv_stability=stability_traj,
         exit_reason=exit_reason,
-        text=tok.decode(text_ids),
+        text=text,
     )
 
 

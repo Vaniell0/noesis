@@ -603,6 +603,73 @@ near-BPTT translation quality).
 
 **Status:** IPC DONE. Next: MLP probe after RL checkpoint 1.
 
+### Latent imagination / recurrent-loop distillation (found 2026-08-19)
+
+Prompted by a real finding: the M-loop content decoder
+(`_diag_think_content.py`, one-off, deleted after use) showed that even
+a "clean" G1i checkpoint's invisible M-loop tokens were only ever
+chat-template scaffolding (`"\n\nAnswer"`), never real task content —
+and this degraded further into contest-boilerplate under RL. Root
+cause: there is no ground truth for what an M-loop token *should* be,
+so RL alone has nothing to select for beyond whatever the reward
+shapes. Searched for prior art on training a self-referential recurrent
+loop to have *content*, not just a budget.
+
+- **"Dreaming: Model-based RL by Latent Imagination without
+  Reconstruction"** (arXiv 2007.14535) — direct precedent for a
+  teacher/student split on a stateful recurrence. Trains a *prior*
+  (self-generated latent rollout, no observation — the "dream") to
+  match a *posterior* (latent state derived from a real observation)
+  via `KL[posterior‖prior]` (their Eq. 2, `𝒥ᴷᴸ`), no reconstruction
+  loss. Structurally identical framing to what we now do for the
+  M-loop: teacher = real explicit `<think>` pass (sees real
+  "observation" — the actual reasoning text), student = M-loop's
+  self-feed step (sees only the prompt, must reach a matching state).
+  **Divergence:** their latent is stochastic (Gaussian), so KL applies
+  directly; RWKV's WKV state is deterministic, so we use weighted L2
+  between states instead (same simplification `L_state` already made
+  vs. SFA — not a new pattern for this codebase, see
+  `training/state_reg.py`).
+
+- **"Looped World Models"** (arXiv 2606.18208, Lu/Wei/Zhang et al.,
+  2026) — directly relevant to the open question in §3.1 below and to
+  the N=3 attractor-collapse note in the BLT/T-FREE section above.
+  Stabilizes a looped/recurrent forward pass **by construction**, not
+  by a live detector: parameterizes the state-transition matrix as
+  `Ā = exp(Δ·diag(−exp(a)))`, which guarantees spectral radius < 1
+  for any loop length — "no gradient clipping, post-hoc normalisation,
+  or sensitive hyperparameter tuning required" (their wording). RWKV-7
+  already has a per-head learned decay in (0,1), architecturally
+  similar in spirit — evidently not sufficient on its own to prevent
+  the attractor-collapse fleeb83 reported past N=3 on his G1h LoRA.
+  Open question, not yet investigated: is our decay's effective
+  contractivity being weakened by LoRA/full-FT training itself (i.e.
+  the constraint holds at init but training can walk it toward the
+  boundary), which this paper's exp-parameterization would prevent
+  by construction? Worth a real check before assuming RWKV-7's decay
+  is "enough."
+
+- **Recursive Latent Reinforcement Pretraining (RLRP)** (OpenReview,
+  ID `DMQlGhvEUB`) — per-token latent refinement head on a base LLM,
+  iteratively updating a latent state. Abstract explicitly names our
+  exact symptom: "naive recurrence can be unstable, overfit to
+  reasoning-heavy data at the expense of general fluency, and provides
+  weak incentives for later refinement steps to reliably improve upon
+  early predictions." Could not get past OpenReview's access wall to
+  extract their specific fix — flagged for a follow-up read, not
+  verified further.
+
+**Implementation:** `experiments/rl/train_think_distill.py` (new,
+2026-08-19) — teacher/student L2 state-distillation using the existing
+step9 SFT corpus (`training/tokenised/step9_combined_train.pt`, real
+`<think>` spans already present, no new data generated), M fixed at 1
+(not commit/plateau-adaptive — a larger M risked being read by the
+model as a new user turn rather than "keep thinking," at this
+untrained stage), layers/weights reused as-is from
+`training/state_reg.py`'s A0.5-derived set (L12/L16/L20). RL (β/γ/ζ)
+stays off until this stabilizes — see `docs/rl-track.md`. Status:
+smoke-tested on GPU, not yet a real run.
+
 ### Multimodal RWKV
 
 - **VisualRWKV** line (BlinkDL + academic follow-ups) demonstrates

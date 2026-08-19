@@ -7,6 +7,7 @@ Stack:
     rewards.py       — compute_wkv_loop_rewards
     grpo.py          — compute_advantages + PPO-clip surrogate
     corpus.py        — CorpusScheduler (curriculum advance/drop)
+    checkpoint.py    — save_checkpoint/load_checkpoint (directory format)
     monitor.py       — TrainingMonitor (emergency stops)
     vm_watchdog.py   — WatchdogHook (24h Selectel VM deadline)
     probes.py        — run_inline_probes (stable_rank + effort frontier)
@@ -28,9 +29,10 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import signal
 import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -47,6 +49,7 @@ from experiments.rl.grpo import compute_advantages
 from experiments.rl.monitor import TrainingMonitor
 from experiments.rl.vm_watchdog import VMWatchdog, WatchdogHook
 from experiments.rl.probes import run_inline_probes
+from experiments.rl.checkpoint import save_checkpoint, load_checkpoint
 from experiments._common.results import save_result
 from experiments._common.heartbeat import write_heartbeat
 
@@ -63,7 +66,10 @@ def _recompute_wkv_log_probs(
     feed_mode: str,
     mlp_delta: Optional[torch.nn.Module],
     alpha: float,
-) -> torch.Tensor:
+    l_state_delta_weight: float = 0.0,
+    l_state_kappa_weight: float = 0.0,
+    l_state_answer_eps: float = 0.05,
+) -> Tuple[torch.Tensor, torch.Tensor]:
     """Recompute log π_θ(answer | prompt + WKV-loop) with gradients.
 
     Strategy: replay prefill + WKV loop (deterministic), then compute
@@ -96,8 +102,50 @@ def _recompute_wkv_log_probs(
     actual proximate OOM trigger once the fixed cost was already fixed)
     worth cutting now. Re-added the same day once the fixed-cost fix
     made the transient cost the binding constraint.
+
+    `l_state_delta_weight`/`l_state_kappa_weight` (added 2026-08-19,
+    default 0.0 — grafted, not activated): revives
+    `reference_noesis_loss_design`'s L_state mechanism from the old
+    A1-pilot SFT stack (inverted-SFA — *reward* WKV state motion and
+    curvature instead of penalizing it) for the current RL stack, as a
+    direct differentiable auxiliary loss (not GRPO reward-shaping, unlike
+    beta/gamma/delta/zeta — L_state doesn't need to know the eventual
+    answer, so it belongs on the loss side, added straight into
+    `surrogate` before `.backward()` in `wkv_grpo_loss`).
+
+    Real trap found and avoided: `loader.py::wkv_stack()` calls
+    `.detach()` on the peft path — using it here would silently produce
+    a term that computes a real number but contributes ZERO gradient
+    (backward through a detached tensor does nothing upstream). This
+    reads `state.wkv` directly instead (peft backend only, same
+    differentiable path `_step()`'s checkpointed calls already use for
+    the log-probs this function returns) to keep the gradient live.
+
+    Formula (mean over layers, not the old per-layer w_L profile — that
+    was fit on the SFT-era A1 pilot model, not verified for G1i/this RL
+    setup, so using it here would be false precision):
+        loss -= delta_weight · ‖s(t)−s(t−1)‖ + kappa_weight · ‖s(t)−2s(t−1)+s(t−2)‖
+    averaged over the M-loop + answer-decode timesteps. Only computed
+    when either weight is > 0 (peft backend only) — zero when both are
+    0.0, so this must not change behavior or add overhead for any
+    current run. Gradient-flow through the checkpointed `state.wkv` path
+    has NOT yet been verified on real GPU — do that before trusting this
+    for anything beyond "present but off." See
+    `project_noesis_info_density_reward` memory (renamed to cover both
+    queued M-loop ideas) for the full design discussion.
+
+    **Same tension flagged in that memory, restated as code, not just
+    prose**: the existing (also-0-by-default) `delta` stability bonus in
+    `rewards.py::compute_wkv_loop_rewards` rewards LOW motion; this
+    rewards HIGH motion. Turning both on together without resolving the
+    direction conflict would fight itself — pick one, don't stack them
+    blindly.
     """
     use_checkpoint = loaded.backend == "peft"
+    track_l_state = (
+        loaded.backend == "peft"
+        and (l_state_delta_weight > 0.0 or l_state_kappa_weight > 0.0)
+    )
 
     def _step(fwd_fn, inp, state):
         if use_checkpoint:
@@ -105,6 +153,45 @@ def _recompute_wkv_log_probs(
                 fwd_fn, inp, state, use_reentrant=False
             )
         return fwd_fn(inp, state)
+
+    # Reads state.wkv directly, NOT loader.py::wkv_stack() — wkv_stack
+    # calls .detach() on the peft path, which would silently zero the
+    # gradient through this whole term (see docstring above).
+    l_state_terms: List[torch.Tensor] = []
+    prev_wkv: Optional[torch.Tensor] = None
+    prev_prev_wkv: Optional[torch.Tensor] = None
+
+    def _track_l_state(state, phase_weight: float = 1.0) -> None:
+        nonlocal prev_wkv, prev_prev_wkv
+        if not track_l_state:
+            return
+        # Full [n_layer, ...] tensor, NOT reduced yet — diff first, norm
+        # after, so opposite-signed changes in different layers/entries
+        # don't cancel out the way they would if reduced (e.g. .mean())
+        # before differencing. Per-layer w_L weighting from the old A1
+        # pilot isn't used (unverified for this model), so this is a
+        # single norm over the whole stacked state, not a per-layer sum.
+        #
+        # `phase_weight` — the old A1-pilot SFT stack's ε-mask
+        # (`reference_noesis_loss_design` memory: α_eff = α·(think_frac·
+        # (1−ε_out) + ε_out), ε_out=0.05) applied L_state at ~full weight
+        # inside <think> spans and ~5% outside, via a state_mask tensor —
+        # proven in step9 (best A1-pilot checkpoint) to stop the model
+        # learning to produce WKV-useless tokens outside think spans.
+        # The current M-loop design has no visible <think> spans to mask
+        # (that framing is retired), but the *same* phase distinction
+        # exists structurally in the code: M-loop steps vs. answer-decode
+        # are already separate loops, no mask tensor needed — just weight
+        # the term differently depending on which loop called this.
+        wkv = state.wkv
+        if prev_wkv is not None:
+            delta_term = (wkv - prev_wkv).norm()
+            term = -l_state_delta_weight * delta_term
+            if prev_prev_wkv is not None:
+                kappa_term = (wkv - 2 * prev_wkv + prev_prev_wkv).norm()
+                term = term - l_state_kappa_weight * kappa_term
+            l_state_terms.append(phase_weight * term)
+        prev_prev_wkv, prev_wkv = prev_wkv, wkv
 
     state = loaded.new_state(batch=1)
 
@@ -115,6 +202,7 @@ def _recompute_wkv_log_probs(
     else:
         inp = rollout.prompt_ids
     logits, state = _step(loaded.forward_stateful, inp, state)
+    _track_l_state(state)
 
     # WKV loop replay (deterministic, same choices as rollout)
     emb_w = loaded.embedding_weight if feed_mode != "discrete" else None
@@ -136,6 +224,7 @@ def _recompute_wkv_log_probs(
             logits, state = _step(
                 loaded.forward_stateful_embeds, expected.unsqueeze(1), state
             )
+        _track_l_state(state)
 
     # Answer tokens: compute log-probs with grad
     log_probs: List[torch.Tensor] = []
@@ -149,10 +238,16 @@ def _recompute_wkv_log_probs(
         else:
             step_inp = [tok_id]
         logits, state = _step(loaded.forward_stateful, step_inp, state)
+        _track_l_state(state, phase_weight=l_state_answer_eps)
+
+    l_state_loss = (
+        torch.stack(l_state_terms).mean() if l_state_terms
+        else torch.tensor(0.0, device=loaded.device)
+    )
 
     if not log_probs:
-        return torch.tensor(0.0, requires_grad=True)
-    return torch.stack(log_probs)  # [T_answer], has grad
+        return torch.tensor(0.0, requires_grad=True), l_state_loss
+    return torch.stack(log_probs), l_state_loss  # [T_answer], has grad
 
 
 # ------------------------------------------------------------------
@@ -169,6 +264,9 @@ def wkv_grpo_loss(
     kl_coef: float = 0.01,
     forge_manager=None,
     lr: Optional[float] = None,
+    l_state_delta_weight: float = 0.0,
+    l_state_kappa_weight: float = 0.0,
+    l_state_answer_eps: float = 0.05,
 ) -> float:
     """PPO-clip GRPO loss over batch. Calls `.backward()` once per (prompt,
     rollout) pair internally and returns a plain float (the mean loss, for
@@ -227,8 +325,11 @@ def wkv_grpo_loss(
             forge_manager.pre_step(lr=lr, is_accumulating=(i < n_micro - 1))
 
         try:
-            log_pi_theta = _recompute_wkv_log_probs(
-                loaded, rollout, feed_mode, mlp_delta, alpha
+            log_pi_theta, l_state_loss = _recompute_wkv_log_probs(
+                loaded, rollout, feed_mode, mlp_delta, alpha,
+                l_state_delta_weight=l_state_delta_weight,
+                l_state_kappa_weight=l_state_kappa_weight,
+                l_state_answer_eps=l_state_answer_eps,
             )  # [T_ans], grad
 
             # Old log-probs (stored at rollout time)
@@ -258,6 +359,13 @@ def wkv_grpo_loss(
             # KL penalty
             kl = (ratio - 1 - (log_pi_theta - log_pi_old)).mean()
             surrogate = surrogate + kl_coef * kl
+
+            # L_state (see _recompute_wkv_log_probs docstring) — direct
+            # differentiable auxiliary loss, not GRPO reward-shaping.
+            # l_state_loss is exactly 0.0 (a constant, no grad path
+            # built for it) when both weights are 0, so this is a true
+            # no-op addition in the default/current-run case.
+            surrogate = surrogate + l_state_loss
 
             # Weight to match the original total_loss/n_tokens_total mean —
             # each rollout contributes proportionally to its own answer length.
@@ -299,109 +407,6 @@ def wkv_grpo_loss(
 
 
 # ------------------------------------------------------------------
-# Checkpoint
-
-def _save_checkpoint(out_dir: Path, loaded: LoadedModel, step: int,
-                     mlp_delta: Optional[torch.nn.Module] = None,
-                     sched=None) -> None:
-    """Saves to a `ckpt_step{step:06d}/` directory, one file per trainable
-    parameter, instead of one `.pt` with a single in-memory dict of all
-    CPU-copied tensors.
-
-    The old single-dict-comprehension version (`{n: p.detach().cpu() for
-    n, p in trainable.items()}`) built a full second CPU-resident copy of
-    every trainable parameter (~5.9GB for G1i 2.9B) before `torch.save`
-    even started writing — on top of `Int8AdamW(offload_state=True)`'s
-    already-resident ~5.8GB of CPU-side optimizer state, this pushed
-    system RAM (15GB, no swap) over the edge. Confirmed 2026-08-18 via
-    `dmesg`: kernel oom-killer SIGKILLed the training process
-    (anon-rss=14.9GB) at exactly this point, silently — no Python
-    traceback, no checkpoint file, process just vanished. Writing one
-    parameter at a time bounds peak checkpoint-save memory to the single
-    largest parameter (tens–hundreds of MB), not the whole model.
-    """
-    ckpt_dir = out_dir / f"ckpt_step{step:06d}"
-    ckpt_dir.mkdir(parents=True, exist_ok=True)
-    model_dir = ckpt_dir / "model"
-    n_saved = 0
-    if loaded.backend == "peft":
-        # Save only trainable params (LoRA A/B or full diff)
-        model_dir.mkdir(exist_ok=True)
-        for n, p in loaded.model.named_parameters():
-            if not p.requires_grad:
-                continue
-            torch.save(p.detach().cpu(), model_dir / f"{n}.pt")
-            n_saved += 1
-    else:
-        # blink (CPU) backend has no trainable params — --no-update smoke
-        # runs are the only thing that should ever hit this path. Flagged
-        # loudly rather than silently: a checkpoint with no model/ dir
-        # looks identical to a real one until someone tries to resume from
-        # it and finds nothing to load.
-        print(f"[train] WARNING: checkpoint at step {step} has no model "
-              f"weights (backend={loaded.backend!r}, not 'peft') — only "
-              f"step count is saved, nothing to resume from")
-    meta = {"step": step, "param_names": None}
-    if loaded.backend == "peft":
-        meta["param_names"] = [n for n, p in loaded.model.named_parameters()
-                               if p.requires_grad]
-    if mlp_delta is not None:
-        meta["mlp_delta"] = {n: p.detach().cpu()
-                             for n, p in mlp_delta.named_parameters()}
-    if sched is not None:
-        # Curriculum progress (per-category level + accuracy history) —
-        # without this, a resume restores model weights correctly but
-        # silently resets every category back to start_level=1, re-earning
-        # curriculum progress from scratch. Added 2026-08-18 alongside the
-        # model resume path, same reasoning: interruptible instance means
-        # resumes are the expected case, not a rare edge case.
-        meta["sched"] = sched.state_dict()
-    torch.save(meta, ckpt_dir / "meta.pt")
-    print(f"[train] checkpoint → {ckpt_dir} ({n_saved} tensors)")
-
-
-def _load_checkpoint(path: Path, loaded: LoadedModel,
-                     mlp_delta: Optional[torch.nn.Module] = None,
-                     sched=None) -> int:
-    """Resume from a checkpoint directory written by `_save_checkpoint`.
-    Returns the saved step (caller should continue from `step + 1`).
-
-    Written 2026-08-18 — `_save_checkpoint` existed with no corresponding
-    load path at all; a checkpoint could be written but never read back.
-    Matters specifically because the planned GPU rental is a preemptible
-    (interruptible) instance, which the provider can reclaim mid-run —
-    without this, that would mean restarting training from scratch on
-    every preemption, not just resuming.
-    """
-    meta = torch.load(path / "meta.pt", map_location=loaded.device)
-    if meta["param_names"] is None:
-        raise ValueError(
-            f"{path} has no saved model weights — it was saved on a "
-            f"non-'peft' backend and has nothing to resume from (see the "
-            f"WARNING printed when it was saved)"
-        )
-    state_dict = {
-        n: torch.load(path / "model" / f"{n}.pt", map_location=loaded.device)
-        for n in meta["param_names"]
-    }
-    missing, unexpected = loaded.model.load_state_dict(state_dict, strict=False)
-    # `strict=False` is required: only trainable params were saved, so the
-    # frozen backbone is expected to show up as "missing" here — that's
-    # correct, not an error. Genuinely unexpected keys would still be real.
-    if unexpected:
-        raise ValueError(f"{path}: unexpected keys in checkpoint not present "
-                          f"in model: {unexpected}")
-    if mlp_delta is not None and "mlp_delta" in meta:
-        mlp_delta.load_state_dict(meta["mlp_delta"], strict=True)
-    if sched is not None and "sched" in meta:
-        sched.load_state_dict(meta["sched"])
-    step = meta["step"]
-    print(f"[train] resumed from {path} at step {step} "
-          f"({len(state_dict)} trainable tensors loaded)")
-    return step
-
-
-# ------------------------------------------------------------------
 # Main
 
 def main():
@@ -415,6 +420,46 @@ def main():
     ap.add_argument("--batch", type=int, default=4, help="Prompts per update")
     ap.add_argument("--M-max", type=int, default=16)
     ap.add_argument("--max-answer", type=int, default=32)
+    ap.add_argument("--beta", type=float, default=0.005,
+                    help="Reward penalty weight on M (thinking-step count). "
+                         "0.0 disables — pure correctness reward.")
+    ap.add_argument("--gamma", type=float, default=0.02,
+                    help="Reward penalty weight on entropy-increase (ReLU(dH)). "
+                         "0.0 disables — pure correctness reward.")
+    ap.add_argument("--zeta", type=float, default=0.0,
+                    help="Information-density reward weight (entropy-drop "
+                         "per unit WKV state motion). 0.0 (default) "
+                         "disables — grafted but not activated, see "
+                         "rewards.py::compute_wkv_loop_rewards docstring. "
+                         "Meant to be swept, not guessed at.")
+    ap.add_argument("--l-state-delta-weight", type=float, default=0.0,
+                    help="L_state motion term weight (revived from the old "
+                         "A1-pilot SFT stack's inverted-SFA loss — rewards "
+                         "WKV state motion instead of penalizing it). 0.0 "
+                         "(default) disables — grafted but not activated, "
+                         "gradient-flow not yet verified on real GPU, see "
+                         "_recompute_wkv_log_probs docstring.")
+    ap.add_argument("--l-state-kappa-weight", type=float, default=0.0,
+                    help="L_state curvature term weight (same mechanism, "
+                         "second-difference of WKV state). 0.0 (default) "
+                         "disables — same caveats as --l-state-delta-weight.")
+    ap.add_argument("--l-state-answer-eps", type=float, default=0.05,
+                    help="L_state weight during answer-decode, relative to "
+                         "full weight during the M-loop (1.0). Default 0.05 "
+                         "matches the old A1-pilot SFT stack's proven "
+                         "ε_out — full L_state pressure inside 'think' "
+                         "(the M-loop), ~5%% outside (answer-decode). Only "
+                         "matters when l-state-*-weight > 0.")
+    ap.add_argument("--gate-on-correct", dest="gate_on_correct",
+                    action="store_true", default=True,
+                    help="beta/gamma shaping only applies to already-correct "
+                         "rollouts (default on) — prevents shaping from "
+                         "substituting for correctness signal when accuracy "
+                         "is near zero.")
+    ap.add_argument("--no-gate-on-correct", dest="gate_on_correct",
+                    action="store_false",
+                    help="Apply beta/gamma shaping unconditionally "
+                         "(pre-2026-08-19 behavior).")
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--steps", type=int, default=2000)
     ap.add_argument("--ckpt-every", type=int, default=100)
@@ -524,7 +569,7 @@ def main():
         # accidentally got pulled over rsync.
         if args.no_update:
             return
-        _save_checkpoint(out_dir, loaded, global_step, mlp_delta, sched)
+        save_checkpoint(out_dir, loaded, global_step, mlp_delta, sched, monitor)
 
     hook = WatchdogHook(wd, _checkpoint,
                         force_ckpt_hours=2.0, stop_hours=0.25,
@@ -532,7 +577,7 @@ def main():
 
     global_step = 0
     if args.resume is not None:
-        global_step = _load_checkpoint(args.resume, loaded, mlp_delta, sched)
+        global_step = load_checkpoint(args.resume, loaded, mlp_delta, sched, monitor)
         # train_log.jsonl is append-only, so a run that crashes and gets
         # resumed leaves behind log lines for steps that got redone from
         # the checkpoint — same step number appearing twice with
@@ -553,6 +598,21 @@ def main():
     print(f"[train] feed_mode={args.feed_mode} alpha={args.alpha} "
           f"G={args.G} M_max={args.M_max} device={args.device} "
           f"resume_step={global_step}")
+
+    # No signal handler existed here at all before 2026-08-19 — an
+    # external kill (manual, or a real Selectel preemption) bypassed
+    # VMWatchdog entirely, since that only self-polls from inside the
+    # running loop. Everything since the last periodic --ckpt-every save
+    # was lost on every such kill this session. A checkpoint on SIGTERM
+    # bounds that loss to whatever happened since the signal, not since
+    # the last periodic save.
+    def _sigterm_handler(signum, frame):
+        print(f"[train] SIGTERM received — checkpointing at step "
+              f"{global_step} before exit")
+        _checkpoint()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, _sigterm_handler)
 
     start_step = global_step  # 0, or the resumed checkpoint's step
     for step in range(args.steps):
@@ -585,7 +645,9 @@ def main():
         batch_rewards: List[torch.Tensor] = []
         all_r_correct: List[torch.Tensor] = []
         for rollouts, task in zip(batch_rollouts, tasks):
-            rewards, diag = compute_wkv_loop_rewards(rollouts, task["rubric"])
+            rewards, diag = compute_wkv_loop_rewards(
+                rollouts, task["rubric"], beta=args.beta, gamma=args.gamma,
+                zeta=args.zeta, gate_on_correct=args.gate_on_correct)
             batch_rewards.append(rewards)
             all_r_correct.append(diag["r_correct"])
 
@@ -621,6 +683,9 @@ def main():
                 feed_mode=args.feed_mode,
                 mlp_delta=mlp_delta,
                 alpha=args.alpha,
+                l_state_delta_weight=args.l_state_delta_weight,
+                l_state_kappa_weight=args.l_state_kappa_weight,
+                l_state_answer_eps=args.l_state_answer_eps,
             )
             if loaded.backend == "peft":
                 # Clip across every trainable param together (same threshold

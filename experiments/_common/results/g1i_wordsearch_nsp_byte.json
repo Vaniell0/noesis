@@ -1,0 +1,378 @@
+{
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "tasks": "experiments/A0_eval/tasks_matrix_wordsearch_nsp.jsonl",
+  "byte_adapter": "random_init",
+  "max_new": 128,
+  "n_total": 56,
+  "n_correct": 0,
+  "overall_accuracy": 0.0,
+  "elapsed_s": 307.07396364212036,
+  "per_level": {
+    "1": {
+      "n": 8,
+      "correct": 0
+    },
+    "2": {
+      "n": 8,
+      "correct": 0
+    },
+    "3": {
+      "n": 8,
+      "correct": 0
+    },
+    "4": {
+      "n": 8,
+      "correct": 0
+    },
+    "5": {
+      "n": 8,
+      "correct": 0
+    },
+    "6": {
+      "n": 8,
+      "correct": 0
+    },
+    "7": {
+      "n": 8,
+      "correct": 0
+    }
+  },
+  "results": [
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_00",
+      "level": 1,
+      "correct": false,
+      "output": "sotsottT-;.-.O(Xz#"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_01",
+      "level": 1,
+      "correct": false,
+      "output": "##VP-HzotCmTsTss"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_02",
+      "level": 1,
+      "correct": false,
+      "output": "-.\u000bottVotTsz]-;DzV"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_03",
+      "level": 1,
+      "correct": false,
+      "output": "WH#ottVtM#ot"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_04",
+      "level": 1,
+      "correct": false,
+      "output": "#UsstotZ-hotCmVsot"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_05",
+      "level": 1,
+      "correct": false,
+      "output": "Z-#B\u000bu\u000b\u000bu\u000b(\u000b(\u000b(zzHnN)tTztCm<;yz"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_06",
+      "level": 1,
+      "correct": false,
+      "output": "H##ottCCmUVB#t"
+    },
+    {
+      "id": "wsearch_L1_5x5_H_LR_nsp_01_07",
+      "level": 1,
+      "correct": false,
+      "output": "OTsTssstzsotot{lkA-\u000b"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_00",
+      "level": 2,
+      "correct": false,
+      "output": "-.(XzV)otVVVV########"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_01",
+      "level": 2,
+      "correct": false,
+      "output": "otsototS.tZT#"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_02",
+      "level": 2,
+      "correct": false,
+      "output": "-.HHtothotsTst"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_03",
+      "level": 2,
+      "correct": false,
+      "output": "#oototototot"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_04",
+      "level": 2,
+      "correct": false,
+      "output": "##ott"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_05",
+      "level": 2,
+      "correct": false,
+      "output": "-.Xz;VV#VBYthot-.(Xz;"
+    },
+    {
+      "id": "wsearch_L2_6x6_V_TD_nsp_02_06",
+      "level": 2,
+      "correct": false,
+      "output": "-.Ts\u000bV#otK.#-(Ts;#P;K-.ot##"
+    },
+    {
+      "id": "wsearch_L2_6x6_H_LR_nsp_02_07",
+      "level": 2,
+      "correct": false,
+      "output": "ss;****tz***tz***\u000b***tz\u000b(\u000b(DzHU\u000b(sU**t"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_LR_nsp_03_00",
+      "level": 3,
+      "correct": false,
+      "output": "VotVotVVV"
+    },
+    {
+      "id": "wsearch_L3_7x7_V_TD_nsp_03_01",
+      "level": 3,
+      "correct": false,
+      "output": "-.HotK-Vot#VO"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_RL_nsp_03_02",
+      "level": 3,
+      "correct": false,
+      "output": "#ot#Ts#-ssotCm+"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_LR_nsp_03_03",
+      "level": 3,
+      "correct": false,
+      "output": "-.##s#K-.t"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_LR_nsp_03_04",
+      "level": 3,
+      "correct": false,
+      "output": "otVP-ot#"
+    },
+    {
+      "id": "wsearch_L3_7x7_V_TD_nsp_03_05",
+      "level": 3,
+      "correct": false,
+      "output": "#tI-VB]UveveTG#ootCm<;ot[-."
+    },
+    {
+      "id": "wsearch_L3_7x7_V_TD_nsp_03_06",
+      "level": 3,
+      "correct": false,
+      "output": "-.VVBVo#ootoot#TV"
+    },
+    {
+      "id": "wsearch_L3_7x7_H_RL_nsp_03_07",
+      "level": 3,
+      "correct": false,
+      "output": "-.\u000bOS.Ts\u000bHzYtzCmCm+`-;tTs"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_00",
+      "level": 4,
+      "correct": false,
+      "output": "S.#Ts.-;tM.[-.VVVF-.tVot##"
+    },
+    {
+      "id": "wsearch_L4_8x8_H_RL_nsp_04_01",
+      "level": 4,
+      "correct": false,
+      "output": "-.UotK3B#Ts*tCm+-."
+    },
+    {
+      "id": "wsearch_L4_8x8_V_TD_nsp_04_02",
+      "level": 4,
+      "correct": false,
+      "output": "-.TXz**DotCmT"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_TD_nsp_04_03",
+      "level": 4,
+      "correct": false,
+      "output": "\u000b(t.XtHz#otBVTYtotCCm<;."
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_04",
+      "level": 4,
+      "correct": false,
+      "output": "U"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_05",
+      "level": 4,
+      "correct": false,
+      "output": "-.S.##I-.##"
+    },
+    {
+      "id": "wsearch_L4_8x8_H_LR_nsp_04_06",
+      "level": 4,
+      "correct": false,
+      "output": "VotK-B#"
+    },
+    {
+      "id": "wsearch_L4_8x8_V_BU_nsp_04_07",
+      "level": 4,
+      "correct": false,
+      "output": "-.Ts*z****t\u000bCm+-.{VTs#F-.+;"
+    },
+    {
+      "id": "wsearch_L5_9x9_H_RL_nsp_05_00",
+      "level": 5,
+      "correct": false,
+      "output": "#ototT;Tot#"
+    },
+    {
+      "id": "wsearch_L5_9x9_D_DL_nsp_05_01",
+      "level": 5,
+      "correct": false,
+      "output": "-.B(\u000b(tVTssotCmTBtCmo"
+    },
+    {
+      "id": "wsearch_L5_9x9_D_DL_nsp_05_02",
+      "level": 5,
+      "correct": false,
+      "output": "-.S.#sotototCm+-MC"
+    },
+    {
+      "id": "wsearch_L5_9x9_H_LR_nsp_05_03",
+      "level": 5,
+      "correct": false,
+      "output": "#;otototzTT-."
+    },
+    {
+      "id": "wsearch_L5_9x9_V_BU_nsp_05_04",
+      "level": 5,
+      "correct": false,
+      "output": "otK-.WF-.t"
+    },
+    {
+      "id": "wsearch_L5_9x9_V_BU_nsp_05_05",
+      "level": 5,
+      "correct": false,
+      "output": "-.t.TsHTsTB#`-;t"
+    },
+    {
+      "id": "wsearch_L5_9x9_H_LR_nsp_05_06",
+      "level": 5,
+      "correct": false,
+      "output": "TsTs#tCmTs\u000b\u000b(T"
+    },
+    {
+      "id": "wsearch_L5_9x9_V_TD_nsp_05_07",
+      "level": 5,
+      "correct": false,
+      "output": "K-Tss##\u000b(Tiot#-k"
+    },
+    {
+      "id": "wsearch_L6_10x10_V_BU_nsp_06_00",
+      "level": 6,
+      "correct": false,
+      "output": "-.RtB##G"
+    },
+    {
+      "id": "wsearch_L6_10x10_V_BU_nsp_06_01",
+      "level": 6,
+      "correct": false,
+      "output": "T#P.##ot#-."
+    },
+    {
+      "id": "wsearch_L6_10x10_D_UL_nsp_06_02",
+      "level": 6,
+      "correct": false,
+      "output": "#Es\u000bEot\u000b\u000b\u000b"
+    },
+    {
+      "id": "wsearch_L6_10x10_D_DR_nsp_06_03",
+      "level": 6,
+      "correct": false,
+      "output": "-.O##"
+    },
+    {
+      "id": "wsearch_L6_10x10_D_DR_nsp_06_04",
+      "level": 6,
+      "correct": false,
+      "output": "3t"
+    },
+    {
+      "id": "wsearch_L6_10x10_D_UL_nsp_06_05",
+      "level": 6,
+      "correct": false,
+      "output": "*BYt\u000b(Z/V\u000b(\u000b(\u000b(\u000b(\u000b(\u000b(HOotTPTsP"
+    },
+    {
+      "id": "wsearch_L6_10x10_H_LR_nsp_06_06",
+      "level": 6,
+      "correct": false,
+      "output": "-.Ootot#ot#CotT"
+    },
+    {
+      "id": "wsearch_L6_10x10_V_TD_nsp_06_07",
+      "level": 6,
+      "correct": false,
+      "output": "-.\u000b(I.S.P-H#TsTsHz\u000b(TT;"
+    },
+    {
+      "id": "wsearch_L7_12x12_V_TD_nsp_07_00",
+      "level": 7,
+      "correct": false,
+      "output": "-.###ot#"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_DR_nsp_07_01",
+      "level": 7,
+      "correct": false,
+      "output": "-.tC.X@Hz;##Ts5t#w-;"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_DL_nsp_07_02",
+      "level": 7,
+      "correct": false,
+      "output": "Tt-(Tuot(#-\u000b(Xz;t.P"
+    },
+    {
+      "id": "wsearch_L7_12x12_H_LR_nsp_07_03",
+      "level": 7,
+      "correct": false,
+      "output": "-.S.t#####ot"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_UR_nsp_07_04",
+      "level": 7,
+      "correct": false,
+      "output": "-.#\u000b\u000b\u000b(Tihot##"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_UR_nsp_07_05",
+      "level": 7,
+      "correct": false,
+      "output": "-.(X=N)+VVB"
+    },
+    {
+      "id": "wsearch_L7_12x12_D_DL_nsp_07_06",
+      "level": 7,
+      "correct": false,
+      "output": "-.3otot#F-.5totO"
+    },
+    {
+      "id": "wsearch_L7_12x12_V_TD_nsp_07_07",
+      "level": 7,
+      "correct": false,
+      "output": "-."
+    }
+  ]
+}
