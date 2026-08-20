@@ -1,6 +1,6 @@
 # A0.H12a — working-memory bottleneck attribution
 
-Probe for hypothesis H12 (see `HYPOTHESES.md`). Distinguishes whether
+Probe for hypothesis H12 (see `hypotheses/README.md`). Distinguishes whether
 RWKV-7's cross-domain reasoning failures are dominated by
 **active-representation width** (number of concepts held simultaneously)
 or by **decay-rate** over token distance.

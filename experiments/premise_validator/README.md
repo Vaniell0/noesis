@@ -1,6 +1,6 @@
 # H21 premise-validity probe
 
-Runnable scaffold for HYPOTHESES.md § H21 — "premise-validity
+Runnable scaffold for hypotheses/README.md § H21 — "premise-validity
 readout: model refuses invalid premises before answering".
 
 ## Dataset
@@ -30,7 +30,7 @@ diagnostic parity):
 
 Each item: `{id, category (valid|invalid), invalid_type, prompt, notes}`.
 
-## Metrics (from HYPOTHESES.md § H21)
+## Metrics (from hypotheses/README.md § H21)
 
 The full architecture is a 2-layer MLP head on frozen WKV state after
 prompt ingestion (before decode), trained to predict

@@ -190,7 +190,7 @@ of a P9 (falsify-before-you-build) experiment.
 
 ## Related
 
-- H8, H9 (`HYPOTHESES.md`).
+- H8, H9 (`hypotheses/README.md`).
 - P8, P9, P12 (`docs/principles.md`).
 - ROADMAP §Gate 1.
 - A0.4 (`results.md`) — provides descriptive baseline, doesn't resolve

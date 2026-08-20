@@ -204,7 +204,7 @@ def call_rwkv_mloop(loaded, prompt: str, num_predict: int, m_max: int,
     """M-loop decode via experiments.rl.wkv_loop.generate_rollout.
 
     H10's N/K/readout_mode axes collapse to this single M axis (internal
-    WKV-loop steps, no decoded think-tokens) — see HYPOTHESES.md H10's
+    WKV-loop steps, no decoded think-tokens) — see hypotheses/H10.md's
     stale-marker note. `loaded` comes from experiments.rl.loader.load_rwkv7,
     not experiments._common.model.load_model (different LoadedModel
     interface — this is the same loader/rollout machinery

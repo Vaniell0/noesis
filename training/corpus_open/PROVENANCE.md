@@ -84,3 +84,9 @@ pointed at via `.gitignore`. This manifest is the traceable record.
 - **Status:** listed on HF, distributed as multiple parquet files
   under `data/`. Not attempted this session — `pyarrow`/`pandas`
   wheels not present in `training/.venv`.
+
+<!-- AUTO-GENERATED BELOW: do not hand-edit — regenerate via `python training/regenerate_corpus_index.py` -->
+
+| Name | Stage | Provenance | Origin | Date | SHA-256 | Rows | Out | Script |
+|------|-------|------------|--------|------|---------|------|-----|--------|
+| — | — | — | — | — | — | — | *(none yet — nothing run through `training._common` so far)* | — |

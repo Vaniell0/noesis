@@ -16,7 +16,7 @@ Models (native bf16 `.pth`, no GGUF, no quantisation):
 - **G1d-0.4B**   — `BlinkDL/rwkv7-g1 :
   rwkv7-g1d-0.4b-20260210-ctx8192.pth`. Reasoning-line 0.4B ("G1d"
   variant — the 0.4B slot in the G1 line; G1h exists only at 2.9B).
-  See `HYPOTHESES.md` H9 for framing.
+  See `hypotheses/README.md` H9 for framing.
 
 **Scale caveat.** Original plan targeted 2.9B pairs (World3 + G1h).
 CPU-only bf16 throughput on i5-1235U measured at ~0.07 tok/s for 2.9B —
@@ -109,7 +109,7 @@ metrics that will most likely carry H8/H9.
 
 ## Pre-registered thresholds (locked from pilot)
 
-Per H8 / H9 threshold-lock policy (see `../../HYPOTHESES.md`):
+Per H8 / H9 threshold-lock policy (see `../../hypotheses/README.md`):
 
 - **`Δ_min` per metric** = 3 × between-seed SD from the pilot (this
   file's pilot section).

@@ -14,7 +14,7 @@ comment above its `## H<N>.` prose section) and:
      formed regardless of what the posterior says); `status` whose
      polarity disagrees with the computed posterior.
 
-    python experiments/bayes_lite.py [FILE ...]     # defaults to HYPOTHESES.md
+    python experiments/bayes_lite.py [FILE ...]     # defaults to hypotheses/*.md
 
 A record block looks like:
 
@@ -40,7 +40,7 @@ from pathlib import Path
 import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_DEFAULT_FILE = _REPO_ROOT / "HYPOTHESES.md"
+_HYPOTHESES_DIR = _REPO_ROOT / "hypotheses"
 
 _COMMENT_RE = re.compile(r"<!--(.*?)-->", re.DOTALL)
 _ID_START_RE = re.compile(r"^id:\s*\S+", re.MULTILINE)
@@ -121,7 +121,7 @@ def lint(record: dict, known_ids: set[str]) -> list[str]:
 
 
 if __name__ == "__main__":
-    files = [Path(p) for p in sys.argv[1:]] or [_DEFAULT_FILE]
+    files = [Path(p) for p in sys.argv[1:]] or sorted(_HYPOTHESES_DIR.glob("*.md"))
 
     all_text = ""
     for f in files:

@@ -42,7 +42,7 @@ inference is the price side of that bet — it makes the runtime
 economically viable to run continuously on the laptop i5-1235U without
 cloud dependency for the everyday loop.
 
-This is unproven. `HYPOTHESES.md` records every specific wager — H4b
+This is unproven. `hypotheses/README.md` records every specific wager — H4b
 (state as computation), H7 (understanding in weights, not context),
 H12b (multi-slot LoRA as working memory), H16 (self-initiated
 externalisation), H17 (state absorption vs history re-injection), and
@@ -138,7 +138,7 @@ Not running yet (stubs):
 ## Who this is for
 
 - **The owner's own machine.** Design target.
-- **Community push-back on the wagers.** `HYPOTHESES.md` is the point of
+- **Community push-back on the wagers.** `hypotheses/README.md` is the point of
   contact. A clean falsification is more valuable than a green build.
 - **Not:** a replacement for frontier reasoning models, a general
   deployable assistant, a product.
@@ -149,7 +149,7 @@ Not running yet (stubs):
 noesis/
 ├── README.md          — this file
 ├── ROADMAP.md         — phased plan across cognitive + memory + integration
-├── HYPOTHESES.md      — falsifiable claims (H1..H17)
+├── hypotheses/README.md      — falsifiable claims (H1..H17)
 ├── CONTRIBUTING.md    — how to engage (hypotheses > runtime PRs)
 ├── FAILED.md          — refuted hypotheses and dead experiments
 ├── docs/              — policies, principles, DSL, extensions, verdicts

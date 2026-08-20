@@ -7,7 +7,7 @@ of ``experiments/RESULTS.md`` from them — the index grows as scripts run,
 instead of someone remembering to hand-transcribe a new row.
 
 The historical rows already in RESULTS.md (backfilled 2026-08-17 from
-HYPOTHESES.md, before this mechanism existed) are hand-written and live
+hypotheses/README.md, before this mechanism existed) are hand-written and live
 above the ``AUTO-GENERATED`` marker; regeneration only ever rewrites
 below that marker.
 """
@@ -45,7 +45,7 @@ def save_result(
             name a probe was registered under in ``registry.py`` where
             applicable, but this function has no hard dependency on the
             registry (works for one-off scripts too).
-        hypothesis: HYPOTHESES.md IDs this result speaks to, e.g. ``["H8"]``.
+        hypothesis: hypotheses/README.md IDs this result speaks to, e.g. ``["H8"]``.
         status: ``"done"``, ``"partial"``, ``"failed"`` — free text, kept
             short. Does not gate anything; purely descriptive.
         summary: optional ``{metric_label: value_str}`` pairs — becomes

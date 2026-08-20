@@ -7,7 +7,7 @@ genuinely useful.
 
 ## The most useful thing you can do
 
-**Try to falsify a hypothesis.** `HYPOTHESES.md` lists every specific
+**Try to falsify a hypothesis.** `hypotheses/README.md` lists every specific
 wager (H1..H17) with a stated prediction and a falsifier. A clean
 falsification on your own setup — "H7 predicts X, I ran the experiment
 with these parameters and observed Y" — is more valuable than any

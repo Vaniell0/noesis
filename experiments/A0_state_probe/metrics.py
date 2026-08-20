@@ -14,7 +14,7 @@ The three metrics are intended to answer distinct questions:
 Definitions are matched to the paper (Appendix J stable-rank) plus the
 plan's own delta / second-difference framing. See
 ``../../docs/state-and-reasoning.md`` §1 (Appendix J) and
-``../../HYPOTHESES.md`` §H8 for the underlying rationale.
+``../../hypotheses/README.md`` §H8 for the underlying rationale.
 """
 
 from __future__ import annotations

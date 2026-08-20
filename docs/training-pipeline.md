@@ -179,3 +179,9 @@ so they get split into chunks where L_state = 0. Extraction collapsed from
 | Wire H12b.i hookup in `light_rwkv.py` | `compute_h12bi_aux()` implemented but not connected |
 
 Config base: `training/config/pilot_step9b.yaml` — change `ctx_len`, adjust fractions.
+
+<!-- AUTO-GENERATED BELOW: do not hand-edit — regenerate via `python training/regenerate_corpus_index.py` -->
+
+| Name | Sources (fraction) | Date | Tokens | Consumed by | Out |
+|------|---------------------|------|--------|-------------|-----|
+| — | *(none yet — nothing combined through `training.build_corpus` so far)* | — | — | — | — |

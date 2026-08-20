@@ -1,6 +1,6 @@
 # H20 aporia probe
 
-Runnable scaffold for HYPOTHESES.md § H20 — "state holds contradictory
+Runnable scaffold for hypotheses/README.md § H20 — "state holds contradictory
 belief pairs without premature collapse".
 
 ## Dataset
@@ -18,7 +18,7 @@ Each item: `{id, category, prompt, alternatives: [X, Y], notes}`.
 The `prompt` ends at the ambiguity site — the model's next `K=8`
 tokens are the measurement window.
 
-## Metrics (from HYPOTHESES.md § H20)
+## Metrics (from hypotheses/README.md § H20)
 
 1. **Modal-collapse rate** — fraction of items where either `X` or
    `Y` token receives `p > 0.9` on the first decode step.

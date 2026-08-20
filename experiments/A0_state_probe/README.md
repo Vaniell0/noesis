@@ -21,12 +21,12 @@ time).
 
 ## Hypotheses under test
 
-- **H8** — state-as-computation in RWKV-7 (`HYPOTHESES.md`).
+- **H8** — state-as-computation in RWKV-7 (`hypotheses/README.md`).
 - **H9** — G1-line training amplifies state utilisation
-  (`HYPOTHESES.md`).
+  (`hypotheses/README.md`).
 
 Both prediction / falsification thresholds are placeholders in
-`HYPOTHESES.md` and are locked at the *start* of the execution
+`hypotheses/README.md` and are locked at the *start* of the execution
 session, after a pilot run establishes the noise floor. Do not lock
 thresholds by reading this README.
 
@@ -129,6 +129,6 @@ plumbing already in place.
 - `../A0_baseline/` — throughput baseline (done, one commit).
 - `../../docs/state-and-reasoning.md` — literature notes underpinning
   metric choice and stack decision.
-- `../../HYPOTHESES.md` — H8, H9 (placeholders until execution
+- `../../hypotheses/README.md` — H8, H9 (placeholders until execution
   session pilots).
 - `../../ROADMAP.md` — Track A, A0.4 slot; Gate 1 exit criteria.

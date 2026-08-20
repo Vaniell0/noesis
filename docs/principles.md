@@ -46,7 +46,7 @@ through fine-tune.
 **Why.** Weights outlive knowledge. A model that reasons well over
 given facts generalises to new facts. A model that memorised facts
 does not automatically reason about them. See H2 and H7 in
-HYPOTHESES.md.
+hypotheses/README.md.
 
 **How to apply.** Training corpora contain reasoning traces, not
 domain knowledge. Anything that could be retrieved from a document is
@@ -185,7 +185,7 @@ on the eval set lose.
 **Why.** This whole project is a wager. Wagers pay off on outcomes,
 not on reasoning quality. The temptation to preserve elegant frames
 after the numbers reject them is exactly the failure mode
-HYPOTHESES.md's evaluation philosophy exists to prevent.
+hypotheses/README.md's evaluation philosophy exists to prevent.
 
 **How to apply.** Every philosophical claim in this project must be
 paired with a falsifiable hypothesis and a cheap test. Refutation
@@ -199,7 +199,7 @@ neither is post-hoc reframing.
 ## P9. Falsify before you build
 
 **Statement.** Every non-trivial design bet is paired with a
-falsifiable hypothesis in HYPOTHESES.md and a cheap probe *before*
+falsifiable hypothesis in hypotheses/README.md and a cheap probe *before*
 significant build effort is committed.
 
 **Why.** Sunk-cost bias then rescues bad decisions. Cheap experiments
@@ -207,7 +207,7 @@ protect against months of misdirected work. Gate 1 exists exactly
 for this reason.
 
 **How to apply.** Before starting a phase in ROADMAP.md, verify: is
-there a hypothesis in HYPOTHESES.md this phase advances or tests? Is
+there a hypothesis in hypotheses/README.md this phase advances or tests? Is
 there a cheap probe that could refute the assumption before the
 expensive work begins? If not, add one — and do the probe first.
 
@@ -223,7 +223,7 @@ that is the method.
 care as one that succeeds. Silence on failure is worse than the
 failure itself.
 
-**Why.** Without negatives, HYPOTHESES.md drifts toward a wishlist.
+**Why.** Without negatives, hypotheses/README.md drifts toward a wishlist.
 Failure is signal — often more informative than success — and the
 audit trail is worthless without it.
 

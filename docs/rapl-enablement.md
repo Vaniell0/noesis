@@ -1,6 +1,6 @@
 # RAPL enablement for noesis calibration
 
-Startup calibration (`HYPOTHESES.md` §H1) derives the ambient drip
+Startup calibration (`hypotheses/README.md` §H1) derives the ambient drip
 ceiling from thermal headroom and rwkv-cpp throughput. Intel/AMD RAPL
 adds a third, orthogonal signal — joules per token — that lets the
 sweep cap on package watts rather than temperature delta alone. RAPL

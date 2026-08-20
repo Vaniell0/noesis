@@ -51,7 +51,7 @@ which is now measured (12.5%) rather than merely predicted.
 with `prompt_cot` before that date; results from before are invalid — moot
 now that `readout_mode` itself is retired, kept here only because `eval.py`
 (the A0.2 harness, unrelated to `wkv_loop.py`) still has the flag and old
-results referencing it exist in HYPOTHESES.md §H10.
+results referencing it exist in hypotheses/README.md §H10.
 
 **Post-RL M-sweep: blocked behind a prerequisite, not just "not run yet"
 (2026-08-19).** The "real divergence from flat after RL training" signal
@@ -69,7 +69,7 @@ wrong, the *next* data point just isn't a post-RL M-sweep yet.
 
 **Current baselines (2026-08-14/17), for reference, not M data:**
 - G1i chatwrap: 41.7% (20/48) — best single-pass baseline
-- G1i base, `state_readout` (eval.py, post-fix, 2026-08-17): 33.3% (16/48) — see HYPOTHESES.md §H10
+- G1i base, `state_readout` (eval.py, post-fix, 2026-08-17): 33.3% (16/48) — see hypotheses/README.md §H10
 - step9b-e1: 39.6% — regression from step9 e0 (43.8%)
 - G1h base: 7.1% (format mismatch; not a useful baseline)
 - Word-search nsp: G1i 0%/3.6% (baseline/np=256) — target for RL

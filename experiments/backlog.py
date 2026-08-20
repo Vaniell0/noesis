@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""List `_meta`-stamped results that HYPOTHESES.md hasn't cited yet.
+"""List `_meta`-stamped results that the hypotheses/ directory hasn't cited yet.
 
     python experiments/backlog.py
 
 A result counts as "processed" once its own repo-relative path (e.g.
 `experiments/_common/results/g1i_battery_gpu/mlp_ipc.json`) appears as a
-literal substring somewhere in HYPOTHESES.md — which is already this
-project's existing citation convention (every reconciled number in that
-file is followed by a path to the file it came from). No new bookkeeping
-file, no schema change to results or hypotheses: this is a pure checker
-over the two conventions that already exist (`_meta.hypothesis` stamped
-by `experiments._common.results.save_result`, and file-path citations in
-HYPOTHESES.md prose).
+literal substring somewhere under `hypotheses/*.md` — which is already
+this project's existing citation convention (every reconciled number is
+followed by a path to the file it came from). No new bookkeeping file,
+no schema change to results or hypotheses: this is a pure checker over
+two conventions that already exist (`_meta.hypothesis` stamped by
+`experiments._common.results.save_result`, and file-path citations in
+hypothesis prose/frontmatter).
 
 Grouped by hypothesis ID so a run of this script is directly the queue
-for a "fold results into HYPOTHESES.md" pass.
+for a "fold results into the record" pass.
 """
 from __future__ import annotations
 
@@ -28,7 +28,11 @@ if str(_REPO_ROOT) not in sys.path:
 
 from experiments._common.results import _iter_meta_stamped
 
-_HYPOTHESES_MD = _REPO_ROOT / "HYPOTHESES.md"
+_HYPOTHESES_DIR = _REPO_ROOT / "hypotheses"
+
+
+def _all_hypothesis_text() -> str:
+    return "\n".join(p.read_text() for p in sorted(_HYPOTHESES_DIR.glob("*.md")))
 
 
 def find_backlog(hyp_text: str, root: Path | None = None) -> dict[str, list[tuple[Path, dict]]]:
@@ -47,15 +51,15 @@ def find_backlog(hyp_text: str, root: Path | None = None) -> dict[str, list[tupl
 
 
 if __name__ == "__main__":
-    hyp_text = _HYPOTHESES_MD.read_text()
+    hyp_text = _all_hypothesis_text()
     backlog = find_backlog(hyp_text)
 
     if not backlog:
-        print("[backlog] nothing pending — every stamped result is cited in HYPOTHESES.md")
+        print("[backlog] nothing pending — every stamped result is cited under hypotheses/")
         sys.exit(0)
 
     total = sum(len(v) for v in backlog.values())
-    print(f"[backlog] {total} result file(s) not yet cited in HYPOTHESES.md, across {len(backlog)} hypothesis tag(s)\n")
+    print(f"[backlog] {total} result file(s) not yet cited under hypotheses/, across {len(backlog)} hypothesis tag(s)\n")
 
     for h in sorted(backlog, key=lambda k: (k == "(untagged)", k)):
         entries = backlog[h]

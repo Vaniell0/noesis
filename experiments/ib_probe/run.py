@@ -130,7 +130,7 @@ class MLPDecoder(nn.Module):
     invisible to a linear decoder. `probe_lag` below tests whether the
     same gap exists for IB's reconstruction task (predict token[t-lag]
     from state[t]) — linear IB came back ~=0 beyond lag=2 (see FAILED.md/
-    HYPOTHESES.md note 2026-08-18); this is the direct check for whether
+    hypotheses/README.md note 2026-08-18); this is the direct check for whether
     that's a real absence of structure or the same linear-decoder blindness.
     """
     def __init__(self, in_dim: int, hidden: int, n_classes: int):

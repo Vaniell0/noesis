@@ -77,7 +77,7 @@ def make_context(prior_turns: list[tuple[str, str]]) -> str:
     return "\n".join(parts) + "\n\n"
 
 
-def main():
+def _build_argparser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out",            required=True)
     ap.add_argument("--max-items",      type=int, default=30000)
@@ -86,8 +86,15 @@ def main():
     ap.add_argument("--last-turn-only", action="store_true",
                     help="Only emit the final assistant turn per dialogue")
     ap.add_argument("--seed",           type=int, default=42)
-    args = ap.parse_args()
+    return ap
 
+
+def run(args: argparse.Namespace) -> dict:
+    """Registered entry point (see @registry.stage below) — same body
+    `main()` always had, just parameterized on `args` instead of calling
+    `ArgumentParser.parse_args()` itself, so training/build_corpus.py can
+    invoke this directly with a constructed Namespace. Returns a small
+    summary dict for the caller (provenance.py stamps the rest)."""
     from datasets import load_dataset
     import random
     rng = random.Random(args.seed)
@@ -141,6 +148,21 @@ def main():
     if written < args.max_items:
         print(f"[hh_rlhf] WARNING: only {written}/{args.max_items} items passed filter")
 
+    return {"out_path": str(out_path), "n_rows": written, "n_skipped": skipped}
+
+
+try:
+    from training._common import registry as _registry
+    _registry.stage(
+        "hh_rlhf", kind="normalize", provenance="external-hf",
+        origin="Anthropic/hh-rlhf",
+        out_default="training/corpus_open/hh_rlhf.jsonl",
+        description="Anthropic hh-rlhf Constitutional AI chosen-responses -> plain-CoT (no think span).",
+    )(run)
+except ImportError:
+    pass  # standalone invocation (python normalize_hh_rlhf.py) doesn't need the registry
+
 
 if __name__ == "__main__":
-    main()
+    main_args = _build_argparser().parse_args()
+    run(main_args)

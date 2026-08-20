@@ -1,6 +1,6 @@
 # H22 attribution probe
 
-Runnable scaffold for HYPOTHESES.md § H22 — "unattributed collective
+Runnable scaffold for hypotheses/README.md § H22 — "unattributed collective
 claims are a detectable, distinct honesty failure".
 
 ## Dataset
@@ -12,7 +12,7 @@ seeds the design + lets us test the head architecture on 0.4B.
 Item shape: `{id, category (attributable|unattributed|ambiguous),
 prompt, notes}`.
 
-## Metrics (from HYPOTHESES.md § H22)
+## Metrics (from hypotheses/README.md § H22)
 
 1. **Binary separation.** F1 on the attributable vs unattributed
    split (16 items, leave-3-out CV). Pilot target: F1 ≥ 0.75

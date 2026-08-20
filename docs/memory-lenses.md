@@ -9,7 +9,7 @@
 > into a per-zone protocol that also covers *resident* model swaps
 > (Ollama child change, RWKV checkpoint bump, cross-architecture
 > fallback). Falsifier and prediction are locked as **H11** in
-> `HYPOTHESES.md`.
+> `hypotheses/README.md`.
 
 ## Problem
 

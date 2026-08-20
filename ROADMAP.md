@@ -132,7 +132,7 @@ serialize them.
   data, no *domain* knowledge in weights.** Domain knowledge is deferred
   — general knowledge that noesis needs at runtime enters through the
   context window (retrieval, tool observations), not through fine-tune.
-  See H2 and H7 in HYPOTHESES.md.
+  See H2 and H7 in hypotheses/README.md.
 - **Sources** (open only): DeepSeek-R1 distill traces, publicly available
   Anthropic process-supervision / Constitutional-AI methodology material,
   synthetic step-by-step derivations, competition-math CoT, code reasoning
@@ -216,7 +216,7 @@ See `docs/rl-track.md` for the full design.
 - **State metrics and new aux losses** — see `docs/rl-track.md §State metrics`.
   IPC DONE (2026-08-16): linear IPC ≈ 0 held-out on our own `ipc_g1i_fixed.json` run
   — **unreconciled against fleeb83's independently-reported nonzero IPC on the same
-  checkpoints**, see HYPOTHESES.md H8/IPC before treating this as settled.
+  checkpoints**, see hypotheses/H10.md (IPC section) before treating this as settled.
   L_mem skipped permanently. MLP probe NOT YET RUN on G1i base — queued behind the
   H10 state_readout eval (PID 133922, CPU-bound), launch once that frees the CPU;
   re-run after RL checkpoint 1 on same trajectory to measure state content gain.
@@ -252,7 +252,7 @@ See `docs/rl-track.md` for the full design.
   user-relevant technical documentation.
 - **Open decision, deliberately unlocked**: does domain knowledge enter
   through fine-tune, through retrieval into the context window, or
-  through a hybrid? H7 in HYPOTHESES.md is the specific claim to test
+  through a hybrid? H7 in hypotheses/README.md is the specific claim to test
   before committing to a strategy here.
 - Only starts once A1 shows the reasoning-first strategy actually works.
 
@@ -358,7 +358,7 @@ See `docs/rl-track.md` for the full design.
   baseline numbers make the RWKV bet untenable, re-evaluate *before*
   investing in A1 training compute. Also decides A1 loss objective
   via A0.4 (SFT-only vs state-regularised). H8 refutation triggers a
-  backbone re-open only after the staged flow in HYPOTHESES.md §H8
+  backbone re-open only after the staged flow in hypotheses/README.md §H8
   (first failure → verify metric implementation and hooks → repeat →
   sustained failure across independent replications). A single null
   A0.4 run is not sufficient.
@@ -411,6 +411,6 @@ See `docs/rl-track.md` for the full design.
   patches through the same delta-rule update), H13b (image-in-context
   beats text-digest for screen tasks) and H16 (gated externalisation
   from a continuous silent think-stream so the model self-initiates
-  rather than being polled) are logged in HYPOTHESES.md. All three are
+  rather than being polled) are logged in hypotheses/README.md. All three are
   Phase 3+; H13b is the cheap near-term probe if noesis needs
   screen-content assistance before Phase 3 lands.

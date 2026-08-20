@@ -282,6 +282,19 @@ def main() -> int:
                           "(full-FT hit the ceiling even at G=2/batch=2/M_max=4 there).")
     ap.add_argument("--forge", action="store_true")
     ap.add_argument("--forge-offload-state", action="store_true")
+    ap.add_argument("--grad-clip", type=float, default=1.0,
+                     help="Max gradient norm (torch.nn.utils.clip_grad_norm_) "
+                          "before the optimizer step. 0 disables clipping. "
+                          "Added 2026-08-20 after a full-FT run's answer_ce "
+                          "spiked 2.5->18 within one step on a single hard "
+                          "wordsearch example (long prompt, multi-token "
+                          "answer, a task category the model has ~0% "
+                          "baseline on) — with LoRA the adapter bottleneck "
+                          "(1.58% of params) implicitly capped how far any "
+                          "one example's gradient could move the model; "
+                          "full-FT has no such bottleneck, so an explicit "
+                          "clip is needed instead. 1.0 is a standard default, "
+                          "not tuned for this run specifically.")
     ap.add_argument("--state-loss-clamp", type=float, default=100.0,
                      help="Per-layer cap on the distillation distance before "
                           "weighting — see distill_step docstring comment "
@@ -345,6 +358,10 @@ def main() -> int:
     params = [p for p in loaded.model.parameters() if p.requires_grad]
     if think_marker is not None:
         params += list(think_marker.parameters())
+    all_trainable_params = list(params)  # kept separately: `params` gets
+    # reassigned to int8_optimizer.other_params below when --forge is on
+    # (a subset — the rest is managed inside int8_optimizer), but grad
+    # clipping needs the full set regardless of which optimizer owns each.
     if args.forge:
         from experiments.rl.loader import Int8AdamW
         int8_optimizer = Int8AdamW(params, lr=args.lr, weight_decay=0.01,
@@ -421,17 +438,24 @@ def main() -> int:
             state_sum += float(state_loss.item())
             n_tok_sum += n_tok
 
+        if args.grad_clip > 0:
+            grad_norm = torch.nn.utils.clip_grad_norm_(all_trainable_params, args.grad_clip)
+        else:
+            grad_norm = None
+
         if args.forge and int8_optimizer is not None:
             int8_optimizer.step()
         optimizer.step()
 
         mean_ce = ce_sum / args.batch
         mean_state = state_sum / args.batch
+        grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
         print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
-              f"n_answer_tok={n_tok_sum}")
+              f"n_answer_tok={n_tok_sum}{grad_norm_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
-                                 "state_loss": mean_state}) + "\n")
+                                 "state_loss": mean_state,
+                                 "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
 
         if step % args.ckpt_every == 0:
             _checkpoint()

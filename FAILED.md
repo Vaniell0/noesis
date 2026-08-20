@@ -3,7 +3,7 @@
 The graveyard of refuted hypotheses, dead experiments, and abandoned
 design directions. This file exists because P10 (Report negative
 results) is real, not aspirational — and because the hypotheses in
-HYPOTHESES.md must have a place to *go* when they lose.
+hypotheses/README.md must have a place to *go* when they lose.
 
 Each entry records: what the claim was, what evidence refuted it,
 what was learned, and what changed in the project as a result.
@@ -17,7 +17,7 @@ pointing to the reversal, do not overwrite.
     ### YYYY-MM-DD — [short title]
     
     **Was.** [The claim, hypothesis, or design bet — quote the
-    original if possible, cite HYPOTHESES.md ID or ROADMAP.md phase.]
+    original if possible, cite hypotheses/README.md ID or ROADMAP.md phase.]
     
     **Refuted by.** [The evidence — link to the experiment writeup in
     experiments/, numbers, dates. If not a formal experiment, the
@@ -72,7 +72,7 @@ better-structured donors (code < prose) transfer more, but not enough
 to change the verdict.
 
 **Changed.**
-- `HYPOTHESES.md` H8 tightened: portability claim split into the two
+- `hypotheses/README.md` H8 tightened: portability claim split into the two
   sub-claims above; only sub-claim 1 survives.
 - Runtime plan (`docs/effort-frontier.md`): H10 `state_readout` mode
   gains weight — decode state content to text and re-inject via
@@ -132,7 +132,7 @@ structures state, so g1d → world should transfer better than world → g1d.
 ### 2026-07-30 — H20 pilot ordering `cf > ba > ui` did not hold at scale
 
 **Was.** The 2026-07-29 aporia probe pilot report predicted (per
-HYPOTHESES.md § H20 report notes and `experiments/aporia_probe/README.md`
+hypotheses/README.md § H20 report notes and `experiments/aporia_probe/README.md`
 category shapes): contested_facts should collapse more than
 bounded_ambiguity, which in turn collapses more than
 underdetermined_inference — a monotone `cf > ba > ui` ordering of
@@ -167,7 +167,7 @@ ui=0.560. Ordering is **cf > ui ≈ ba** — `ba` and `ui` swap places,
   narrative that would have shaped training data selection.
 
 **Changed.**
-- `HYPOTHESES.md` § H20 status updated with the scale-up numbers
+- `hypotheses/README.md` § H20 status updated with the scale-up numbers
   (2026-07-30) and the ordering swap. Kept as an "aporia lives in
   continuation branching, needs decode" finding — pooled-WKV feature
   claim from the earlier pilot survives, category-ordering claim does
@@ -330,9 +330,9 @@ corpus analysis run on 2026-08-06 (63,218 rollouts inspected):
    chosen before architecture, not after.
 
 **Changed.**
-- `HYPOTHESES.md` H2: added "Corpus selection constraint" block —
+- `hypotheses/README.md` H2: added "Corpus selection constraint" block —
   reactive corpora cannot test H2; corpus must be reflexive-first.
-- `HYPOTHESES.md` H10: status updated to BLOCKED on corpus fix;
+- `hypotheses/README.md` H10: status updated to BLOCKED on corpus fix;
   K-sweep data from Steps 4–5 excluded as confounded.
 - `docs/verdicts/2026-08-06-a1-pilot-step5.md` written with root cause,
   structural mismatch analysis, and Step 6 corpus options.
@@ -372,7 +372,7 @@ N ∈ {1,2,3} × K ∈ {32,128,512} × mode ∈ {silent, prompt_cot, state_reado
   before the axis becomes measurable. Swept too early.
 
 **Changed.**
-- `HYPOTHESES.md` §H10: readout-mode prediction marked FALSIFIED at epoch 0.
+- `hypotheses/README.md` §H10: readout-mode prediction marked FALSIFIED at epoch 0.
   Axis dropped from active sweep dimensions. Will be revisited only after A1
   training includes state-readout targets.
 - `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md` §Key Finding 3:
@@ -414,7 +414,7 @@ DSL noise.
   unless the checkpoint was specifically trained on N>2 stable re-feed.
 
 **Changed.**
-- `HYPOTHESES.md` §H10: N=3 result documented; refinement axis bounded to
+- `hypotheses/README.md` §H10: N=3 result documented; refinement axis bounded to
   N ∈ {1,2} for DSL checkpoints. Mechanism noted as unconfirmed (would need
   N=3 on a non-DSL checkpoint to isolate DSL-loop from general WKV saturation).
 - `experiments/A0.8_refine/results/step8_epoch0/SUMMARY.md` §Key Finding 1-2:
@@ -430,7 +430,7 @@ DSL noise.
 G1h-2.9B step7-action at K=8,P=1 scored 51% vs base 53% — interpreted as
 "NO CONTAMINATION" and "action-chain training appears to have improved
 multi-track state stability independently of the LoRA intervention H12b
-predicts" (HYPOTHESES.md §H12b, same-day entry).
+predicts" (hypotheses/README.md §H12b, same-day entry).
 
 **Refuted by.** Full-depth probe 2026-08-07, 420 cells: K∈{2,4,8},
 P∈{1,2,4}, n=10 per cell, G1d-0.4B + G1h-2.9B base + G1h-2.9B step7.
@@ -467,7 +467,7 @@ step7 degrades faster. G1d-0.4B aggregate: K=2: 18%, K=4: 15%, K=8: 7%.
    probe. H12b + H12b.i remains a live Phase 2 hypothesis.
 
 **Changed.**
-- `HYPOTHESES.md` §H12b: "NO CONTAMINATION" qualifier added: "P=1 only, K=8";
+- `hypotheses/README.md` §H12b: "NO CONTAMINATION" qualifier added: "P=1 only, K=8";
   the "action-chain training improved stability" sentence struck and replaced
   with the full 9-cell table and "step7 < base on 7/9 cells" verdict.
 - H12b status updated: behavioral baseline = MIXED (architecture helps,
@@ -493,7 +493,7 @@ generation time regardless of what the readout mechanism did internally.
 The exact tie across all 20 cells was not evidence that the state carries no
 extra signal — it was evidence that the eval harness never exercised the
 `state_readout` code path differently from `prompt_cot` in the first place.
-See `HYPOTHESES.md` §H10, step8 sweep, Key Finding 3.
+See `hypotheses/README.md` §H10, step8 sweep, Key Finding 3.
 
 **Learned.**
 - An exact numerical tie across every cell of a sweep should have been a red
@@ -510,7 +510,7 @@ See `HYPOTHESES.md` §H10, step8 sweep, Key Finding 3.
   pointer that supersedes it.
 
 **Changed.**
-- `HYPOTHESES.md` §H10 step8 sweep: Key Finding 3 rewritten to state the bug
+- `hypotheses/README.md` §H10 step8 sweep: Key Finding 3 rewritten to state the bug
   explicitly and mark all `state_readout` data in that table invalid.
 - H10 rerun with the fixed evaluator launched on G1i 2.9B base
   (`experiments/A0_eval/results/h10_state_readout_g1i_base.json`,

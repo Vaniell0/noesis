@@ -132,7 +132,7 @@ estimate: ~4 h for the full sweep, same as v1.
 
 ## Related
 
-- HYPOTHESES.md § H12 — parent hypothesis, reframed 2026-07-30 to
+- hypotheses/README.md § H12 — parent hypothesis, reframed 2026-07-30 to
   decouple H12b from H12a v2.
 - `results-g1d-n30/REPORT.md` — v1 sweep results with the
   confound clearly visible.

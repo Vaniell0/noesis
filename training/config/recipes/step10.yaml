@@ -1,0 +1,40 @@
+# step10: rfc + bitsub + selfcot + hh-rlhf + aporia + premise (attrib absent
+# on disk this session -> omitted, same effective ratios as
+# combine_step10_corpus.py's missing-source redistribution: dropping a
+# source and rescaling the rest to sum to 1.0 preserves every pairwise
+# ratio, and combine_by_fraction only ever uses ratios relative to the
+# anchor, so the un-rescaled fractions below reproduce it exactly).
+name: step10
+out: training/tokenised/step10_combined_train_rebuild.pt
+seed: 42
+sources:
+  - name: rfc
+    fraction: 0.30
+    pt: training/tokenised/step9_rfc_train.pt
+    provenance: generated
+    origin: "RFC QA (restructure_rfc.py)"
+  - name: bitsub
+    fraction: 0.15
+    pt: training/tokenised/bitsub_train.pt
+    provenance: generated
+    origin: "gen_bitsub_tasks.py"
+  - name: selfcot
+    fraction: 0.15
+    pt: training/tokenised/selfcot_train.pt
+    provenance: generated
+    origin: "step9 model self-generated CoT"
+  - name: hhrlhf
+    fraction: 0.15
+    pt: training/tokenised/hh_rlhf_train.pt
+    provenance: external-hf
+    origin: "Anthropic/hh-rlhf"
+  - name: aporia
+    fraction: 0.10
+    pt: training/tokenised/aporia_train.pt
+    provenance: generated
+    origin: "gen_aporia_corpus.py (H20)"
+  - name: premise
+    fraction: 0.10
+    pt: training/tokenised/premise_refusal_train.pt
+    provenance: generated
+    origin: "gen_premise_refusal_corpus.py (H21)"

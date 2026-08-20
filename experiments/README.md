@@ -2,7 +2,7 @@
 
 Measurements and evaluations against RWKV-7 checkpoints (state-geometry
 probes, causal-intervention tests, RL training) — the empirical half of
-noesis, feeding `HYPOTHESES.md`. This file is the map; each subdirectory
+noesis, feeding `hypotheses/README.md`. This file is the map; each subdirectory
 that needs more detail has its own `README.md`.
 
 ## Quick start
@@ -45,7 +45,7 @@ usually needs a per-run choice like which prompt or which base checkpoint
 to diff against):
 - `A0_state_probe/a05_run.py` + `a05_analyze.py` — causal state
   intervention (zero/shuffle/corrupt WKV, measure the effect) — the
-  *causal*, not decodability, test. See the plan/HYPOTHESES.md H8 section
+  *causal*, not decodability, test. See the plan/hypotheses/H8.md section
   for why this matters more than another probe when a decodability
   result is ambiguous.
 - `A0_state_probe/lora_rank_analysis.py` — SVD of a base/trained weight
@@ -66,7 +66,7 @@ can be reclaimed without much warning. Writes a heartbeat every step.
 
 ## What's parked, and why (full audit 2026-08-18)
 
-Cross-referenced every directory against `HYPOTHESES.md`/`ROADMAP.md`/
+Cross-referenced every directory against `hypotheses/README.md`/`ROADMAP.md`/
 `FAILED.md` — nothing here is unaccounted-for, but not everything is
 live:
 

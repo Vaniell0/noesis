@@ -2,7 +2,7 @@
 
 Written 2026-07-25. Last updated 2026-08-14. Consolidates prior-art
 scattered across `docs/state-and-reasoning.md §2`, "Frontier adjacency"
-boxes inside `HYPOTHESES.md` H8/H12, and per-topic snippets in
+boxes inside `hypotheses/README.md` H8/H12, and per-topic snippets in
 `docs/effort-frontier.md`. Purpose: a single flat map of what the
 RWKV / state-space community *has*, what noesis is *actually adding*,
 and what merits deeper external research.
@@ -664,6 +664,35 @@ loop to have *content*, not just a budget.
   vs. SFA — not a new pattern for this codebase, see
   `training/state_reg.py`).
 
+  **Deeper divergence, found 2026-08-20 (goes past the deterministic-
+  vs-stochastic point above):** Dreamer's world model (RSSM) is a
+  separate, purpose-built module trained specifically to represent and
+  predict world dynamics — matching a deterministic system to it via
+  L2 is already a soft target by necessity (near-zero chance of exact
+  reproduction through a training-derived gradient pressure, unlike
+  Dreamer's own KL objective on its own stochastic latent), which is
+  why `l_state_weight` kept needing to shrink (0.01→0.001) just to let
+  training proceed at all — a symptom of importing the KL-matching
+  *mechanism* too literally, not a principled "answer matters more than
+  state" decision at the time it was made. But the real gap is
+  architectural, not just a stochastic/deterministic technicality: WKV
+  state is **not itself a model** — it has no independent forward
+  dynamics of its own the way an RSSM does; its evolution is entangled
+  with, and depends on, the surrounding network's weights (attention/
+  FFN-equivalent reads and writes), and it is a general-purpose,
+  architecture-native memory register, not a purpose-built predictive
+  latent. Practical consequence: importing Dreamer's *mechanism*
+  (train a standalone prior to match a posterior via a strict
+  distributional-distance loss) doesn't transplant cleanly — only the
+  *framing* (teacher sees real observation, student self-feeds, target
+  = teacher's resulting state) survives translation. The actual
+  training signal on WKV should weight answer/EOS correctness as
+  primary and state-matching as a softer shaping term, not a strict
+  target to hit exactly — confirmed the hard way 2026-08-20 (see
+  `docs/rl-track.md`'s think-distill history, item 10: state metrics
+  trending flat/plateaued said nothing about the answer collapsing into
+  a non-terminating repeat loop underneath).
+
 - **"Looped World Models"** (arXiv 2606.18208, Lu/Wei/Zhang et al.,
   2026) — directly relevant to the open question in §3.1 below and to
   the N=3 attractor-collapse note in the BLT/T-FREE section above.
@@ -809,7 +838,7 @@ responses) and H16 (dense state-think per emit token). Either
 promote to a new H-number with prediction + falsifier, or write it
 off with reasoning. **Note:** original text said "promote to H18"
 — H18 is now the git-like branch/merge hypothesis. If L_length is
-promoted, it gets the next free number (currently H25+). H24 = decoding efficiency (DE) under RL pressure (2026-08-14, HYPOTHESES.md).
+promoted, it gets the next free number (currently H25+). H24 = decoding efficiency (DE) under RL pressure (2026-08-14, hypotheses/README.md).
 
 ---
 

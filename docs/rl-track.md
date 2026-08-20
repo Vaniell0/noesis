@@ -191,7 +191,7 @@ hardcodes `args.peft = "none"` — there is currently no LoRA toggle in the WKV-
 stack at all (unlike the earlier `train_wordsearch.py`, which had `--lora-r`). The
 reasoning behind that choice still holds and predates this rewrite: LoRA modifies
 projection matrices within a low-rank subspace, and the LoRA-rank analysis
-(`experiments/A0_state_probe/lora_rank_analysis.py`, 2026-08-14, see `HYPOTHESES.md`
+(`experiments/A0_state_probe/lora_rank_analysis.py`, 2026-08-14, see `hypotheses/README.md`
 §H16) found LoRA r=32 spans only ~1.25% of a 2560×2560 weight matrix — the routing
 geometry that decides emit-vs-hold (H16) lives in the other 98.75%, which LoRA never
 touches. GRPO training the M-step exit behavior is exactly this kind of routing
@@ -736,12 +736,125 @@ before the next attempt:**
    tokens' worth of state update; one self-fed token is a much smaller
    update, asking the student to close the same distance in far fewer
    steps.
-6. **Fixed 8-token phase budget, M=1 — in progress at time of writing,
-   healthier than any prior attempt through the same step range** (step
-   ~100: state_loss 29-74, no clamp-pinning; contrast run 4's
-   predecessor runs, which were already showing early instability
-   signs by comparable steps). Not yet past the ~280-330 step range
-   where every prior attempt broke — not claimed stable until it is.
+6. **Fixed 8-token phase budget, M=1 — completed clean, 2026-08-20
+   (`overnight2` run, LoRA r=32/alpha=64).** Ran the full 1950/1950
+   steps, no divergence, no clamp-pinning at any point. First run to
+   survive past the ~280-330 step range where every prior attempt
+   broke. `answer_ce` dropped from ~9.9 (step 1) to a ~2.5-3 plateau
+   and stayed there for the remaining ~1600 steps — real early
+   adaptation, no further improvement after.
+
+7. **Diagnostic decode (4 fixed prompts — matrix addition, wordsearch,
+   arithmetic sequence, XOR; `_diag_think_content.py`, one-off, same
+   convention as `_debug_modecol.py`) reached for the first time,
+   2026-08-20 — real qualitative shift, but no convergence.** Baseline
+   (pre-`overnight2`) M-loop think-tokens are pure chat-template
+   scaffolding ("\n\nAnswer", "\n\nAssistant") on every prompt, never
+   task content — matches the earlier finding in the "Latent
+   imagination" section of `docs/community-map.md`. Post-`overnight2`,
+   think-tokens are genuinely task-domain (digits on numeric tasks,
+   letters on the word task; one case, the arithmetic sequence, landed
+   on the mathematically correct missing digit). But the model doesn't
+   converge to a clean single answer — it repeats/loops instead
+   ("STARSTSTSTAR", "000000000000", "12800128012801280..."). LoRA
+   moved *what* the loop thinks about, not *whether it stops*.
+
+8. **Full-FT continuation attempt #1 — immediate regression, not a
+   slow drift, 2026-08-20.** Merged `overnight2`'s LoRA delta into the
+   base weights (`_merge_lora.py`, PEFT's own per-layer `.merge()`,
+   verified key-for-key identical to the un-merged checkpoint's
+   behaviour on the 4-prompt diagnostic). Continued full-FT at
+   `--lr 3.3e-5` (1/3 of the LoRA run's rate — full-FT here had
+   previously diverged "regardless of M/phase-budget tuning" per this
+   script's own `--lora-r` doc string, and LR itself was never part of
+   that earlier sweep). Result: `answer_ce` never improved past its
+   starting ~6 across 238 steps (LoRA had reached ~3.3), and
+   `state_loss` broke cleanly at step ~180 (stable 28-47 for 150+
+   steps, then a sharp climb to the 80-90s and clamp-touches at 100).
+   Isolated, no-gradient comparison on the same first 5 corpus examples
+   (`_check_ex5.py`-adjacent script) confirmed the merge itself was not
+   the cause — LoRA and merged-model losses matched to 3-4 decimal
+   places. The actual break: `answer_ce` spiked 2.5→18.0 at step 6,
+   nothing to do with the later state_loss clamp event. That example
+   was a 9x9 wordsearch grid (176-token prompt, 2-token answer
+   "GRAZE") — a task category the model has ~0% baseline accuracy on
+   (`WorldTokenizer` column-position asymmetry, already documented
+   above). No gradient clipping existed anywhere in this script.
+   LoRA's adapter bottleneck (1.58% of parameters) had been *implicitly*
+   capping how far any one example's gradient could move the model;
+   full-FT has no such bottleneck.
+
+9. **`--grad-clip` added (`clip_grad_norm_`, default max-norm 1.0),
+   full-FT continuation attempt #2, 2026-08-20 — holding.** Same
+   wordsearch example at step 6: raw grad_norm=1519 (confirms it really
+   was that large), `answer_ce` only reached 5.7 and *recovered to 2.2
+   the very next step* — contrast attempt #1, where the same event
+   never recovered. Raw grad_norm routinely reaches 1000-10000+ per
+   step even on ordinary examples (step 1, alone, was 2938) — clipping
+   is doing real, constant work, not a rare edge-case correction.
+   Survived a VM reboot (Selectel's 24h reclaim) via the existing
+   SIGTERM checkpoint handler with zero lost steps, resumed cleanly
+   from `ckpt_step000429` — `state_loss` had been sitting at 60-69
+   (elevated vs. the ~40 baseline, but nowhere near the 100 clamp)
+   through the entire previously-fatal step-150-300 window and beyond.
+   Not yet run to completion; the retroactive implication worth
+   flagging: run 5 above (the failed M=2 attempt, 1-token phase budget)
+   never had gradient clipping either, so that divergence may have had
+   two compounding causes (budget mismatch *and* unclipped outlier
+   gradients), not only the one already diagnosed.
+
+10. **`full2` closed at step 1000 (flat Kalman plateau), eval reveals a
+    real root cause, 2026-08-20 — likely explains item 7's "repeats/
+    loops" finding too, not just a new bug.** M-sweep was deferred in
+    favor of a plain chatwrap eval first: **0/48**, every category,
+    every response degenerates into a repeated-token loop
+    (`"000000000..."`, `"932932932..."`, digit/word cycles) regardless
+    of the task's actual expected answer type. A native-format (no
+    chat-wrap, no M-loop, greedy) control ruled out a harness/template
+    artifact: on a wordsearch prompt the *first* generated token was the
+    genuinely correct answer (`"CAT"`), then the model cycled through
+    unrelated words indefinitely, never emitting EOS in 80 tokens; on a
+    bit-decoding prompt it collapsed to `"0000..."` from the first
+    token. **Root cause, confirmed by direct inspection (not inferred):**
+    `training/tokenize_plain_cot.py::_render()` never emits an EOS
+    segment after `answer` (`segs.append((answer, 1, 0))` is the last
+    segment) — checked against 5 real rollouts in
+    `training/tokenised/g1i_warmup_v2_train.pt`, none end in token 0.
+    **The model was never given a single training example of "stop
+    after the answer."** State-distillation quality (state_loss/
+    answer_ce trending flat-but-not-diverging) said nothing about this —
+    a plateau in those metrics is consistent with a stable *but
+    degenerate* attractor, not necessarily a healthy one. **Take for the
+    record:** state distillation without terminal (EOS) supervision on
+    the answer produces looping in the visible output even when the
+    model's first tokens are genuinely correct — greedy/low-temperature
+    decode past a corpus's trained-answer-length boundary is undefined
+    territory for any autoregressive LM, and degenerates the same way
+    regardless of whether the underlying reasoning/state mechanism is
+    otherwise sound. This reframes item 7 above: the M-loop's own
+    "repeats/loops instead" finding was very likely the same missing-EOS
+    problem showing up internally first, not independent evidence that
+    the M-loop specifically lacks genuine content.
+
+**Next phase — "Dreaming cycle" (user's naming, 2026-08-20), M>1,
+sits between the current M=1 phase and RL resuming.** Not a new
+mechanism to build and not a reframing of RL itself (both considered,
+both ruled out on discussion) — it's this same latent-overshooting
+curriculum, run at M≥2, now with the 8-token phase budget (this run,
+not run 5's 1-token budget) *and* gradient clipping (new this round).
+Why "Dreaming": as M grows, each teacher chunk thins — less real
+observation grounds each individual phase, so the mechanism leans
+increasingly on the model's own prior rollout rather than dense
+teacher supervision, the same posterior-to-prior shift the Dreamer
+paper (arXiv 2007.14535) describes. Why this has to happen before RL,
+not after: RL can only shape/select among behaviours the model can
+already produce — an earlier RL run already found `mean_M` frozen at
+exactly 2.0 with zero variance to correlate quality against, concluding
+"RL has nothing to select for inside the M-loop when the loop has no
+content to begin with." A model that has never coherently run an M>1
+self-feed can't have that regulated by RL, only trained into it first.
+Full plan: `/home/vaniello/.claude/plans/twinkly-questing-ullman.md`
+(local machine only, not part of this repo).
 
 Full narrative, including the "why 1 token per step is too little"
 reasoning and the DE-table correction (an earlier claim that G1i's own
@@ -1000,7 +1113,7 @@ with H8. To measure actual state content after RL, use a nonlinear probe (2-laye
 **⚠ Unresolved (2026-08-16):** fleeb83's independently-reported IPC numbers on the
 same checkpoints (G1h/G1i base, step9b-e1) are nonzero (17–48% of ceiling), not ≈0.
 Not reconciled — possibly an in-sample-vs-held-out split difference, possibly sample
-size (256 vs 512 tokens). See HYPOTHESES.md H8/IPC section for detail before treating
+size (256 vs 512 tokens). See hypotheses/H10.md (IPC section) for detail before treating
 IPC≈0 as settled.
 
 **H10 gap** = requires nonlinear probe, not ridge regression. Run MLP probe after RL

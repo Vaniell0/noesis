@@ -2,7 +2,7 @@
 # Fixed 2026-08-16 fleeb83 PR#1 (agent/ipc-runtime-comparability, b63e179):
 # prompt-token double-feed bug — same trajectory bug was in our own
 # reference implementation. Numbers from before this commit (IPC≈12,
-# in-sample ridge regression) are invalid; see HYPOTHESES.md H8/IPC.
+# in-sample ridge regression) are invalid; see hypotheses/H10.md (IPC section).
 """IPC (Information Processing Capacity) analysis of WKV state trajectory.
 
 Measures how much information about the input token history is linearly

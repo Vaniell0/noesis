@@ -7,7 +7,6 @@
 !.gitignore
 !README.md
 !ROADMAP.md
-!HYPOTHESES.md
 !CONTRIBUTING.md
 !FAILED.md
 !LICENSE
@@ -16,6 +15,9 @@
 
 # Docs
 !docs/**/*.md
+
+# Hypotheses (split out of the old top-level HYPOTHESES.md)
+!hypotheses/**/*.md
 
 # Nix modules (independent, importable)
 !nix/**/*.nix

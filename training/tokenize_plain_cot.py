@@ -51,15 +51,27 @@ os.environ.setdefault("RWKV_CUDA_ON", "0")
 sys.path.insert(0, str(HERE))
 from tokenize_fixture import _VocabOnlyPipeline  # noqa: E402
 
+# rwkv_vocab_v20230424's EOS id — confirmed 2026-08-18 (`tok.decode([0])`
+# decodes to the EOS char) and again 2026-08-20: no rollout in
+# g1i_warmup_v2_train.pt (this renderer's actual output) ever ended in
+# token 0, meaning no example ever taught the model to stop after the
+# answer — root cause of the answer degenerating into a non-terminating
+# repeat loop once generation runs past the corpus's trained-answer
+# length. `_render` returns a `None` text sentinel for this segment
+# since it can't be produced by `tok.encode(str)` like the others.
+EOS_ID = 0
 
-def _render(item: dict) -> list[tuple[str, int, int]]:
-    """Return list of (text, ce_mask, state_mask) segments."""
+
+def _render(item: dict) -> list[tuple[str | None, int, int]]:
+    """Return list of (text, ce_mask, state_mask) segments.
+    `text=None` is the EOS sentinel — emits EOS_ID directly, not via
+    tok.encode()."""
     system = item.get("system", "").strip()
     user   = item.get("user", "").strip()
     think  = item.get("think", "").strip()
     answer = item.get("answer", "").strip()
 
-    segs: list[tuple[str, int, int]] = []
+    segs: list[tuple[str | None, int, int]] = []
     if system:
         segs.append((f"System: {system}\n\n", 0, 0))
     segs.append((f"{user}\n\n", 0, 0))
@@ -67,6 +79,7 @@ def _render(item: dict) -> list[tuple[str, int, int]]:
     segs.append((f"{think}\n", 1, 1))
     segs.append(("</think>\n", 1, 1))  # closing tag
     segs.append((answer, 1, 0))        # answer: CE-supervised, not state-supervised
+    segs.append((None, 1, 0))          # EOS: CE-supervised (must learn to predict it)
     return segs
 
 
@@ -86,7 +99,7 @@ def _tokenize_split(items: list[dict], tok) -> dict:
         starts.append(len(all_ids))
         segs = _render(item)
         for text, ce, st in segs:
-            toks = tok.encode(text)
+            toks = [EOS_ID] if text is None else tok.encode(text)
             all_ids.extend(toks)
             all_ce.extend([ce] * len(toks))
             all_state.extend([st] * len(toks))

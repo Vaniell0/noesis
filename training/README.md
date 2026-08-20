@@ -19,7 +19,7 @@ properties the pretrained checkpoint does not have out of the box:
   only; they never enter A1 supervision.
 
 A1 is a training experiment, on the same axis as A0.* probes — not a
-release checkpoint. Its success criterion is stated in `HYPOTHESES.md`
+release checkpoint. Its success criterion is stated in `hypotheses/README.md`
 (§H7 and adjacent) and its runbook lives in this file. Configs in
 `training/config/`; verdicts in `docs/verdicts/`.
 
