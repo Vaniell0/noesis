@@ -503,6 +503,39 @@ matures.
   inside `<think>` focuses gradient on active state-write moments — complement
   to L_state curvature signal.
 
+- **"Recirculation"** (arXiv 2608.17981, checked 2026-08-20) —
+  inference-time technique for off-the-shelf **feedforward**
+  transformers. Motivation, quoted: "the fundamental limitation that
+  state updates in feedforward transformers are bounded by model
+  depth." Fix: re-process the prompt through the frozen network an
+  extra time (serial, prefill-only — "no additional latency during
+  generation") so the model can "act as a dynamical system and track
+  belief states" it otherwise couldn't get from one `depth`-deep pass.
+  Explicitly distinguished from CoT and from "popular depth-recurrence
+  techniques (looping)." Reports on Gemma3: 23% perplexity reduction,
+  +21% GSM8k accuracy, training-free. This was flagged in the
+  2026-08-18 handoff as needing a check against WKV — done here.
+  **Premise doesn't transfer.** Recirculation's whole motivation is
+  that a feedforward transformer carries *no* state across positions —
+  only a KV cache reconstructed by attention each step, bounded to
+  `depth` layers of processing per token. WKV already is the kind of
+  persistent, genuinely recurrent dynamical system Recirculation is
+  retrofitting onto Gemma3: its state updates once per token per
+  layer, compounding across the whole sequence — by the end of a
+  T-token prompt the state has been touched by on the order of
+  `T × depth` sequential nonlinear updates, not the flat `depth` a
+  feedforward transformer's prefill representation gets in one pass.
+  Recirculation's fix (re-run the prompt once or twice more) is
+  solving a problem WKV's architecture doesn't have. What *would*
+  transfer mechanically — reprocessing a token's representation
+  through the same depth stack more than once before committing — is
+  exactly the "looping" family the paper explicitly contrasts itself
+  against, i.e. our own M-loop / think-distill work, not this
+  technique. **Verdict: not applicable, no action.** (Abstract-level
+  read only, full PDF not fetched — if the real mechanism turns out to
+  also inject persistent cross-position state rather than just deepen
+  a single prefill pass, revisit.)
+
 ### MoE / multi-expert losses (adjacent field, not native RWKV)
 
 - **Switch Transformer, GShard, Mixtral, DynMoLE, SimSMoE** —
