@@ -451,6 +451,72 @@ integration starts?"*.
 
 ---
 
+<!--
+H8 STRUCTURED RECORD — pilot for the schema proposed in
+project_noesis_hypotheses_formalization (2026-08-20). Prose below is
+unchanged; this block is the machine-checkable layer bayes_lite.py and
+hyp_xref.py read. A `call: contradicts` entry below IS the failure
+record for that specific evidence item — no separate "Falsification"
+ritual needed per-item, the file's existing staged Falsification
+section (below) stays as the *test-design* criteria, this block is the
+running evidence log against it.
+
+id: H8
+status: SUPPORTED            # A0.5 sigma-slope test passed at 0.4B and 2.9B (2026-08-04/05) — this is the load-bearing verdict, unchanged by the entries below
+prior: 0.6                   # motivation section above frames this as a real open bet at the time it was written, not a coin-flip default
+posterior: null              # bayes_lite.py not built yet (task #3, blocked on this pilot) — fill once it exists
+depends_on: []
+supports: [H12b]              # IPC result is an explicit precondition for H12b ("required gate before H12b", see IPC section below) — H12b's own record should eventually point back here, not duplicate this evidence
+contradicts_if:
+  - "held-out IPC on G1i stays ≈0 even at n_tokens large enough that the same held-out linear estimator is non-degenerate on G1d (see ipc_sweep entry — G1d itself reads exactly 0.000 below n_tokens≈256, so 'G1i≈0 at 256' doesn't yet rule out the same floor effect at G1i's larger state size)"
+evidence:
+  - date: 2026-08-18
+    file: [experiments/_common/results/a05_g1h_reverify/a05.json, experiments/_common/results/a05_grid/a05_full_grid.json, experiments/_common/results/a05_grid/a05_g1d_g1h_g1i.json]
+    call: supports
+    strength: weak
+    note: "Re-verification of the already-SUPPORTED sigma-slope causal test, extended to G1i (1.76) and step9b-e1 (1.74) for the first time — both land inside the same 1.5-2.1 range as the original passing cells (G1d 1.56-2.10, G1h 1.58-1.67). Confirms robustness across two more checkpoints, doesn't change the verdict."
+  - date: 2026-08-18
+    file: [experiments/_common/results/ib_probe_g1d_heldout/ib_probe.json, experiments/_common/results/g1d_ib_probe_gpu/ib_probe.json]
+    call: contradicts
+    strength: strong
+    note: "G1d 0.4B held-out state-reconstruction: lag=1 frac_explained=25.1%, collapses to 0% by lag=4 — sharply below the 2026-08-12 in-repo result on the SAME model (lag=1=95.9%, lag=64=78.3%, no collapse, see prose below). Two independent runs (CPU + GPU) agree with each other on the new low numbers, so not a one-off fluke. Suspected cause, UNCONFIRMED: the 2026-08-12 number may be in-sample rather than held-out — the exact failure mode already caught for IPC three lines below (IPC≈12 in-sample artifact vs IPC≈0 held-out on the same checkpoints). Needs the 2026-08-12 run's methodology re-checked before either number can be cited as settled."
+  - date: 2026-08-17
+    file: [experiments/_common/results/ipc_sweep/g1d_64/ipc.json, experiments/_common/results/ipc_sweep/g1d_128/ipc.json]
+    call: methodology
+    strength: strong
+    note: "Same G1d 0.4B, same held-out linear IPC estimator as the reconciled n_tokens=256 run (IPC_total≈13, see IPC section below) — but at n_tokens=64 and 128 it reads exactly 0.000 for every layer. The estimator is degenerate below some token-count floor between 128 and 256. Feeds contradicts_if above: G1i's IPC≈0 at n_tokens=256 doesn't establish architecture-level non-decodability if G1i's (much larger) state needs more than 256 tokens to clear the same floor G1d needed 256 for."
+  - date: 2026-08-18
+    file: [experiments/_common/results/mlp_ipc_g1d_64/mlp_ipc.json, experiments/_common/results/mlp_ipc_g1i_256/mlp_ipc.json, experiments/_common/results/g1d_battery_gpu_smoke/mlp_ipc.json, experiments/_common/results/g1i_battery_gpu/mlp_ipc.json, experiments/_common/results/step9b_e1_battery_gpu/mlp_ipc.json]
+    call: supports
+    strength: weak
+    note: "First real run of the nonlinear (2-layer MLP, degree<=2) IPC probe, closing an open TODO in this file (was: 'rerun IPC with an MLP probe to measure how much task-relevant information accumulates'). Same size ordering as linear IPC (G1d 6.9-10.5/16 >> G1i 0.46-3.6/16 ~ step9b-e1 3.9/16) and G1i stays low even under a strictly more expressive estimator — the near-zero-past-L0 G1i pattern isn't a linear-probe blind spot. Caveat: G1d's own number varies 6.9->10.5 across two runs at different n_tokens/layer-sets, not apples-to-apples yet."
+  - date: 2026-08-18
+    file: [experiments/_common/results/g1d_battery_gpu_smoke/ipc.json, experiments/_common/results/g1i_battery_gpu/ipc.json, experiments/_common/results/step9b_e1_battery_gpu/ipc.json]
+    call: supports
+    strength: weak
+    note: "First same-day, same-methodology 3-way linear IPC comparison (G1d 13.2/16, G1i 1.48/16, step9b-e1 7.9/16) — reinforces the model-size-dependent pattern already under discussion in the unreconciled fleeb83 discrepancy below, without resolving it."
+  - date: 2026-08-18
+    file: [experiments/_common/results/g1d_battery_gpu_smoke/think_geometry.json, experiments/_common/results/g1i_battery_gpu/think_geometry.json, experiments/_common/results/step9b_e1_battery_gpu/think_geometry.json]
+    call: supports
+    strength: weak
+    note: "Think/non-think WKV-delta ratio shape (dip <1x at input layers, rising to ~1.0-1.13x at later layers) replicates near-identically across all three checkpoints/scales — same qualitative pattern as the 2026-08-14 G1h-base/step9b-e1 result already in prose below, now shown to generalize to G1i too."
+  - date: 2026-08-18
+    file: [experiments/_common/results/g1d_battery_gpu_smoke/rlens.json, experiments/_common/results/g1d_battery_gpu_smoke/rich.json, experiments/_common/results/g1i_battery_gpu/rlens.json, experiments/_common/results/g1i_battery_gpu/rich.json, experiments/_common/results/step9b_e1_battery_gpu/rlens.json, experiments/_common/results/step9b_e1_battery_gpu/rich.json, experiments/_common/results/g1d_battery_gpu_smoke/jlens.json, experiments/_common/results/g1i_battery_gpu/jlens.json, experiments/_common/results/step9b_e1_battery_gpu/jlens.json]
+    call: methodology
+    strength: weak
+    note: "rlens/rich: raw scale characterization (sigma1 magnitude tracks parameter count as expected) across G1d/G1i/step9b-e1, not itself a reasoning-vs-narrative matched-pair test, so doesn't directly speak to H8's effect-size criterion — useful raw material for a future proper A/B, not evidence on its own. jlens: ran, produced no `summary` at all (probe doesn't emit one) — flagged as a probe-quality gap, not a finding."
+  - date: 2026-08-16
+    file: [experiments/_common/results/external/ipc_fleeb83_native_1024.json, experiments/_common/results/external/ipc_fleeb83_native_512.json, experiments/_common/results/external/ipc_fleeb83_rdp_sensitivity.json, experiments/_common/results/external/ipc_native_1024_g1d_04b.json, experiments/_common/results/external/ipc_native_1024_g1h_29b_base.json, experiments/_common/results/external/ipc_native_1024_g1i_29b_base.json, experiments/_common/results/external/ipc_native_1024_step9b-e1.json, experiments/_common/results/external/ipc_native_512_g1d_04b.json, experiments/_common/results/external/ipc_native_512_g1h_29b_base.json, experiments/_common/results/external/ipc_native_512_g1i_29b_base.json, experiments/_common/results/external/ipc_native_512_step9b-e1.json, experiments/_common/results/external/ipc_rdp_sensitivity_L25.json, experiments/_common/results/external/ipc_rdp_sensitivity_L28.json, experiments/_common/results/external/ipc_rdp_sensitivity_L31.json]
+    call: methodology
+    strength: strong
+    note: "Already fully discussed in the unreconciled-discrepancy prose below — these are the underlying files those paragraphs cite by number. Listed here only to close the backlog gap; no new interpretation added."
+  - date: 2026-08-18
+    file: experiments/_common/results/m_baseline_g1d/probes_step000001.json
+    call: methodology
+    strength: weak
+    note: "shortcut_score=0.00, M_mean=3.0 — single-step smoke test of train_wkv_loop.py's inline probes on G1d, from the paused RL track. Tagged H8 because rl_inline_probes registers broadly; also tagged H10, the more relevant home for this one."
+-->
+
 ## H8. State-as-computation in RWKV-7
 
 **Claim.** During autoregressive generation, RWKV-7's hidden WKV state
