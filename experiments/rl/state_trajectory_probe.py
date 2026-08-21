@@ -64,14 +64,31 @@ def _state_norms(wkv, layers) -> dict[int, float]:
     return {L: float(torch.linalg.vector_norm(wkv[L].float().flatten()).item()) for L in layers}
 
 
+def _delta_norms(wkv, prev_wkv, layers) -> dict[int, float] | None:
+    """‖S_t - S_{t-1}‖ per layer — true displacement, not difference of
+    norms (a state can rotate a lot at near-constant magnitude, or barely
+    move at large magnitude; norm(a)-norm(b) conflates both with actual
+    motion). None on the first token of a trace (no previous state).
+    Raw tensors are never stored in the output, only this scalar — a WKV
+    state tensor (n_head x head_size x head_size per layer) is far too
+    large to keep per-token in JSON."""
+    if prev_wkv is None:
+        return None
+    return {L: float(torch.linalg.vector_norm((wkv[L].float() - prev_wkv[L].float()).flatten()).item())
+            for L in layers}
+
+
 def trace_prompt(loaded, prompt_text: str, layers, tok) -> dict:
     ids = tok.encode(prompt_text)
     state = loaded.new_state(batch=1)
     read_trace = []
+    prev_wkv = None
     for pos, tid in enumerate(ids):
         x = torch.tensor([[tid]], device=loaded.device)
         logits, state = loaded.forward_stateful(x, state)
-        read_trace.append({"pos": pos, "token_id": tid, "norms": _state_norms(state.wkv, layers)})
+        read_trace.append({"pos": pos, "token_id": tid, "norms": _state_norms(state.wkv, layers),
+                            "delta_norms": _delta_norms(state.wkv, prev_wkv, layers)})
+        prev_wkv = state.wkv
 
     gen_trace = []
     next_id = None
@@ -79,7 +96,9 @@ def trace_prompt(loaded, prompt_text: str, layers, tok) -> dict:
         v = _last_vec(logits)
         next_id = int(v.argmax().item())
         gen_trace.append({"step": step, "token_id": next_id,
-                           "norms": _state_norms(state.wkv, layers)})
+                           "norms": _state_norms(state.wkv, layers),
+                           "delta_norms": _delta_norms(state.wkv, prev_wkv, layers)})
+        prev_wkv = state.wkv
         if next_id == 0:  # EOS — stop tracing, nothing more to feed
             break
         x = torch.tensor([[next_id]], device=loaded.device)
@@ -117,6 +136,12 @@ def main() -> int:
             n_gen = len(results[name]["generate"])
             hit_eos = results[name]["generate"][-1]["token_id"] == 0 if n_gen else False
             print(f"  read={n_read} tok, generate={n_gen} tok, hit_eos={hit_eos}")
+            L0 = layers[0]
+            read_deltas = [t["delta_norms"][L0] for t in results[name]["read"] if t["delta_norms"] is not None]
+            if read_deltas:
+                mean_d = sum(read_deltas) / len(read_deltas)
+                print(f"  L{L0} read delta_norm: mean={mean_d:.2f} max={max(read_deltas):.2f} "
+                      f"last5={[round(x, 2) for x in read_deltas[-5:]]}")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({

@@ -891,6 +891,34 @@ before the next attempt:**
     M≥2 Dreaming-cycle work), not something to wave off because answer
     quality currently looks fine.
 
+13. **Per-token *delta* (not just magnitude), computed post-hoc from
+    item 12's already-collected trajectories — the growth isn't diffuse,
+    it's a sharp late-read acceleration.** `‖S_t‖` alone can't
+    distinguish "big but static" from "still actively moving"; `‖S_t -
+    S_{t-1}‖` per token can. Base model: read-phase deltas oscillate
+    around a small, stable band the entire prompt (`|mean|≈2.0-2.2`,
+    `max_abs≈7.95` across all 4 prompts — the first ~12 deltas are
+    literally identical across prompts, since they're computed over the
+    shared system-prompt prefix). The item-11 checkpoint's read-phase
+    deltas are elevated from the very first shared-prefix token (18.82
+    vs. base's -5.15, same tokens) and then, specifically in the last
+    ~4-6 tokens before the `<think>` marker (i.e. right at the
+    read→generate transition, not spread evenly through the prompt),
+    spike hard: arithmetic_sequence hits 66.46 in one single-token step;
+    xor hits 35.12; wordsearch's last 5 deltas alone are
+    12.0/22.3/2.9/11.8/17.8. The 1-3 generate-phase tokens that follow
+    continue at this same elevated magnitude, not a return to the calm
+    mid-prompt regime. Reads as the model concentrating a burst of
+    state-writing right at the moment it must commit to an answer,
+    rather than uniformly inflating state throughout the read — a much
+    more specific, testable claim than "training amplified state norm"
+    (item 12's framing), and the first real answer (not yet a full one —
+    4 prompts, 2 checkpoints) to the standing open question about what
+    each individual token actually does to the system. Not yet checked:
+    whether this late-read spike is present in exactly this shape
+    across a larger prompt sample, or specific to these 4 fixed
+    diagnostics.
+
 **Next phase — "Dreaming cycle" (user's naming, 2026-08-20), M>1,
 sits between the current M=1 phase and RL resuming.** Not a new
 mechanism to build and not a reframing of RL itself (both considered,
