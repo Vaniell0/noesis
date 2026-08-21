@@ -204,6 +204,71 @@ class OnlineKalman:
                 "level_std": self.P[0][0] ** 0.5, "slope_std": self.P[1][1] ** 0.5}
 
 
+class KalmanTrack:
+    """One monitored metric for the online multi-track auto-stop config
+    (train_think_distill.py --kalman-config). Wraps an OnlineKalman with
+    a *direction* that counts as bad for this specific metric — rising
+    is bad for a loss (state_loss, answer_ce), falling is bad for
+    something you want to stay high (cos_sim) — and a consecutive-bad-
+    check streak, so one noisy check doesn't trigger a stop.
+
+    Added 2026-08-21: the single-field, CLI-flag-only version (still
+    supported as a fallback — see train_think_distill.py's
+    --kalman-check-every/--kalman-max-rising) only watched state_loss,
+    and its thresholds lived in whatever the operator happened to type
+    at launch. For a real release run this is a safety mechanism, not a
+    convenience knob — it belongs in a checked-in, reviewable config
+    (training/config/kalman_watch.yaml), not something a launch command
+    can silently omit or mistype.
+    """
+    def __init__(self, field: str, bad_direction: str, max_bad_streak: int):
+        if bad_direction not in ("rising", "falling"):
+            raise ValueError(f"bad_direction must be 'rising' or 'falling', got {bad_direction!r}")
+        self.field = field
+        self.bad_direction = bad_direction
+        self.max_bad_streak = max_bad_streak
+        self.filter: "OnlineKalman | None" = None
+        self.streak = 0
+
+    def update(self, value: float) -> dict:
+        if self.filter is None:
+            self.filter = OnlineKalman(value)
+            return {"field": self.field, "level": value, "slope": 0.0,
+                    "slope_std": 0.0, "bad": False, "streak": 0}
+        r = self.filter.update(value)
+        ci_excludes_zero = abs(r["slope"]) >= r["slope_std"]
+        is_bad = ci_excludes_zero and (
+            (self.bad_direction == "rising" and r["slope"] > 0)
+            or (self.bad_direction == "falling" and r["slope"] < 0)
+        )
+        self.streak = self.streak + 1 if is_bad else 0
+        return {"field": self.field, "level": r["level"], "slope": r["slope"],
+                "slope_std": r["slope_std"], "bad": is_bad, "streak": self.streak}
+
+    @property
+    def critical(self) -> bool:
+        return self.streak >= self.max_bad_streak
+
+
+def load_kalman_watch_config(path: str) -> dict:
+    """Load a training/config/kalman_watch.yaml-style file:
+        check_every: 100
+        tracks:
+          - {field: state_loss, bad_direction: rising, max_bad_streak: 3}
+          - {field: answer_ce,  bad_direction: rising, max_bad_streak: 3}
+          - {field: cos_sim,    bad_direction: falling, max_bad_streak: 3}
+    Returns {"check_every": int, "tracks": [KalmanTrack, ...]}.
+    """
+    import yaml
+    with open(path) as f:
+        cfg = yaml.safe_load(f)
+    tracks = [
+        KalmanTrack(t["field"], t["bad_direction"], t.get("max_bad_streak", 3))
+        for t in cfg.get("tracks", [])
+    ]
+    return {"check_every": cfg.get("check_every", 100), "tracks": tracks}
+
+
 def report_full(results, label):
     for r in results:
         print(f"step={r['step']:>4}  raw={r['raw']:.4f}  "

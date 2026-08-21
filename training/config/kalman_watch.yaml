@@ -1,0 +1,28 @@
+# Kalman auto-stop watch config for train_think_distill.py --kalman-config.
+#
+# This is the "emergency brake" for a training run — deliberately a
+# checked-in file, not CLI flags typed at launch time. A human forgetting
+# or mistyping a threshold at the console shouldn't be how a real
+# critical-trend catch fails to fire on a run that matters. See
+# experiments/rl/kalman_convergence.py's KalmanTrack docstring.
+#
+# bad_direction: which way is bad for this metric — "rising" for
+# something that should stay low (a loss), "falling" for something that
+# should stay high (an alignment/similarity score).
+#
+# Auto-stop fires the moment ANY one track hits max_bad_streak
+# consecutive checks with a real (CI-excludes-zero), not noisy, trend in
+# its bad direction — same graceful checkpoint-then-exit path as SIGTERM.
+
+check_every: 100
+
+tracks:
+  - field: state_loss
+    bad_direction: rising
+    max_bad_streak: 3
+  - field: answer_ce
+    bad_direction: rising
+    max_bad_streak: 3
+  - field: cos_sim
+    bad_direction: falling
+    max_bad_streak: 3

@@ -69,7 +69,7 @@ if str(_REPO_ROOT) not in sys.path:
 from experiments.rl.loader import load_rwkv7
 from experiments.rl.checkpoint import save_checkpoint, load_checkpoint
 from experiments.rl.wkv_loop import _last_vec, _entropy_of_logits
-from experiments.rl.kalman_convergence import OnlineKalman
+from experiments.rl.kalman_convergence import load_kalman_watch_config
 from training.state_reg import DEFAULT_WORK_LAYERS, default_layer_weights
 
 
@@ -156,12 +156,13 @@ def distill_step(
     tau_commit: float = 0.9,
     eps_plateau: float = 0.05,
     norm_anchor_threshold: float = 300.0,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
-    norm_penalty, n_answer_tokens, n_phase_tokens_used) — caller
+    norm_penalty, cos_sim, n_answer_tokens, n_phase_tokens_used) — caller
     combines/weights/backwards (norm_penalty is unscaled here, weighted
     by --norm-anchor-weight at the call site, same convention as
-    state_loss/--l-state-weight).
+    state_loss/--l-state-weight; cos_sim is diagnostic-only, logged but
+    never added to the loss — see the per-layer computation below).
 
     M>1 (added 2026-08-19, "latent overshooting", see Dreaming arXiv
     2007.14535's J^k_KL): the teacher's think span is sliced into M
@@ -250,6 +251,7 @@ def distill_step(
         logits, state_s = loaded.forward_stateful_embeds(marker, state_s)
     state_loss = torch.zeros((), device=device, dtype=torch.float32)
     norm_penalty = torch.zeros((), device=device, dtype=torch.float32)
+    cos_sim_sum = torch.zeros((), device=device, dtype=torch.float32)
     n_phase_tokens_used = 0
     for i in range(M_eff):
         prev_H: Optional[float] = None
@@ -272,7 +274,19 @@ def distill_step(
         student_wkv = state_s.wkv
         teacher_wkv = teacher_states[i]
         for L in layers:
-            d = student_wkv[L].float() - teacher_wkv[L].float().detach()
+            s_flat = student_wkv[L].float().flatten()
+            t_flat = teacher_wkv[L].float().detach().flatten()
+            # Diagnostic only (not part of the loss) — separates *direction*
+            # from *magnitude* in the state_loss L2 distance above. Added
+            # 2026-08-21: after finding the student's absolute norm running
+            # 3-4x the base model's, the open question was whether direction
+            # also drifts or it's purely a scale effect (which norm_penalty
+            # already targets). High cos_sim despite large state_loss would
+            # mean "same direction, wrong scale"; low cos_sim would mean a
+            # real directional divergence norm_penalty doesn't address.
+            cos_sim = F.cosine_similarity(s_flat.unsqueeze(0), t_flat.unsqueeze(0)).squeeze()
+            cos_sim_sum = cos_sim_sum + layer_weights[L] * cos_sim
+            d = s_flat - t_flat
             # Clamp, same convention as training/state_reg.py's per-layer
             # cap (there: -10.0, "≈2× typical pretrained baseline").
             # Found 2026-08-19: an unclamped run's state_loss ran away
@@ -289,10 +303,11 @@ def distill_step(
             # under threshold, a true no-op there) and only grows past
             # the threshold, so it doesn't fight state_loss's own
             # gradient while the student is within a normal range.
-            student_norm = torch.linalg.vector_norm(student_wkv[L].float().flatten())
+            student_norm = torch.linalg.vector_norm(s_flat)
             norm_penalty = norm_penalty + layer_weights[L] * F.relu(student_norm - norm_anchor_threshold) ** 2
     state_loss = state_loss / M_eff  # keep scale comparable across M
     norm_penalty = norm_penalty / M_eff
+    cos_sim_mean = cos_sim_sum / M_eff  # diagnostic only, not in the loss
 
     answer_ids = ex["answer_ids"]
     logits_last = logits
@@ -308,7 +323,7 @@ def distill_step(
     token_lp = log_probs[0, torch.arange(len(answer_ids), device=device), target]
     answer_ce = -token_lp.mean()
 
-    return answer_ce, state_loss, norm_penalty, len(answer_ids), n_phase_tokens_used
+    return answer_ce, state_loss, norm_penalty, cos_sim_mean, len(answer_ids), n_phase_tokens_used
 
 
 # --------------------------------------------------------------------------- #
@@ -423,21 +438,25 @@ def main() -> int:
                           "relying on the state-distillation target alone "
                           "to teach that distinction implicitly. See "
                           "ThinkMarker docstring.")
-    ap.add_argument("--kalman-check-every", type=int, default=100,
-                     help="Feed state_loss into an OnlineKalman filter "
-                          "(experiments/rl/kalman_convergence.py) and print a "
-                          "trend warning every N steps. 0 disables monitoring "
-                          "entirely. Added 2026-08-21 after two runs this "
-                          "session ran hundreds of steps past a real state_loss "
-                          "reversal before a human ran kalman_convergence.py "
-                          "after the fact and found it.")
-    ap.add_argument("--kalman-max-rising", type=int, default=3,
-                     help="Auto-stop (same graceful checkpoint-then-exit path "
-                          "as SIGTERM) after this many CONSECUTIVE "
-                          "--kalman-check-every checks find state_loss's slope "
-                          "positive with 1-sigma CI excluding zero (a real, "
-                          "not noisy, upward trend) — 'critical trend'. 0 "
-                          "disables auto-stop (still prints warnings).")
+    ap.add_argument("--kalman-config", default="training/config/kalman_watch.yaml",
+                     help="Path to a multi-track Kalman auto-stop config (see "
+                          "training/config/kalman_watch.yaml and "
+                          "experiments/rl/kalman_convergence.py's KalmanTrack "
+                          "docstring) — watches state_loss/answer_ce/cos_sim (or "
+                          "whatever the file lists) simultaneously, each with "
+                          "its own bad-direction and consecutive-bad-streak "
+                          "threshold, auto-stopping (same graceful checkpoint-"
+                          "then-exit path as SIGTERM) the moment any one track "
+                          "hits its streak. Deliberately a checked-in file, not "
+                          "CLI flags — this is a safety mechanism for a run "
+                          "that matters, not something a launch command should "
+                          "be able to silently omit or mistype. Empty string "
+                          "disables monitoring entirely. Added 2026-08-21, "
+                          "replacing an earlier state_loss-only, "
+                          "--kalman-check-every/--kalman-max-rising CLI-only "
+                          "version after two runs this session ran hundreds of "
+                          "steps past a real reversal before a human caught it "
+                          "after the fact.")
     args = ap.parse_args()
 
     layers = tuple(int(x) for x in args.work_layers.split(","))
@@ -507,8 +526,13 @@ def main() -> int:
 
     signal.signal(signal.SIGTERM, _sigterm_handler)
 
-    state_loss_kalman: Optional[OnlineKalman] = None
-    kalman_rising_streak = 0
+    kalman_watch = None
+    if args.kalman_config:
+        kalman_watch = load_kalman_watch_config(args.kalman_config)
+        track_desc = ", ".join(f"{t.field}({t.bad_direction},streak{t.max_bad_streak})"
+                                for t in kalman_watch["tracks"])
+        print(f"[distill] kalman watch: {args.kalman_config} "
+              f"check_every={kalman_watch['check_every']} tracks=[{track_desc}]")
 
     print(f"[distill] work_layers={layers} l_state_weight={args.l_state_weight} "
           f"batch={args.batch} device={args.device} resume_step={global_step} "
@@ -524,14 +548,14 @@ def main() -> int:
         if args.forge and int8_optimizer is not None:
             int8_optimizer.zero_grad()
 
-        ce_sum, state_sum, norm_penalty_sum, n_tok_sum, n_phase_tok_sum = 0.0, 0.0, 0.0, 0, 0
+        ce_sum, state_sum, norm_penalty_sum, cos_sim_sum_batch, n_tok_sum, n_phase_tok_sum = 0.0, 0.0, 0.0, 0.0, 0, 0
         for _ in range(args.batch):
             if idx >= len(order):
                 rng.shuffle(order)
                 idx = 0
             ex = examples[order[idx]]
             idx += 1
-            ce, state_loss, norm_penalty, n_tok, n_phase_tok = distill_step(
+            ce, state_loss, norm_penalty, cos_sim, n_tok, n_phase_tok = distill_step(
                 loaded, ex, layers, layer_weights,
                 state_loss_clamp=args.state_loss_clamp,
                 M=args.M,
@@ -548,6 +572,7 @@ def main() -> int:
             ce_sum += float(ce.item())
             state_sum += float(state_loss.item())
             norm_penalty_sum += float(norm_penalty.item())
+            cos_sim_sum_batch += float(cos_sim.item())
             n_tok_sum += n_tok
             n_phase_tok_sum += n_phase_tok
 
@@ -563,34 +588,38 @@ def main() -> int:
         mean_ce = ce_sum / args.batch
         mean_state = state_sum / args.batch
         mean_norm_penalty = norm_penalty_sum / args.batch
+        mean_cos_sim = cos_sim_sum_batch / args.batch
         grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
         print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
-              f"norm_penalty={mean_norm_penalty:.4f} n_answer_tok={n_tok_sum} "
-              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}")
+              f"norm_penalty={mean_norm_penalty:.4f} cos_sim={mean_cos_sim:.4f} "
+              f"n_answer_tok={n_tok_sum} n_phase_tok={n_phase_tok_sum}{grad_norm_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
                                  "state_loss": mean_state,
                                  "norm_penalty": mean_norm_penalty,
+                                 "cos_sim": mean_cos_sim,
                                  "n_phase_tok": n_phase_tok_sum,
                                  "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
 
-        if args.kalman_check_every > 0:
-            if state_loss_kalman is None:
-                state_loss_kalman = OnlineKalman(mean_state)
-            else:
-                state_loss_kalman.update(mean_state)
-            if step % args.kalman_check_every == 0:
-                k = state_loss_kalman
-                ci_excludes_zero = abs(k.x[1]) >= k.P[1][1] ** 0.5
-                rising = ci_excludes_zero and k.x[1] > 0
-                kalman_rising_streak = kalman_rising_streak + 1 if rising else 0
-                trend = "RISING (real)" if rising else ("falling" if k.x[1] < 0 else "flat/noise")
-                print(f"[distill] [kalman] step {step}: state_loss level={k.x[0]:.3f} "
-                      f"slope={k.x[1]:+.5f}/step (±{k.P[1][1] ** 0.5:.5f}) — {trend} "
-                      f"(streak={kalman_rising_streak}/{args.kalman_max_rising})")
-                if args.kalman_max_rising > 0 and kalman_rising_streak >= args.kalman_max_rising:
-                    print(f"[distill] [kalman] CRITICAL TREND — state_loss rising for "
-                          f"{kalman_rising_streak} consecutive checks, stopping "
+        if kalman_watch is not None:
+            field_values = {"answer_ce": mean_ce, "state_loss": mean_state,
+                             "norm_penalty": mean_norm_penalty, "cos_sim": mean_cos_sim}
+            for t in kalman_watch["tracks"]:
+                if t.field in field_values:
+                    t.update(field_values[t.field])
+            if step % kalman_watch["check_every"] == 0:
+                critical = [t for t in kalman_watch["tracks"] if t.critical]
+                for t in kalman_watch["tracks"]:
+                    r = t.filter
+                    if r is None:
+                        continue
+                    trend = "BAD (real)" if t.streak > 0 else "ok"
+                    print(f"[distill] [kalman] step {step}: {t.field} level={r.x[0]:.4f} "
+                          f"slope={r.x[1]:+.5f}/step (±{r.P[1][1] ** 0.5:.5f}) — {trend} "
+                          f"(streak={t.streak}/{t.max_bad_streak})")
+                if critical:
+                    names = ", ".join(t.field for t in critical)
+                    print(f"[distill] [kalman] CRITICAL TREND on [{names}] — stopping "
                           f"(same checkpoint-then-exit path as SIGTERM). Resume from an "
                           f"earlier checkpoint if this run's later ones aren't useful.")
                     _checkpoint()
