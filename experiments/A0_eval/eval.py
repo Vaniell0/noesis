@@ -219,6 +219,50 @@ def call_rwkv_mloop(loaded, prompt: str, num_predict: int, m_max: int,
     return rollout.text
 
 
+def call_rwkv_native(loaded, prompt: str, num_predict: int,
+                     system_prompt: str = "You are a precise reasoning assistant. Work step by step.",
+                     think_prefix: bool = True) -> str:
+    """Greedy decode using the model's own training-corpus template, not
+    chat_wrap's generic "User:/Assistant:" markup (call_ollama-only —
+    never applied to this backend at all, --chat-wrap silently does
+    nothing for --backend rwkv) or the bare task prompt call_rwkv sends
+    with no framing at all.
+
+    Built 2026-08-21 after both existing rwkv-backend paths gave 0/48 on
+    a checkpoint trained exclusively on
+    "{system}\\n\\n{user}\\n\\n<think>\\n..." (training/tokenize_plain_cot.py)
+    — with no system framing or <think> cue, EOS (now genuinely learned,
+    see docs/rl-track.md item 10) fires almost immediately regardless of
+    the model's real task capability. Real EOS-stopping (loop breaks the
+    moment id 0 is sampled), same convention as call_rwkv/generate_rollout.
+
+    think_prefix=False deliberately omits the "<think>\\n" cue — tests
+    the model on a bare instruction with no trained scaffold at all, a
+    direct check for whether full-FT toward the (narrow, 6-category)
+    think-distill corpus costs general instruction-following outside
+    that scaffold, not just accuracy inside it.
+    """
+    import torch
+    full_prompt = f"{system_prompt}\n\n{prompt}\n\n"
+    if think_prefix:
+        full_prompt += "<think>\n"
+    tok = loaded.tokenizer
+    ids = tok.encode(full_prompt)
+    state = loaded.new_state(batch=1)
+    x = torch.tensor([ids], device=loaded.device)
+    out_ids: List[int] = []
+    with torch.no_grad():
+        logits, state = loaded.forward_stateful(x, state)
+        for _ in range(num_predict):
+            nxt = int(torch.argmax(logits[0, -1]).item())
+            if nxt == 0:
+                break
+            out_ids.append(nxt)
+            x = torch.tensor([[nxt]], device=loaded.device)
+            logits, state = loaded.forward_stateful(x, state)
+    return tok.decode(out_ids)
+
+
 def call_rwkv(model_ref: str, tokenizer, model, prompt: str,
               num_predict: int, n_passes: int = 1,
               readout_mode: str = "silent", readout_k: int = 64) -> str:
@@ -344,12 +388,18 @@ def main() -> int:
                     help="Ollama model name or path to .pth for rwkv backend.")
     ap.add_argument("--num-predict", type=int, default=64,
                     help="Answer token budget (separate from --readout-k).")
-    ap.add_argument("--axis", choices=["h10", "m"], default="h10",
+    ap.add_argument("--axis", choices=["h10", "m", "native"], default="h10",
                     help="rwkv backend only. 'h10': legacy N/K/readout_mode axes "
-                         "(--n-passes/--readout-mode/--readout-k). 'm': current "
+                         "(--n-passes/--readout-mode/--readout-k), sends the bare "
+                         "task prompt with no framing at all. 'm': current "
                          "WKV-loop M axis via experiments.rl.wkv_loop.generate_rollout "
                          "(--m-max/--feed-mode) — H10's own stale-marker note says "
-                         "N x K x mode collapsed to this single axis.")
+                         "N x K x mode collapsed to this single axis. 'native': "
+                         "the model's own training-corpus template "
+                         "(--system-prompt + task prompt + <think> cue unless "
+                         "--no-think-prefix) — added 2026-08-21 after both h10 and "
+                         "chat_wrap gave 0/48 on a checkpoint that only ever saw "
+                         "this exact template in training (see call_rwkv_native).")
     ap.add_argument("--m-max", type=int, default=16,
                     help="--axis=m only: max internal WKV-loop steps before forced exit.")
     ap.add_argument("--feed-mode", choices=["discrete", "expected", "residual"],
@@ -383,7 +433,18 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=None,
                     help="Cap number of tasks (for smoke tests).")
     ap.add_argument("--chat-wrap", action="store_true",
-                    help="Wrap prompt as 'User: ...\\n\\nAssistant:' for chat-trained models (G1i+).")
+                    help="ollama backend only (silently ignored for --backend rwkv, "
+                         "which call_rwkv/call_rwkv_mloop never consult) — wraps "
+                         "prompt as 'User: ...\\n\\nAssistant:'. For rwkv, use "
+                         "--axis native instead.")
+    ap.add_argument("--system-prompt",
+                    default="You are a precise reasoning assistant. Work step by step.",
+                    help="--axis native only. Default matches "
+                         "training/tokenize_plain_cot.py's actual training template.")
+    ap.add_argument("--no-think-prefix", action="store_true",
+                    help="--axis native only. Omit the '<think>\\n' cue — tests the "
+                         "model on a bare instruction with no trained scaffold at "
+                         "all (see call_rwkv_native docstring).")
     args = ap.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
@@ -397,7 +458,7 @@ def main() -> int:
 
     tok = mdl = loaded = None
     device = args.device or os.environ.get("NOESIS_EVAL_DEVICE", "cpu")
-    if args.backend == "rwkv" and args.axis == "m":
+    if args.backend == "rwkv" and args.axis in ("m", "native"):
         from experiments.rl.loader import load_rwkv7
         # backend=None: load_rwkv7's own auto-select (peft on cuda, blink on
         # cpu) — discrete feed_mode works on either; expected/residual need
@@ -421,6 +482,10 @@ def main() -> int:
             elif args.axis == "m":
                 resp = call_rwkv_mloop(loaded, task["prompt"], args.num_predict,
                                        args.m_max, args.feed_mode)
+            elif args.axis == "native":
+                resp = call_rwkv_native(loaded, task["prompt"], args.num_predict,
+                                        system_prompt=args.system_prompt,
+                                        think_prefix=not args.no_think_prefix)
             else:
                 resp = call_rwkv(args.model, tok, mdl, task["prompt"],
                                  args.num_predict, args.n_passes,
@@ -457,6 +522,8 @@ def main() -> int:
         "readout_k": args.readout_k,
         "m_max": args.m_max if args.axis == "m" else None,
         "feed_mode": args.feed_mode if args.axis == "m" else None,
+        "system_prompt": args.system_prompt if args.axis == "native" else None,
+        "think_prefix": (not args.no_think_prefix) if args.axis == "native" else None,
         "n_tasks": len(tasks),
         "elapsed_s": elapsed,
         "aggregate": agg,
@@ -466,6 +533,8 @@ def main() -> int:
     }
     if args.axis == "m":
         status = f"backend={args.backend} axis=m M_max={args.m_max} feed_mode={args.feed_mode}"
+    elif args.axis == "native":
+        status = f"backend={args.backend} axis=native think_prefix={not args.no_think_prefix}"
     else:
         status = f"backend={args.backend} N={args.n_passes} mode={args.readout_mode} K={args.readout_k}"
     out_path = save_result(
