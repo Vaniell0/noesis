@@ -69,6 +69,7 @@ if str(_REPO_ROOT) not in sys.path:
 from experiments.rl.loader import load_rwkv7
 from experiments.rl.checkpoint import save_checkpoint, load_checkpoint
 from experiments.rl.wkv_loop import _last_vec, _entropy_of_logits
+from experiments.rl.kalman_convergence import OnlineKalman
 from training.state_reg import DEFAULT_WORK_LAYERS, default_layer_weights
 
 
@@ -422,6 +423,21 @@ def main() -> int:
                           "relying on the state-distillation target alone "
                           "to teach that distinction implicitly. See "
                           "ThinkMarker docstring.")
+    ap.add_argument("--kalman-check-every", type=int, default=100,
+                     help="Feed state_loss into an OnlineKalman filter "
+                          "(experiments/rl/kalman_convergence.py) and print a "
+                          "trend warning every N steps. 0 disables monitoring "
+                          "entirely. Added 2026-08-21 after two runs this "
+                          "session ran hundreds of steps past a real state_loss "
+                          "reversal before a human ran kalman_convergence.py "
+                          "after the fact and found it.")
+    ap.add_argument("--kalman-max-rising", type=int, default=3,
+                     help="Auto-stop (same graceful checkpoint-then-exit path "
+                          "as SIGTERM) after this many CONSECUTIVE "
+                          "--kalman-check-every checks find state_loss's slope "
+                          "positive with 1-sigma CI excluding zero (a real, "
+                          "not noisy, upward trend) — 'critical trend'. 0 "
+                          "disables auto-stop (still prints warnings).")
     args = ap.parse_args()
 
     layers = tuple(int(x) for x in args.work_layers.split(","))
@@ -491,6 +507,9 @@ def main() -> int:
 
     signal.signal(signal.SIGTERM, _sigterm_handler)
 
+    state_loss_kalman: Optional[OnlineKalman] = None
+    kalman_rising_streak = 0
+
     print(f"[distill] work_layers={layers} l_state_weight={args.l_state_weight} "
           f"batch={args.batch} device={args.device} resume_step={global_step} "
           f"dynamic_phase_stop={args.dynamic_phase_stop} norm_anchor_weight={args.norm_anchor_weight}")
@@ -554,6 +573,28 @@ def main() -> int:
                                  "norm_penalty": mean_norm_penalty,
                                  "n_phase_tok": n_phase_tok_sum,
                                  "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
+
+        if args.kalman_check_every > 0:
+            if state_loss_kalman is None:
+                state_loss_kalman = OnlineKalman(mean_state)
+            else:
+                state_loss_kalman.update(mean_state)
+            if step % args.kalman_check_every == 0:
+                k = state_loss_kalman
+                ci_excludes_zero = abs(k.x[1]) >= k.P[1][1] ** 0.5
+                rising = ci_excludes_zero and k.x[1] > 0
+                kalman_rising_streak = kalman_rising_streak + 1 if rising else 0
+                trend = "RISING (real)" if rising else ("falling" if k.x[1] < 0 else "flat/noise")
+                print(f"[distill] [kalman] step {step}: state_loss level={k.x[0]:.3f} "
+                      f"slope={k.x[1]:+.5f}/step (±{k.P[1][1] ** 0.5:.5f}) — {trend} "
+                      f"(streak={kalman_rising_streak}/{args.kalman_max_rising})")
+                if args.kalman_max_rising > 0 and kalman_rising_streak >= args.kalman_max_rising:
+                    print(f"[distill] [kalman] CRITICAL TREND — state_loss rising for "
+                          f"{kalman_rising_streak} consecutive checks, stopping "
+                          f"(same checkpoint-then-exit path as SIGTERM). Resume from an "
+                          f"earlier checkpoint if this run's later ones aren't useful.")
+                    _checkpoint()
+                    return 0
 
         if step % args.ckpt_every == 0:
             _checkpoint()

@@ -149,6 +149,61 @@ def run_kalman(series, key, binomial):
     return results
 
 
+class OnlineKalman:
+    """Same local-level+trend filter as run_kalman, but incremental — one
+    .update(y) call per new observation, for live monitoring inside a
+    training loop instead of post-hoc analysis of a full log file.
+    Reuses the identical transition math and Q_LEVEL/Q_SLOPE constants.
+
+    One real difference from run_kalman, by necessity: run_kalman knows
+    the whole series up front and computes a single fixed observation-
+    noise R from all of it before filtering; an online filter can't see
+    the future, so R here is re-estimated from the diffs seen *so far*
+    on every call (same half-variance-of-diffs formula, growing window).
+    Early in a run this makes R noisier — the filter is honestly less
+    confident with 3 points than with 300 — which is the correct
+    behavior for live monitoring, not a bug to reconcile against the
+    batch tool's numbers.
+
+    Added 2026-08-21 so train_think_distill.py can self-monitor
+    state_loss and auto-stop on a sustained bad trend instead of
+    burning the rest of a run before a human runs kalman_convergence.py
+    after the fact and finds the reversal happened hundreds of steps
+    ago — exactly what happened twice this session.
+    """
+    def __init__(self, first_value: float):
+        self.x = [first_value, 0.0]
+        self.P = [[1.0, 0.0], [0.0, 1.0]]
+        self._diffs: list = []
+        self._prev_value = first_value
+
+    def update(self, y: float) -> dict:
+        self._diffs.append(y - self._prev_value)
+        self._prev_value = y
+        R = max((sum(d * d for d in self._diffs) / len(self._diffs)) / 2, 1e-6)
+
+        level_pred = self.x[0] + self.x[1]
+        slope_pred = self.x[1]
+        p00, p01, p10, p11 = self.P[0][0], self.P[0][1], self.P[1][0], self.P[1][1]
+        self.P = [
+            [p00 + p01 + p10 + p11 + Q_LEVEL, p01 + p11],
+            [p10 + p11, p11 + Q_SLOPE],
+        ]
+        self.x = [level_pred, slope_pred]
+
+        y_err = y - self.x[0]
+        S = self.P[0][0] + R
+        K0 = self.P[0][0] / S
+        K1 = self.P[1][0] / S
+        self.x = [self.x[0] + K0 * y_err, self.x[1] + K1 * y_err]
+        self.P = [
+            [self.P[0][0] - K0 * self.P[0][0], self.P[0][1] - K0 * self.P[0][1]],
+            [self.P[1][0] - K1 * self.P[0][0], self.P[1][1] - K1 * self.P[0][1]],
+        ]
+        return {"level": self.x[0], "slope": self.x[1],
+                "level_std": self.P[0][0] ** 0.5, "slope_std": self.P[1][1] ** 0.5}
+
+
 def report_full(results, label):
     for r in results:
         print(f"step={r['step']:>4}  raw={r['raw']:.4f}  "
