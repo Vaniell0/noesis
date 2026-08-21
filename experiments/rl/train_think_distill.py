@@ -140,6 +140,48 @@ def load_examples(path: Path) -> List[Dict[str, List[int]]]:
 
 
 # --------------------------------------------------------------------------- #
+# CLIPO-style in-batch contrastive term
+# --------------------------------------------------------------------------- #
+
+def _clipo_contrastive_loss(student_reprs: List[torch.Tensor],
+                             teacher_reprs: List[torch.Tensor],
+                             tau: float = 0.05) -> torch.Tensor:
+    """In-batch InfoNCE: each example's student state should be closer to
+    ITS OWN teacher target than to any OTHER example's target in the same
+    batch. Same tau-scaled cosine-similarity InfoNCE machinery as
+    rewards.py's `_infonce_reward`, but a genuinely different contrast
+    axis — that one contrasts correct-vs-incorrect ROLLOUTS (needs GRPO
+    sampling, doesn't exist in this supervised-distillation script, every
+    training example here is a "correct" teacher demonstration by
+    construction); this one contrasts DIFFERENT EXAMPLES within a batch,
+    the standard batch-negatives InfoNCE used in CLIP/SimCLR-style
+    self-supervised training.
+
+    Why this addresses the overfitting-to-narrow-answer-style concern
+    raised 2026-08-21 (see docs/rl-track.md): a plain per-example L2
+    target (state_loss) is satisfied by a shortcut that reproduces THIS
+    example's target closely, with no pressure for the representation to
+    be discriminative — nothing stops student states from different
+    examples collapsing toward a similar region if that happens to lower
+    the average L2 distance. Forcing student_i to be identifiably closer
+    to teacher_i than to teacher_j (all j != i in the batch) requires a
+    representation that actually encodes what's specific to each example,
+    not just "close enough on average" — needs batch >= 2 to have any
+    negatives at all; a batch of 1 has nothing to contrast against.
+
+    Symmetric InfoNCE via cross-entropy (the CLIP loss trick): similarity
+    matrix's diagonal (student_i vs teacher_i) should be the row-wise
+    argmax after softmax — equivalent to the explicit logsumexp form
+    `_infonce_reward` uses, cheaper to write batched.
+    """
+    S = F.normalize(torch.stack(student_reprs), dim=-1)          # [B, D], grad-tracked
+    T = F.normalize(torch.stack([t.detach() for t in teacher_reprs]), dim=-1)  # [B, D], fixed targets
+    sim = (S @ T.T) / tau                                        # [B, B]
+    targets = torch.arange(sim.shape[0], device=sim.device)
+    return F.cross_entropy(sim, targets)
+
+
+# --------------------------------------------------------------------------- #
 # Per-example step
 # --------------------------------------------------------------------------- #
 
@@ -156,13 +198,24 @@ def distill_step(
     tau_commit: float = 0.9,
     eps_plateau: float = 0.05,
     norm_anchor_threshold: float = 300.0,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
-    norm_penalty, cos_sim, n_answer_tokens, n_phase_tokens_used) — caller
-    combines/weights/backwards (norm_penalty is unscaled here, weighted
-    by --norm-anchor-weight at the call site, same convention as
-    state_loss/--l-state-weight; cos_sim is diagnostic-only, logged but
-    never added to the loss — see the per-layer computation below).
+    norm_penalty, cos_sim, student_repr, teacher_repr, n_answer_tokens,
+    n_phase_tokens_used) — caller combines/weights/backwards (norm_penalty
+    is unscaled here, weighted by --norm-anchor-weight at the call site,
+    same convention as state_loss/--l-state-weight; cos_sim is
+    diagnostic-only, logged but never added to the loss).
+
+    student_repr/teacher_repr (added 2026-08-21, for the CLIPO-style
+    in-batch contrastive term — see _clipo_contrastive_loss): the final
+    phase's student_wkv / teacher_wkv, flattened and concatenated across
+    `layers`, gradient-tracked for student (detached for teacher, same
+    as state_loss's target). NOT combined into a loss here — a
+    contrastive term needs multiple examples' representations in the
+    same computational context (this example's target vs. OTHER
+    examples in the batch as negatives), which a single distill_step
+    call can't see; the caller collects these across a whole batch
+    before computing it.
 
     M>1 (added 2026-08-19, "latent overshooting", see Dreaming arXiv
     2007.14535's J^k_KL): the teacher's think span is sliced into M
@@ -253,6 +306,8 @@ def distill_step(
     norm_penalty = torch.zeros((), device=device, dtype=torch.float32)
     cos_sim_sum = torch.zeros((), device=device, dtype=torch.float32)
     n_phase_tokens_used = 0
+    last_student_parts: List[torch.Tensor] = []
+    last_teacher_parts: List[torch.Tensor] = []
     for i in range(M_eff):
         prev_H: Optional[float] = None
         for _ in range(max_phase_tokens):
@@ -286,6 +341,9 @@ def distill_step(
             # real directional divergence norm_penalty doesn't address.
             cos_sim = F.cosine_similarity(s_flat.unsqueeze(0), t_flat.unsqueeze(0)).squeeze()
             cos_sim_sum = cos_sim_sum + layer_weights[L] * cos_sim
+            if i == M_eff - 1:
+                last_student_parts.append(s_flat)
+                last_teacher_parts.append(t_flat)
             d = s_flat - t_flat
             # Clamp, same convention as training/state_reg.py's per-layer
             # cap (there: -10.0, "≈2× typical pretrained baseline").
@@ -308,6 +366,8 @@ def distill_step(
     state_loss = state_loss / M_eff  # keep scale comparable across M
     norm_penalty = norm_penalty / M_eff
     cos_sim_mean = cos_sim_sum / M_eff  # diagnostic only, not in the loss
+    student_repr = torch.cat(last_student_parts)
+    teacher_repr = torch.cat(last_teacher_parts)
 
     answer_ids = ex["answer_ids"]
     logits_last = logits
@@ -323,7 +383,8 @@ def distill_step(
     token_lp = log_probs[0, torch.arange(len(answer_ids), device=device), target]
     answer_ce = -token_lp.mean()
 
-    return answer_ce, state_loss, norm_penalty, cos_sim_mean, len(answer_ids), n_phase_tokens_used
+    return (answer_ce, state_loss, norm_penalty, cos_sim_mean, student_repr, teacher_repr,
+            len(answer_ids), n_phase_tokens_used)
 
 
 # --------------------------------------------------------------------------- #
@@ -410,6 +471,24 @@ def main() -> int:
                      help="--norm-anchor-weight only: per-layer norm above "
                           "which the penalty activates. Empirical starting "
                           "point, not derived — see distill_step docstring.")
+    ap.add_argument("--clipo-weight", type=float, default=0.0,
+                     help="Weight on the CLIPO-style in-batch contrastive term "
+                          "(_clipo_contrastive_loss) — pulls each example's "
+                          "student state toward ITS OWN teacher target and "
+                          "away from other examples' targets in the same "
+                          "batch. 0 (default) = true no-op, same convention "
+                          "as --l-state-weight/--norm-anchor-weight. Needs "
+                          "--batch >= 2 to have any negatives to contrast "
+                          "against — silently skipped (a 0.0 term) on smaller "
+                          "batches regardless of this weight. Added "
+                          "2026-08-21 — see _clipo_contrastive_loss docstring "
+                          "for why this needed batch>1 and a restructured "
+                          "loop (every example's forward pass now stays in "
+                          "the graph until one combined backward, instead of "
+                          "each example calling .backward() immediately).")
+    ap.add_argument("--clipo-tau", type=float, default=0.05,
+                     help="--clipo-weight only: InfoNCE temperature. Same "
+                          "default as rewards.py's _infonce_reward.")
     ap.add_argument("--resume", type=Path, default=None)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--lora-r", type=int, default=0,
@@ -548,14 +627,24 @@ def main() -> int:
         if args.forge and int8_optimizer is not None:
             int8_optimizer.zero_grad()
 
-        ce_sum, state_sum, norm_penalty_sum, cos_sim_sum_batch, n_tok_sum, n_phase_tok_sum = 0.0, 0.0, 0.0, 0.0, 0, 0
+        # Collect the whole batch's forward passes BEFORE any backward —
+        # required for _clipo_contrastive_loss, which needs every
+        # example's student_repr/teacher_repr alive in the same
+        # computational context (each example used to call .backward()
+        # immediately and free its graph, which a cross-example
+        # contrastive term can't work with). Real cost: peak memory now
+        # holds args.batch forward graphs simultaneously instead of one
+        # at a time — watch VRAM if raising --batch on this VM.
+        ce_list, state_list, norm_penalty_list, cos_sim_list = [], [], [], []
+        student_repr_list, teacher_repr_list = [], []
+        n_tok_sum = n_phase_tok_sum = 0
         for _ in range(args.batch):
             if idx >= len(order):
                 rng.shuffle(order)
                 idx = 0
             ex = examples[order[idx]]
             idx += 1
-            ce, state_loss, norm_penalty, cos_sim, n_tok, n_phase_tok = distill_step(
+            ce, state_loss, norm_penalty, cos_sim, student_repr, teacher_repr, n_tok, n_phase_tok = distill_step(
                 loaded, ex, layers, layer_weights,
                 state_loss_clamp=args.state_loss_clamp,
                 M=args.M,
@@ -566,15 +655,28 @@ def main() -> int:
                 eps_plateau=args.eps_plateau,
                 norm_anchor_threshold=args.norm_anchor_threshold,
             )
-            total = (ce + args.l_state_weight * state_loss
-                     + args.norm_anchor_weight * norm_penalty) / args.batch
-            total.backward()
-            ce_sum += float(ce.item())
-            state_sum += float(state_loss.item())
-            norm_penalty_sum += float(norm_penalty.item())
-            cos_sim_sum_batch += float(cos_sim.item())
+            ce_list.append(ce)
+            state_list.append(state_loss)
+            norm_penalty_list.append(norm_penalty)
+            cos_sim_list.append(cos_sim)
+            student_repr_list.append(student_repr)
+            teacher_repr_list.append(teacher_repr)
             n_tok_sum += n_tok
             n_phase_tok_sum += n_phase_tok
+
+        ce_t = torch.stack(ce_list).mean()
+        state_t = torch.stack(state_list).mean()
+        norm_penalty_t = torch.stack(norm_penalty_list).mean()
+        cos_sim_t = torch.stack(cos_sim_list).mean()
+
+        clipo_loss = torch.zeros((), device=loaded.device)
+        if args.clipo_weight > 0 and len(student_repr_list) >= 2:
+            clipo_loss = _clipo_contrastive_loss(student_repr_list, teacher_repr_list, tau=args.clipo_tau)
+
+        total = (ce_t + args.l_state_weight * state_t
+                 + args.norm_anchor_weight * norm_penalty_t
+                 + args.clipo_weight * clipo_loss)
+        total.backward()
 
         if args.grad_clip > 0:
             grad_norm = torch.nn.utils.clip_grad_norm_(all_trainable_params, args.grad_clip)
@@ -585,19 +687,22 @@ def main() -> int:
             int8_optimizer.step()
         optimizer.step()
 
-        mean_ce = ce_sum / args.batch
-        mean_state = state_sum / args.batch
-        mean_norm_penalty = norm_penalty_sum / args.batch
-        mean_cos_sim = cos_sim_sum_batch / args.batch
+        mean_ce = float(ce_t.item())
+        mean_state = float(state_t.item())
+        mean_norm_penalty = float(norm_penalty_t.item())
+        mean_cos_sim = float(cos_sim_t.item())
+        mean_clipo_loss = float(clipo_loss.item())
         grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
         print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
               f"norm_penalty={mean_norm_penalty:.4f} cos_sim={mean_cos_sim:.4f} "
-              f"n_answer_tok={n_tok_sum} n_phase_tok={n_phase_tok_sum}{grad_norm_str}")
+              f"clipo_loss={mean_clipo_loss:.4f} n_answer_tok={n_tok_sum} "
+              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
                                  "state_loss": mean_state,
                                  "norm_penalty": mean_norm_penalty,
                                  "cos_sim": mean_cos_sim,
+                                 "clipo_loss": mean_clipo_loss,
                                  "n_phase_tok": n_phase_tok_sum,
                                  "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
 
