@@ -836,6 +836,61 @@ before the next attempt:**
     problem showing up internally first, not independent evidence that
     the M-loop specifically lacks genuine content.
 
+11. **EOS fix verified end-to-end, 2026-08-20/21 — `tokenize_plain_cot.py`
+    now emits a CE-supervised EOS segment after `answer`. From-scratch
+    LoRA run (r=32/alpha=64, base model, corrected corpus, 1950/1950
+    steps, no divergence) confirms the fix: `answer_ce` drops from 6.82
+    (step 1) to a stable ~1 level and stays flat (Kalman slope
+    -0.014±0.018/step, 1σ CI includes zero) — genuinely healthy, not
+    just non-diverging. `state_loss` climbs toward the 100.0 clamp
+    (level ~89 by the end, real sustained slope +0.24 → +0.15/step
+    through steps 600-1000, not noise) — same shape as the already-
+    documented Run 6 pattern (`project_noesis_think_distill_experiments`
+    memory): state distance from the teacher target grows while answer
+    quality stays good, "a genuinely different, self-consistent way to
+    solve tasks, not failure." Native-format sanity check on the final
+    checkpoint: wordsearch → `"CAT"` + clean EOS (exact match to the
+    200-step control run); bit-decoding → `"01"` + EOS — terser than the
+    control's `"01 00 10 00"` + EOS, not yet the correct full decode
+    (`"HI"`), but still a clean stop on real content, no loop.
+
+12. **First real per-token state-trajectory data
+    (`experiments/rl/state_trajectory_probe.py`, new — records WKV
+    state-norm at every individual token, prefill and self-feed alike,
+    unlike training's batched prefill which only exposes the end-of-read
+    state) — answers the open "how does the whole system change per
+    token, read vs generate" question raised earlier this session, and
+    finds something unexpected.** Same 4 fixed prompts as item 7's
+    diagnostic decoder, run against both base G1i (untrained) and the
+    item-11 checkpoint, layers L12/L16/L20 (the A0.5 set). Base model:
+    state norm during the 40-token read phase stays in a modest, stable
+    band (e.g. L20 ≈ 135-138 across all 4 prompts) and drifts up
+    *slowly and smoothly* during a forced 40-token generate phase (never
+    reaches EOS in that budget — confirms base has no stop behavior at
+    all, consistent with item 10's fix being training-induced, not
+    innate). **The item-11 checkpoint is dramatically different at the
+    exact same read position, same input tokens:** end-of-prompt state
+    norm is 3-4x the base model's, on every prompt and every tracked
+    layer (L20: 135→512-647; L16: 165-180→342-464). Then the generate
+    phase (only 2-3 tokens before EOS, matching item 11's terse-answer
+    finding) shows the norm barely moving further (e.g. 646.6→646.8) —
+    the state is already near its endpoint by the time generation
+    starts, not still travelling toward it. **This directly explains
+    item 11's climbing `state_loss`, not as a separate mystery:**
+    `state_loss` is a raw L2 distance, and a 3-4x growth in the whole
+    state's magnitude scale mechanically inflates any absolute distance
+    measured against it, independent of whether the *direction* the
+    model is moving is coherent (which the healthy `answer_ce` suggests
+    it is). **Also a direct, now-answered instance of the open
+    instrumentation gap `docs/community-map.md` §3.1 flagged**
+    ("instrument state_norm_layer_L_step_t... if any layer's norm grows
+    >10x over baseline, add an explicit norm-anchor loss or clip") — at
+    3-4x this isn't yet at that alarm threshold, but it's a real,
+    substantial, training-induced amplification worth tracking across
+    future runs (especially the planned full-FT continuation and any
+    M≥2 Dreaming-cycle work), not something to wave off because answer
+    quality currently looks fine.
+
 **Next phase — "Dreaming cycle" (user's naming, 2026-08-20), M>1,
 sits between the current M=1 phase and RL resuming.** Not a new
 mechanism to build and not a reframing of RL itself (both considered,
