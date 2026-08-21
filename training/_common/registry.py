@@ -37,6 +37,7 @@ from typing import Callable, Dict, List, Literal, Optional, Sequence
 # training/regenerate_corpus_index.py both import from this one list.
 KNOWN_MODULES: List[str] = [
     "training.scripts.normalize_hh_rlhf",
+    "training.scripts.gen_g1i_warmup",
 ]
 
 Kind = Literal["normalize", "tokenize"]
