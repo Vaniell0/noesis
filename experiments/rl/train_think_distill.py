@@ -68,7 +68,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from experiments.rl.loader import load_rwkv7
 from experiments.rl.checkpoint import save_checkpoint, load_checkpoint
-from experiments.rl.wkv_loop import _last_vec
+from experiments.rl.wkv_loop import _last_vec, _entropy_of_logits
 from training.state_reg import DEFAULT_WORK_LAYERS, default_layer_weights
 
 
@@ -151,9 +151,16 @@ def distill_step(
     M: int = 1,
     max_phase_tokens: int = 4,
     think_marker: Optional["ThinkMarker"] = None,
-) -> Tuple[torch.Tensor, torch.Tensor, int]:
+    dynamic_phase_stop: bool = False,
+    tau_commit: float = 0.9,
+    eps_plateau: float = 0.05,
+    norm_anchor_threshold: float = 300.0,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
-    n_answer_tokens) — caller combines/weights/backwards.
+    norm_penalty, n_answer_tokens, n_phase_tokens_used) — caller
+    combines/weights/backwards (norm_penalty is unscaled here, weighted
+    by --norm-anchor-weight at the call site, same convention as
+    state_loss/--l-state-weight).
 
     M>1 (added 2026-08-19, "latent overshooting", see Dreaming arXiv
     2007.14535's J^k_KL): the teacher's think span is sliced into M
@@ -169,6 +176,32 @@ def distill_step(
     corresponding teacher chunk before each comparison, not a fixed 1.
     See project_noesis_think_distill_experiments memory. M=1 with a
     1-token think span reduces to the exact original behavior.
+
+    dynamic_phase_stop (added 2026-08-21): reuses wkv_loop.py's
+    generate_rollout commit/plateau exit criterion (same
+    tau_commit/eps_plateau semantics, same check-before-feed order) for
+    the inner self-feed loop instead of always spending the full
+    max_phase_tokens — max_phase_tokens becomes a ceiling the model can
+    stop short of, not a fixed count. Same principle as the EOS fix
+    (let the model decide when a unit of content is done), applied one
+    level up: to a *phase*, not just the final answer. Off by default
+    (fixed-count behavior unchanged) — the LoRA-1950 run that produced
+    the first clean (post-EOS-fix) checkpoint used the fixed-count path,
+    so this needs its own isolated test before being trusted as a
+    default, same "one variable at a time" discipline as everywhere
+    else in this file's history.
+
+    norm_anchor_threshold: paired with --norm-anchor-weight (main()) —
+    a soft per-layer penalty on the student's *absolute* WKV state norm
+    exceeding this threshold, unlike state_loss_clamp (a hard cap on the
+    *distance-to-teacher*, doesn't stop the student's own magnitude from
+    growing). Added after `experiments/rl/state_trajectory_probe.py`
+    found the eos_full LoRA checkpoint's end-of-read state norm running
+    3-4x the base model's (L20: ~135-190 base vs. 340-650 trained) —
+    the default here (300.0) is an empirical starting point in that gap
+    (comfortably above base, below the observed blowup range), same
+    "set from measurement, not derived" convention as
+    state_loss_clamp's own 100.0 and training/state_reg.py's clamps.
     """
     device = loaded.device
     prompt = torch.tensor([ex["prompt_ids"]], dtype=torch.long, device=device)
@@ -197,9 +230,10 @@ def distill_step(
             teacher_states.append(state_t.wkv)
 
     # Student: prompt, then M_eff self-feed PHASES — each phase feeds
-    # back a FIXED max_phase_tokens self-generated tokens (argmax →
-    # feed back, repeated), deterministic, not tied to the teacher
-    # chunk's own (variable, per-example) length. Deliberately generous
+    # back up to max_phase_tokens self-generated tokens (argmax → feed
+    # back, repeated; early exit if dynamic_phase_stop, see docstring),
+    # not tied to the teacher chunk's own (variable, per-example)
+    # length. Deliberately generous
     # (default 8) rather than squeezed — compression/efficiency is RL's
     # job (β·M penalty + entropy-plateau exit already exist for that);
     # this stabilization phase should "unfold the chain" and reduce
@@ -214,12 +248,26 @@ def distill_step(
         marker = think_marker.embed.to(dtype=loaded.embedding_weight.dtype).view(1, 1, -1)
         logits, state_s = loaded.forward_stateful_embeds(marker, state_s)
     state_loss = torch.zeros((), device=device, dtype=torch.float32)
+    norm_penalty = torch.zeros((), device=device, dtype=torch.float32)
+    n_phase_tokens_used = 0
     for i in range(M_eff):
+        prev_H: Optional[float] = None
         for _ in range(max_phase_tokens):
             v = _last_vec(logits)
+            if dynamic_phase_stop:
+                # Same check-before-feed order as generate_rollout: a
+                # token that triggers commit/plateau is never fed back —
+                # the phase is judged "done" on the logits it already
+                # has, not on one more (redundant) self-feed step.
+                H_t = _entropy_of_logits(v)
+                max_p = float(F.softmax(v.float(), dim=-1).max().item())
+                if max_p > tau_commit or (prev_H is not None and abs(H_t - prev_H) < eps_plateau):
+                    break
+                prev_H = H_t
             next_id = int(v.argmax().item())
             step_inp = torch.tensor([[next_id]], dtype=torch.long, device=device)
             logits, state_s = loaded.forward_stateful(step_inp, state_s)
+            n_phase_tokens_used += 1
         student_wkv = state_s.wkv
         teacher_wkv = teacher_states[i]
         for L in layers:
@@ -234,7 +282,16 @@ def distill_step(
             # pre-blowup stable range (weighted-sum ~25-40).
             dist = torch.linalg.vector_norm(d.flatten()).clamp(max=state_loss_clamp)
             state_loss = state_loss + layer_weights[L] * dist
+            # Soft anchor on the student's OWN absolute norm — see
+            # docstring. Unlike `dist` above (distance to teacher, hard
+            # clamped), this is unclamped-below (relu(...) is 0 while
+            # under threshold, a true no-op there) and only grows past
+            # the threshold, so it doesn't fight state_loss's own
+            # gradient while the student is within a normal range.
+            student_norm = torch.linalg.vector_norm(student_wkv[L].float().flatten())
+            norm_penalty = norm_penalty + layer_weights[L] * F.relu(student_norm - norm_anchor_threshold) ** 2
     state_loss = state_loss / M_eff  # keep scale comparable across M
+    norm_penalty = norm_penalty / M_eff
 
     answer_ids = ex["answer_ids"]
     logits_last = logits
@@ -250,7 +307,7 @@ def distill_step(
     token_lp = log_probs[0, torch.arange(len(answer_ids), device=device), target]
     answer_ce = -token_lp.mean()
 
-    return answer_ce, state_loss, len(answer_ids)
+    return answer_ce, state_loss, norm_penalty, len(answer_ids), n_phase_tokens_used
 
 
 # --------------------------------------------------------------------------- #
@@ -288,9 +345,9 @@ def main() -> int:
                           "Added 2026-08-20 after a full-FT run's answer_ce "
                           "spiked 2.5->18 within one step on a single hard "
                           "wordsearch example (long prompt, multi-token "
-                          "answer, a task category the model has ~0% "
+                          "answer, a task category the model has ~0%% "
                           "baseline on) — with LoRA the adapter bottleneck "
-                          "(1.58% of params) implicitly capped how far any "
+                          "(1.58%% of params) implicitly capped how far any "
                           "one example's gradient could move the model; "
                           "full-FT has no such bottleneck, so an explicit "
                           "clip is needed instead. 1.0 is a standard default, "
@@ -306,10 +363,37 @@ def main() -> int:
                           "overshooting) instead of one far endpoint. M=1 is "
                           "the original single-step behavior.")
     ap.add_argument("--max-phase-tokens", type=int, default=8,
-                     help="Fixed self-fed token count per M phase, deliberately "
-                          "generous rather than squeezed — compression is RL's "
-                          "job (β·M + entropy-plateau exit), this phase should "
-                          "reduce pressure, not fight for a tight budget too.")
+                     help="Self-fed token count per M phase — a ceiling if "
+                          "--dynamic-phase-stop is on (model can stop earlier), "
+                          "otherwise a fixed count. Deliberately generous "
+                          "rather than squeezed either way.")
+    ap.add_argument("--dynamic-phase-stop", action="store_true",
+                     help="Let each M phase exit early via wkv_loop.py's own "
+                          "commit/plateau criterion (see distill_step docstring) "
+                          "instead of always spending the full --max-phase-tokens. "
+                          "Off by default — the first clean post-EOS-fix "
+                          "checkpoint used the fixed-count path; needs its own "
+                          "isolated test, added 2026-08-21.")
+    ap.add_argument("--tau-commit", type=float, default=0.9,
+                     help="--dynamic-phase-stop only: exit a phase early if "
+                          "max(softmax) exceeds this (model already confident "
+                          "about the next token). Same default as generate_rollout.")
+    ap.add_argument("--eps-plateau", type=float, default=0.05,
+                     help="--dynamic-phase-stop only: exit a phase early if "
+                          "entropy stops moving by more than this between "
+                          "steps. Same default as generate_rollout.")
+    ap.add_argument("--norm-anchor-weight", type=float, default=0.0,
+                     help="Weight on a soft penalty for the student's own WKV "
+                          "state norm exceeding --norm-anchor-threshold, added "
+                          "per-layer alongside state_loss. 0 (default) = true "
+                          "no-op, same convention as --l-state-weight. Added "
+                          "2026-08-21 after state_trajectory_probe.py found the "
+                          "eos_full checkpoint's state norm running 3-4x the "
+                          "base model's (see distill_step docstring).")
+    ap.add_argument("--norm-anchor-threshold", type=float, default=300.0,
+                     help="--norm-anchor-weight only: per-layer norm above "
+                          "which the penalty activates. Empirical starting "
+                          "point, not derived — see distill_step docstring.")
     ap.add_argument("--resume", type=Path, default=None)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--lora-r", type=int, default=0,
@@ -408,7 +492,8 @@ def main() -> int:
     signal.signal(signal.SIGTERM, _sigterm_handler)
 
     print(f"[distill] work_layers={layers} l_state_weight={args.l_state_weight} "
-          f"batch={args.batch} device={args.device} resume_step={global_step}")
+          f"batch={args.batch} device={args.device} resume_step={global_step} "
+          f"dynamic_phase_stop={args.dynamic_phase_stop} norm_anchor_weight={args.norm_anchor_weight}")
 
     order = list(range(len(examples)))
     idx = 0
@@ -420,23 +505,32 @@ def main() -> int:
         if args.forge and int8_optimizer is not None:
             int8_optimizer.zero_grad()
 
-        ce_sum, state_sum, n_tok_sum = 0.0, 0.0, 0
+        ce_sum, state_sum, norm_penalty_sum, n_tok_sum, n_phase_tok_sum = 0.0, 0.0, 0.0, 0, 0
         for _ in range(args.batch):
             if idx >= len(order):
                 rng.shuffle(order)
                 idx = 0
             ex = examples[order[idx]]
             idx += 1
-            ce, state_loss, n_tok = distill_step(loaded, ex, layers, layer_weights,
-                                                  state_loss_clamp=args.state_loss_clamp,
-                                                  M=args.M,
-                                                  max_phase_tokens=args.max_phase_tokens,
-                                                  think_marker=think_marker)
-            total = (ce + args.l_state_weight * state_loss) / args.batch
+            ce, state_loss, norm_penalty, n_tok, n_phase_tok = distill_step(
+                loaded, ex, layers, layer_weights,
+                state_loss_clamp=args.state_loss_clamp,
+                M=args.M,
+                max_phase_tokens=args.max_phase_tokens,
+                think_marker=think_marker,
+                dynamic_phase_stop=args.dynamic_phase_stop,
+                tau_commit=args.tau_commit,
+                eps_plateau=args.eps_plateau,
+                norm_anchor_threshold=args.norm_anchor_threshold,
+            )
+            total = (ce + args.l_state_weight * state_loss
+                     + args.norm_anchor_weight * norm_penalty) / args.batch
             total.backward()
             ce_sum += float(ce.item())
             state_sum += float(state_loss.item())
+            norm_penalty_sum += float(norm_penalty.item())
             n_tok_sum += n_tok
+            n_phase_tok_sum += n_phase_tok
 
         if args.grad_clip > 0:
             grad_norm = torch.nn.utils.clip_grad_norm_(all_trainable_params, args.grad_clip)
@@ -449,12 +543,16 @@ def main() -> int:
 
         mean_ce = ce_sum / args.batch
         mean_state = state_sum / args.batch
+        mean_norm_penalty = norm_penalty_sum / args.batch
         grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
         print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
-              f"n_answer_tok={n_tok_sum}{grad_norm_str}")
+              f"norm_penalty={mean_norm_penalty:.4f} n_answer_tok={n_tok_sum} "
+              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
                                  "state_loss": mean_state,
+                                 "norm_penalty": mean_norm_penalty,
+                                 "n_phase_tok": n_phase_tok_sum,
                                  "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
 
         if step % args.ckpt_every == 0:
