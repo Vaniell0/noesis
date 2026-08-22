@@ -4,9 +4,15 @@
 Not RL (no GRPO, no reward, no sampling). Plain supervised training: for
 each step9-corpus example, a *teacher* pass sees the real explicit
 `<think>...</think>` text and reaches a real WKV state; a *student* pass
-sees only the prompt, then takes ONE self-feed step (M=1, mirroring the
-M-loop's own mechanism in wkv_loop.py::generate_rollout) and is pulled
-toward the teacher's state before decoding the real answer.
+sees only the prompt, then runs M ThinkChain phases (--think-marker,
+2026-08-21 — M_eff explicitly-distinct learned embeddings, each fed
+straight into WKV, budget-matched to its teacher chunk's real token
+count; see ThinkChain/distill_step docstrings) and is pulled toward the
+teacher's per-phase states before decoding the real answer. No self-feed
+loop — this no longer mirrors wkv_loop.py::generate_rollout's mechanism
+(that script's discrete/expected/residual feed modes are all still the
+old homogeneous self-feed loop; porting ThinkChain there is separate,
+not-yet-done work, see project_noesis_rl_track memory).
 
 Why this exists (2026-08-19): the M-loop content decoder
 (_diag_think_content.py, deleted after use) showed that even a "clean"
@@ -20,19 +26,21 @@ a real target: the state a genuine explicit-think pass reaches for the
 same prompt. RL (β/γ/ζ) stays off until this stabilizes — see
 docs/rl-track.md and project_noesis_info_density_reward memory.
 
-Loss:  L = -log_prob(answer | student_state_after_M1)
+Loss:  L = -log_prob(answer | student_state_after_M_phases)
            + l_state_weight * state_distillation_loss
 
-state_distillation_loss = weighted L2 between student's post-M1 WKV state
-and the teacher's post-think WKV state (teacher detached — gradient only
-flows through the student path). Layer selection and weights are the
-already-validated A0.5 set from training/state_reg.py (L12/L16/L20,
-KL-profile-derived) — not re-guessed here.
+state_distillation_loss = weighted L2 between student's post-phase WKV
+states and the teacher's post-chunk WKV states, summed over phases
+(teacher detached — gradient only flows through the student path).
+Layer selection and weights are the already-validated A0.5 set from
+training/state_reg.py (L12/L16/L20, KL-profile-derived) — not
+re-guessed here.
 
-M is fixed at 1 for this phase (not commit/plateau-adaptive) — a single
-self-feed step is small enough that the model can plausibly learn to
-treat it as "keep thinking," not "the user asked a new question,"
-which is the failure mode a larger M risks at this untrained stage.
+M is a launch choice (--M), not fixed at 1 — ThinkChain's explicitly-
+distinct per-phase markers were built specifically so a larger M no
+longer risks the "self-feed loop can't tell phase i from i+1" collapse
+that motivated keeping M=1 under the old self-feed mechanism (see
+ThinkChain docstring below).
 
 Data: training/tokenised/step9_combined_train.pt — already-built step9
 SFT corpus (real <think> spans, real answers), reused as-is. Each
@@ -49,6 +57,7 @@ state is supervised, never the specific token chosen at the M-loop step.
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import random
 import shutil
@@ -150,6 +159,69 @@ def load_examples(path: Path) -> List[Dict[str, List[int]]]:
     return examples
 
 
+# Best-effort task-category tags from prompt text, checked in order (first
+# match wins — more specific keywords before generic ones). Not exhaustive
+# (g1i_warmup_v3's full category list was never enumerated, only sampled) —
+# good enough for batch-diversity purposes, where an imperfect split still
+# beats no split. Added 2026-08-22 after finding step9_combined_train.pt
+# was 85% one answer-template (see --data default's help text) and a batch
+# could silently be all-one-category even under a full corpus shuffle.
+_CATEGORY_KEYWORDS = [
+    ("crossword", "xword"),
+    ("Find the word", "wordsearch"),
+    ("bitwise XOR", "xor"),
+    ("column addition", "arithmetic"),
+    ("next number in this sequence", "sequence"),
+    ("letter matrix", "matrix"),
+    ("Decimal", "bits"),
+    ("Binary", "bits"),
+]
+
+
+def _infer_category(prompt_text: str) -> str:
+    for keyword, cat in _CATEGORY_KEYWORDS:
+        if keyword in prompt_text:
+            return cat
+    return "other"
+
+
+class _CategoryBatcher:
+    """Cycles through categories in shuffled round-robin order so a batch
+    draws from as many DISTINCT categories as possible, instead of a flat
+    shuffle-and-walk that can (and did — see _infer_category above) land
+    a whole batch in one category on a skewed corpus. Within a category,
+    also cycles its own shuffled order (no example repeats until that
+    category's pool is exhausted). If batch size > number of categories,
+    later picks in a batch necessarily repeat a category — unavoidable,
+    not a bug."""
+    def __init__(self, examples: List[Dict], categories: List[str], rng: random.Random):
+        self.examples = examples
+        self.rng = rng
+        self.by_cat: Dict[str, List[int]] = {}
+        for i, c in enumerate(categories):
+            self.by_cat.setdefault(c, []).append(i)
+        self.cat_order: List[str] = list(self.by_cat)
+        self.rng.shuffle(self.cat_order)
+        self.cat_pos = 0
+        self.within_pos: Dict[str, int] = {c: 0 for c in self.by_cat}
+        for idxs in self.by_cat.values():
+            self.rng.shuffle(idxs)
+
+    def next(self) -> Dict:
+        if self.cat_pos >= len(self.cat_order):
+            self.cat_pos = 0
+            self.rng.shuffle(self.cat_order)
+        cat = self.cat_order[self.cat_pos]
+        self.cat_pos += 1
+        idxs = self.by_cat[cat]
+        pos = self.within_pos[cat]
+        if pos >= len(idxs):
+            self.rng.shuffle(idxs)
+            pos = 0
+        self.within_pos[cat] = pos + 1
+        return self.examples[idxs[pos]]
+
+
 # --------------------------------------------------------------------------- #
 # CLIPO-style in-batch contrastive term
 # --------------------------------------------------------------------------- #
@@ -205,10 +277,12 @@ def distill_step(
     M: int = 1,
     think_marker: Optional["ThinkChain"] = None,
     norm_anchor_threshold: float = 300.0,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int]:
+    dynamic_phase_stop: bool = False,
+    eps_plateau: float = 0.05,
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
-    norm_penalty, cos_sim, student_repr, teacher_repr, n_answer_tokens)
-    — caller combines/weights/backwards (norm_penalty is unscaled here,
+    norm_penalty, cos_sim, student_repr, teacher_repr, n_answer_tokens,
+    n_phase_tokens_used) — caller combines/weights/backwards (norm_penalty is unscaled here,
     weighted by --norm-anchor-weight at the call site, same convention
     as state_loss/--l-state-weight; cos_sim is diagnostic-only, logged
     but never added to the loss).
@@ -248,6 +322,26 @@ def distill_step(
     naturally-distinct text chunks — instead of asking the student to
     manufacture that distinctness from a homogeneous loop.
 
+    2026-08-22 fix (the 08-21 rewrite was incomplete, not wrong): each
+    phase now feeds its marker REPEATED chunk_lens[i] times (budget-
+    matched to the teacher chunk it's scored against) instead of a
+    single fixed step — the 08-21 version silently dropped budget-
+    matching, a fix this exact file's history already needed once
+    before for the old self-feed loop (see the M=2/1-token-budget
+    divergence in `project_noesis_think_distill_experiments` memory).
+    Repeating a CONSTANT embedding isn't the loop-collapse failure mode
+    above: R/K/V/decay/a/g derive from `x` and `time_shift(x)-x`, and
+    the latter is exactly zero from the second repeat onward (identical
+    consecutive inputs) — a fixed transformation applied T times to the
+    evolving state, not a self-referential one that drifts as its own
+    input grows more homogeneous. chunk_lens[i] is a ceiling on that
+    repeat count, not mandatory — --dynamic-phase-stop exits early once
+    the WKV state itself stops moving (relative delta vs. --eps-plateau),
+    not once the phase's readout is confident (an earlier same-day version
+    borrowed generate_rollout's confidence check verbatim and found it
+    fires almost immediately on g1i_warmup_v3's templated answer format —
+    see --dynamic-phase-stop's help text).
+
     norm_anchor_threshold: paired with --norm-anchor-weight (main()) —
     a soft per-layer penalty on the student's *absolute* WKV state norm
     exceeding this threshold, unlike state_loss_clamp (a hard cap on the
@@ -271,6 +365,14 @@ def distill_step(
     # grad — these are fixed targets, not a trainable path.
     bounds = [round(i * n / M_eff) for i in range(M_eff + 1)]
     teacher_states = []
+    chunk_lens: List[int] = []  # real per-chunk token count — reused below
+    # so the student's phase gets the SAME step budget as the teacher chunk
+    # it's compared against, not a fixed 1. Restores the budget-matching
+    # fix from the pre-ThinkChain self-feed loop (see M>1 docstring section
+    # above) that the 2026-08-21 rewrite dropped: each phase there was a
+    # single forward_stateful_embeds call (T=1) regardless of chunk length,
+    # asking one learned vector's one-step WKV update to land wherever the
+    # teacher's chunk_lens[i] real tokens landed it.
     with torch.no_grad():
         state_t = loaded.new_state(batch=1)
         _, state_t = loaded.forward_stateful(prompt, state_t)
@@ -282,17 +384,29 @@ def distill_step(
             end = min(n, max(bounds[i + 1], pos + 1))  # each chunk gets >=1 token, never past n
             chunk = think_ids[pos:end]
             pos = end
+            chunk_lens.append(len(chunk))
             chunk_t = torch.tensor([chunk], dtype=torch.long, device=device)
             _, state_t = loaded.forward_stateful(chunk_t, state_t)
             teacher_states.append(state_t.wkv)
 
     # Student: prompt, then M_eff PHASES — each phase feeds its own
-    # distinct, directly-learned marker (think_marker.step(i+1)) straight
-    # into WKV, no self-feed token loop. Mirrors the teacher's M_eff
-    # real, naturally-distinct chunks with M_eff explicitly-distinct
-    # learned signals instead of one signal reused in a homogeneous
-    # loop (see distill_step's M>1 docstring section for why the old
-    # argmax self-feed loop was replaced).
+    # distinct, directly-learned marker (think_marker.step(i+1)) via
+    # forward_stateful_embeds, REPEATED up to chunk_lens[i] times
+    # (budget-matched to the teacher chunk it's scored against; a
+    # ceiling, not mandatory — see --dynamic-phase-stop below). One
+    # call per repeat (not a single batched [B,T,D] call) specifically
+    # so an early-exit check can run between repeats. Repeating a
+    # CONSTANT embedding is not the old loop-collapse failure mode:
+    # R/K/V/decay/a/g are derived from `x` and `time_shift(x) - x`, and
+    # the latter is exactly zero from the second repeat onward
+    # (identical consecutive inputs) — so this is a fixed, well-defined
+    # transformation applied T times to the evolving WKV state (like a
+    # constant decay rate applied for T steps), not a self-referential
+    # loop whose own transformation drifts as its input grows more
+    # confident/homogeneous (see distill_step's M>1 docstring section
+    # for why THAT was the actual collapse mechanism). Mirrors the
+    # teacher's M_eff real, naturally-distinct chunks with M_eff
+    # explicitly-distinct learned signals, each given the same real budget.
     state_s = loaded.new_state(batch=1)
     logits, state_s = loaded.forward_stateful(prompt, state_s)
     if think_marker is not None:
@@ -303,10 +417,52 @@ def distill_step(
     cos_sim_sum = torch.zeros((), device=device, dtype=torch.float32)
     last_student_parts: List[torch.Tensor] = []
     last_teacher_parts: List[torch.Tensor] = []
+    n_phase_tokens_used = 0
     for i in range(M_eff):
         if think_marker is not None:
             phase_marker = think_marker.step(i + 1).to(dtype=loaded.embedding_weight.dtype).view(1, 1, -1)
-            logits, state_s = loaded.forward_stateful_embeds(phase_marker, state_s)
+            # chunk_lens[i] is a CEILING on this phase's repeat budget, not
+            # a mandatory count. No intermediate teacher target is needed
+            # for an early exit: the loss below still compares whatever
+            # state the student reaches against the teacher's end-of-chunk
+            # target regardless of how many repeats it took to get there.
+            #
+            # 2026-08-22, second correction: the first version of this
+            # criterion (re-added same day) borrowed wkv_loop.py::
+            # generate_rollout's readout-confidence check (max_p/entropy on
+            # the phase's logits) verbatim. Real run diagnosis found it
+            # fires almost always after exactly 1 repeat (157/~200 logged
+            # steps had n_phase_tok == batch size) — traced to the actual
+            # cause: g1i_warmup_v3's answer format is templated (e.g.
+            # "Decimal: ..."), so the readout is >99.9% confident about the
+            # first ANSWER TOKEN almost immediately, regardless of whether
+            # the phase has done any real work — generate_rollout's
+            # confidence check is valid THERE because it inspects the
+            # actual next token about to be generated in a real answer
+            # stream; here the phase readout is a side artifact with no
+            # such meaning. Replaced with a criterion that checks the
+            # THING the phase is actually supposed to be doing: has the
+            # WKV state (not the incidental readout) stopped moving,
+            # relative to its own scale. `eps_plateau` is now a relative
+            # threshold (fraction of current state norm), not an entropy
+            # difference — `tau_commit` had no analogous meaning to
+            # preserve and was removed.
+            prev_phase_wkv: Optional[Dict[int, torch.Tensor]] = None
+            for _ in range(chunk_lens[i]):
+                logits, state_s = loaded.forward_stateful_embeds(phase_marker, state_s)
+                n_phase_tokens_used += 1
+                if dynamic_phase_stop:
+                    cur_phase_wkv = {L: state_s.wkv[L] for L in layers}
+                    if prev_phase_wkv is not None:
+                        delta_norm = sum(
+                            torch.linalg.vector_norm((cur_phase_wkv[L].float() - prev_phase_wkv[L].float()).flatten()).item()
+                            for L in layers)
+                        ref_norm = sum(
+                            torch.linalg.vector_norm(cur_phase_wkv[L].float().flatten()).item()
+                            for L in layers)
+                        if delta_norm < eps_plateau * max(ref_norm, 1e-6):
+                            break
+                    prev_phase_wkv = cur_phase_wkv
         student_wkv = state_s.wkv
         teacher_wkv = teacher_states[i]
         for L in layers:
@@ -365,7 +521,7 @@ def distill_step(
     answer_ce = -token_lp.mean()
 
     return (answer_ce, state_loss, norm_penalty, cos_sim_mean, student_repr, teacher_repr,
-            len(answer_ids))
+            len(answer_ids), n_phase_tokens_used)
 
 
 # --------------------------------------------------------------------------- #
@@ -376,7 +532,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
     ap.add_argument("--out", required=True, type=Path)
-    ap.add_argument("--data", default=str(_REPO_ROOT / "training/tokenised/step9_combined_train.pt"))
+    ap.add_argument("--data", default=str(_REPO_ROOT / "training/tokenised/g1i_warmup_v3_eos_train.pt"),
+                     help="Tokenised corpus (see load_examples). Default switched 2026-08-22 "
+                          "from step9_combined_train.pt (268 examples, 85%% share one answer-"
+                          "template first token — real, verified skew, not a sampling artifact) "
+                          "to g1i_warmup_v3_eos_train.pt (10529 examples, 1409 unique first "
+                          "words, matrix_tasks.jsonl-derived, already has the EOS fix).")
     ap.add_argument("--l-state-weight", type=float, default=0.01,
                      help="Weight on the state-distillation term (λ_state). "
                           "Not swept yet — start small, watch state_loss trend "
@@ -416,10 +577,37 @@ def main() -> int:
                           "(found 2026-08-19: unbounded state_loss ran away, "
                           "25→4493 over ~10 steps, dragging answer_ce up with it).")
     ap.add_argument("--M", type=int, default=1,
-                     help="Number of self-feed steps, each scored against its "
-                          "own slice of the teacher's think trajectory (latent "
-                          "overshooting) instead of one far endpoint. M=1 is "
-                          "the original single-step behavior.")
+                     help="Number of ThinkChain phases (needs --think-marker to "
+                          "mean anything — without it there's no per-phase "
+                          "signal at all). Each phase is scored against its own "
+                          "slice of the teacher's think trajectory (latent "
+                          "overshooting), budget-matched to that slice's real "
+                          "token count (a ceiling — see --dynamic-phase-stop). "
+                          "M=1 collapses to a single phase.")
+    ap.add_argument("--dynamic-phase-stop", action="store_true",
+                     help="Let each phase exit its repeat budget early once the "
+                          "WKV state itself stops moving (see --eps-plateau), "
+                          "instead of always spending the full budget-matched "
+                          "chunk_lens[i] repeats. 2026-08-22, second version: "
+                          "the first version checked readout-logit confidence "
+                          "(borrowed from generate_rollout) — found to fire "
+                          "almost always after exactly 1 repeat on "
+                          "g1i_warmup_v3, because that corpus's templated "
+                          "answer format (e.g. 'Decimal: ...') makes the FIRST "
+                          "answer token >99.9%% predictable regardless of "
+                          "whether the phase did any real work. Readout "
+                          "confidence answers a question that only makes sense "
+                          "for a real generated token stream (generate_rollout's "
+                          "context); this phase's readout is a side artifact. "
+                          "State-motion is the thing the phase is actually "
+                          "supposed to be doing.")
+    ap.add_argument("--eps-plateau", type=float, default=0.05,
+                     help="--dynamic-phase-stop only: exit a phase early once "
+                          "the WKV state's move this repeat is smaller than "
+                          "this fraction of its own current norm (relative, "
+                          "not absolute — so it scales with however large the "
+                          "state has grown, e.g. from --norm-anchor-weight "
+                          "drift).")
     ap.add_argument("--norm-anchor-weight", type=float, default=0.0,
                      help="Weight on a soft penalty for the student's own WKV "
                           "state norm exceeding --norm-anchor-threshold, added "
@@ -510,15 +698,19 @@ def main() -> int:
     print(f"[distill] {len(examples)} usable examples from {args.data}")
     rng = random.Random(args.seed)
 
+    categories = [_infer_category(loaded.tokenizer.decode(ex["prompt_ids"])) for ex in examples]
+    cat_counts = {c: categories.count(c) for c in sorted(set(categories))}
+    print(f"[distill] category split (best-effort, see _infer_category): {cat_counts}")
+    batcher = _CategoryBatcher(examples, categories, rng)
+
     think_marker = ThinkChain(loaded.n_embd, args.M).to(args.device) if args.think_marker else None
     if think_marker is not None:
         print(f"[distill] think-chain enabled ({loaded.n_embd}-dim, {args.M + 1} distinct markers: 1 entry + {args.M} phase)")
 
     int8_optimizer = None
-    named_trainable_params = [(n, p) for n, p in loaded.model.named_parameters() if p.requires_grad]
+    params = [p for p in loaded.model.parameters() if p.requires_grad]
     if think_marker is not None:
-        named_trainable_params += [(f"think_marker.{n}", p) for n, p in think_marker.named_parameters()]
-    params = [p for _, p in named_trainable_params]
+        params += list(think_marker.parameters())
     all_trainable_params = list(params)  # kept separately: `params` gets
     # reassigned to int8_optimizer.other_params below when --forge is on
     # (a subset — the rest is managed inside int8_optimizer), but grad
@@ -533,7 +725,6 @@ def main() -> int:
 
     args.out.mkdir(parents=True, exist_ok=True)
     log_path = args.out / "distill_log.jsonl"
-    weight_trace_path = args.out / "weight_trace.jsonl"
 
     global_step = 0
     if args.resume is not None:
@@ -579,10 +770,9 @@ def main() -> int:
 
     print(f"[distill] work_layers={layers} l_state_weight={args.l_state_weight} "
           f"batch={args.batch} device={args.device} resume_step={global_step} "
-          f"M={args.M} norm_anchor_weight={args.norm_anchor_weight}")
+          f"M={args.M} norm_anchor_weight={args.norm_anchor_weight} "
+          f"dynamic_phase_stop={args.dynamic_phase_stop}")
 
-    order = list(range(len(examples)))
-    idx = 0
     step = global_step
     while step < args.steps:
         step += 1
@@ -601,20 +791,40 @@ def main() -> int:
         # at a time — watch VRAM if raising --batch on this VM.
         ce_list, state_list, norm_penalty_list, cos_sim_list = [], [], [], []
         student_repr_list, teacher_repr_list = [], []
-        n_tok_sum = 0
+        n_tok_sum = n_phase_tok_sum = n_skipped = 0
         for _ in range(args.batch):
-            if idx >= len(order):
-                rng.shuffle(order)
-                idx = 0
-            ex = examples[order[idx]]
-            idx += 1
-            ce, state_loss, norm_penalty, cos_sim, student_repr, teacher_repr, n_tok = distill_step(
-                loaded, ex, layers, layer_weights,
-                state_loss_clamp=args.state_loss_clamp,
-                M=args.M,
-                think_marker=think_marker,
-                norm_anchor_threshold=args.norm_anchor_threshold,
-            )
+            ex = batcher.next()
+            try:
+                ce, state_loss, norm_penalty, cos_sim, student_repr, teacher_repr, n_tok, n_phase_tok = distill_step(
+                    loaded, ex, layers, layer_weights,
+                    state_loss_clamp=args.state_loss_clamp,
+                    M=args.M,
+                    think_marker=think_marker,
+                    norm_anchor_threshold=args.norm_anchor_threshold,
+                    dynamic_phase_stop=args.dynamic_phase_stop,
+                    eps_plateau=args.eps_plateau,
+                )
+            except torch.cuda.OutOfMemoryError:
+                # Same pattern as train_wkv_loop.py's per-rollout OOM
+                # catch-and-skip (added 2026-08-18 there after one OOM
+                # cascaded into 13/16 rollouts failing the same step) —
+                # this loop holds args.batch forward graphs simultaneously
+                # (see comment above, for CLIPO), so an unusually long
+                # example (a long chunk_lens[i] repeat budget under
+                # --dynamic-phase-stop, or a long think-span) can push an
+                # otherwise-fine batch over the edge. Drop this example,
+                # keep the step going with whatever the rest of the batch
+                # produces, rather than crash an hours-long run over one
+                # example. gc.collect() before empty_cache() — same
+                # ordering, same reference-cycle reasoning as
+                # train_wkv_loop.py (no torch.utils.checkpoint hooks here,
+                # but harmless and consistent to keep the order anyway).
+                n_skipped += 1
+                print(f"[distill] WARNING: OOM on an example this batch — skipping, "
+                      f"{n_skipped} skipped this step", file=sys.stderr)
+                gc.collect()
+                torch.cuda.empty_cache()
+                continue
             ce_list.append(ce)
             state_list.append(state_loss)
             norm_penalty_list.append(norm_penalty)
@@ -622,6 +832,12 @@ def main() -> int:
             student_repr_list.append(student_repr)
             teacher_repr_list.append(teacher_repr)
             n_tok_sum += n_tok
+            n_phase_tok_sum += n_phase_tok
+
+        if not ce_list:
+            print(f"[distill] step {step}: entire batch OOM'd, skipping this "
+                  f"optimizer step entirely", file=sys.stderr)
+            continue
 
         ce_t = torch.stack(ce_list).mean()
         state_t = torch.stack(state_list).mean()
@@ -654,28 +870,16 @@ def main() -> int:
         grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
         print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
               f"norm_penalty={mean_norm_penalty:.4f} cos_sim={mean_cos_sim:.4f} "
-              f"clipo_loss={mean_clipo_loss:.4f} n_answer_tok={n_tok_sum}{grad_norm_str}")
+              f"clipo_loss={mean_clipo_loss:.4f} n_answer_tok={n_tok_sum} "
+              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
                                  "state_loss": mean_state,
                                  "norm_penalty": mean_norm_penalty,
                                  "cos_sim": mean_cos_sim,
                                  "clipo_loss": mean_clipo_loss,
+                                 "n_phase_tok": n_phase_tok_sum,
                                  "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
-
-        if weight_trace_path is not None:
-            # Per-named-parameter gradient L2 norm — answers "when/what/
-            # where does the system actually change", separate from the
-            # aggregate loss metrics above. One line per step; each key
-            # is a real module path (e.g. layer index + LoRA A/B or the
-            # ThinkChain marker), so a spike isolates to a specific part
-            # of the model, not just "grad_norm went up" in aggregate.
-            trace = {"step": step}
-            for name, p in named_trainable_params:
-                if p.grad is not None:
-                    trace[name] = float(torch.linalg.vector_norm(p.grad.detach()).item())
-            with open(weight_trace_path, "a") as f:
-                f.write(json.dumps(trace) + "\n")
 
         if kalman_watch is not None:
             field_values = {"answer_ce": mean_ce, "state_loss": mean_state,
