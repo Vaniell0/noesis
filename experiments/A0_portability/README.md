@@ -106,9 +106,12 @@ would be noise on top of the actual signal.
 - **A0.6**: two models (World-0.4B and G1d-0.4B) — matches the A0.5
   grid. G1H at 2.9B remains a Gate-2 GPU follow-up.
 - **A0.7 tier-1**: two checkpoint pairs — `World-0.4B ↔ G1d-0.4B`
-  (definitely runnable, both are in cache) and `World-1.5B ↔ G1H-1.5B`
-  (needs G1H-1.5B availability check — deferred to `a07_tier1_run.py`
-  design if not readily downloadable).
+  (definitely runnable, both are in cache) and `World-1.5B ↔ G1H-1.5B`.
+  Resolved (corrected 2026-08-23): `a07_tier1_run.py`, `verdict_a07.py`,
+  `results_a07.md`, `results_a07_summary.md` all exist with real per-cell
+  data (clean-negative verdicts) — already reflected in
+  `experiments/README.md`'s "Correctly refuted" bucket, this file's own
+  prose just wasn't updated to match.
 
 ### D6. Directional symmetry
 
