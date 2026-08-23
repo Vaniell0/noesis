@@ -265,6 +265,134 @@ class FrozenFinalReadoutController(StagedController):
         return c
 
 
+class ChainedController(nn.Module):
+    """The 'reproduce fleeb83, but exact operations' extension
+    (2026-08-23): not just solving one fixed operation, but SELECTING
+    which operation to apply from an input signal, and CHAINING several
+    such steps so each round's result becomes the next round's operand
+    — read entirely from state, no operand ever re-presented externally.
+    This is the toy analog of fleeb83's own reported mechanism (frozen
+    G1h 7.2B + trained state interface: operands/operation-selection
+    held in state, one result written back and used to select/feed the
+    next operation, 48/48 correct at chain depths 4/8/16/32) — except on
+    continuous, exact arithmetic (add/multiply) rather than his
+    Boolean/symbolic operations.
+
+    Round 0 loads the initial operand `a` (op-code ignored that round).
+    Rounds 1..n_rounds-1 each reveal one (operand, op_code) pair; the
+    controller must combine whatever the CURRENT state holds (the
+    running accumulator) with that operand according to op_code — it
+    never sees the running total directly, only through state."""
+
+    OPS = {0: lambda x, y: x + y, 1: lambda x, y: x * y}
+
+    def __init__(self, head_size: int, n_rounds: int, hidden: int = 64):
+        super().__init__()
+        self.head_size = head_size
+        self.n_rounds = n_rounds
+        self.round_embed = nn.Embedding(n_rounds, 8)
+        self.net = nn.Sequential(
+            nn.Linear(2 + 8, hidden), nn.Tanh(),
+            nn.Linear(hidden, hidden), nn.Tanh(),
+            nn.Linear(hidden, 4 * head_size + head_size),
+        )
+        self.readout = nn.Linear(head_size, 1)
+
+    def step_controls(self, operand: torch.Tensor, op_code: torch.Tensor, round_idx: int) -> dict:
+        B = operand.shape[0]
+        re = self.round_embed(torch.full((B,), round_idx, dtype=torch.long, device=operand.device))
+        x = torch.stack([operand, op_code], dim=-1)
+        raw = self.net(torch.cat([x, re], dim=-1))
+        r, k, v, a_logit, w_raw = raw.split(self.head_size, dim=-1)
+        a_gate = torch.sigmoid(a_logit)
+        w = -F.softplus(-w_raw) - 0.5
+        return {"r": r, "k": k, "v": v, "w": w, "a_gate": a_gate}
+
+    def forward(self, operands: list[torch.Tensor], op_codes: list[torch.Tensor]
+                ) -> torch.Tensor:
+        """operands[0] is the initial value (op_codes[0] can be anything,
+        e.g. zeros — ignored for round 0). operands[i]/op_codes[i] for
+        i>=1 are the (value, op) pair revealed at round i."""
+        B = operands[0].shape[0]
+        state = torch.zeros(B, self.head_size, self.head_size, device=operands[0].device)
+        out = None
+        for r in range(self.n_rounds):
+            c = self.step_controls(operands[r], op_codes[r], r)
+            out, state = micro_wkv_step(state, c["r"], c["k"], c["v"], c["w"], c["a_gate"])
+        return self.readout(out).squeeze(-1)
+
+
+def _sample_chain(n: int, n_rounds: int, lo: float, hi: float, seed: int | None = None
+                   ) -> tuple[list[torch.Tensor], list[torch.Tensor], torch.Tensor]:
+    if seed is not None:
+        torch.manual_seed(seed)
+    operands = [torch.empty(n).uniform_(lo, hi) for _ in range(n_rounds)]
+    op_codes = [torch.zeros(n)] + [torch.randint(0, 2, (n,)).float() for _ in range(n_rounds - 1)]
+    acc = operands[0].clone()
+    for r in range(1, n_rounds):
+        add_mask = op_codes[r] == 0
+        acc = torch.where(add_mask, acc + operands[r], acc * operands[r])
+    return operands, op_codes, acc
+
+
+def train_chain(n_rounds: int = 3, head_size: int = 8, n_train_steps: int = 8000,
+                 batch_size: int = 64, lr: float = 3e-3, seed: int = 0) -> dict:
+    """Trains ChainedController on a chain of n_rounds-1 operations
+    (add/multiply, selected per-round), reports in-distribution R² per
+    op-combination (does it generalize across ALL combinatorial op
+    sequences, not just a memorized subset?) and held-out(OOD)-range R²
+    (2026-08-23 result: R²=0.998 in-distribution across all 4 two-op
+    combinations at n_rounds=3, but only R²=0.60 held-out — a compounded
+    2-step chain generalizes noticeably worse than the single-operation
+    task, error likely compounding across rounds; honest, not hidden)."""
+    torch.manual_seed(seed)
+    model = ChainedController(head_size, n_rounds)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+
+    for step in range(n_train_steps):
+        operands, op_codes, target = _sample_chain(batch_size, n_rounds, -2.5, 2.5)
+        y_hat = model(operands, op_codes)
+        loss = F.mse_loss(y_hat, target)
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        if step % 2000 == 0 or step == n_train_steps - 1:
+            print(f"  [chain] step {step}: train_mse={loss.item():.5f}")
+
+    with torch.no_grad():
+        operands, op_codes, target = _sample_chain(2000, n_rounds, -2.5, 2.5)
+        y_hat = model(operands, op_codes)
+        id_r2 = 1.0 - F.mse_loss(y_hat, target).item() / target.var().item()
+        print(f"  [chain] all op-combinations, in-distribution: R²={id_r2:.4f}")
+
+        per_combo = {}
+        if n_rounds == 3:  # only 2 ops -> 4 combinations, breakdown is readable
+            names = {0: "add", 1: "mul"}
+            for o1 in (0, 1):
+                for o2 in (0, 1):
+                    mask = (op_codes[1] == o1) & (op_codes[2] == o2)
+                    if mask.sum() > 10:
+                        r2_c = 1.0 - F.mse_loss(y_hat[mask], target[mask]).item() / target[mask].var().item()
+                        key = f"{names[o1]}_{names[o2]}"
+                        per_combo[key] = r2_c
+                        print(f"    op1={names[o1]:3s} op2={names[o2]:3s}: n={mask.sum().item():4d}  R²={r2_c:.4f}")
+
+        sign = lambda t: (torch.randint(0, 2, t.shape) * 2 - 1).float()
+        ood_operands = [operands[0]] + [None] * (n_rounds - 1)
+        ood_operands[0] = sign(operands[0]) * torch.empty(2000).uniform_(2.5, 4.0)
+        for r in range(1, n_rounds):
+            ood_operands[r] = sign(operands[r]) * torch.empty(2000).uniform_(2.5, 4.0)
+        ood_acc = ood_operands[0].clone()
+        for r in range(1, n_rounds):
+            add_mask = op_codes[r] == 0
+            ood_acc = torch.where(add_mask, ood_acc + ood_operands[r], ood_acc * ood_operands[r])
+        y_ood = model(ood_operands, op_codes)
+        ood_r2 = 1.0 - F.mse_loss(y_ood, ood_acc).item() / ood_acc.var().item()
+        print(f"  [chain] held-out(OOD) range: R²={ood_r2:.4f}")
+
+    return {"n_rounds": n_rounds, "id_r2": id_r2, "ood_r2": ood_r2, "per_combo_r2": per_combo}
+
+
 def train_task(task: str, n_steps: int, head_size: int, n_train_steps: int = 4000,
                 batch_size: int = 64, lr: float = 3e-3, seed: int = 0,
                 freeze_final_readout: bool = False) -> dict:
@@ -366,21 +494,33 @@ def main() -> int:
                           "bilinear shortcut so any surviving computation must route "
                           "through k/v/a_gate (erase/rewrite) instead — the decisive "
                           "version of the ablation, see hypotheses/H25.md.")
+    ap.add_argument("--chain", action="store_true",
+                     help="Train ChainedController: select and chain n_rounds-1 "
+                          "operations (add/multiply, per-round) from state, the "
+                          "'reproduce fleeb83 but on exact operations' extension. "
+                          "Uses --steps as n_rounds — pass --steps 3 to reproduce "
+                          "the 2026-08-23 tested config (load + 2 ops); --steps's "
+                          "own default (4) has not been separately verified.")
     args = ap.parse_args()
 
     if args.verify:
         verify()
+        return 0
+    if args.chain:
+        train_chain(n_rounds=args.steps, head_size=args.head_size,
+                     n_train_steps=args.train_steps, seed=args.seed)
         return 0
     if args.train:
         train_task(args.train, args.steps, args.head_size,
                     n_train_steps=args.train_steps, seed=args.seed,
                     freeze_final_readout=args.freeze_final_readout)
         return 0
-    print("Nothing to do — pass --verify or --train {add,multiply} "
-          "[--freeze-final-readout]. fleeb83's full counterfactual-altered-"
-          "recurrence test (predict the exact output under an altered law, "
-          "not just ablate-and-measure) and the Jacobian-sampling / "
-          "pseudo-inverse-ceiling items (hypotheses/H25.md) are not implemented yet.")
+    print("Nothing to do — pass --verify, --train {add,multiply} "
+          "[--freeze-final-readout], or --chain. fleeb83's full "
+          "counterfactual-altered-recurrence test on a real checkpoint "
+          "(the toy version is tautological — see module docstring for why) "
+          "and the Jacobian-sampling / pseudo-inverse-ceiling items "
+          "(hypotheses/H25.md) are not implemented yet.")
     return 0
 
 

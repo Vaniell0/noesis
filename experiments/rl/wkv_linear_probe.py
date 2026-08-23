@@ -159,7 +159,7 @@ def main() -> int:
     examples = gen_examples(args.n_examples, args.n_bits, args.seed)
     print(f"[wkv_linear_probe] generated {len(examples)} XOR examples, "
           f"{args.n_bits}-bit operands")
-    states = collect_states(loaded, think_marker, examples, layers, args.phase_repeat_ticks)
+    states = collect_states(loaded, think_marker, examples, layers, args.phase_repeat_ticks).cpu()
     print(f"[wkv_linear_probe] collected states: {tuple(states.shape)}")
 
     n_train = int(len(examples) * 0.8)
