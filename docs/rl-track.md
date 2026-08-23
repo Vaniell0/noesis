@@ -172,6 +172,16 @@ not resolved — read it before assuming the two stages share a curriculum.
    two marker types. Ties to the parked "WKV as programmable coprocessor"
    idea (memory `project_noesis_reservoir_computing_idea`). Not
    implementable today — ROSA has no LM-scale checkpoint to delegate to.
+   **Scope narrowed by the toy-computer result below (hypotheses/H25.md,
+   2026-08-23): WKV's own delta-rule physics was shown to perform real
+   bilinear computation (multiplication) unaided, at toy scale, once
+   given the right control signals.** If that holds up at real-model
+   scale (not yet tested), a delegate-to-ROSA marker isn't the default
+   path for exact operations in general — it becomes a reserve for
+   whatever WKV's own precision/capacity genuinely can't cover (longer
+   chains, larger magnitudes, operations past what per-channel decay +
+   rank-1 write can represent), not a replacement for training WKV
+   itself to compute.
 
 Mechanism-level detail (recurrence math, decay derivation) lives in
 `docs/rwkv7-mechanics.md`. Full run-by-run narrative for Phases 1/1.5/2 is the

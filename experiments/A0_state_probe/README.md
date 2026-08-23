@@ -4,6 +4,15 @@
 Full A0.5 causal grid ran 2026-08-04: 2×2 model/prompt grid, 7 corruption families.
 Results in `results/pilot/` and `results/a05_ext/`. H8 and H9 SUPPORTED.
 
+**`micro_wkv.py` (added 2026-08-23, different scope from the rest of this
+directory)** — a from-scratch, faithful single-head RWKV-7 delta-rule
+cell plus a trainable controller, for H25 ("WKV as a learnable physical
+computer"). Not a probe against a real checkpoint like everything else
+here — a controlled toy experiment (verified against `docs/rwkv7-mechanics.md`,
+then used to test whether the recurrence's own physics, not just a
+trained network sitting on top of it, can perform real computation).
+Full narrative and results in `hypotheses/H25.md`'s "Cheap pre-test" section.
+
 ## Purpose
 
 Directly test whether RWKV-7's WKV state does *computational* work
