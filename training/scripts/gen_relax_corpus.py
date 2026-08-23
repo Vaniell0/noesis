@@ -20,6 +20,12 @@ text — procedurally faking a real dialect would teach the model our
 guess at a dialect, not the dialect itself; skipped here, needs a real
 corpus if pursued (see docs/rl-track.md's Phase 1.5 note).
 
+Not implemented, flagged 2026-08-23 as a separate future idea, not
+folded in here: keyboard-LAYOUT confusion (e.g. Cyrillic text typed with
+a Latin/QWERTY layout active, producing deterministic per-character
+garbling — "ghbdtn" for "привет" — a different, real LLM weakness,
+worth its own eval, not a random-substitution typo like the ones below).
+
 Usage:
     training/.venv/bin/python training/scripts/gen_relax_corpus.py \\
         --out training/corpus_open/relax_v1.jsonl \\
@@ -101,14 +107,16 @@ def _git_log_snippets(n: int, rng: random.Random) -> list[str]:
     return messages[:n]
 
 
-def _docs_prose_snippets(n: int, rng: random.Random) -> list[str]:
-    """Paragraph-length prose chunks from docs/*.md, stripped of markdown
-    code fences and headers — plain explanatory text, still real, not
-    synthetic; excludes matrix-task-shaped content since docs/rl-track.md
-    etc. describe those tasks rather than being formatted as one."""
+def _prose_snippets_from(root: Path, n: int, rng: random.Random) -> list[str]:
+    """Paragraph-length prose chunks from all *.md under `root` (recursive),
+    stripped of markdown code fences and headers — plain explanatory
+    text, still real, not synthetic."""
     paras: list[str] = []
-    for path in (_REPO_ROOT / "docs").glob("*.md"):
-        text = path.read_text(encoding="utf-8", errors="ignore")
+    for path in root.rglob("*.md"):
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
         text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)
         for para in re.split(r"\n\s*\n", text):
             para = para.strip()
@@ -120,9 +128,26 @@ def _docs_prose_snippets(n: int, rng: random.Random) -> list[str]:
     return paras[:n]
 
 
+def _docs_prose_snippets(n: int, rng: random.Random) -> list[str]:
+    """noesis's own docs/*.md — excludes matrix-task-shaped content since
+    docs/rl-track.md etc. describe those tasks rather than being
+    formatted as one."""
+    return _prose_snippets_from(_REPO_ROOT / "docs", n, rng)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
+    ap.add_argument("--extra-docs-root", type=Path, default=None,
+                     help="Additional real *.md source outside this repo "
+                          "(e.g. another of the user's own projects) — "
+                          "2026-08-23: used to widen the pool beyond "
+                          "noesis's own ~400 usable snippets. The output "
+                          "file mixing this content in should NOT be "
+                          "committed to noesis's public repo (same "
+                          "convention as matrix_tasks.jsonl) unless the "
+                          "source project's content is confirmed fine to "
+                          "publish.")
     ap.add_argument("--n", type=int, default=2000)
     ap.add_argument("--error-rate", type=float, default=0.0,
                      help="Per-character typo probability (0 = clean text, "
@@ -133,22 +158,37 @@ def main() -> int:
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
-    n_git = args.n // 2
-    n_docs = args.n - n_git
-    sources = ([("git_log", t) for t in _git_log_snippets(n_git, rng)]
-               + [("docs_prose", t) for t in _docs_prose_snippets(n_docs, rng)])
+    if args.extra_docs_root is not None:
+        n_git = args.n // 3
+        n_docs = args.n // 3
+        n_extra = args.n - n_git - n_docs
+        sources = ([("git_log", t) for t in _git_log_snippets(n_git, rng)]
+                   + [("docs_prose", t) for t in _docs_prose_snippets(n_docs, rng)]
+                   + [("extra_docs", t) for t in _prose_snippets_from(args.extra_docs_root, n_extra, rng)])
+    else:
+        n_git = args.n // 2
+        n_docs = args.n - n_git
+        sources = ([("git_log", t) for t in _git_log_snippets(n_git, rng)]
+                   + [("docs_prose", t) for t in _docs_prose_snippets(n_docs, rng)])
     rng.shuffle(sources)
 
     items = []
     for source, text in sources:
         noisy = inject_typos(text, args.error_rate, rng)
+        words = noisy.split(" ")
+        if len(words) < 8:
+            continue  # too short for a meaningful prompt/answer split
+        split = max(4, int(len(words) * rng.uniform(0.5, 0.75)))
+        prompt_text, answer_text = " ".join(words[:split]), " ".join(words[split:])
         uid = hashlib.md5(f"{source}:{text[:60]}".encode()).hexdigest()[:10]
         items.append({
             "id": f"relax_{source}_{uid}",
-            "system": "You are a helpful assistant.",
-            "user": f"Continue or summarize the following in one sentence:\n\n{noisy}",
-            "think": "",  # explicit: M=0, no phase marker, no <think> content at all
-            "answer": text if args.error_rate > 0 else "",  # denoised target only when noisy
+            # Plain continuation, no instruction-following framing at all --
+            # deliberately: the point of M=0 is ordinary next-token language
+            # modeling on non-task text, not a "summarize this" task shape
+            # (which would just be a different task, not the absence of one).
+            "prompt": prompt_text,
+            "answer": answer_text,
             "source": f"relax_{source}",
             "error_rate": args.error_rate,
         })
@@ -156,8 +196,10 @@ def main() -> int:
     with open(args.out, "w") as f:
         for it in items:
             f.write(json.dumps(it, ensure_ascii=False) + "\n")
-    print(f"[gen_relax_corpus] {len(items)} examples "
-          f"({n_git} git_log + {n_docs} docs_prose, error_rate={args.error_rate}) -> {args.out}")
+    src_counts = {s: sum(1 for s2, _ in sources if s2 == s) for s in dict.fromkeys(s for s, _ in sources)}
+    print(f"[gen_relax_corpus] {len(items)} examples (requested {args.n}, "
+          f"some dropped for being too short to split) from pool "
+          f"{src_counts}, error_rate={args.error_rate} -> {args.out}")
     return 0
 
 

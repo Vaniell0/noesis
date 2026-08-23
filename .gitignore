@@ -102,3 +102,4 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+training/corpus_open/relax_v1.jsonl
