@@ -545,7 +545,8 @@ RL level, not just at the SFT level (where H12b.i slot-entropy operates).
 
 ---
 
-## ByteAdapter — tokenizer-free word-search (planned, GPU required)
+## ByteAdapter — tokenizer-free word-search (closed, not "planned" —
+## header corrected 2026-08-23 to match this section's own body below)
 
 **Motivation.** WorldTokenizer creates two problems for grid tasks (see below).
 ByteAdapter eliminates both by replacing the 65k-vocab embedding with a 256-entry
@@ -1518,15 +1519,26 @@ IPC≈0 as settled.
 **H10 gap** = requires nonlinear probe, not ridge regression. Run MLP probe after RL
 checkpoint 1 to quantify how much task-relevant content accumulates in WKV state.
 
-### MLP probe — NOT YET RUN (was mislabeled RUNNING; corrected 2026-08-17)
+### MLP probe — RUN, 2026-08-18 (corrected 2026-08-23; the command below
+### is a dead path, the probe shipped a different way)
 
-Nonlinear IPC via 2-layer MLP replacing ridge regression. Written 2026-08-16,
-never actually launched — was queued behind the H10 state_readout eval (CPU
-contention), then behind an IPC re-verification run. Linear IPC≈0 (held-out)
-on G1i was the original motivation, but that result is itself now flagged as
-unreconciled (see §State metrics above) — worth keeping in mind when reading
-whatever this probe eventually reports.
+Nonlinear IPC via 2-layer MLP replacing ridge regression. **Not actually
+"never launched" as this section previously said** — it shipped by
+migrating into the `experiments/_common` shared battery framework rather
+than through the standalone invocation below, closing the open TODO.
+Real results across G1d/G1i/step9b-e1 (`hypotheses/H8.md`'s 2026-08-18
+evidence entry): same size ordering as linear IPC (G1d 6.9-10.5/16 >>
+G1i 0.46-3.6/16 ≈ step9b-e1 3.9/16) — G1i stays low even under a strictly
+more expressive nonlinear estimator, so the near-zero-past-L0 pattern
+isn't a linear-probe blind spot. Result files:
+`experiments/_common/results/{mlp_ipc_g1d_64,mlp_ipc_g1i_256,g1d_battery_gpu_smoke,g1i_battery_gpu,step9b_e1_battery_gpu}/mlp_ipc.json`.
+Linear IPC≈0 (held-out) on G1i was the original motivation, but that
+result is itself flagged as unreconciled (see §State metrics above) —
+worth keeping in mind when reading these numbers too.
 
+Dead invocation path, kept only as a historical note — the file this
+pointed at directly (not through `_common`) was never actually the one
+that ran:
 ```bash
 python3 experiments/A0_state_probe/mlp_probe.py \
     --model models/rwkv7-g1i-2.9b-20260805-ctx16384.pth \
@@ -1534,7 +1546,6 @@ python3 experiments/A0_state_probe/mlp_probe.py \
     --out experiments/A0_state_probe/results/mlp_ipc_g1i_base.json
 ```
 
-Result: `experiments/A0_state_probe/results/mlp_ipc_g1i_base.json` (pending).
 Re-run after RL checkpoint 1 on same trajectory (`--trajectory-in`) to measure
 how much task-relevant content accumulates in WKV state after training.
 
