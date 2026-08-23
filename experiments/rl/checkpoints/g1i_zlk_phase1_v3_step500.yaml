@@ -1,0 +1,72 @@
+# ZLK Phase 1 (ThinkChain), v3 — step 500. LoRA delta only, resume with
+# checkpoint.py::load_checkpoint(this_dir, loaded, mlp_delta=think_marker)
+# on top of models/rwkv7-g1i-2.9b-20260805-ctx16384.pth. Full merged model
+# NOT committed here (5.9GB) — only the LoRA/ThinkChain delta (182MB).
+
+base_model: rwkv7-g1i-2.9b-20260805-ctx16384.pth
+script: experiments/rl/train_think_distill.py
+mechanism: ThinkChain (M+1 explicit distinct markers, no self-feed loop)
+date: 2026-08-22/23
+
+training_config:
+  M: 1
+  think_marker: true
+  lora_r: 32
+  lora_alpha: 64
+  batch: 4
+  dynamic_phase_stop: true   # state-delta criterion, not readout-confidence
+  norm_anchor_weight: 0.01
+  clipo_weight: 0.1
+  l_state_weight: 0.01       # NOTE: user's standing position post-run is
+                              # this should be 0 going forward — see
+                              # feedback_noesis_standing_positions memory.
+                              # This checkpoint still used 0.01.
+  data: training/tokenised/g1i_warmup_v3_eos_train.pt  # 10529 examples,
+                                                         # category-diverse batching
+  kalman_config: training/config/kalman_watch_phase1_v3.yaml  # state_loss
+                                                                # max_bad_streak
+                                                                # loosened 3->20
+  steps: 500  # resumed from an earlier stop at step 100 (Kalman, since-loosened)
+
+final_metrics_step500:
+  answer_ce: 0.922   # plateaued (Kalman slope ~0, noise)
+  state_loss: 59.89  # still rising (+0.027/step, real) — above both prior
+                      # stop-points (v2's failure was 55.7 at step 200)
+  cos_sim: 0.972     # plateaued, notably higher than early training (~0.945)
+  norm_penalty: 6.75 # rising — state magnitude exceeding norm_anchor_threshold
+  grad_norm: 71.7    # rising, not stabilizing
+  n_phase_tok: 8.0   # phase converges in ~8 repeats (down from 12 at step100)
+
+qualitative_check (M=0 vs trained M=1, same checkpoint):
+  step100:
+    xor_1010_0110:  {M0: "coherent reasoning trace (incomplete)", M1: "1010 (WRONG)"}
+    flower_vs_car:  {M0: "A car is bigger than a flower. (correct)", M1: "apples (nonsense)"}
+  step500:
+    xor_1010_0110:  {M0: "1010\\n0110 (incoherent repeat)", M1: "1100 (CORRECT)"}
+    flower_vs_car:  {M0: "A flower (WRONG)", M1: "car (correct)"}
+  # Full reversal step100->step500: phase went from actively harmful to
+  # actively helpful; M=0 path degraded over the same training (LoRA
+  # plausibly reshaping weights toward "expect the marker" as normal
+  # operation) — risk to watch on the planned full-FT continuation
+  # (Phase 1.5), which has no LoRA bottleneck limiting that drift.
+
+comparison_to_archived_step200 (old self-feed loop mechanism, see
+  models/archive/ and experiments/rl/runs/archive/ on the VM):
+  step200_old: {n_phase_tok_range: "7-85 (highly variable)", state_loss_range: "45-56", grad_norm_range: "14-71"}
+  this_run_step100-133: {n_phase_tok: "~5 (mostly exactly batch-size, i.e. 1 repeat/example)", state_loss: "46-48.5", grad_norm: "7.7-19"}
+  # ThinkChain is structurally more stable by construction (constant
+  # marker vs. self-referential drift) — confirmed empirically, not
+  # just theoretically.
+
+not_yet_run_against_this_checkpoint:
+  - R-lens probe on non-task axes (shortcut-vs-reasoning check, see
+    docs/rl-track.md's Step10-skip section — this exact diagnostic was
+    specified for exactly this risk and never applied here)
+  - state_trajectory_probe.py --resume against this checkpoint (the
+    fixed retention/delta_cos_prev version — earlier tonight's --resume
+    runs used random markers before this checkpoint existed)
+
+status: kept as a milestone/reference checkpoint, not the final Phase 1
+  answer. Next planned step is Phase 1.5 (merge + full-FT continuation,
+  robustness across M=0..3), not more steps at this exact config — see
+  docs/rl-track.md and memory project_noesis_rl_track.

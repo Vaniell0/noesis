@@ -1,0 +1,32 @@
+# Kalman auto-stop watch, Phase 1 ThinkChain v3 variant — 2026-08-22.
+#
+# Copy of kalman_watch.yaml with state_loss's max_bad_streak loosened
+# (3 -> 20), not the shared default touched. Reasoning (see
+# project_noesis_rl_track memory / session log): state_loss's absolute
+# level here (~47-50) is already at or below the OLD self-feed
+# mechanism's known-working level (~60, no blowup ever observed there),
+# and some residual gap from the teacher's state is expected by
+# construction — ThinkChain's markers are deterministic, so the student
+# can never exactly reproduce the teacher's trajectory. The v3 run's
+# rising trend at step 100 (+0.019/step) is far milder than v2's real
+# blowup (+0.350/step, streak 46) — this config still catches a genuine
+# blowup of that kind, just tolerates the mild, expected drift long
+# enough to see whether more training (not yet enough steps to move past
+# teacher-forced-CE into free-generation coherence — see session log's
+# M=0 vs M=1 "apples"/"1010" finding) resolves it on its own.
+#
+# l_state_weight was deliberately NOT changed alongside this — one
+# variable at a time, so whichever way this run goes, it's attributable.
+
+check_every: 100
+
+tracks:
+  - field: state_loss
+    bad_direction: rising
+    max_bad_streak: 20
+  - field: answer_ce
+    bad_direction: rising
+    max_bad_streak: 3
+  - field: cos_sim
+    bad_direction: falling
+    max_bad_streak: 3

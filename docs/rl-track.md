@@ -197,15 +197,23 @@ geometry that decides emit-vs-hold (H16) lives in the other 98.75%, which LoRA n
 touches. GRPO training the M-step exit behavior is exactly this kind of routing
 decision, so full FT is the only path expected to move it.
 
-**Cost consequence, not yet addressed.** Full FT on G1i 2.9B needs the whole
-optimizer state in VRAM — naive estimate ~18GB. **FORGE** (`dk4248/FORGE`, fuses the
-optimizer into the backward pass, tile-by-tile) was researched as the fix
-(~18GB → ~12–13GB) but was never actually wired in — no `wrap_rwkv7()` helper, no
-integration with `_load_peft`/`train_wkv_loop.py`. This is a real gap, not a
-"someday": at 24GB (4090) the naive full-FT VRAM budget leaves little room for
-`G × batch` rollout parallelism; FORGE's headroom directly trades against how many
-GRPO rollouts can run per update. Needs doing before the next GPU session, not
-during it.
+**Cost consequence — RESOLVED 2026-08-18, this paragraph was stale until
+2026-08-23's pass caught it.** Full FT on G1i 2.9B needs the whole optimizer
+state in VRAM — naive estimate ~18GB. The originally-planned fix (`dk4248/FORGE`
+fusing the optimizer *into* the backward pass) turned out structurally
+incompatible with a WKV-loop's BPTT (fused-into-backward assumes each layer's
+weight is touched by `backward()` at most once per step; the loop's weight-reuse
+across timesteps violates that). Real fix that shipped instead:
+`experiments/rl/loader.py::Int8AdamW` — don't fuse anything into backward, run
+ordinary full-BPTT `backward()`, then apply FORGE's standalone
+`optimizer_only_adamw_int8state()` kernel to the resulting `.grad` tensors.
+Verified on G1d, 5 real steps, no crash. VRAM measured (not the informal
+~18→~12-13GB estimate above): 13713 MiB without `--forge`, 13655 MiB with, at
+G=4/batch=2/M_max=4 — essentially no difference at *this* scale, because the
+WKV-loop's own unbatched per-rollout activation memory dominates total usage
+here, not optimizer state (see §Known risks #2 below — that's the actual lever
+for a bigger run, more than the optimizer path). Full writeup: memory
+`project_noesis_forge_bptt`.
 
 The old ε-mask / two-phase-SFT framing that used to live in this section is gone —
 SFT was skipped entirely (see §Step10 SFT below), and ε-mask doesn't exist in the
@@ -303,8 +311,16 @@ reference for what to revisit, not as a description of current behavior.
 rollouts together, pull correct vs. incorrect apart, as a reward term
 (InfoNCE on a WKV-state projection) on top of binary correctness. Made moot in
 its original form: it was keyed on WKV state at `</think>`, and there is no
-`</think>` position in the M-step loop anymore. A re-adaptation would key on
-state at the commit step instead — not designed yet.
+`</think>` position in the M-step loop anymore. Still not in `rewards.py`/
+`train_wkv_loop.py` (this section's own RL loop) — but the re-adaptation this
+used to say "not designed yet" now exists one layer over, in
+`experiments/rl/train_think_distill.py`'s `_clipo_contrastive_loss`
+(2026-08-21/22): keyed on `i == M_eff - 1` (the last/commit phase's
+student/teacher representations), in-batch InfoNCE across examples instead of
+correct-vs-incorrect rollouts (distillation has no incorrect rollout to
+contrast against). Porting this from the distillation script into the actual
+RL loop is part of the generate_rollout ThinkChain port this doc's Phase 3
+section flags as not yet done — not a separate open design question anymore.
 
 **L_KVB auxiliary SFT loss** (arXiv 2602.21204) — teach think-span tokens to
 carry KV structure the WKV state absorbs cleanly. Doesn't apply without an SFT
@@ -427,24 +443,33 @@ directional-attention training.
 
 ---
 
-## Switch-GRPO (arXiv 2606.13106) — role unclear post-WKV-loop, kept for reference
+## Switch-GRPO (arXiv 2606.13106) — reopened by ThinkChain, was "role unclear"
 
 Source: arXiv 2606.13106 "Switchable Latent Reasoning."
 
-**This section's original framing is obsolete, not just its terminology.** It
-was written as "Phase 4 extends Phase 3's visible `<think>` tokens to latent
-blocks" — but current Phase 3 (WKV-loop) *already* has no emitted reasoning
-tokens at all (M internal steps, nothing decoded). There is no "text →
-`<latent>` placeholder" curriculum to run, because there was never text to
-replace. Switch-GRPO's actual contribution — a well-defined policy ratio at
-explicit block boundaries — solves a problem the M-step design doesn't have
-(WKV-loop's boundary is just "the loop exited," not a tagged token pair).
+**This section's original verdict (below, kept for the reasoning) is now
+reopened, not settled, by the ThinkChain port this doc's Phase 3 section
+flags as pending.** The verdict was: Switch-GRPO's contribution — a
+well-defined policy ratio at *explicit block boundaries* — "solves a problem
+the M-step design doesn't have," because the old self-feed loop's boundary is
+just "the loop exited," not a tagged pair. **ThinkChain's boundaries are the
+opposite of that**: `M` explicitly-distinct, discretely-indexed phase markers,
+each with a definite start/end — exactly the kind of explicit block structure
+Switch-GRPO's ratio mechanism attaches to. Once `generate_rollout` uses
+ThinkChain markers instead of the old feed modes (the not-yet-done port), this
+paper's boundary-token machinery becomes the natural candidate for keeping
+GRPO's policy ratio well-defined over the (still non-emitting) phase
+positions — read it properly before that port, not filed as background any
+more.
 
-What might still be worth revisiting from the paper: if a future design wants
-*partial* visibility (some reasoning surfaced as text, some kept in state),
-Switch-GRPO's boundary-token mechanism is the right reference. Not scheduled;
-no prerequisite chain currently points at it. The mechanism sketch below is
-left as-is for that future reference, not as a near-term plan.
+Original obsolete framing, for the historical record: this section was
+written as "Phase 4 extends Phase 3's visible `<think>` tokens to latent
+blocks" — true when Phase 3 emitted visible think-tokens, false once the
+self-feed WKV-loop replaced that with no emitted tokens at all (nothing to
+progressively replace with `<latent>`). The mechanism sketch below still
+describes the paper's own `<swi>`/`</swi>`/`<latent>` vocabulary — read it as
+the paper's mechanism, not as a noesis-vocabulary mapping (there isn't one
+yet).
 
 **Three-token vocabulary extension:**
 - `<swi>` — enter latent block
@@ -477,12 +502,14 @@ segmented backward.
 Reward = ±1 correctness + ±1 tag-format (valid `<swi>`/`</swi>` pairs) +
 {0,1} latent-usage (bonus when correct answer used the latent path).
 
-**Noesis mapping — n/a.** The table this section used to have mapped
-`<swi>`/`</swi>`/`<latent>` onto `<think>`/`</think>` tokens that don't exist
-in the WKV-loop vocabulary — removed rather than patched, since there's no
-current design that would consume it. If the partial-visibility idea above
-ever gets picked up, the mapping needs to be rebuilt against `wkv_loop.py`'s
-actual exit-reason/M mechanics, not against a think-token vocabulary.
+**Noesis mapping — not built yet, now a real candidate (see above), not n/a.**
+The table this section used to have mapped `<swi>`/`</swi>`/`<latent>` onto
+`<think>`/`</think>` tokens that don't exist in the WKV-loop vocabulary —
+removed rather than patched, since nothing consumed it at the time. The
+mapping to build now: `<swi>`/`</swi>` onto ThinkChain's entry-cue/phase-marker
+boundaries (each phase already IS a discrete, indexed block — the exact shape
+Switch-GRPO's ratio mechanism wants), not against the old self-feed loop's
+fuzzy exit-reason/M mechanics.
 
 K_min (minimum latent dwell) is still a real design point if a boundary-token
 mechanism gets revisited: without it, a trained latent-block model exits in
@@ -919,30 +946,158 @@ before the next attempt:**
     across a larger prompt sample, or specific to these 4 fixed
     diagnostics.
 
-**Next phase — "Dreaming cycle" (user's naming, 2026-08-20), M>1,
-sits between the current M=1 phase and RL resuming.** Not a new
-mechanism to build and not a reframing of RL itself (both considered,
-both ruled out on discussion) — it's this same latent-overshooting
-curriculum, run at M≥2, now with the 8-token phase budget (this run,
-not run 5's 1-token budget) *and* gradient clipping (new this round).
-Why "Dreaming": as M grows, each teacher chunk thins — less real
-observation grounds each individual phase, so the mechanism leans
-increasingly on the model's own prior rollout rather than dense
-teacher supervision, the same posterior-to-prior shift the Dreamer
-paper (arXiv 2007.14535) describes. Why this has to happen before RL,
-not after: RL can only shape/select among behaviours the model can
-already produce — an earlier RL run already found `mean_M` frozen at
-exactly 2.0 with zero variance to correlate quality against, concluding
-"RL has nothing to select for inside the M-loop when the loop has no
-content to begin with." A model that has never coherently run an M>1
-self-feed can't have that regulated by RL, only trained into it first.
-Full plan: `/home/vaniello/.claude/plans/twinkly-questing-ullman.md`
-(local machine only, not part of this repo).
+**Superseded 2026-08-21/22/23 — the self-feed loop above was replaced,
+not just re-tuned, and the "Dreaming cycle" plan below was overtaken by
+a locked 4-stage structure.** Kept verbatim above for the debugging
+history (the self-feed loop's actual failure mode is real and
+instructive — see below), not because it's still the design.
 
-Full narrative, including the "why 1 token per step is too little"
-reasoning and the DE-table correction (an earlier claim that G1i's own
-output was *more* verbose than step9b-e1's got the real numbers
-backwards until checked), in memory `project_noesis_think_distill_experiments`.
+**Why the self-feed loop was replaced, not fixed.** All N self-feed
+steps apply the SAME transformation to state, and the input at each
+step (a self-generated token) has no signal telling the model which
+phase it's in. Since a token's R/K/V/decay are derived from that
+token's own embedding, and self-generated tokens grow more similar as
+the model gets confident, the per-step transformation homogenises and
+the loop converges toward a fixed point instead of doing M genuinely
+different units of work — the exact mechanism behind two things this
+section already documented as separate bugs (dynamic-phase-stop's
+entropy-plateau firing increasingly early; the need for an explicit
+norm anchor against unbounded state drift). **ThinkChain**
+(`ThinkChain` class, `experiments/rl/train_think_distill.py`,
+2026-08-21) replaces the self-feed loop with `M+1` explicitly distinct,
+directly-learned embeddings (one shared entry cue, one per phase) fed
+straight into WKV via `forward_stateful_embeds` — no self-feed token
+loop at all. Mirrors what the teacher already has for free: `M_eff`
+real, naturally-distinct text chunks, instead of asking the student to
+manufacture distinctness from a homogeneous loop.
+
+**Two bugs found and fixed in the rewrite itself (2026-08-22), same
+day, before trusting a real run:**
+- *Budget-matching silently dropped.* The first ThinkChain cut fed each
+  phase's marker for exactly one step regardless of the teacher
+  chunk's real length (up to 141 tokens in `g1i_warmup_v3`, median 65)
+  — this repo's own history already needed this fix once before for
+  the self-feed loop (see the M=2/1-token-budget divergence above).
+  Fixed: each phase repeats its marker up to `chunk_lens[i]` times (a
+  ceiling, not mandatory). Repeating a *constant* embedding isn't the
+  loop-collapse failure mode above — R/K/V/decay depend on the input
+  and its time-shift delta, and that delta is exactly zero from the
+  second repeat onward (identical consecutive inputs), so this is a
+  fixed transformation applied T times to the evolving state, not a
+  self-referential one whose own output drifts.
+- *Wrong stop criterion.* `--dynamic-phase-stop` was re-added reusing
+  `wkv_loop.py::generate_rollout`'s readout-confidence check
+  (`max_p`/entropy on the phase's logits) verbatim. A real run showed
+  it firing after exactly 1 repeat on ~80% of steps — traced to
+  `g1i_warmup_v3`'s templated answers (many start "Decimal: ...") making
+  the *first answer token* >99.9% predictable regardless of whether the
+  phase did any real work; the readout-confidence check answers a
+  question that only makes sense for a real generated token stream,
+  which a phase's internal readout isn't. Replaced with a state-delta
+  criterion (exits once the WKV state itself stops moving, relative to
+  its own norm) — see `experiments/rl/train_think_distill.py`'s
+  `--dynamic-phase-stop` docstring for the exact formula.
+
+**Corpus was also wrong, independently.** `--data`'s old default
+(`step9_combined_train.pt`, 268 examples) has 85% of examples sharing
+one answer-template first token ("Decimal") — confirmed, not a sampling
+artifact. Switched default to `g1i_warmup_v3_eos_train.pt` (10 529
+examples, 1409 unique first words) with a new best-effort
+category-diverse batch sampler (`_CategoryBatcher`) so a batch doesn't
+land in one category on a skewed corpus.
+
+**Real run result (`g1i_think_distill_zlk_phase1_v3`, 500 steps, LoRA
+r=32/alpha=64, M=1): the fixes worked, on a delay.** At step 100, free
+generation (M=1, trained marker) was *worse* than the bare LoRA weights
+with no marker at all (M=0) — e.g. XOR(1010,0110) answered `1010`
+(wrong) at M=1 vs. a coherent-if-incomplete reasoning trace at M=0; "is
+a flower or car bigger" answered `apples` at M=1 vs. a correct answer
+at M=0. By step 500, this fully reversed: M=1 answered XOR correctly
+(`1100`) and the flower/car question correctly (`car`), while M=0's own
+answers had *degraded* over the same training (plausible cause: LoRA
+reshaping weights toward "expect the phase marker" as normal operation,
+making the bare M=0 path increasingly out-of-distribution for this
+specific fine-tune — a real risk to watch on the planned full-FT
+continuation below, where there is no LoRA bottleneck limiting how far
+that drift can go). Kalman (standalone, full 500-step log): answer_ce
+and cos_sim both plateaued by step 500 (further steps at this config
+unlikely to buy more quality) while state_loss/norm_penalty/grad_norm
+kept rising (real, not noise) — stop-and-reconfigure point, not a
+stop-and-declare-done point.
+
+**Locked 4-stage structure (2026-08-22/23, supersedes the single
+"Dreaming cycle" plan above and the file this section used to point
+at — that file is gone, this doc is now the record):**
+
+1. **Phase 1 (done, this run).** The cycle exists at all and is stable
+   — M=1, ThinkChain, LoRA. Bar is deliberately low: even the *old*
+   self-feed loop, which used to destabilise WKV outright, counted as
+   success once merely non-diverging. Real, already-demonstrated value
+   independent of current answer quality: token savings via
+   distillation alone (doing in ~8-12 hidden steps what visible
+   reasoning would take many tokens for).
+2. **Phase 1.5 (next, not started).** Merge the LoRA delta into base
+   weights (`_merge_lora.py`) and continue on full-FT — lets the
+   tension LoRA's 1.58%-of-params bottleneck concentrated relax across
+   the whole network, same "LoRA validates cheaply, full-FT continues"
+   pattern this repo already used once (§Full FT vs LoRA above).
+   Combined goal: robustness across a *range* of M (0 through 3) rather
+   than a single trained M — the mechanism should not break, and the
+   model should not forget the bare M=0 path, at any of them. No
+   content/meaning requirement yet — plumbing, not the payload.
+3. **Phase 2 (designed, not built).** Give M>1 actual *meaning*, on a
+   schedule *we* design (not yet the model's own decision — see Phase
+   3). Leading candidate mechanism, not yet implemented: a dedicated,
+   separately-trained **rewind marker** — trained (same L2 state-loss
+   machinery, different target) to pull the post-phase state back
+   toward `state_after_prompt` (already computed in `distill_step`,
+   never used as a target before now), so a *different* subsequent
+   phase-marker can explore a distinct continuation from
+   approximately the same origin. Resolves the determinism objection
+   to "dreaming" (a fixed marker can't choose between scenarios) without
+   adding stochasticity: branching comes from feeding *different*,
+   still-deterministic markers after a shared near-origin reset, not
+   from randomness in any one marker. Open, not yet designed: the
+   rewind target's "close to origin" half has a ready-made loss (L2 to
+   `state_after_prompt`); its "shifted toward the next pass" half does
+   not — needs its own signal, likely only specifiable through the
+   downstream answer quality after the branch, not a direct state target.
+   Ceiling test for how far to grow M: `state_trajectory_probe.py`'s
+   `delta_norm`/`delta_cos_prev`, applied *across* phases (does phase
+   i+1 move state distinctly from phase i, not just within-phase
+   self-similarity) — stop growing M where an added phase stops
+   contributing distinct work.
+4. **Phase 3 (RL, this section's own design above).** Once Phase 2 has
+   given the cycle real, designed meaning, RL is where the model learns
+   to *autonomously decide* how to use it — when to rewind, how much M
+   to spend — rather than following our fixed Phase-2 schedule. Skill
+   compression (`−β·M`) and the self-reflection framing are this
+   autonomy, not a separate feature bolted on after. **Open, flagged
+   not resolved:** this section's RL design trains on **word-search**
+   grid tasks; Phase 1/1.5/2 train on **matrix/arithmetic/xor/crossword**
+   tasks (`g1i_warmup_v3`) — different corpora, never reconciled. Either
+   intentional (Phase 1/2 = general mechanism validation, Phase 3 =
+   production task) or an oversight — not decided. Separately: this
+   section's own Step10-skip reasoning (SFT before RL risks teaching a
+   shortcut RL then can't distinguish from genuine task-solving,
+   valuable specifically because word-search's 0/56 baseline has
+   nothing to pre-contaminate) applies uncomfortably well to Phase
+   1/1.5/2's SFT-shaped distillation on the *same task family* RL would
+   eventually run on, if the curricula are ever unified — the mandatory
+   R-lens-on-non-task-axes checkpoint this section already specifies for
+   exactly this risk (§Step10 SFT — skip decision below) has never been
+   run against any ThinkChain checkpoint. Do that before trusting
+   Phase 1/1.5's output as clean groundwork, not just as a stability
+   test.
+
+Mechanism-level detail (the exact recurrence math, R/K/V/decay/retention
+derivation, and the corrected understanding of what the architecture's
+decay soft-clamp does and doesn't guarantee) lives in
+`docs/rwkv7-mechanics.md`, not duplicated here. Full run-by-run
+narrative in memory `project_noesis_think_distill_experiments` and
+`project_noesis_rl_track` (the latter is the current live index for
+this whole track — read it first in a fresh session, not this file's
+history log).
 
 ---
 
