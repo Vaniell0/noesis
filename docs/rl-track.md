@@ -1,5 +1,128 @@
 # RL Track — Matrix Task Curriculum (A1.5)
 
+## Track status (read first — the 4-stage plan, current as of 2026-08-23)
+
+This file covers two related sub-tracks that share one document because Phase 3
+consumes Phase 1/1.5/2's output: **ThinkChain latent-refinement** (Phases
+1/1.5/2, `experiments/rl/train_think_distill.py`, matrix/arithmetic/xor/
+crossword corpus) and **word-search GRPO** (Phase 3, `experiments/rl/
+train_wkv_loop.py`, this file's own §RL design below). The corpus mismatch
+between them (matrix/arithmetic vs. word-search) is flagged in Phase 3 below,
+not resolved — read it before assuming the two stages share a curriculum.
+
+1. **Phase 1 — the cycle is born (done, shipped).** ThinkChain (`M+1`
+   explicit, distinct trainable embeddings — one shared entry cue, one per
+   phase — fed via `forward_stateful_embeds`) replaces the self-feed loop,
+   which homogenised into a fixed point instead of doing `M` genuinely
+   different units of work (mechanism explained in the appendix below). Bar:
+   existence + stability, not richness. Real run
+   `g1i_think_distill_zlk_phase1_v3` (500 steps, LoRA r=32/alpha=64, M=1):
+   free generation with the trained phase went from actively harmful at step
+   100 to correct on both diagnostic prompts at step 500 — full reversal,
+   confirming the mechanism was undertrained, not broken. Bare M=0 path
+   degraded over the same training (LoRA reshaping weights toward "expect the
+   marker") — a real risk carried into Phase 1.5, which removes the LoRA
+   bottleneck that was limiting how far that drift could go.
+
+2. **Phase 1.5 — robustness + full-FT smoothing (next, not started).** Merge
+   the LoRA delta and continue on full-FT; goal is a mechanism that doesn't
+   break and an M=0 path that doesn't degrade, across M=0..3, not just the one
+   trained M. Plumbing, not meaning, yet — but see the 2026-08-23 addition to
+   Phase 2 below: this stage may already be doing more than plumbing.
+
+3. **Phase 2 — give M>1 real meaning (designed, revised 2026-08-23, not
+   built).** Original framing (kept in the appendix below for the reasoning
+   that led here): a dedicated rewind marker, trained to pull state back
+   toward `state_after_prompt` via L2, so a different subsequent phase-marker
+   could explore a distinct continuation from near the same origin. **Revised
+   design, following a direct discussion of what `M>1` is actually for** — not
+   just boundary-balancing between fixed phases, but genuine movement:
+   advance, then *smoothly, gradually* retreat, then advance again,
+   potentially several times, not a single snap back to a fixed target.
+
+   - **Mechanism reuses phase-marker plumbing, doesn't add new plumbing.** A
+     rewind marker is just another constant learned embedding, repeated over
+     several ticks via the same `chunk_lens`/dynamic-phase-stop machinery
+     phase markers already use (repeating a constant embedding is a fixed
+     contraction applied T times — not the self-feed loop's homogenisation
+     failure, since R/K/V/decay's time-shift delta is exactly zero from the
+     second repeat onward). The "smooth" in "smoothly retreat" is this:
+     several ticks of contraction, not one L2-driven jump.
+   - **Loss: mirror L_state, don't repeat the Dreamer mistake.** The original
+     framing's L2-to-a-fixed-target approach is exactly the strict-target
+     mistake already diagnosed for teacher-state matching generally (see
+     `docs/community-map.md`'s "Dreaming" entry: answer/EOS correctness should
+     be primary, state-matching a *softer shaping term*, not a strict target —
+     confirmed the hard way once already, appendix item 10 below). Proposed
+     instead: use `L_tPC` (parked in this file's §State metrics as "post-GPU,
+     ablation required" — InfoNCE between WKV states at `t` and `t+k`,
+     rewards *predictable* motion) as the rewind marker's training signal, as
+     the direct mirror of `L_state` (rewards *large, curved* motion) used for
+     phase markers. Explore gets the curvature-maximising loss; retreat gets
+     the smoothness-maximising loss — genuinely opposite objectives for
+     genuinely opposite roles, not two flavors of the same mechanism.
+   - **Marker sequences become interleaved, not monotonic.** `[entry,
+     phase_A, rewind, phase_B, rewind, phase_C, ...]` instead of `[entry,
+     phase_1, phase_2, ...]` — the model explores several distinct directions
+     from approximately the same near-origin point, which is the actual
+     operationalisation of "advance and retreat," not a single mechanism
+     bolted onto the old design.
+   - **Architecture caveat, stated explicitly so nobody expects more than
+     this buys:** WKV's decay + outer-product update is not invertible
+     (contrast the so(3)/Cayley PoC in `docs/community-map.md`, where
+     composition is a rotation and trivially reversible by construction). A
+     rewind marker is always a *trained approximation* to an inverse, never
+     an exact undo.
+   - **New validation step, ahead of building any of this (2026-08-23,
+     arXiv 2602.08100, "Emergent Search and Backtracking in Latent Reasoning
+     Models," Huginn-0125):** backtracking in looped latent reasoning showed
+     up *without* being explicitly trained for — it emerged purely from
+     training at variable recurrence depth, exactly what Phase 1.5 already
+     plans (M=0..3 robustness). Their detection method is nearly free to
+     port: decode the answer-readout distribution after every internal step,
+     watch for the majority-vote answer to flip (A dominant ≥3 steps, then
+     B≠A dominant ≥3 steps) — no probe, no new training. Their result: 32% of
+     instances backtrack, +34% accuracy when they do, smooth (not
+     discontinuous) entropy transitions, 72% of backtracks abandon the
+     semantically-closest wrong answer (a real recalibration signature, not
+     noise). **Do this measurement on the existing step500 checkpoint (and
+     again after Phase 1.5) before building a dedicated rewind marker** — if
+     backtracking-like behavior already shows up from M-variance training
+     alone, Phase 2's first job is measuring and reinforcing it, not
+     constructing a mechanism from scratch. Tracked in memory
+     `project_noesis_rl_track` / TaskCreate #12.
+   - Ceiling test, unchanged: `state_trajectory_probe.py`'s
+     `delta_norm`/`delta_cos_prev`, applied *across* phases — stop growing
+     `M` where an added phase contributes no distinct work.
+
+4. **Phase 3 — RL teaches autonomous use (this file's own §RL design
+   below).** Once Phase 2 has given the cycle real, designed meaning (or
+   established that it emerges from Phase 1.5 alone), RL is where the model
+   learns to *autonomously decide* how to use it — when to rewind, how much
+   `M` — rather than following a fixed schedule. **Two flagged, unresolved
+   gaps, unchanged since 2026-08-22:** (a) this file's own §RL design trains
+   word-search grid tasks; Phase 1/1.5/2 train matrix/arithmetic/xor/
+   crossword — different corpora, intentional split or oversight, not
+   decided. (b) the mandatory R-lens-on-non-task-axes shortcut check this
+   file already specifies (§Step10 SFT below) has never been run against any
+   ThinkChain checkpoint — do this before trusting Phase 1/1.5's output as
+   clean groundwork. **New, from the same 2026-08-23 discussion:** once
+   ThinkChain markers replace `generate_rollout`'s feed modes (the still-
+   pending port, §Switch-GRPO below), and if Phase 2's rewind marker or its
+   Huginn-style emergent equivalent is real, Switch-GRPO's `<swi>`/`</swi>`
+   boundary-token machinery likely needs a third boundary type (a tagged
+   "revert" transition) to keep the policy ratio well-defined across a
+   rewind event too, not just entry/exit — flag for whoever does that port,
+   not designed yet.
+
+Mechanism-level detail (recurrence math, decay derivation) lives in
+`docs/rwkv7-mechanics.md`. Full run-by-run narrative for Phases 1/1.5/2 is the
+appendix below and memory `project_noesis_think_distill_experiments`/
+`project_noesis_rl_track` (read the memory first in a fresh session — this
+file's appendix is the detailed backing, not the entry point).
+
+---
+
 ## Motivation
 
 The RL track trains the model on a unified curriculum of matrix tasks — all
@@ -676,9 +799,13 @@ knowledge contamination — different question, about corpus-leaked facts,
 not calibration). Neither is a clean match. Candidate for its own
 hypothesis once there's a stable checkpoint worth probing this on.
 
-## RL status: PAUSED — think-loop state distillation prerequisite (2026-08-19)
+## Appendix: ThinkChain run history (Phases 1/1.5/2 debugging log)
 
-**RL training is paused, by explicit decision, not by crash or budget.**
+**Current status and the 4-stage plan now live in §Track status at the top of
+this file — this section is the detailed run-by-run history behind it, not
+the entry point.**
+
+**Word-search RL (Phase 3) training is paused, by explicit decision, not by crash or budget.**
 The M-loop content decoder (a one-off diagnostic, not kept in the repo)
 showed that even a directly-verified-clean G1i RL checkpoint's internal
 M-step was never real task content — just chat-template scaffolding
@@ -1025,79 +1152,14 @@ unlikely to buy more quality) while state_loss/norm_penalty/grad_norm
 kept rising (real, not noise) — stop-and-reconfigure point, not a
 stop-and-declare-done point.
 
-**Locked 4-stage structure (2026-08-22/23, supersedes the single
-"Dreaming cycle" plan above and the file this section used to point
-at — that file is gone, this doc is now the record):**
-
-1. **Phase 1 (done, this run).** The cycle exists at all and is stable
-   — M=1, ThinkChain, LoRA. Bar is deliberately low: even the *old*
-   self-feed loop, which used to destabilise WKV outright, counted as
-   success once merely non-diverging. Real, already-demonstrated value
-   independent of current answer quality: token savings via
-   distillation alone (doing in ~8-12 hidden steps what visible
-   reasoning would take many tokens for).
-2. **Phase 1.5 (next, not started).** Merge the LoRA delta into base
-   weights (`_merge_lora.py`) and continue on full-FT — lets the
-   tension LoRA's 1.58%-of-params bottleneck concentrated relax across
-   the whole network, same "LoRA validates cheaply, full-FT continues"
-   pattern this repo already used once (§Full FT vs LoRA above).
-   Combined goal: robustness across a *range* of M (0 through 3) rather
-   than a single trained M — the mechanism should not break, and the
-   model should not forget the bare M=0 path, at any of them. No
-   content/meaning requirement yet — plumbing, not the payload.
-3. **Phase 2 (designed, not built).** Give M>1 actual *meaning*, on a
-   schedule *we* design (not yet the model's own decision — see Phase
-   3). Leading candidate mechanism, not yet implemented: a dedicated,
-   separately-trained **rewind marker** — trained (same L2 state-loss
-   machinery, different target) to pull the post-phase state back
-   toward `state_after_prompt` (already computed in `distill_step`,
-   never used as a target before now), so a *different* subsequent
-   phase-marker can explore a distinct continuation from
-   approximately the same origin. Resolves the determinism objection
-   to "dreaming" (a fixed marker can't choose between scenarios) without
-   adding stochasticity: branching comes from feeding *different*,
-   still-deterministic markers after a shared near-origin reset, not
-   from randomness in any one marker. Open, not yet designed: the
-   rewind target's "close to origin" half has a ready-made loss (L2 to
-   `state_after_prompt`); its "shifted toward the next pass" half does
-   not — needs its own signal, likely only specifiable through the
-   downstream answer quality after the branch, not a direct state target.
-   Ceiling test for how far to grow M: `state_trajectory_probe.py`'s
-   `delta_norm`/`delta_cos_prev`, applied *across* phases (does phase
-   i+1 move state distinctly from phase i, not just within-phase
-   self-similarity) — stop growing M where an added phase stops
-   contributing distinct work.
-4. **Phase 3 (RL, this section's own design above).** Once Phase 2 has
-   given the cycle real, designed meaning, RL is where the model learns
-   to *autonomously decide* how to use it — when to rewind, how much M
-   to spend — rather than following our fixed Phase-2 schedule. Skill
-   compression (`−β·M`) and the self-reflection framing are this
-   autonomy, not a separate feature bolted on after. **Open, flagged
-   not resolved:** this section's RL design trains on **word-search**
-   grid tasks; Phase 1/1.5/2 train on **matrix/arithmetic/xor/crossword**
-   tasks (`g1i_warmup_v3`) — different corpora, never reconciled. Either
-   intentional (Phase 1/2 = general mechanism validation, Phase 3 =
-   production task) or an oversight — not decided. Separately: this
-   section's own Step10-skip reasoning (SFT before RL risks teaching a
-   shortcut RL then can't distinguish from genuine task-solving,
-   valuable specifically because word-search's 0/56 baseline has
-   nothing to pre-contaminate) applies uncomfortably well to Phase
-   1/1.5/2's SFT-shaped distillation on the *same task family* RL would
-   eventually run on, if the curricula are ever unified — the mandatory
-   R-lens-on-non-task-axes checkpoint this section already specifies for
-   exactly this risk (§Step10 SFT — skip decision below) has never been
-   run against any ThinkChain checkpoint. Do that before trusting
-   Phase 1/1.5's output as clean groundwork, not just as a stability
-   test.
-
-Mechanism-level detail (the exact recurrence math, R/K/V/decay/retention
-derivation, and the corrected understanding of what the architecture's
-decay soft-clamp does and doesn't guarantee) lives in
-`docs/rwkv7-mechanics.md`, not duplicated here. Full run-by-run
-narrative in memory `project_noesis_think_distill_experiments` and
-`project_noesis_rl_track` (the latter is the current live index for
-this whole track — read it first in a fresh session, not this file's
-history log).
+**The 4-stage structure this section used to detail here now lives at the
+top of the file (§Track status), including the 2026-08-23 revisions to Phase
+2** (graduated advance/retreat instead of a one-shot snap-to-origin, a
+smoothness-loss/curvature-loss mirror pair for rewind vs. phase markers, and
+a Huginn-backtracking-style validation step ahead of building anything).
+Not duplicated here to avoid two copies of a living design drifting apart —
+this appendix stays a historical record of how the taxonomy was arrived at,
+the top of the file is what to edit when the plan changes again.
 
 ---
 
@@ -1201,7 +1263,7 @@ settled.
    several minutes at the tiny scale above). Full writeup: memory
    `project_noesis_forge_bptt.md`.
 
-8. **RESOLVED 2026-08-18 — `feed_mode="expected"` verified end-to-end,
+7. **RESOLVED 2026-08-18 — `feed_mode="expected"` verified end-to-end,
    real gradient flow confirmed.** Previously zero coverage beyond the
    isolated `_peft_forward_embeds` equivalence test. Full
    `generate_rollout(feed_mode="expected")` → `wkv_grpo_loss` →
@@ -1217,7 +1279,7 @@ settled.
    real, worth noting that `expected` mode hit a degenerate high-confidence
    collapse this quickly on an undertrained 0.4B model with random tasks.
 
-7. **RESOLVED 2026-08-18 — first real (non-`--no-update`, non-`--forge`)
+8. **RESOLVED 2026-08-18 — first real (non-`--no-update`, non-`--forge`)
    gradient-update run, confirmed with actual nonzero signal.** First
    attempt (G1d, G=4/batch=2/M_max=4, lr=1e-5, 3 steps) ran clean but hit
    a degenerate all-identical-reward batch on every step (loss=0.0 exactly,

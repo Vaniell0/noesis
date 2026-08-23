@@ -62,10 +62,41 @@ real task content on any checkpoint tested, RL-trained or not, and
 variance — i.e. there was nothing for M to correlate against, on either
 side of the flat-vs-divergent question this section poses. Think-loop
 state distillation (`experiments/rl/train_think_distill.py`) is the
-prerequisite now being worked — see `docs/rl-track.md`'s "RL status"
-section for the real experimental history. The 12.5%/33.3% numbers
-above remain the valid pre-RL baseline; nothing here is retroactively
-wrong, the *next* data point just isn't a post-RL M-sweep yet.
+prerequisite now being worked — see `docs/rl-track.md`'s "Track status"
+section (renamed 2026-08-23, was "RL status") for the current
+experimental history. The 12.5%/33.3% numbers above remain the valid
+pre-RL baseline; nothing here is retroactively wrong, the *next* data
+point just isn't a post-RL M-sweep yet.
+
+**"M" now names two different mechanisms — not yet reconciled
+(2026-08-23).** This whole document's "one knob: M" framing (2026-08-17
+rewrite, above) describes `wkv_loop.py::generate_rollout`'s self-feed
+loop: M identical self-referential steps, same transformation applied
+each time, exit on plateau/commit/M_max. ThinkChain
+(`experiments/rl/train_think_distill.py`, 2026-08-21+, `docs/rl-track.md`
+§Track status) uses the same letter for something structurally
+different: M *distinct*, separately-trained phase markers, each
+internally repeated up to a per-example `chunk_lens[i]` budget — the
+step-count-vs-quality tradeoff this document analyzes is about the
+*inner* repeat count of one phase, not about M itself, which is closer
+in spirit to the old retired K (a fixed content-bearing unit) than to
+this document's self-feed M. **Consequence for the effort registry
+below:** `effort=fast/normal/deep → M_max` was designed for one scalar
+that trades linearly against quality. ThinkChain-M is not that scalar —
+adding a phase changes *what kind* of computation happens (a new,
+distinct marker), not just *how much*. This gets sharper, not simpler,
+with the 2026-08-23 Phase 2 revision (`docs/rl-track.md`): if phase
+sequences interleave explore markers with a rewind/retreat marker
+(`[phase_A, rewind, phase_B, rewind, ...]`), a ThinkChain M-count also
+stops being uniformly "more compute → answer-relevant work" — retreat
+ticks exist to *settle* state, not to write new task content, so
+pricing them the same as explore ticks in a future `−β·M`-style cost
+term is not obviously right. Not resolved here — flagged so whoever
+designs a ThinkChain-native effort registry doesn't inherit this
+document's single-scalar assumption by default. This document's own
+M-sweep/registry design (below) still describes `wkv_loop.py`'s
+mechanism accurately; it just isn't the right frame for ThinkChain
+without this caveat.
 
 **Current baselines (2026-08-14/17), for reference, not M data:**
 - G1i chatwrap: 41.7% (20/48) — best single-pass baseline

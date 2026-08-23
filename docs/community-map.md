@@ -717,9 +717,43 @@ loop to have *content*, not just a budget.
   exact symptom: "naive recurrence can be unstable, overfit to
   reasoning-heavy data at the expense of general fluency, and provides
   weak incentives for later refinement steps to reliably improve upon
-  early predictions." Could not get past OpenReview's access wall to
-  extract their specific fix — flagged for a follow-up read, not
-  verified further.
+  early predictions." PDF still behind OpenReview's bot-verification wall
+  (checked again 2026-08-23) — but a secondary web search surfaced the
+  fix in outline: deep supervision via a convex combination of per-step
+  next-token cross-entropies, data-aware routing that interleaves
+  reasoning-focused and fluency-focused batches (directly answers the
+  "overfits to reasoning-heavy data" symptom), a "soft RL" term on top,
+  and separate learning rates for the latent head (fast) vs. the base
+  model (slow). Not independently verified against the actual paper text
+  — treat as a secondhand summary, re-derive from the PDF if this ever
+  becomes load-bearing for a design decision.
+
+- **"Emergent Search and Backtracking in Latent Reasoning Models"**
+  (arXiv 2602.08100, read 2026-08-23) — studies Huginn-0125, a 3.5B
+  looped latent-reasoning transformer (prelude → recurrent block iterated
+  K times → coda, coda decodable at every intermediate step). **Key
+  finding: backtracking is not trained for — it emerges purely from
+  training at variable recurrence depth.** Quoted: "The search is not
+  prescribed by the architecture or the training objective — it is
+  discovered by the model as an efficient use of iterative computation."
+  Detection is cheap and structural, not a probe: decode
+  `p_i = softmax(C(h_i))` at every loop step `i`, call it a backtrack
+  when one answer dominates ≥3 steps, then a different answer dominates
+  the next ≥3 steps. Results: backtracking occurs in 32% of instances,
+  those instances score **34% higher accuracy** than non-backtracking
+  ones, entropy transitions are smooth (gradual, not a discontinuous
+  jump), and 72% of backtracks abandon specifically the *semantically
+  closest* wrong distractor — a real recalibration signature, not noise.
+  **Why relevant to noesis's ThinkChain (`project_noesis_rl_track`
+  Phase 2):** directly informs the rewind-marker design discussion of
+  2026-08-23 — Huginn gets this behavior for free from M-variance
+  training alone (which noesis's own Phase 1.5, "robustness across
+  M=0..3," already plans), suggesting the first move on Phase 2 should
+  be *measuring* whether backtracking-like answer-flips already occur in
+  ThinkChain (port their decode-and-watch-for-flips method onto
+  `state_trajectory_probe.py`, next to the existing WKV-delta tracking)
+  before *building* a dedicated rewind mechanism from scratch. Tracked
+  as TaskCreate #12.
 
 **Implementation:** `experiments/rl/train_think_distill.py` (new,
 2026-08-19) — teacher/student L2 state-distillation using the existing
