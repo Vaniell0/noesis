@@ -52,9 +52,12 @@ Pilot subset metrics on this 40-item set:
    valid subset (production target is degradation ≤ 3 %; this
    pilot is a proxy).
 
-## Runner (not yet written)
+## Runner — built and run (corrected 2026-08-23; this section described
+the pre-implementation plan, `run.py` is real — 362 lines, `results.jsonl`/
+`report.md`/`results_n1`/`results_n2`/`results_n3`/`results_n5` sweep dirs
+already on disk, H21 F1=1.00 per `experiments/README.md`)
 
-`run.py` (TODO) should:
+`run.py` does:
 
 - Load G1d-0.4B (bf16, fp32 WKV accumulator; same probe pattern as
   `../aporia_probe/`).

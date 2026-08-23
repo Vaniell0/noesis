@@ -32,9 +32,11 @@ prompt, notes}`.
    pilot subset alone — requires the reformulation pipeline, which
    is not yet built.
 
-## Runner (not yet written)
+## Runner — built and run (corrected 2026-08-23; this section described
+the pre-implementation plan, `run.py` is real — 368 lines, `results.jsonl`/
+`report.md`/`distinctness/summary.json` already on disk, H22 F1=0.947)
 
-`run.py` (TODO), analogous to `../premise_validator/run.py`:
+`run.py`, analogous to `../premise_validator/run.py`:
 
 - Load G1d-0.4B, same probe pattern.
 - Extract WKV state at the token position *immediately before* the

@@ -86,7 +86,14 @@ per generated token per layer.
   enough to confound H8/H9. Bf16 weights + fp32 WKV accumulator, per
   paper §8.
 
-## How to run (once implemented)
+## How to run — historical (pre-implementation skeleton, kept for command
+## shape reference; corrected 2026-08-23 — this whole section, "Files",
+## and "Follow-ups" below describe the SKELETON stage, contradicted by
+## "Status: COMPLETE" at the top of this file. `probe.py`/`metrics.py`/
+## `run.py` are no longer stubs — real results exist in `results/pilot/`
+## and `results/a05_ext/` per line 3-5 above. Kept below only because the
+## actual CLI invocation shape is still accurate, not because the status
+## text is current.
 
 ```bash
 # Pilot: one seed, one prompt, verify plumbing.
@@ -99,21 +106,15 @@ python3 run.py --model RWKV/rwkv-7-g1h-2.9b  --prompt medium    --seeds 10 --out
 python3 run.py --model RWKV/rwkv-7-g1h-2.9b  --prompt narrative --seeds 10 --out results/g1h_narrative/
 ```
 
-Currently `run.py` prints a "not yet implemented" notice and exits 0
-— the CLI shape is fixed so the execution session begins with the
-plumbing already in place.
+## Files (historical — see status note above; these were stubs when written)
 
-## Files
-
-- `probe.py` — state extraction: model loading + torch hooks on RWKV
-  blocks. Stubs, `NotImplementedError`.
-- `metrics.py` — the three metric functions. Stubs with math in
-  docstrings, `NotImplementedError`.
-- `run.py` — CLI wrapper. Argparse works; body is a stub.
+- `probe.py` — state extraction: model loading + torch hooks on RWKV blocks.
+- `metrics.py` — the three metric functions.
+- `run.py` — CLI wrapper.
 - `prompts.py` — thin shim that re-exports `ALL`, `SHORT`, `MEDIUM`,
   `LONG`, `NARRATIVE`, `word_count` from `../A0_baseline/prompts.py`.
 
-## Follow-ups (out of scope for skeleton)
+## Follow-ups — historical, from before the pilot/causal-grid runs above existed
 
 - Verify G1h HF weight availability before the execution session.
 - Threshold-lock for H8 / H9 after pilot noise-floor measurement.

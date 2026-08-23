@@ -32,9 +32,12 @@ tokens are the measurement window.
    distribution. Falsified if greedy picks one but sampling picks
    it > 90 % of the time (collapse hides in argmax).
 
-## Runner (not yet written)
+## Runner — built and run (corrected 2026-08-23; this section described
+the pre-implementation plan, `run.py` is real, `results.jsonl`/`report.md`
+already exist — see `experiments/README.md`'s "Correctly refuted" bucket
+for the actual H20 verdict)
 
-`run.py` (TODO) should:
+`run.py` does:
 
 - Load G1d-0.4B (bf16, fp32 WKV accumulator; see
   `experiments/A0_state_probe/probe.py` for the extraction pattern).
