@@ -474,6 +474,77 @@ def train_task(task: str, n_steps: int, head_size: int, n_train_steps: int = 400
     return result
 
 
+def _random_step_controls(head_size: int, g: torch.Generator) -> dict:
+    return {
+        "r": torch.randn(1, head_size, generator=g),
+        "k": torch.randn(1, head_size, generator=g),
+        "v": torch.randn(1, head_size, generator=g),
+        "w": -0.5 - torch.rand(1, head_size, generator=g) * 3.0,
+        "a_gate": torch.sigmoid(torch.randn(1, head_size, generator=g)),
+    }
+
+
+def pseudo_inverse_ceiling(head_size: int = 8, n_drift_ticks: int = 4,
+                            opt_steps: int = 1500, seed: int = 1) -> dict:
+    """hypotheses/H25.md item 2 ("pseudo-inverse ceiling"): true time-
+    reversal doesn't exist (decay is a genuine contraction, see verify()
+    check #3) — but how close can ANY marker get, given the fixed
+    algebra? Directly optimizes the physical controls (r,k,v,w,a_gate)
+    themselves via gradient descent — NOT a trained embedding-generating
+    network — to pull a drifted state S1 back toward its origin S0,
+    repeated over T ticks (same repeated-constant-embedding mechanic as
+    real phase/rewind markers). This is a CEILING: any real, network-
+    generated Phase 2 rewind marker should do no better than this, since
+    direct optimization of the raw controls is strictly more expressive
+    than anything a marker embedding can be mapped to through the
+    model's own projections.
+
+    S0: a reference "origin" state (the state_after_prompt analog).
+    S1: S0 after n_drift_ticks of RANDOM controls (simulating unknown
+    prior exploration phases the rewind marker must pull back from).
+    """
+    g = torch.Generator().manual_seed(seed)
+    S0 = torch.randn(1, head_size, head_size, generator=g)
+    S0 = S0 / S0.norm() * 10.0  # arbitrary fixed reference scale
+
+    S1 = S0.clone()
+    for _ in range(n_drift_ticks):
+        c = _random_step_controls(head_size, g)
+        _, S1 = micro_wkv_step(S1, c["r"], c["k"], c["v"], c["w"], c["a_gate"])
+    drift_rel = (S1 - S0).norm().item() / S0.norm().item()
+    print(f"  after {n_drift_ticks} random explore ticks: relative drift "
+          f"||S1-S0||/||S0||={drift_rel:.4f}")
+
+    results = {}
+    for T in (1, 4, 8):
+        torch.manual_seed(42)
+        r = torch.randn(1, head_size, requires_grad=True)
+        k = torch.randn(1, head_size, requires_grad=True)
+        v = torch.randn(1, head_size, requires_grad=True)
+        w_raw = torch.randn(1, head_size, requires_grad=True)
+        a_logit = torch.randn(1, head_size, requires_grad=True)
+        opt = torch.optim.Adam([r, k, v, w_raw, a_logit], lr=0.05)
+
+        state = S1
+        for _ in range(opt_steps):
+            opt.zero_grad()
+            w = -F.softplus(-w_raw) - 0.5
+            a_gate = torch.sigmoid(a_logit)
+            state = S1.clone()
+            for _ in range(T):
+                _, state = micro_wkv_step(state, r, k, v, w, a_gate)
+            loss = F.mse_loss(state, S0)
+            loss.backward()
+            opt.step()
+
+        final_rel = (state.detach() - S0).norm().item() / S0.norm().item()
+        results[T] = final_rel
+        print(f"  T={T} ticks: best-achievable relative error "
+              f"||rewind(S1)-S0||/||S0||={final_rel:.4f} (started at {drift_rel:.4f})")
+
+    return {"drift_rel": drift_rel, "ceiling_by_T": results}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--verify", action="store_true",
@@ -501,10 +572,19 @@ def main() -> int:
                           "Uses --steps as n_rounds — pass --steps 3 to reproduce "
                           "the 2026-08-23 tested config (load + 2 ops); --steps's "
                           "own default (4) has not been separately verified.")
+    ap.add_argument("--ceiling", action="store_true",
+                     help="hypotheses/H25.md item 2: how close can ANY marker "
+                          "(directly-optimized physical controls, not a trained "
+                          "network) pull a drifted state back toward its origin, "
+                          "repeated over T ticks — a ceiling for Phase 2's rewind "
+                          "marker design, not a mechanism.")
     args = ap.parse_args()
 
     if args.verify:
         verify()
+        return 0
+    if args.ceiling:
+        pseudo_inverse_ceiling(head_size=args.head_size, seed=args.seed)
         return 0
     if args.chain:
         train_chain(n_rounds=args.steps, head_size=args.head_size,
@@ -516,11 +596,11 @@ def main() -> int:
                     freeze_final_readout=args.freeze_final_readout)
         return 0
     print("Nothing to do — pass --verify, --train {add,multiply} "
-          "[--freeze-final-readout], or --chain. fleeb83's full "
+          "[--freeze-final-readout], --chain, or --ceiling. fleeb83's full "
           "counterfactual-altered-recurrence test on a real checkpoint "
           "(the toy version is tautological — see module docstring for why) "
-          "and the Jacobian-sampling / pseudo-inverse-ceiling items "
-          "(hypotheses/H25.md) are not implemented yet.")
+          "and the Jacobian-sampling item (hypotheses/H25.md) are not "
+          "implemented yet.")
     return 0
 
 
