@@ -61,6 +61,22 @@ not resolved — read it before assuming the two stages share a curriculum.
      phase markers. Explore gets the curvature-maximising loss; retreat gets
      the smoothness-maximising loss — genuinely opposite objectives for
      genuinely opposite roles, not two flavors of the same mechanism.
+     **Complicated by real data, 2026-08-23 (task #12's run, below): the
+     CURRENT explore marker (M=1, no curvature loss active — `l_state_weight`
+     is already de-prioritized per standing project decisions) already shows
+     `delta_cos_prev` drifting strongly toward +1 across its own 8 repeat-
+     ticks (0.64-0.68 → 0.97-0.98, all 4 diagnostic prompts) — i.e. it
+     *already* contracts smoothly, the exact signature this bullet wanted to
+     reserve for rewind specifically. Explore and rewind may not be
+     distinguishable by dynamics *shape* (curvy vs. smooth) at all — a
+     repeated constant marker seems to contract smoothly regardless of
+     content, by construction (fixed transformation applied T times, see
+     appendix's "why the self-feed loop was replaced"). The real
+     distinguishing factor is more likely *where* each marker's fixed point
+     sits (task-relevant content vs. `state_after_prompt`), not how it gets
+     there. This doesn't kill the L_state/L_tPC pairing outright, but it's
+     not the clean "opposite dynamics" story as written — revisit before
+     implementing either loss.**
    - **Marker sequences become interleaved, not monotonic.** `[entry,
      phase_A, rewind, phase_B, rewind, phase_C, ...]` instead of `[entry,
      phase_1, phase_2, ...]` — the model explores several distinct directions
@@ -85,10 +101,23 @@ not resolved — read it before assuming the two stages share a curriculum.
      instances backtrack, +34% accuracy when they do, smooth (not
      discontinuous) entropy transitions, 72% of backtracks abandon the
      semantically-closest wrong answer (a real recalibration signature, not
-     noise). **Do this measurement on the existing step500 checkpoint (and
-     again after Phase 1.5) before building a dedicated rewind marker** — if
-     backtracking-like behavior already shows up from M-variance training
-     alone, Phase 2's first job is measuring and reinforcing it, not
+     noise). **Done, 2026-08-23 (task #12) — real trained M=1 markers
+     (`--chain-phases 1`, matching the checkpoint's own training config; a
+     first attempt at `--chain-phases 3` silently fell back to random,
+     untrained markers on a shape mismatch and was discarded — same failure
+     mode already documented for the step200 data above, worth watching for
+     every time `--resume` and `--chain-phases` aren't both checked
+     together).** Result: chain backtracked in 1 of 4 diagnostic prompts
+     (wordsearch: readout flips from token 869 to token 25427 between tick 2
+     and tick 5 of the 8-tick phase); `loop` backtracked in 0 of 4. A real,
+     directional signal — chain can and loop didn't, on this small sample —
+     but `n=4` fixed prompts is nowhere near Huginn's 260-instance,
+     32%-of-cases claim; treat as "worth tracking as Phase 1.5 trains more
+     M," not as confirmation. Full data:
+     `experiments/rl/results/state_trajectory_backtrack_v3_step500_m1.json`.
+     Again after Phase 1.5 (M=0..3 robustness) before building a dedicated
+     rewind marker — if backtracking rate rises with M-variance training
+     alone, Phase 2's first job stays measuring and reinforcing it, not
      constructing a mechanism from scratch. Tracked in memory
      `project_noesis_rl_track` / TaskCreate #12.
    - Ceiling test, unchanged: `state_trajectory_probe.py`'s
@@ -1109,11 +1138,26 @@ strictly require cos→1 the way a naive reading suggests — WKV's `v^T k`
 write term keeps injecting content a pure decay-only contraction
 wouldn't have). That same file's `chain` branch is not a usable
 comparison point: step200 predates ThinkChain, so `--resume` fell back
-to random, untrained markers there. **Real test is task #12's run** (the
-same probe, on the real `v3`/step500 checkpoint — loop on a checkpoint
-trained under that mechanism, chain on real trained markers) — it
-already prints this exact first-half/second-half trend for both
-branches, nothing more to build.
+to random, untrained markers there.
+
+**Second data point, task #12's run on v3/step500, 2026-08-23 — still not
+confirming.** `loop`'s `delta_cos_prev` stays negative on all 4 prompts
+here too (e.g. xor: −0.086 → −0.195), same as step200. Caveat this time
+runs the other way: step500 was trained *under ThinkChain*, not the old
+self-feed mechanism, so `loop` here is genuinely off-distribution for
+this checkpoint (there is no single checkpoint that is both
+self-feed-trained and available to test cleanly — step200 is the
+self-feed-trained one, step500 is ThinkChain-trained). Between the two
+checkpoints tested so far, the specific `cos_prev → 1` prediction has
+never shown up, on-distribution or off. Doesn't mean the qualitative
+"self-feed is less stable" finding is wrong (n_phase_tok/state_loss/
+grad_norm variance still clearly favor ThinkChain, measured separately —
+see the run-6-vs-v3 comparison above) — it means this one specific
+predicted *signature* of why isn't the right measurement, or the
+homogenisation happens through a channel this metric doesn't see (e.g.
+concentrated in specific channels/layers rather than the whole-state
+vector cosine). Not chased further; flagging so a future session doesn't
+treat this paragraph's causal story as measured fact.
 
 **ThinkChain**
 (`ThinkChain` class, `experiments/rl/train_think_distill.py`,
