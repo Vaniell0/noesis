@@ -484,6 +484,77 @@ def _random_step_controls(head_size: int, g: torch.Generator) -> dict:
     }
 
 
+def jacobian_spectral_sampling(head_size: int = 8, n_samples: int = 2000,
+                                seed: int = 7) -> dict:
+    """hypotheses/H25.md item 1 ("local-Jacobian/curvature sampling").
+    For FIXED controls (r,k,v,w,a_gate), micro_wkv_step's update is
+    exactly affine in state (the same operator for every state value,
+    not merely locally linear): `new_state = A@state + k⊗v` with
+    `A = diag(decay) - outer(kk·a_gate, kk)` — derived directly from the
+    code, not approximated numerically. Samples A's spectral radius
+    (worst-case long-term contraction rate) across many random
+    (k, w, a_gate) draws, plus a targeted a_gate=0..1 sweep at fixed
+    (k, w) to isolate erase-rewrite's specific contribution.
+
+    Real finding (2026-08-23): spectral radius is almost completely
+    insensitive to a_gate across its ENTIRE range — erase-rewrite's
+    rank-1 correction is confined to the unit-norm kk direction, and
+    doesn't touch whichever channel holds the dominant decay value.
+    Stability (spectral radius) and computation (erase-rewrite, proven
+    NECESSARY by the frozen-readout ablation) are nearly decoupled:
+    training can push a_gate anywhere the task needs without risking
+    destabilizing the linear part through this specific channel."""
+    g = torch.Generator().manual_seed(seed)
+    spectral_radii = []
+    decay_only_radii = []
+    n_complex = 0
+    for _ in range(n_samples):
+        k = torch.randn(head_size, generator=g)
+        w = -0.5 - torch.rand(head_size, generator=g) * 3.0
+        a_gate = torch.sigmoid(torch.randn(head_size, generator=g))
+        kk = F.normalize(k, p=2.0, dim=-1, eps=1e-8)
+        decay = decay_from_logit(w)
+        A = torch.diag(decay) - torch.outer(kk * a_gate, kk)
+        eigvals = torch.linalg.eigvals(A)
+        spectral_radii.append(eigvals.abs().max().item())
+        decay_only_radii.append(decay.max().item())
+        if eigvals.imag.abs().max().item() > 1e-4:
+            n_complex += 1
+    spectral_radii_t = torch.tensor(spectral_radii)
+    decay_only_t = torch.tensor(decay_only_radii)
+    n_above_1 = (spectral_radii_t > 1.0).float().mean().item()
+    print(f"  {n_samples} random (k,w,a_gate) draws, head_size={head_size}:")
+    print(f"  spectral radius of A: mean={spectral_radii_t.mean():.4f} "
+          f"std={spectral_radii_t.std():.4f} range=[{spectral_radii_t.min():.4f}, "
+          f"{spectral_radii_t.max():.4f}]")
+    print(f"  complex-eigenvalue fraction (rotation, not pure decay): {n_complex / n_samples:.4f}")
+    print(f"  fraction with radius > 1.0 (locally expanding): {n_above_1:.4f}")
+    print(f"  pure-decay-only radius (a_gate=0 baseline): mean={decay_only_t.mean():.4f}")
+
+    # Targeted sweep: fixed (k, w), vary a_gate uniformly 0..1 across all
+    # channels, to isolate erase-rewrite's OWN effect on spectral radius
+    # from the decay term's already-known variability.
+    g2 = torch.Generator().manual_seed(seed + 100)
+    k = torch.randn(head_size, generator=g2)
+    w = -0.5 - torch.rand(head_size, generator=g2) * 3.0
+    decay = decay_from_logit(w)
+    kk = F.normalize(k, p=2.0, dim=-1, eps=1e-8)
+    sweep = {}
+    for a_scale in (0.0, 0.5, 0.9, 0.99, 1.0):
+        a_gate = torch.full((head_size,), a_scale)
+        A = torch.diag(decay) - torch.outer(kk * a_gate, kk)
+        radius = torch.linalg.eigvals(A).abs().max().item()
+        sweep[a_scale] = radius
+    print(f"  fixed-(k,w) a_gate sweep (isolates erase-rewrite's own effect): "
+          + ", ".join(f"a={a:.2f}->r={r:.4f}" for a, r in sweep.items()))
+
+    return {"spectral_radius_mean": spectral_radii_t.mean().item(),
+            "spectral_radius_std": spectral_radii_t.std().item(),
+            "complex_fraction": n_complex / n_samples,
+            "fraction_above_1": n_above_1,
+            "a_gate_sweep": sweep}
+
+
 def pseudo_inverse_ceiling(head_size: int = 8, n_drift_ticks: int = 4,
                             opt_steps: int = 1500, seed: int = 1) -> dict:
     """hypotheses/H25.md item 2 ("pseudo-inverse ceiling"): true time-
@@ -578,6 +649,11 @@ def main() -> int:
                           "network) pull a drifted state back toward its origin, "
                           "repeated over T ticks — a ceiling for Phase 2's rewind "
                           "marker design, not a mechanism.")
+    ap.add_argument("--jacobian", action="store_true",
+                     help="hypotheses/H25.md item 1: exact closed-form spectral "
+                          "radius sampling of the recurrence's per-step linear "
+                          "operator across random controls, plus an a_gate sweep "
+                          "isolating erase-rewrite's own effect on stability.")
     args = ap.parse_args()
 
     if args.verify:
@@ -585,6 +661,9 @@ def main() -> int:
         return 0
     if args.ceiling:
         pseudo_inverse_ceiling(head_size=args.head_size, seed=args.seed)
+        return 0
+    if args.jacobian:
+        jacobian_spectral_sampling(head_size=args.head_size, seed=args.seed)
         return 0
     if args.chain:
         train_chain(n_rounds=args.steps, head_size=args.head_size,
