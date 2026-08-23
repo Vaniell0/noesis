@@ -142,9 +142,12 @@ beyond §1, skip and stay pure action-cloning.
 ## Fine-tune plan (sketch)
 
 - **Base:** RWKV-7 G1d 0.4B (reasoning-line — starts with better
-  inductive bias for state utilisation, per H9). 2.9B upgrade
-  deferred until GPU inventory reappears (see
-  `project_noesis_hardware_2026_07_30`).
+  inductive bias for state utilisation, per H9). ~~2.9B upgrade
+  deferred until GPU inventory reappears~~ — **happened**: GPU inventory
+  reappeared (Selectel VM), G1h/G1i 2.9B has been the primary training
+  target since step 6, and the entire full-FT RL track (`docs/rl-track.md`)
+  targets 2.9B. This whole section describes the pre-GPU 0.4B plan;
+  corrected 2026-08-23, kept as historical sketch, not the current target.
 - **Method:** QLoRA. Rank 16-32 for the micro-pilot; target
   modules per the A0.5 verdict (layers that empirically carry
   state-work).
@@ -237,11 +240,16 @@ state_reg:
 - **Rank consideration**: rank 16 may be insufficient for multi-layer state shaping.
   Step 9 trial: rank 32, target_modules += output projection.
 
-### N/K/mode curriculum (deferred to step 10)
+### N/K/mode curriculum — superseded, not merely deferred (corrected 2026-08-23)
 
-After self-CoT corpus is built: generate training examples labeled by which (N,K,mode)
-solved each task. Model learns to self-select compute budget. Eventually model emits
-optimal K tokens autonomously (H16 gate) without explicit budget token.
+This framing (generate examples labeled by which (N,K,mode) solved each task, model
+self-selects compute budget) is retired, not delayed: `docs/effort-frontier.md`'s
+2026-08-17 rewrite formally killed N and `readout_mode` — no code path in
+`wkv_loop.py` refers to either anymore, only a single `M` axis remains.
+`hypotheses/H10.md`'s step-10 entry independently confirms "the effort frontier is
+task-entropy-indexed, not a universal (N, K, mode) recommendation." Step 10 did
+happen (`training/config/pilot_step10.yaml`) but didn't implement this literal plan
+— read `docs/effort-frontier.md` for the actual current design.
 
 ## Open questions (not to resolve here)
 
