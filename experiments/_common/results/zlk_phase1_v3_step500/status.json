@@ -1,0 +1,13 @@
+{
+  "ts": 1787512803.978227,
+  "ts_human": "2026-08-23 19:20:03",
+  "progress": [
+    5,
+    5
+  ],
+  "probe": null,
+  "probe_index": 5,
+  "probe_total": 5,
+  "model": "models/rwkv7-g1i-2.9b-zlk_phase1_v3-step500-merged.pth",
+  "message": "done \u2014 5/5 probes finished"
+}

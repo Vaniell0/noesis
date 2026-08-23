@@ -1,0 +1,49 @@
+{
+  "_meta": {
+    "experiment": "wkv_linear_probe",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-08-23",
+    "status": "done",
+    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/rl/wkv_linear_probe.py",
+    "summary": {
+      "held_out_r2_xor_int": "-0.0206",
+      "held_out_r2_bits_mean": "0.1703"
+    }
+  },
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "resume": "experiments/rl/runs/archive/g1i_think_distill_zlk_phase1_v3/ckpt_step000500",
+  "work_layers": [
+    12,
+    16,
+    20
+  ],
+  "chain_phases": 1,
+  "n_examples": 200,
+  "n_bits": 4,
+  "n_train": 160,
+  "results": {
+    "xor_int": {
+      "in_sample_r2": 0.005016396226883879,
+      "held_out_r2": -0.020558889604275432
+    },
+    "xor_bit0": {
+      "in_sample_r2": -0.02519861909301402,
+      "held_out_r2": -0.01750555306914059
+    },
+    "xor_bit1": {
+      "in_sample_r2": 0.34735377097381437,
+      "held_out_r2": 0.31428587735461944
+    },
+    "xor_bit2": {
+      "in_sample_r2": 0.31940571254022576,
+      "held_out_r2": 0.11104054794957074
+    },
+    "xor_bit3": {
+      "in_sample_r2": 0.5377304899676418,
+      "held_out_r2": 0.2732863450275643
+    }
+  }
+}
