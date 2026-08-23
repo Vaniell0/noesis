@@ -29,6 +29,25 @@ body, same convention as `loader.py::_peft_forward_embeds`) can capture
 them; see `_capture_rkvwag` below. Re-sync that function against
 `rwkvt/rwkv7/att.py:235-279` if the vendored file changes.
 
+2026-08-23 addition: Huginn-style backtrack detection (arXiv 2602.08100,
+"Emergent Search and Backtracking in Latent Reasoning Models" — found
+that backtracking in a looped latent-reasoning transformer emerges
+without being explicitly trained for, just from variable recurrence
+depth, and is detectable for free by decoding the readout distribution
+at every internal step and watching the majority-vote answer flip:
+one token dominant >=3 steps, then a DIFFERENT token dominant >=3
+steps). ThinkChain's `forward_stateful_embeds` already returns fresh
+readout logits after every call, same as Huginn's decoder-ready coda —
+no new probe needed, just decode more often. The `chain` branch below
+now repeats each phase marker `--phase-repeat-ticks` times (was: one
+call per phase) and records the per-tick readout argmax; `_detect_backtrack`
+runs the same rule against both this new chain stream and the existing
+`loop` branch's real self-fed token stream (already free — those tokens
+ARE argmax-decoded each step), so the two mechanisms are directly
+comparable on this measure. This is the task-#12 diagnostic ahead of
+building a dedicated Phase-2 rewind marker (`docs/rl-track.md` §Track
+status) — first check whether answer-flips already occur without one.
+
 `retention` (per layer, per token): the ACTUAL per-channel decay
 multiplier applied to the WKV state each step is `exp(-exp(w))` — a
 DOUBLE exponential of `w` (RWKV-7's per-channel log-decay logit,
@@ -107,6 +126,33 @@ def _delta_norms(wkv, prev_wkv, layers) -> dict[int, float] | None:
         return None
     return {L: float(torch.linalg.vector_norm((wkv[L].float() - prev_wkv[L].float()).flatten()).item())
             for L in layers}
+
+
+def _detect_backtrack(answer_stream: list[int], min_streak: int = 3) -> dict:
+    """Huginn-style backtrack detection (arXiv 2602.08100): a backtrack is
+    one answer-token dominating >= min_streak consecutive internal steps,
+    then a DIFFERENT answer-token dominating the next >= min_streak steps
+    (their operational definition, not a looser "did it ever change").
+    Runs on any per-step token-id stream — the chain branch's per-tick
+    readout argmax, or the loop branch's real self-fed tokens (same rule,
+    two different streams, see module docstring)."""
+    streaks: list[tuple[int, int, int]] = []  # (token_id, start_idx, length)
+    cur_tok, cur_start = None, 0
+    for i, tok in enumerate(answer_stream):
+        if tok != cur_tok:
+            if cur_tok is not None:
+                streaks.append((cur_tok, cur_start, i - cur_start))
+            cur_tok, cur_start = tok, i
+    if answer_stream:
+        streaks.append((cur_tok, cur_start, len(answer_stream) - cur_start))
+    qualifying = [s for s in streaks if s[2] >= min_streak]
+    streak_dicts = [{"token": t, "start": s, "len": l} for t, s, l in streaks]
+    for a, b in zip(qualifying, qualifying[1:]):
+        if a[0] != b[0]:
+            return {"backtracked": True, "from_token": a[0], "to_token": b[0],
+                    "from_streak_start": a[1], "to_streak_start": b[1],
+                    "streaks": streak_dicts}
+    return {"backtracked": False, "streaks": streak_dicts}
 
 
 def _tensor_stats(t: torch.Tensor) -> dict:
@@ -213,7 +259,7 @@ def _step(loaded, x_or_ids, state, layers, capture_layers, save_raw, use_embeds:
 
 
 def trace_prompt(loaded, prompt_text: str, layers, capture_layers, save_raw: bool,
-                  think_marker, n_chain_phases: int, tok) -> dict:
+                  think_marker, n_chain_phases: int, tok, phase_repeat_ticks: int) -> dict:
     ids = tok.encode(prompt_text)
     device = loaded.device
 
@@ -291,14 +337,29 @@ def trace_prompt(loaded, prompt_text: str, layers, capture_layers, save_raw: boo
     e, prev_delta = entry(0, "<entry>", state, prev_wkv, prev_delta, cap)
     chain_trace.append(e)
     prev_wkv = state.wkv
+    # readout_stream: argmax of the readout logits after EVERY tick (not
+    # just once per phase) — the quantity Huginn's decoder-ready coda
+    # exposes for free, used to test for answer-flips across ticks/phases
+    # (see module docstring, task #12). First entry is the readout right
+    # after the shared entry cue, before any phase-specific work.
+    readout_stream: list[int] = [int(_last_vec(logits).argmax().item())]
     for i in range(n_chain_phases):
         marker_i = think_marker.step(i + 1).to(dtype=loaded.embedding_weight.dtype).view(1, 1, -1)
-        logits, state, cap = _step(loaded, marker_i, state, layers, capture_layers, save_raw, use_embeds=True)
-        e, prev_delta = entry(i + 1, f"<phase{i}>", state, prev_wkv, prev_delta, cap)
-        chain_trace.append(e)
-        prev_wkv = state.wkv
+        for tick in range(phase_repeat_ticks):
+            logits, state, cap = _step(loaded, marker_i, state, layers, capture_layers, save_raw, use_embeds=True)
+            e, prev_delta = entry(f"{i}.{tick}", f"<phase{i}:{tick}>", state, prev_wkv, prev_delta, cap)
+            chain_trace.append(e)
+            prev_wkv = state.wkv
+            readout_stream.append(int(_last_vec(logits).argmax().item()))
 
-    return {"read": read_trace, "loop": loop_trace, "chain": chain_trace, "prompt_n_tokens": len(ids)}
+    chain_backtrack = _detect_backtrack(readout_stream)
+    # loop branch's own tokens already ARE argmax-decoded, real self-fed
+    # generation — no new capture needed, same detector, direct comparison.
+    loop_backtrack = _detect_backtrack([e["token_id"] for e in loop_trace])
+
+    return {"read": read_trace, "loop": loop_trace, "chain": chain_trace,
+            "chain_readout_stream": readout_stream, "chain_backtrack": chain_backtrack,
+            "loop_backtrack": loop_backtrack, "prompt_n_tokens": len(ids)}
 
 
 def _load_think_marker(n_embd: int, n_phases: int, device: str) -> ThinkChain:
@@ -336,6 +397,11 @@ def main() -> int:
     ap.add_argument("--chain-phases", type=int, default=3,
                      help="M for the ThinkChain trace branch (3 phases + shared "
                           "entry cue, per 2026-08-21 decision).")
+    ap.add_argument("--phase-repeat-ticks", type=int, default=8,
+                     help="Repeat ticks per phase marker in the chain branch "
+                          "(matches train_think_distill.py's --max-phase-tokens "
+                          "default) — needed for the Huginn-style backtrack "
+                          "check to have enough per-phase readout samples.")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = ap.parse_args()
 
@@ -378,7 +444,7 @@ def main() -> int:
         for name, prompt_text in PROMPTS.items():
             print(f"[state_trajectory_probe] tracing {name} ...")
             r = trace_prompt(loaded, prompt_text, layers, capture_layers, args.save_raw,
-                              think_marker, args.chain_phases, tok)
+                              think_marker, args.chain_phases, tok, args.phase_repeat_ticks)
             if args.save_raw:
                 raw_out[name] = {}
                 for branch in ("read", "loop", "chain"):
@@ -425,6 +491,15 @@ def main() -> int:
                     if ret:
                         print(f"  [{branch}] L{Lc} retention(max-over-channels): "
                               f"mean={sum(ret)/len(ret):.4f} max={max(ret):.4f}")
+            for branch, bt in (("chain", r["chain_backtrack"]), ("loop", r["loop_backtrack"])):
+                if bt["backtracked"]:
+                    print(f"  [{branch}] BACKTRACK: token {bt['from_token']} "
+                          f"(from tick {bt['from_streak_start']}) -> token {bt['to_token']} "
+                          f"(from tick {bt['to_streak_start']})")
+                else:
+                    n_streaks = len(bt["streaks"])
+                    print(f"  [{branch}] no backtrack ({n_streaks} distinct streak(s), "
+                          f"min-streak=3 rule)")
 
     # Real min/max retention actually observed this run (not a hardcoded
     # guess) — every captured layer/token/branch/prompt, so the summary
@@ -432,6 +507,14 @@ def main() -> int:
     all_ret = [lr["retention"][stat] for name in results for branch in ("read", "loop", "chain")
                for e in results[name][branch] for lr in e["rkvwag"] for stat in ("min", "max")]
     ret_summary = f"{min(all_ret):.4f}-{max(all_ret):.4f} across all layers/tokens/branches/prompts"
+
+    n_prompts = len(results)
+    n_chain_backtrack = sum(1 for r in results.values() if r["chain_backtrack"]["backtracked"])
+    n_loop_backtrack = sum(1 for r in results.values() if r["loop_backtrack"]["backtracked"])
+    backtrack_summary = (f"chain={n_chain_backtrack}/{n_prompts} prompts backtracked, "
+                          f"loop={n_loop_backtrack}/{n_prompts} (Huginn min-streak=3 rule; "
+                          f"n=4 fixed prompts, not a statistical claim — see arXiv 2602.08100 "
+                          f"for their 32%/34%-accuracy numbers on 260 real instances)")
 
     save_result(
         args.out,
@@ -445,7 +528,7 @@ def main() -> int:
         # REAL trained ThinkChain markers exists to --resume from (see
         # docs/rwkv7-mechanics.md §5) — true regardless of whether --model
         # itself is trained (e.g. the pre-ThinkChain step200 checkpoint).
-        summary={"retention_range": ret_summary},
+        summary={"retention_range": ret_summary, "backtrack": backtrack_summary},
         model=str(args.model),
         script=str(Path(__file__).resolve().relative_to(_REPO_ROOT)),
     )
