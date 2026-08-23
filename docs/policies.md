@@ -139,8 +139,11 @@ Runs on supervisor start; results cached in
 7. **Interactive fallback.** For hosts without `coretemp` (AMD Zen
    `k10temp` — different hwmon name; future ARM boards) or where auto
    returns `1%` because the machine idles hot: `noesis-runtime
-   calibrate --interactive` CLI planned. Not yet shipped; placeholder
-   emits `calibration_advice` event pointing at this section.
+   calibrate --interactive` CLI — shipped (corrected 2026-08-23; this
+   line previously said "planned"), `runtime/noesis-runtime/src/
+   calibrate_interactive.rs`, real throughput measurement + interactive
+   fan-safe% prompt + `calibration.toml` persistence, plus a
+   `--thread-sweep` variant.
 
 **Derived drip formula:**
 ```

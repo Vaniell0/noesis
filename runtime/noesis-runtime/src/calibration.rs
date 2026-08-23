@@ -585,8 +585,7 @@ pub async fn run_background_job(
                 &store,
                 "auto-calibration unavailable: no coretemp sensor. \
                  Runtime is on conservative fallback. To raise the drip \
-                 ceiling, run `noesis-runtime calibrate --interactive` \
-                 (planned; see plan-extensions §11).",
+                 ceiling, run `noesis-runtime calibrate --interactive`.",
             );
             return Ok(());
         }
