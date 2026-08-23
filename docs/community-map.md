@@ -1,6 +1,9 @@
 # Community map — RWKV / SSM landscape vs noesis divergences
 
-Written 2026-07-25. Last updated 2026-08-14. Consolidates prior-art
+Written 2026-07-25. Last updated 2026-08-23 (header date corrected —
+content past 2026-08-14 had already been added in several passes before
+this fix: see the Huginn/RLRP entries below, dated 2026-08-19/20/23, for
+the most recent). Consolidates prior-art
 scattered across `docs/state-and-reasoning.md §2`, "Frontier adjacency"
 boxes inside `hypotheses/README.md` H8/H12, and per-topic snippets in
 `docs/effort-frontier.md`. Purpose: a single flat map of what the
@@ -614,6 +617,15 @@ applicable results:
    probe (MLP) required to measure actual state content. Key bridge: arXiv 2509.04422
    (Singh & Raman, ESN as SSM, ESP = ISS, frequency-domain memory spectra).
    Result file: `experiments/A0_state_probe/results/ipc_g1i_fixed.json`.
+   **⚠ Not actually settled — flagged inconsistently until this 2026-08-23 audit.**
+   `docs/rl-track.md` (§State metrics) carries this result with an explicit
+   "Unresolved" caveat: fleeb83 independently reported nonzero IPC (17-48% of
+   ceiling) on the same checkpoint family, never reconciled with this ≈0 result
+   — possibly an in-sample-vs-held-out split difference, possibly sample size
+   (256 vs 512 tokens). This file previously dropped that caveat and called the
+   status "IPC DONE" below — don't read "DONE" as "reconciled"; it means the
+   *linear, held-out* measurement itself is complete, not that the
+   contradiction with fleeb83's numbers is resolved.
 
 2. **L_mem — skipped permanently.** Linear IPC ≈ 0 → state encodes nonlinearly by
    design → L_mem would fight the architecture. Not applicable.
@@ -789,8 +801,8 @@ technique. Each divergence is explicit about which.
 | **`L_state` — state-motion reward + curvature reward on load-bearing layers** | Mirror-image of Slow-and-Steady SFA (they minimize, we maximize). Per-layer A0.5-derived weights are empirical noesis contribution. **Risk: no unit-variance analogue anchor; CE alone may not prevent state-norm blow-up.** | `training/state_reg.py`, HYPOTHESES §H8/H9 |
 | **Runtime-persistent WKV across sessions with lens-scoped snapshots** | Community has in-process chat demos + trie prefix cache. Server-side session-persistent WKV as first-class abstraction — nobody built it. | HYPOTHESES §H17, plan §5 (lens cache), plan §10 (context transform) |
 | **K=4 tail + retrieval instead of full-history injection** | Untested wager: if WKV state holds prior context, resending full history is redundant. "K=4" is arbitrary — no empirical basis for this number. **Pressure (2026-08-12):** multi-turn law (0/2 across all models, tuned or not) shows state does not reliably enable multi-turn recall without dedicated training. The wager may still hold with correct training, but "K=4 tail works out of the box" is not supported. H17 is the formal bet; do not treat as an engineering decision until H17 passes. | HYPOTHESES §H17, plan §10 |
-| **N/K effort frontier (2D validated, readout axis pending)** | Industry uses single-scalar effort dial. RWKV community has no effort framework at all. N×K sweep is validated (N=2 silent best cell). `state_readout` mode was eval-buggy (shared code path with `prompt_cot`, fixed 2026-08-12) — readout axis data is invalid, rerun required. "3D frontier" claim is suspended until state_readout is properly tested. | HYPOTHESES §H10, `docs/effort-frontier.md` |
-| **Gated externalisation (H16 drip + emit gate)** | RWKV is strictly autoregressive; needs external token to fire. Poll-mode is universal community pattern. Silent drip stream + trained emit gate — nobody built. | HYPOTHESES §H16 |
+| **M effort frontier (single-axis, corrected 2026-08-23: two mechanisms share the name)** | Industry uses single-scalar effort dial. RWKV community has no effort framework at all. **Stale as of 2026-08-23** — the old N/K/readout-mode framing this row used to describe was fully retired 2026-08-17 (`docs/effort-frontier.md`); the live axis is `M` (WKV-loop internal steps), with real pre-RL data (12.5% vs. 33.3% state_readout baseline, 2026-08-18). Current open problem: `M` names two structurally different mechanisms (`wkv_loop.py`'s self-feed steps vs. `train_think_distill.py`'s ThinkChain distinct phase markers) that a single effort-registry dial doesn't yet distinguish. | HYPOTHESES §H10, `docs/effort-frontier.md`, `docs/rl-track.md` §Track status |
+| **Gated externalisation (H16 drip + emit gate) — RETRACTED as a separate head, 2026-08-11** | RWKV is strictly autoregressive; needs external token to fire. Poll-mode is universal community pattern. The LM head already encodes `p(emit)` — a dedicated MLP gate head turned out redundant, not "nobody built it yet." See §3.6 above. | HYPOTHESES §H16 |
 | **Multi-slot LoRA with utilisation regularizer (H12b + H12b.i)** | Standard MoE toolkit (entropy + dissimilarity + coverage) applied to RWKV WKV state. **First application of MoE anti-collapse tricks to recurrent state slots.** | HYPOTHESES §H12b/§H12b.i |
 | **Startup thermal calibration → drip rate derived** | Community drip experiments (rare) all use hardcoded rates. Per-machine calibration + fan-off invariant — noesis specific. | HYPOTHESES §H1, plan §11 |
 | **Unified multimodal substrate wager (H13a)** | VisualRWKV is bolted encoder. Unified state (text ⊕ image ⊕ audio through one delta-rule) — no community model ships this. | HYPOTHESES §H13a |
@@ -855,14 +867,16 @@ Anthropic HH-RLHF honesty subset as principle source, hand-crafted
 positive/negative pairs from user's own chat traces as style
 source. Update H15 with DPO as a candidate variant, not just SFT.
 
-### 3.6 Loss for H16 gate itself
+### 3.6 Loss for H16 gate itself — MOOT, H16 RETRACTED 2026-08-11
 
-H16 spec has the *architecture* (small MLP head over WKV state
-producing `p(emit)`) but no loss formulation. Candidates:
-supervised (labelled "was this a good moment to speak") vs
-self-play (drift from optimal spacing) vs online RL from user
-feedback. Each has different data requirements. Pick one before
-H16 becomes buildable.
+This section used to ask which loss to train a small MLP head over WKV
+state (producing `p(emit)`) with. Never resolved because the premise
+went away first: `hypotheses/H16.md` retracted the separate-head design
+entirely — the LM head already encodes `p(emit)`, a dedicated MLP head
+is redundant. `docs/rl-track.md`'s own hypothesis table already reflects
+this ("H16, RETRACTED as a separate head"); this file wasn't synced
+until the 2026-08-23 audit caught it. No loss to design here — nothing
+to build.
 
 ### 3.7 L_length as formal hypothesis
 
