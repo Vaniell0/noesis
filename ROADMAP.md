@@ -234,10 +234,15 @@ See `docs/rl-track.md` for the full design.
   scheduler), `train_wkv_loop.py` (main training script, replaces
   `train_wordsearch.py`). CPU smoke tests pass; GPU-only paths (peft backend,
   expected/residual feed modes) untested.
-- **Blockers.** GPU only. G1i download DONE; G1i eval DONE (41.7%);
-  word-search baseline CONFIRMED 0/56. IPC DONE locally (linear≈0 held-out,
-  H8 tentatively confirmed — but see the fleeb83 discrepancy flag above).
-  Next: Selectel 4090 (~₽1500/24h) or Colab A100.
+- **Blockers.** ~~GPU only~~ **RESOLVED, corrected 2026-08-23**: this line
+  was already stale by the time it was last touched (2026-08-20) — real
+  GPU training on a Selectel **T4 16GB** (not the 4090 this line named)
+  has been running continuously since 2026-08-18 (`docs/rl-track.md`).
+  G1i download DONE; G1i eval DONE (41.7%); word-search baseline
+  CONFIRMED 0/56. IPC DONE locally (linear≈0 held-out, H8 tentatively
+  confirmed — but see the fleeb83 discrepancy flag above). Current
+  blocker is phase sequencing, not hardware — see `docs/rl-track.md`
+  §Track status for the live 4-stage plan.
 
 ### A2. Memory-policy tuning (after A1 and Track B2)
 - Reproduce Memory-R1 (Yan et al., ACL 2026) approach: RL-trained Memory

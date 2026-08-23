@@ -7,9 +7,17 @@
 #   4. H12b.i WIRED: rank entropy regularizer connected to training_step (was implemented but not called)
 #   5. Preserve: RFC dominant fraction, ε-mask, LoRA rank 32
 #
-# Key decision: start from step9 e0 (best checkpoint, 43.75%) NOT step9b
-#   step9b regressed due to ctx_len=512 bug, not corpus or LoRA issues
-#   step9 e0 is the clean starting point
+# Key decision (SUPERSEDED, corrected 2026-08-23 -- this header was never
+# updated after the actual launch decision changed; the `model:` block
+# below is correct, this comment isn't): originally planned to start from
+# step9 e0 (best checkpoint, 43.75%) NOT step9b, since step9b regressed
+# due to ctx_len=512, not corpus/LoRA issues. Overtaken by events on two
+# counts: (1) step9 e0 was never uploaded to HuggingFace before its VM
+# was deleted -- LOST, unrecoverable (memory: project_noesis_current);
+# (2) separately, the base model line itself migrated to G1i regardless
+# (ROADMAP.md: "Step 9 base was G1h-2.9B; G1i-2.9B... is the new
+# baseline. All step 10+ runs use G1i") -- see the actual `checkpoint:`
+# value below, which already reflects this.
 #
 # Corpus build (run before launching):
 #   # Generate new corpus sources
@@ -90,10 +98,10 @@
 #   T<3 short-circuit: fired because ctx_len=512 gave sequences that were
 #   shorter than 3 chunks after chunking; ctx_len=2048 guarantees T>=4.
 #
-# Base model: download step9 e0 from HuggingFace before launching:
-#   huggingface-cli download Vaniello/noesis-rwkv7-g1h-2.9b \
-#       rwkv7-g1h-2.9b-step9-e0-merged.pth \
-#       --local-dir training/runs/
+# Base model: STALE, do not run this -- step9 e0 is lost (see note above).
+# The real base is the `checkpoint:` path in the `model:` block below
+# (already downloaded/present as of this correction, 2026-08-23):
+#   models/rwkv7-g1i-2.9b-20260805-ctx16384.pth
 
 model:
   checkpoint: models/rwkv7-g1i-2.9b-20260805-ctx16384.pth  # G1i base (2026-08-13)
