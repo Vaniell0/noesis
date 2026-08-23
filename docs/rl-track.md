@@ -29,6 +29,19 @@ not resolved — read it before assuming the two stages share a curriculum.
    break and an M=0 path that doesn't degrade, across M=0..3, not just the one
    trained M. Plumbing, not meaning, yet — but see the 2026-08-23 addition to
    Phase 2 below: this stage may already be doing more than plumbing.
+   **Curriculum design, 2026-08-23 (concern raised, not yet implemented):**
+   the M=0 degradation already observed on v3 (LoRA reshaping weights toward
+   "expect the phase marker") is a real risk for full-FT, which has no LoRA
+   bottleneck limiting how far it can go — worse, not better, without a fix.
+   Proposed fix, Birdie-style (arXiv 2411.01030, already in
+   `docs/community-map.md`'s §"Aligned techniques"): extend
+   `_CategoryBatcher` with a second stratification axis — M/difficulty, not
+   just task category — so every batch keeps a fraction of plain, no-marker,
+   simple-response examples (M=0, not task-specific) alongside the M=1..3
+   harder-task examples, continuously through training, not as an early
+   curriculum stage that gets left behind. Not "train easy first, then
+   hard" (that's exactly the sequential pattern that would let M=0 be
+   forgotten again) — concurrent mixing, every batch.
 
 3. **Phase 2 — give M>1 real meaning (designed, revised 2026-08-23, not
    built).** Original framing (kept in the appendix below for the reasoning
@@ -143,6 +156,22 @@ not resolved — read it before assuming the two stages share a curriculum.
    "revert" transition) to keep the policy ratio well-defined across a
    rewind event too, not just entry/exit — flag for whoever does that port,
    not designed yet.
+
+5. **Phase 4 (speculative, not started, gated on an external signal) — ROSA
+   as a delegate marker, not an architecture merge.** Standing decision
+   (2026-08-22, `reference_rwkv_lucas_community_2026_08.md`): don't
+   integrate ROSA into RL without a stronger signal it works at LM scale,
+   not just synthetic tasks — unchanged. If that signal ever lands, the
+   design direction discussed 2026-08-23 is NOT "merge the ROSA block into
+   the architecture and retrain end-to-end" — it's a third ThinkChain
+   marker type alongside explore (Phase 1-3) and rewind (Phase 2): a
+   **delegate** marker whose fixed point is a call into a ROSA register for
+   an exact-precision sub-operation (digit sequences, verbatim copy, exact
+   lookup — H25's controllability bottleneck), with the result read back
+   into WKV via the same repeat-tick mechanism already built for the other
+   two marker types. Ties to the parked "WKV as programmable coprocessor"
+   idea (memory `project_noesis_reservoir_computing_idea`). Not
+   implementable today — ROSA has no LM-scale checkpoint to delegate to.
 
 Mechanism-level detail (recurrence math, decay derivation) lives in
 `docs/rwkv7-mechanics.md`. Full run-by-run narrative for Phases 1/1.5/2 is the
