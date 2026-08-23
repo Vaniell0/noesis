@@ -1089,7 +1089,33 @@ the loop converges toward a fixed point instead of doing M genuinely
 different units of work — the exact mechanism behind two things this
 section already documented as separate bugs (dynamic-phase-stop's
 entropy-plateau firing increasingly early; the need for an explicit
-norm anchor against unbounded state drift). **ThinkChain**
+norm anchor against unbounded state drift).
+
+**This paragraph is mechanics-reasoned, not yet confirmed by the direct
+measurement built for it — checked 2026-08-23, worth being honest about.**
+`delta_cos_prev` (`state_trajectory_probe.py`, exactly built to test
+"does the loop's per-step delta converge toward a single direction, cos
+→ 1") was computed against the one existing local run
+(`experiments/_common/results/state_trajectory_step200.json`, 2026-08-22,
+loop branch on the step200 checkpoint the old mechanism actually trained
+on — the right checkpoint to ask this on). Result: inconclusive, not
+confirming. 3 of 4 prompts hit EOS after only 2-3 self-feed steps (too
+short a trace to show any trend); the one long trace (matrix_addition,
+13 steps) sits roughly flat around −0.08 to −0.11, not drifting toward
++1 — consecutive deltas pointing in *somewhat opposing* directions on
+average, not the same one. Doesn't refute the mechanism either (mostly a
+sample-length problem, and a genuine fixed-point contraction doesn't
+strictly require cos→1 the way a naive reading suggests — WKV's `v^T k`
+write term keeps injecting content a pure decay-only contraction
+wouldn't have). That same file's `chain` branch is not a usable
+comparison point: step200 predates ThinkChain, so `--resume` fell back
+to random, untrained markers there. **Real test is task #12's run** (the
+same probe, on the real `v3`/step500 checkpoint — loop on a checkpoint
+trained under that mechanism, chain on real trained markers) — it
+already prints this exact first-half/second-half trend for both
+branches, nothing more to build.
+
+**ThinkChain**
 (`ThinkChain` class, `experiments/rl/train_think_distill.py`,
 2026-08-21) replaces the self-feed loop with `M+1` explicitly distinct,
 directly-learned embeddings (one shared entry cue, one per phase) fed
