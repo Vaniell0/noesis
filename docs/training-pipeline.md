@@ -178,7 +178,11 @@ so they get split into chunks where L_state = 0. Extraction collapsed from
 | Reduce hhrlhf or normalize format | Suspected noise source in step 9b mix |
 | Wire H12b.i hookup in `light_rwkv.py` | `compute_h12bi_aux()` implemented but not connected |
 
-Config base: `training/config/pilot_step9b.yaml` — change `ctx_len`, adjust fractions.
+Config base: **already built, corrected 2026-08-23** —
+`training/config/pilot_step10.yaml` (2026-08-14) implements the row above
+directly; use it, not `pilot_step9b.yaml` as a template (see
+`pilot_step10.yaml`'s own header for a base-model correction: step9 e0 is
+lost, the config already uses G1i).
 
 <!-- AUTO-GENERATED BELOW: do not hand-edit — regenerate via `python training/regenerate_corpus_index.py` -->
 

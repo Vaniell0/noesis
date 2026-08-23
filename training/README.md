@@ -139,15 +139,19 @@ Checkpoint on HuggingFace `Vaniello/noesis-rwkv7-g1h-2.9b`. Not present locally.
 - deepspeed fused_adam: patched `light_rwkv.py` to use `torch.optim.AdamW`.
 - `run_effort_sweep.sh`: fixed wrong JSON keys for H10 sweep.
 
-## Step 10 — next training run
+## Step 10 — already built (corrected 2026-08-23; this section described
+## the plan before the config existed)
 
 Goal: restore L_state effectiveness lost in step9b (ctx_len=512 bug).
+The plan below shipped as `training/config/pilot_step10.yaml` (built
+2026-08-14) — use that file directly, not `pilot_step9b.yaml` as a
+template (see that file's own header for a base-model correction: step9
+e0 is lost, the config already uses G1i).
 
 - `ctx_len=2048–4096` (fixes T<3 short-circuit, restores ε-mask)
 - Keep RFC fraction dominant (~25-30%)
 - Add harder RFCs targeting `bit_decoding` gap (CRC, bitfield exercises)
 - Reduce `hhrlhf` fraction or normalize format (suspected noise source)
-- Config: `training/config/pilot_step9b.yaml` as template (update ctx_len)
 
 To run eval on any merged checkpoint:
 ```bash
