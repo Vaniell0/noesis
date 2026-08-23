@@ -128,6 +128,22 @@ class ThinkChain(nn.Module):
 # Data
 # --------------------------------------------------------------------------- #
 
+def _is_oom_error(exc: BaseException) -> bool:
+    """torch.cuda.OutOfMemoryError covers PyTorch's own allocator; FORGE's
+    int8 optimizer runs a Triton CUDA kernel, and Triton raises a plain
+    RuntimeError with "out of memory" in the message instead — a
+    DIFFERENT exception type that a bare `except torch.cuda.
+    OutOfMemoryError` does not catch. Found the hard way, 2026-08-23,
+    full-FT smoke testing: the batch-level OOM guard below was written,
+    then immediately crashed straight through on exactly this exception
+    type on the very next real OOM. Checked by message content, not
+    just type, so both sources are caught without also swallowing an
+    unrelated RuntimeError (a real bug) that happens to occur here."""
+    if isinstance(exc, torch.cuda.OutOfMemoryError):
+        return True
+    return isinstance(exc, RuntimeError) and "out of memory" in str(exc).lower()
+
+
 def load_examples(path: Path) -> List[Dict[str, List[int]]]:
     """Split a step9-style combined_train.pt into per-example
     prompt/think/answer token-id lists, using its own state_mask/loss_mask
@@ -183,6 +199,94 @@ def _infer_category(prompt_text: str) -> str:
         if keyword in prompt_text:
             return cat
     return "other"
+
+
+def load_relax_examples(path: Path, tokenizer) -> List[Dict[str, List[int]]]:
+    """Loads gen_relax_corpus.py's jsonl output (plain {prompt, answer}
+    continuation pairs, no think span at all) — tokenized on the fly,
+    unlike load_examples's .pt-blob pipeline, since relax examples have
+    no state_mask/loss_mask distinction to preserve."""
+    examples = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            d = json.loads(line)
+            prompt_ids = tokenizer.encode(d["prompt"])
+            answer_ids = tokenizer.encode(d["answer"])
+            if not prompt_ids or not answer_ids:
+                continue
+            examples.append({"prompt_ids": prompt_ids, "answer_ids": answer_ids})
+    return examples
+
+
+class _SimpleCycler:
+    """Shuffled round-robin over a flat list — same non-repeat-until-
+    exhausted property as _CategoryBatcher, without the category
+    bucketing (relax examples have no category axis to balance)."""
+    def __init__(self, items: List[Dict], rng: random.Random):
+        self.items = list(items)
+        self.rng = rng
+        self.rng.shuffle(self.items)
+        self.pos = 0
+
+    def next(self) -> Dict:
+        if self.pos >= len(self.items):
+            self.pos = 0
+            self.rng.shuffle(self.items)
+        item = self.items[self.pos]
+        self.pos += 1
+        return item
+
+
+def relax_step(loaded, ex: Dict[str, List[int]]) -> Tuple[torch.Tensor, int]:
+    """The M=0 path: prefill the prompt, teacher-force the continuation,
+    ordinary CE loss — no ThinkChain, no marker, no think span at all.
+    Mirrors distill_step's own answer-CE tail exactly (same pattern,
+    reused deliberately, not reinvented) but with nothing before it —
+    no teacher pass, no phases, no state_loss. Existing purely so the
+    model keeps seeing genuine non-task text with no marker involved,
+    rather than only ever seeing "no marker" on a matrix/arithmetic/xor
+    prompt shape it might otherwise learn to associate with the marker
+    regardless of whether one is actually present (see docs/rl-track.md
+    Phase 1.5's curriculum-mixing note)."""
+    device = loaded.device
+    prompt = torch.tensor([ex["prompt_ids"]], dtype=torch.long, device=device)
+    state = loaded.new_state(batch=1)
+    logits, state = loaded.forward_stateful(prompt, state)
+    answer_ids = ex["answer_ids"]
+    if len(answer_ids) == 1:
+        all_logits = logits
+    else:
+        answer_t = torch.tensor([answer_ids], dtype=torch.long, device=device)
+        logits_rest, _ = loaded.forward_stateful(answer_t[:, :-1], state)
+        all_logits = torch.cat([logits, logits_rest], dim=1)
+    log_probs = F.log_softmax(all_logits.float(), dim=-1)
+    target = torch.tensor(answer_ids, dtype=torch.long, device=device)
+    token_lp = log_probs[0, torch.arange(len(answer_ids), device=device), target]
+    return -token_lp.mean(), len(answer_ids)
+
+
+def warm_start_marker(old_ckpt_dir: Path, new_marker: "ThinkChain") -> None:
+    """One-time copy of an OLDER, SMALLER ThinkChain's rows into a NEW,
+    LARGER one — NOT the same as --resume (which expects an exact shape
+    match, for restarting THIS run after an interruption). E.g. an
+    M=1-trained marker's chain[0] (entry) and chain[1] (phase1) copy
+    into a new M=3 marker's same-index rows; chain[2]/chain[3] (the new
+    phase2/phase3, never trained before) stay at their fresh-random
+    init. Plain tensor slicing, not load_state_dict — a strict shape
+    match would just fail on this exact mismatch, by design (see
+    distill_step/state_trajectory_probe.py's existing handling of the
+    same shape-mismatch case elsewhere in this project)."""
+    meta = torch.load(old_ckpt_dir / "meta.pt", map_location="cpu", weights_only=False)
+    old_chain = meta["mlp_delta"]["chain"]
+    n_old = old_chain.shape[0]
+    with torch.no_grad():
+        new_marker.chain.data[:n_old] = old_chain.to(
+            device=new_marker.chain.device, dtype=new_marker.chain.dtype)
+    print(f"[distill] warm-started {n_old}/{new_marker.chain.shape[0]} ThinkChain "
+          f"rows from {old_ckpt_dir} (remaining rows: fresh random init)")
 
 
 class _CategoryBatcher:
@@ -524,6 +628,92 @@ def distill_step(
             len(answer_ids), n_phase_tokens_used)
 
 
+def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
+                      layer_weights, m_weights, rng, m_counts):
+    """One micro-batch's worth of per-example forward passes (args.batch
+    examples, each its own sampled M — see --m-weights), collected but
+    NOT backward'd yet — --grad-accum-steps (2026-08-23) calls this once
+    per micro-batch, then does its own backward/loss-combination outside,
+    so this function only does the forward-collection part that used to
+    be inline in main()'s training loop.
+
+    Returns (ce_list, state_list, norm_penalty_list, cos_sim_list,
+    student_repr_list, teacher_repr_list, n_tok_sum, n_phase_tok_sum), or
+    None if every example in this micro-batch OOM'd (nothing usable at
+    all — the caller skips this micro-batch's contribution entirely,
+    same as the old single-batch code's "entire batch OOM'd" case)."""
+    ce_list, state_list, norm_penalty_list, cos_sim_list = [], [], [], []
+    student_repr_list, teacher_repr_list = [], []
+    n_tok_sum = n_phase_tok_sum = n_skipped = 0
+    for _ in range(args.batch):
+        # Phase 1.5 (2026-08-23): per-example M, sampled independently —
+        # heterogeneous M (including M=0/relax) within one batch is fine,
+        # this loop is already per-example Python, not a batched tensor
+        # op. m_weights=None preserves the old single-fixed-M behavior
+        # exactly (every example uses args.M, same as before this change).
+        M_i = args.M if m_weights is None else rng.choices(range(args.M + 1), weights=m_weights)[0]
+        m_counts[M_i] += 1
+        try:
+            if M_i == 0:
+                ex = relax_batcher.next()
+                ce, n_tok = relax_step(loaded, ex)
+                state_loss = norm_penalty = cos_sim = None
+                student_repr = teacher_repr = None
+                n_phase_tok = 0
+            else:
+                ex = batcher.next()
+                ce, state_loss, norm_penalty, cos_sim, student_repr, teacher_repr, n_tok, n_phase_tok = distill_step(
+                    loaded, ex, layers, layer_weights,
+                    state_loss_clamp=args.state_loss_clamp,
+                    M=M_i,
+                    think_marker=think_marker,
+                    norm_anchor_threshold=args.norm_anchor_threshold,
+                    dynamic_phase_stop=args.dynamic_phase_stop,
+                    eps_plateau=args.eps_plateau,
+                )
+        except Exception as e:
+            # Same pattern as train_wkv_loop.py's per-rollout OOM
+            # catch-and-skip (added 2026-08-18 there after one OOM
+            # cascaded into 13/16 rollouts failing the same step) —
+            # this loop holds args.batch forward graphs simultaneously
+            # (required for CLIPO's cross-example negatives), so an
+            # unusually long example (a long chunk_lens[i] repeat budget
+            # under --dynamic-phase-stop, or a long think-span) can push
+            # an otherwise-fine batch over the edge. Drop this example,
+            # keep the step going with whatever the rest produces, rather
+            # than crash an hours-long run over one example.
+            # _is_oom_error, not a bare except type: see its own
+            # docstring — a real, distinct exception (Triton's own
+            # RuntimeError) was found slipping through a type-only check
+            # the same night this whole guard was added.
+            if not _is_oom_error(e):
+                raise
+            n_skipped += 1
+            print(f"[distill] WARNING: OOM on an example this batch — skipping, "
+                  f"{n_skipped} skipped this step", file=sys.stderr)
+            gc.collect()
+            torch.cuda.empty_cache()
+            continue
+        ce_list.append(ce)
+        # M=0/relax examples have no ThinkChain state to distill — only
+        # contribute to ce_list, not state/norm/cos/CLIPO. Mean/stack at
+        # the call site naturally handle these lists being shorter than
+        # ce_list.
+        if state_loss is not None:
+            state_list.append(state_loss)
+            norm_penalty_list.append(norm_penalty)
+            cos_sim_list.append(cos_sim)
+            student_repr_list.append(student_repr)
+            teacher_repr_list.append(teacher_repr)
+        n_tok_sum += n_tok
+        n_phase_tok_sum += n_phase_tok
+
+    if not ce_list:
+        return None
+    return (ce_list, state_list, norm_penalty_list, cos_sim_list,
+            student_repr_list, teacher_repr_list, n_tok_sum, n_phase_tok_sum)
+
+
 # --------------------------------------------------------------------------- #
 # Main
 # --------------------------------------------------------------------------- #
@@ -547,7 +737,21 @@ def main() -> int:
                           "distillation target instead, may tolerate more, but "
                           "don't assume it without checking).")
     ap.add_argument("--work-layers", default=",".join(str(x) for x in DEFAULT_WORK_LAYERS))
-    ap.add_argument("--batch", type=int, default=4, help="Examples per optimizer step (grad accum)")
+    ap.add_argument("--batch", type=int, default=4,
+                     help="Examples per micro-batch (all held in VRAM simultaneously, "
+                          "required for the CLIPO cross-example term) — see "
+                          "--grad-accum-steps for combining several of these into one "
+                          "optimizer step without holding them all in VRAM at once.")
+    ap.add_argument("--grad-accum-steps", type=int, default=1,
+                     help="2026-08-23: run this many --batch-sized micro-batches, each "
+                          "its own backward() (scaled by 1/grad_accum_steps, accumulating "
+                          "into .grad), before ONE grad-clip + optimizer step — "
+                          "approximates a --batch * --grad-accum-steps effective batch's "
+                          "gradient statistics without holding that many examples' forward "
+                          "graphs in VRAM at once (the real constraint found doing full-FT "
+                          "on a 16GB card, see docs/rl-track.md). Default 1 = old behavior, "
+                          "unchanged. Known limitation: --clipo-weight's negatives come "
+                          "from one micro-batch only, not the full effective batch.")
     ap.add_argument("--lr", type=float, default=1e-5)
     ap.add_argument("--steps", type=int, default=500)
     ap.add_argument("--ckpt-every", type=int, default=50)
@@ -583,7 +787,36 @@ def main() -> int:
                           "slice of the teacher's think trajectory (latent "
                           "overshooting), budget-matched to that slice's real "
                           "token count (a ceiling — see --dynamic-phase-stop). "
-                          "M=1 collapses to a single phase.")
+                          "M=1 collapses to a single phase. When --m-weights "
+                          "samples a range (Phase 1.5, 2026-08-23), --M is the "
+                          "MAXIMUM M this run's ThinkChain is sized for — "
+                          "smaller M examples simply use fewer of the phase "
+                          "rows, per-example, no separate marker needed.")
+    ap.add_argument("--m-weights", default=None,
+                     help="Phase 1.5 (2026-08-23): relative sampling weights "
+                          "'w0,w1,...,wM' for M=0(relax)..M=--M, one float per "
+                          "value, sampled independently PER EXAMPLE within a "
+                          "batch (heterogeneous M within one batch is fine — "
+                          "this whole training loop is already a per-example "
+                          "Python loop, not a single batched tensor op). "
+                          "Default (None) = old single-M behavior unchanged, "
+                          "every example uses exactly --M. Needs --relax-data "
+                          "if w0 > 0. Example for Phase 1.5's M=0..3 "
+                          "robustness goal: '1,1,1,1' (uniform).")
+    ap.add_argument("--relax-data", type=Path, default=None,
+                     help="gen_relax_corpus.py output (plain {prompt,answer} "
+                          "jsonl, no think span) — required if --m-weights' "
+                          "w0 (M=0 weight) is nonzero. See load_relax_examples "
+                          "and relax_step.")
+    ap.add_argument("--warm-start-marker", type=Path, default=None,
+                     help="One-time carryover of an older, smaller ThinkChain's "
+                          "rows (e.g. an M=1-trained marker) into this run's "
+                          "larger --M-sized one, before training starts. NOT "
+                          "the same as --resume (which is for restarting THIS "
+                          "exact run/shape after an interruption) — use this "
+                          "once, at the start of a genuinely new run that "
+                          "continues from a differently-shaped prior marker. "
+                          "See warm_start_marker's docstring.")
     ap.add_argument("--dynamic-phase-stop", action="store_true",
                      help="Let each phase exit its repeat budget early once the "
                           "WKV state itself stops moving (see --eps-plateau), "
@@ -707,6 +940,25 @@ def main() -> int:
     if think_marker is not None:
         print(f"[distill] think-chain enabled ({loaded.n_embd}-dim, {args.M + 1} distinct markers: 1 entry + {args.M} phase)")
 
+    if args.warm_start_marker is not None:
+        assert think_marker is not None, "--warm-start-marker needs --think-marker"
+        warm_start_marker(args.warm_start_marker, think_marker)
+
+    m_weights: Optional[List[float]] = None
+    relax_examples = None
+    relax_batcher = None
+    if args.m_weights is not None:
+        m_weights = [float(x) for x in args.m_weights.split(",")]
+        assert len(m_weights) == args.M + 1, (
+            f"--m-weights needs {args.M + 1} values (M=0..{args.M}), got {len(m_weights)}")
+        if m_weights[0] > 0:
+            assert args.relax_data is not None, "--m-weights' w0 > 0 needs --relax-data"
+            relax_examples = load_relax_examples(args.relax_data, loaded.tokenizer)
+            print(f"[distill] {len(relax_examples)} relax (M=0) examples from {args.relax_data}")
+            relax_batcher = _SimpleCycler(relax_examples, random.Random(args.seed + 1))
+        print(f"[distill] Phase 1.5 per-example M sampling: weights={m_weights} "
+              f"for M=0..{args.M}")
+
     int8_optimizer = None
     params = [p for p in loaded.model.parameters() if p.requires_grad]
     if think_marker is not None:
@@ -771,7 +1023,7 @@ def main() -> int:
     print(f"[distill] work_layers={layers} l_state_weight={args.l_state_weight} "
           f"batch={args.batch} device={args.device} resume_step={global_step} "
           f"M={args.M} norm_anchor_weight={args.norm_anchor_weight} "
-          f"dynamic_phase_stop={args.dynamic_phase_stop}")
+          f"dynamic_phase_stop={args.dynamic_phase_stop} m_weights={m_weights}")
 
     step = global_step
     while step < args.steps:
@@ -781,86 +1033,100 @@ def main() -> int:
         if args.forge and int8_optimizer is not None:
             int8_optimizer.zero_grad()
 
-        # Collect the whole batch's forward passes BEFORE any backward —
-        # required for _clipo_contrastive_loss, which needs every
-        # example's student_repr/teacher_repr alive in the same
-        # computational context (each example used to call .backward()
-        # immediately and free its graph, which a cross-example
-        # contrastive term can't work with). Real cost: peak memory now
-        # holds args.batch forward graphs simultaneously instead of one
-        # at a time — watch VRAM if raising --batch on this VM.
-        ce_list, state_list, norm_penalty_list, cos_sim_list = [], [], [], []
-        student_repr_list, teacher_repr_list = [], []
-        n_tok_sum = n_phase_tok_sum = n_skipped = 0
-        for _ in range(args.batch):
-            ex = batcher.next()
-            try:
-                ce, state_loss, norm_penalty, cos_sim, student_repr, teacher_repr, n_tok, n_phase_tok = distill_step(
-                    loaded, ex, layers, layer_weights,
-                    state_loss_clamp=args.state_loss_clamp,
-                    M=args.M,
-                    think_marker=think_marker,
-                    norm_anchor_threshold=args.norm_anchor_threshold,
-                    dynamic_phase_stop=args.dynamic_phase_stop,
-                    eps_plateau=args.eps_plateau,
-                )
-            except torch.cuda.OutOfMemoryError:
-                # Same pattern as train_wkv_loop.py's per-rollout OOM
-                # catch-and-skip (added 2026-08-18 there after one OOM
-                # cascaded into 13/16 rollouts failing the same step) —
-                # this loop holds args.batch forward graphs simultaneously
-                # (see comment above, for CLIPO), so an unusually long
-                # example (a long chunk_lens[i] repeat budget under
-                # --dynamic-phase-stop, or a long think-span) can push an
-                # otherwise-fine batch over the edge. Drop this example,
-                # keep the step going with whatever the rest of the batch
-                # produces, rather than crash an hours-long run over one
-                # example. gc.collect() before empty_cache() — same
-                # ordering, same reference-cycle reasoning as
-                # train_wkv_loop.py (no torch.utils.checkpoint hooks here,
-                # but harmless and consistent to keep the order anyway).
-                n_skipped += 1
-                print(f"[distill] WARNING: OOM on an example this batch — skipping, "
-                      f"{n_skipped} skipped this step", file=sys.stderr)
-                gc.collect()
-                torch.cuda.empty_cache()
-                continue
-            ce_list.append(ce)
-            state_list.append(state_loss)
-            norm_penalty_list.append(norm_penalty)
-            cos_sim_list.append(cos_sim)
-            student_repr_list.append(student_repr)
-            teacher_repr_list.append(teacher_repr)
+        # --grad-accum-steps (2026-08-23, built for future use — NOT applied
+        # to the run this was built alongside, which is already training on
+        # the validated --grad-accum-steps 1 / single-micro-batch path):
+        # runs `args.grad_accum_steps` micro-batches, each its own
+        # backward() (scaled by 1/grad_accum_steps, accumulating into .grad
+        # without zero_grad between them), before ONE grad-clip + optimizer
+        # step — the standard technique for approximating a larger
+        # effective batch's gradient statistics without holding that many
+        # examples' forward graphs in VRAM simultaneously (this project's
+        # real, measured constraint — see the batch=4 OOM this same night,
+        # docs/rl-track.md). Default 1 preserves the exact single-micro-
+        # batch behavior already tested and running.
+        #
+        # Known limitation, not fixed here: _clipo_contrastive_loss's
+        # negatives come from whatever's in ONE micro-batch only — splitting
+        # a logical batch across micro-batches shrinks its negative pool
+        # rather than growing it. Not a regression (--clipo-weight is 0 by
+        # default, off in every run so far), but real if ever combined with
+        # --grad-accum-steps > 1 and --clipo-weight > 0 together.
+        agg_ce_list, agg_state_list, agg_norm_penalty_list, agg_cos_sim_list = [], [], [], []
+        n_tok_sum = n_phase_tok_sum = 0
+        m_counts = {m: 0 for m in range(args.M + 1)}
+        grad_norm = None
+        step_oom = False
+
+        for _micro in range(args.grad_accum_steps):
+            micro_result = _run_micro_batch(
+                loaded, args, batcher, relax_batcher, think_marker, layers,
+                layer_weights, m_weights, rng, m_counts)
+            if micro_result is None:
+                continue  # this whole micro-batch OOM'd on every example — skip it, not fatal
+            (ce_list, state_list, norm_penalty_list, cos_sim_list,
+             student_repr_list, teacher_repr_list, n_tok, n_phase_tok) = micro_result
+            agg_ce_list.extend(ce_list)
+            agg_state_list.extend(state_list)
+            agg_norm_penalty_list.extend(norm_penalty_list)
+            agg_cos_sim_list.extend(cos_sim_list)
             n_tok_sum += n_tok
             n_phase_tok_sum += n_phase_tok
 
-        if not ce_list:
-            print(f"[distill] step {step}: entire batch OOM'd, skipping this "
+            micro_ce_t = torch.stack(ce_list).mean()
+            micro_state_t = torch.stack(state_list).mean() if state_list else torch.zeros((), device=loaded.device)
+            micro_norm_penalty_t = torch.stack(norm_penalty_list).mean() if norm_penalty_list else torch.zeros((), device=loaded.device)
+            micro_clipo_loss = torch.zeros((), device=loaded.device)
+            if args.clipo_weight > 0 and len(student_repr_list) >= 2:
+                micro_clipo_loss = _clipo_contrastive_loss(student_repr_list, teacher_repr_list, tau=args.clipo_tau)
+            micro_total = (micro_ce_t + args.l_state_weight * micro_state_t
+                           + args.norm_anchor_weight * micro_norm_penalty_t
+                           + args.clipo_weight * micro_clipo_loss) / args.grad_accum_steps
+            try:
+                micro_total.backward()
+            except Exception as e:
+                if not _is_oom_error(e):
+                    raise
+                print(f"[distill] WARNING: OOM on micro-batch backward at step {step} "
+                      f"— this micro-batch's gradient contribution is lost, "
+                      f"continuing with the rest", file=sys.stderr)
+                step_oom = True
+                gc.collect()
+                torch.cuda.empty_cache()
+
+        if not agg_ce_list:
+            print(f"[distill] step {step}: entire step OOM'd, skipping this "
                   f"optimizer step entirely", file=sys.stderr)
+            optimizer.zero_grad()
+            if args.forge and int8_optimizer is not None:
+                int8_optimizer.zero_grad()
             continue
 
-        ce_t = torch.stack(ce_list).mean()
-        state_t = torch.stack(state_list).mean()
-        norm_penalty_t = torch.stack(norm_penalty_list).mean()
-        cos_sim_t = torch.stack(cos_sim_list).mean()
+        ce_t = torch.stack(agg_ce_list).mean()
+        state_t = torch.stack(agg_state_list).mean() if agg_state_list else torch.zeros((), device=loaded.device)
+        norm_penalty_t = torch.stack(agg_norm_penalty_list).mean() if agg_norm_penalty_list else torch.zeros((), device=loaded.device)
+        cos_sim_t = torch.stack(agg_cos_sim_list).mean() if agg_cos_sim_list else torch.zeros((), device=loaded.device)
+        clipo_loss = torch.zeros((), device=loaded.device)  # diagnostic-only aggregate below is per-micro-batch, not recomputed here
 
-        clipo_loss = torch.zeros((), device=loaded.device)
-        if args.clipo_weight > 0 and len(student_repr_list) >= 2:
-            clipo_loss = _clipo_contrastive_loss(student_repr_list, teacher_repr_list, tau=args.clipo_tau)
-
-        total = (ce_t + args.l_state_weight * state_t
-                 + args.norm_anchor_weight * norm_penalty_t
-                 + args.clipo_weight * clipo_loss)
-        total.backward()
-
-        if args.grad_clip > 0:
-            grad_norm = torch.nn.utils.clip_grad_norm_(all_trainable_params, args.grad_clip)
-        else:
-            grad_norm = None
-
-        if args.forge and int8_optimizer is not None:
-            int8_optimizer.step()
-        optimizer.step()
+        try:
+            if args.grad_clip > 0:
+                grad_norm = torch.nn.utils.clip_grad_norm_(all_trainable_params, args.grad_clip)
+            else:
+                grad_norm = None
+            if args.forge and int8_optimizer is not None:
+                int8_optimizer.step()
+            optimizer.step()
+        except Exception as e:
+            if not _is_oom_error(e):
+                raise
+            print(f"[distill] WARNING: OOM during grad-clip/optimizer step at step {step} "
+                  f"— skipping this optimizer step entirely (weights unchanged)", file=sys.stderr)
+            optimizer.zero_grad()
+            if args.forge and int8_optimizer is not None:
+                int8_optimizer.zero_grad()
+            gc.collect()
+            torch.cuda.empty_cache()
+            continue
 
         mean_ce = float(ce_t.item())
         mean_state = float(state_t.item())
@@ -868,10 +1134,12 @@ def main() -> int:
         mean_cos_sim = float(cos_sim_t.item())
         mean_clipo_loss = float(clipo_loss.item())
         grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
+        m_counts_str = f" m_counts={m_counts}" if m_weights is not None else ""
+        oom_str = " (partial: a micro-batch OOM'd)" if step_oom else ""
         print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
               f"norm_penalty={mean_norm_penalty:.4f} cos_sim={mean_cos_sim:.4f} "
               f"clipo_loss={mean_clipo_loss:.4f} n_answer_tok={n_tok_sum} "
-              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}")
+              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}{m_counts_str}{oom_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
                                  "state_loss": mean_state,
@@ -879,6 +1147,7 @@ def main() -> int:
                                  "cos_sim": mean_cos_sim,
                                  "clipo_loss": mean_clipo_loss,
                                  "n_phase_tok": n_phase_tok_sum,
+                                 "m_counts": m_counts if m_weights is not None else None,
                                  "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
 
         if kalman_watch is not None:
