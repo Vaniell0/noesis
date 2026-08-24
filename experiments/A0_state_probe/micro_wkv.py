@@ -322,6 +322,79 @@ class ChainedController(nn.Module):
         return self.readout(out).squeeze(-1)
 
 
+class ModularChainController(nn.Module):
+    """'Logic -> solution' redesign (2026-08-24, user-directed): not a
+    bigger register file (that's just head_size, a separate scaling
+    question) — a different SEPARATION of decision from execution.
+    ChainedController fuses both into one net that must learn to branch
+    internally on a continuous op_code input, so routing and numerics
+    share the same weights. Here routing is structural (op_code selects
+    which dedicated SUB-NETWORK runs — a hard switch, evaluated for
+    both branches then masked, not a learned blend) and each operation
+    gets its OWN specialized control-generator — closer to a real
+    solver's "dispatcher calls a named subroutine" than one net
+    approximating both operations at once. Tests whether hard
+    separation improves generalization (ChainedController's OOD
+    R²=0.60 at n_rounds=3, hypotheses/H25.md) rather than whether a
+    bigger state does — a genuinely different architecture, same
+    logic-drives-registers principle."""
+
+    OPS = ChainedController.OPS
+
+    def __init__(self, head_size: int, n_rounds: int, hidden: int = 64):
+        super().__init__()
+        self.head_size = head_size
+        self.n_rounds = n_rounds
+        self.round_embed = nn.Embedding(n_rounds, 8)
+
+        def _make_net() -> nn.Sequential:
+            return nn.Sequential(
+                nn.Linear(1 + 8, hidden), nn.Tanh(),
+                nn.Linear(hidden, hidden), nn.Tanh(),
+                nn.Linear(hidden, 4 * head_size + head_size),
+            )
+        self.load_net = _make_net()  # round 0: load the initial operand
+        self.add_net = _make_net()   # rounds >=1, op_code == 0
+        self.mul_net = _make_net()   # rounds >=1, op_code == 1
+        self.readout = nn.Linear(head_size, 1)
+
+    def _controls_from(self, net: nn.Sequential, operand: torch.Tensor, round_idx: int) -> dict:
+        B = operand.shape[0]
+        re = self.round_embed(torch.full((B,), round_idx, dtype=torch.long, device=operand.device))
+        raw = net(torch.cat([operand.unsqueeze(-1), re], dim=-1))
+        r, k, v, a_logit, w_raw = raw.split(self.head_size, dim=-1)
+        a_gate = torch.sigmoid(a_logit)
+        w = -F.softplus(-w_raw) - 0.5
+        return {"r": r, "k": k, "v": v, "w": w, "a_gate": a_gate}
+
+    def forward(self, operands: list[torch.Tensor], op_codes: list[torch.Tensor]
+                ) -> torch.Tensor:
+        B = operands[0].shape[0]
+        state = torch.zeros(B, self.head_size, self.head_size, device=operands[0].device)
+        out = None
+        for round_idx in range(self.n_rounds):
+            operand = operands[round_idx]
+            if round_idx == 0:
+                c = self._controls_from(self.load_net, operand, round_idx)
+                out, state = micro_wkv_step(state, c["r"], c["k"], c["v"], c["w"], c["a_gate"])
+                continue
+            op_code = op_codes[round_idx]
+            # Hard structural dispatch: both branches always computed,
+            # selected per-example by op_code — NOT a learned blend of
+            # the two nets' outputs. Costs 2x compute per round; keeps
+            # routing genuinely discrete instead of a soft interpolation
+            # that could hide numerics inside the routing itself.
+            c_add = self._controls_from(self.add_net, operand, round_idx)
+            c_mul = self._controls_from(self.mul_net, operand, round_idx)
+            is_mul = (op_code == 1)
+            _, state_add = micro_wkv_step(state, c_add["r"], c_add["k"], c_add["v"], c_add["w"], c_add["a_gate"])
+            _, state_mul = micro_wkv_step(state, c_mul["r"], c_mul["k"], c_mul["v"], c_mul["w"], c_mul["a_gate"])
+            state = torch.where(is_mul.unsqueeze(-1).unsqueeze(-1), state_mul, state_add)
+            r_used = torch.where(is_mul.unsqueeze(-1), c_mul["r"], c_add["r"])
+            out = torch.einsum("bn,bnv->bv", r_used, state)
+        return self.readout(out).squeeze(-1)
+
+
 def _sample_chain(n: int, n_rounds: int, lo: float, hi: float, seed: int | None = None
                    ) -> tuple[list[torch.Tensor], list[torch.Tensor], torch.Tensor]:
     if seed is not None:
@@ -336,7 +409,8 @@ def _sample_chain(n: int, n_rounds: int, lo: float, hi: float, seed: int | None 
 
 
 def train_chain(n_rounds: int = 3, head_size: int = 8, n_train_steps: int = 8000,
-                 batch_size: int = 64, lr: float = 3e-3, seed: int = 0) -> dict:
+                 batch_size: int = 64, lr: float = 3e-3, seed: int = 0,
+                 controller_cls: type[nn.Module] = ChainedController) -> dict:
     """Trains ChainedController on a chain of n_rounds-1 operations
     (add/multiply, selected per-round), reports in-distribution R² per
     op-combination (does it generalize across ALL combinatorial op
@@ -346,7 +420,7 @@ def train_chain(n_rounds: int = 3, head_size: int = 8, n_train_steps: int = 8000
     2-step chain generalizes noticeably worse than the single-operation
     task, error likely compounding across rounds; honest, not hidden)."""
     torch.manual_seed(seed)
-    model = ChainedController(head_size, n_rounds)
+    model = controller_cls(head_size, n_rounds)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     for step in range(n_train_steps):
@@ -616,6 +690,77 @@ def pseudo_inverse_ceiling(head_size: int = 8, n_drift_ticks: int = 4,
     return {"drift_rel": drift_rel, "ceiling_by_T": results}
 
 
+# --------------------------------------------------------------------------- #
+# Capacity scaling — RSC design question 2026-08-24: does the register
+# file's capacity grow with head_size (more state dimensions = more
+# registers), or does something else (the controller, the single
+# rank-1-per-step erase/rewrite budget) bottleneck it first? Reuses
+# ChainedController/train_chain unchanged — a parameter sweep, not a
+# new mechanism.
+# --------------------------------------------------------------------------- #
+
+def head_size_sweep(n_rounds: int = 3, head_sizes: tuple[int, ...] = (2, 4, 8, 16, 32, 64),
+                     n_train_steps: int = 3000, seed: int = 0) -> dict:
+    """Fixed chain length (n_rounds, same 'load + 2 ops' config validated
+    2026-08-23), varying head_size. n_train_steps reduced from
+    train_chain's 8000 default — this sweep only needs comparison BETWEEN
+    head_sizes at matched budget, not final-polish absolute numbers."""
+    results = {}
+    for hs in head_sizes:
+        print(f"\n[capacity-sweep] head_size={hs}, n_rounds={n_rounds}")
+        r = train_chain(n_rounds=n_rounds, head_size=hs, n_train_steps=n_train_steps, seed=seed)
+        results[hs] = r
+    print("\n[capacity-sweep] head_size -> (id_r2, ood_r2):")
+    for hs, r in results.items():
+        print(f"  {hs:3d} -> id={r['id_r2']:.4f}  ood={r['ood_r2']:.4f}")
+    return results
+
+
+def chain_length_sweep(head_size: int = 8, n_rounds_list: tuple[int, ...] = (2, 3, 4, 5, 6, 8),
+                        n_train_steps: int = 3000, seed: int = 0) -> dict:
+    """Fixed head_size, varying chain length (n_rounds) — how many
+    load+op rounds can this register file sustain before degrading, at
+    fixed capacity? per_combo breakdown only printed at n_rounds==3
+    (train_chain's own limitation, kept as-is)."""
+    results = {}
+    for nr in n_rounds_list:
+        print(f"\n[length-sweep] head_size={head_size}, n_rounds={nr}")
+        r = train_chain(n_rounds=nr, head_size=head_size, n_train_steps=n_train_steps, seed=seed)
+        results[nr] = r
+    print("\n[length-sweep] n_rounds -> (id_r2, ood_r2):")
+    for nr, r in results.items():
+        print(f"  {nr:2d} -> id={r['id_r2']:.4f}  ood={r['ood_r2']:.4f}")
+    return results
+
+
+def compare_chain_architectures(head_size: int = 8, n_rounds_list: tuple[int, ...] = (3, 4, 5),
+                                 n_train_steps: int = 6000, seed: int = 0) -> dict:
+    """The 2026-08-24 redirect: not bigger state, a different logic/
+    solution separation. ChainedController fuses routing (which op) and
+    numerics (how to execute it) into one net that must learn to branch
+    on a continuous op_code; ModularChainController makes routing a hard
+    structural switch between per-operation specialized nets. Compares
+    both at matched (head_size, n_rounds), across chain lengths —
+    ChainedController's OOD generalization degrades with n_rounds
+    (2026-08-23: R²=0.60 at n_rounds=3); this checks whether hard
+    logic/solution separation changes that degradation curve."""
+    results = {}
+    for nr in n_rounds_list:
+        print(f"\n[compare] n_rounds={nr}, head_size={head_size} — ChainedController (monolithic)")
+        mono = train_chain(n_rounds=nr, head_size=head_size, n_train_steps=n_train_steps,
+                            seed=seed, controller_cls=ChainedController)
+        print(f"\n[compare] n_rounds={nr}, head_size={head_size} — ModularChainController (logic/solution split)")
+        mod = train_chain(n_rounds=nr, head_size=head_size, n_train_steps=n_train_steps,
+                           seed=seed, controller_cls=ModularChainController)
+        results[nr] = {"monolithic": mono, "modular": mod}
+    print("\n[compare] n_rounds -> monolithic(id,ood) vs modular(id,ood):")
+    for nr, r in results.items():
+        m, d = r["monolithic"], r["modular"]
+        print(f"  {nr:2d} -> mono(id={m['id_r2']:.4f}, ood={m['ood_r2']:.4f})  "
+              f"modular(id={d['id_r2']:.4f}, ood={d['ood_r2']:.4f})")
+    return results
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--verify", action="store_true",
@@ -654,6 +799,16 @@ def main() -> int:
                           "radius sampling of the recurrence's per-step linear "
                           "operator across random controls, plus an a_gate sweep "
                           "isolating erase-rewrite's own effect on stability.")
+    ap.add_argument("--capacity-sweep", choices=["head-size", "chain-length"], default=None,
+                     help="RSC design question (2026-08-24): does capacity scale "
+                          "with state dimension (head-size, fixed chain length) or "
+                          "with chain length (fixed head_size)? Reuses train_chain "
+                          "unchanged, just sweeps one axis.")
+    ap.add_argument("--compare-architectures", action="store_true",
+                     help="RSC redirect (2026-08-24): compare ChainedController "
+                          "(monolithic logic+solution) vs ModularChainController "
+                          "(hard-routed, per-op specialized nets) across chain "
+                          "lengths — a different approach, not a bigger register file.")
     args = ap.parse_args()
 
     if args.verify:
@@ -664,6 +819,15 @@ def main() -> int:
         return 0
     if args.jacobian:
         jacobian_spectral_sampling(head_size=args.head_size, seed=args.seed)
+        return 0
+    if args.capacity_sweep == "head-size":
+        head_size_sweep(seed=args.seed)
+        return 0
+    if args.capacity_sweep == "chain-length":
+        chain_length_sweep(seed=args.seed)
+        return 0
+    if args.compare_architectures:
+        compare_chain_architectures(head_size=args.head_size, seed=args.seed)
         return 0
     if args.chain:
         train_chain(n_rounds=args.steps, head_size=args.head_size,
