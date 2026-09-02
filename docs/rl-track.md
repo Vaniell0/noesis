@@ -102,6 +102,32 @@ not resolved — read it before assuming the two stages share a curriculum.
      composition is a rotation and trivially reversible by construction). A
      rewind marker is always a *trained approximation* to an inverse, never
      an exact undo.
+   - **Real budget-safety finding, 2026-09-02 (`hypotheses/H25.md`'s
+     "third follow-up" — user-corrected math, not the naive power-iteration
+     reading first assumed): a trained rewind-style marker looped past its
+     intended horizon does not stay safely near where it was trained to
+     land — it diverges.** `pseudo_inverse_ceiling`'s T=8-optimized marker,
+     traced past T=8 (`experiments/A0_state_probe/micro_wkv.py::
+     verify_power_iteration_prediction`, `--extend-ticks`), heads
+     monotonically toward its operator's TRUE fixed point — `‖x*-S0‖/‖S0‖
+     ≈252`, nothing like S0 — not toward a plateau near the target:
+     `t=8→0.558, t=16→0.821, t=32→1.690, t=64→3.318, t=128→6.071,
+     t=1024→39.01` (worse than the 1.4654 starting drift past t≈32).
+     T=8's low error is a transient pass-near-target on the way elsewhere,
+     not proximity to a stable attractor — consistent with, and explained
+     by, the near-degenerate top eigenvalue pair (0.9998, 0.9998) from
+     `jacobian_spectral_sampling`'s spectral-gap analysis: barely `<1`,
+     not a comfortable safety margin. **Direct implication for `−β·M`
+     budget design (§RL design below): a marker running past `M_max` due
+     to a bug, an off-by-one, or a resumed checkpoint with a mismatched
+     `--chain-phases` (already a documented real failure mode, task #12
+     above) is not merely wasted compute capped by the reward penalty —
+     it can actively degrade state, with the degradation compounding, not
+     saturating.** Whether this toy-scale finding transfers to the real
+     32-layer×32-head G1i substrate is untested; treat as a reason to
+     bound M_max/chain-phases defensively (fail closed, not just
+     expensively) rather than assume "more ticks than needed" is merely
+     inefficient.
    - **New validation step, ahead of building any of this (2026-08-23,
      arXiv 2602.08100, "Emergent Search and Backtracking in Latent Reasoning
      Models," Huginn-0125):** backtracking in looped latent reasoning showed
@@ -452,6 +478,22 @@ rises (0.9997 @ 0.005 → 0.9995 @ 0.01 → 0.9989 @ 0.02 → 0.9966 @ 0.04 →
 `id_r2=0.9997`/`ood_r2=0.8419` vs. Adam's `0.9999`/`0.8675` — the earlier
 "underperforms" reading was an artifact of the untuned default, not a
 real ceiling on what Muon can reach here.
+
+**5-seed check, same day** (`--n-seeds 5 --muon-lr 0.005`, `experiments/
+A0_state_probe/results/muon_vs_adam_multiseed.json`) — the single-seed
+"nearly closes the gap" reading above was itself an artifact: seed=0
+happened to be one of Adam's *better* draws on `ood_r2`. Across 5 seeds,
+`id_r2` is near-identical and tight for both (Adam 0.9996±0.0005, Muon
+0.9997±0.0001); `ood_r2` is if anything slightly higher for Muon on
+average (Adam 0.7449±0.0921, Muon 0.8173±0.0636) — no real quality gap
+either direction once seed noise is accounted for. **The one real,
+seed-robust difference is mechanistic, not quality**: forcing `a_gate=0`
+(H25's delta-rule-necessity ablation) collapses Adam's solutions hard,
+every seed (mean -1.376±1.326, range -0.21 to -3.30), but barely touches
+Muon's, every seed (mean -0.029±0.032, range -0.076 to +0.003) — see
+`hypotheses/H25.md`'s "second follow-up" for the full table and the
+reframe this implies for H25's own necessity claim (solution-dependent,
+not task-inherent).
 
 **Decision (user, 2026-09-02): proceed with the real hand-integration,
 scoped to Phase 1.5/2 only, not Phase 3.** Two independent reasons stack:

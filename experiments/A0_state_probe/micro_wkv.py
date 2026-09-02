@@ -718,7 +718,8 @@ def pseudo_inverse_ceiling(head_size: int = 8, n_drift_ticks: int = 4,
 
 def verify_power_iteration_prediction(head_size: int = 8, n_drift_ticks: int = 4,
                                        opt_steps: int = 1500, seed: int = 1,
-                                       T: int = 8) -> dict:
+                                       T: int = 8,
+                                       extend_ticks: tuple[int, ...] = ()) -> dict:
     """Synthesis, 2026-09-02: does `pseudo_inverse_ceiling`'s diminishing-
     returns curve (T=1/4/8 -> 75.7%/58.3%/55.8% relative error) actually
     match classical power iteration's geometric prediction, error(t) ~
@@ -742,7 +743,27 @@ def verify_power_iteration_prediction(head_size: int = 8, n_drift_ticks: int = 4
     returns) still holds — see this file's `jacobian_spectral_sampling`
     and hypotheses/H25.md's power-iteration synthesis — it's the specific
     quantitative 2-eigenvalue prediction that doesn't survive contact
-    with the actual optimized operator."""
+    with the actual optimized operator.
+
+    `extend_ticks`, e.g. (16, 32, 64, 128, 256, 512, 1024): traces the
+    SAME T-optimized operator PAST its trained horizon (direct numeric
+    iteration in float64, not eigendecomposition — verified to agree
+    with the eigendecomposition-based closed form to float precision
+    before shipping this way, chosen to avoid any concern about the
+    near-degenerate top eigenvalue pair ill-conditioning an eigenvector
+    basis). Real result (T=8, seed=1): does NOT plateau or slowly improve
+    toward S0 — it diverges monotonically toward the operator's TRUE
+    fixed point `x*=(I-A)^-1 B`, which sits at `||x*-S0||/||S0||~252`,
+    utterly unrelated to S0 (t=8: 0.558, t=16: 0.821, t=32: 1.690,
+    t=64: 3.318, t=128: 6.071, t=512: 20.38, t=1024: 39.01 — past t=32
+    this is already worse than the 1.4654 starting drift). T=8's low
+    error is a transient pass-near-target on the way elsewhere, not
+    approach to a nearby attractor — the near-degenerate top pair gives
+    a razor-thin stability margin, not a comfortable safety margin for
+    running a trained marker longer than its intended budget. Real
+    consequence for Phase 2/3 M_max design: looping a rewind-style
+    marker past its trained horizon is not safely inert — it actively
+    degrades state, and the degradation compounds, not saturates."""
     g = torch.Generator().manual_seed(seed)
     S0 = torch.randn(1, head_size, head_size, generator=g)
     S0 = S0 / S0.norm() * 10.0
@@ -790,8 +811,26 @@ def verify_power_iteration_prediction(head_size: int = 8, n_drift_ticks: int = 4
     print(f"  {'t':>3} {'real_rel_err':>14} {'gap^(t-1) predicted':>20}")
     for t in range(T):
         print(f"  {t + 1:>3} {real_errors[t]:>14.4f} {predicted[t]:>20.4f}")
+
+    extended = {}
+    if extend_ticks:
+        with torch.no_grad():
+            r_d, k_d, v_d = r.double(), k.double(), v.double()
+            w_d, a_d = w_final.double(), a_gate_final.double()
+            S0_d, S1_d = S0.double(), S1.double()
+            state_d = S1_d.clone()
+            max_t = max(extend_ticks)
+            print(f"\n  extending past T={T} (direct float64 iteration, same fixed "
+                  f"operator, no eigendecomposition):")
+            for t in range(1, max_t + 1):
+                _, state_d = micro_wkv_step(state_d, r_d, k_d, v_d, w_d, a_d)
+                if t in extend_ticks:
+                    rel = (state_d - S0_d).norm().item() / S0_d.norm().item()
+                    extended[t] = rel
+                    print(f"  t={t:5d}  rel_err={rel:.6f}")
+
     return {"spectrum": mags, "spectral_gap": gap, "real_errors": real_errors,
-            "predicted_by_gap": predicted}
+            "predicted_by_gap": predicted, "extended_errors": extended}
 
 
 # --------------------------------------------------------------------------- #
@@ -911,6 +950,13 @@ def main() -> int:
                           "spectral gap. Real result: qualitatively yes, "
                           "quantitatively no (near-degenerate top eigenvalue "
                           "pair) — see function docstring and hypotheses/H25.md.")
+    ap.add_argument("--extend-ticks", type=str, default=None,
+                     help="Comma-separated tick counts to trace the same "
+                          "T-optimized operator past its trained horizon, e.g. "
+                          "'16,32,64,128,256,512,1024'. Implies "
+                          "--verify-power-iteration. Real result: does NOT "
+                          "plateau/slowly-improve, diverges toward a distant, "
+                          "unrelated fixed point — see function docstring.")
     ap.add_argument("--capacity-sweep", choices=["head-size", "chain-length"], default=None,
                      help="RSC design question (2026-08-24): does capacity scale "
                           "with state dimension (head-size, fixed chain length) or "
@@ -932,8 +978,10 @@ def main() -> int:
     if args.jacobian:
         jacobian_spectral_sampling(head_size=args.head_size, seed=args.seed)
         return 0
-    if args.verify_power_iteration:
-        verify_power_iteration_prediction(head_size=args.head_size, seed=args.seed)
+    if args.verify_power_iteration or args.extend_ticks:
+        extend = tuple(int(x) for x in args.extend_ticks.split(",")) if args.extend_ticks else ()
+        verify_power_iteration_prediction(head_size=args.head_size, seed=args.seed,
+                                           extend_ticks=extend)
         return 0
     if args.capacity_sweep == "head-size":
         head_size_sweep(seed=args.seed)
