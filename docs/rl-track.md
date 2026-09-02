@@ -428,6 +428,21 @@ run: reuse the frozen-readout `micro_wkv.py` toy from H25 (`hypotheses/H25.md`)
 to compare OOD R² and VRAM profile between Int8AdamW and a hand-integrated
 Muon, before spending a real GPU session on it.
 
+**Cheap test run, 2026-09-02** (`experiments/A0_state_probe/muon_vs_adam_toy.py`,
+results in `experiments/A0_state_probe/results/muon_vs_adam_toy.json`) —
+CPU-only, so this answers only "does Muon train this architecture family at
+all," not the VRAM half (needs the real model + a GPU). Canonical
+`SingleDeviceMuon` (github.com/KellerJordan/Muon) on the hidden `net.*.weight`
+matrices, plain AdamW on everything else (embedding/readout/biases), same
+seed/protocol as the existing Adam baseline. Result: Muon trains without
+collapsing (`id_r2=0.9989`, `ood_r2=0.7782`) but underperforms Adam
+(`id_r2=0.9999`, `ood_r2=0.8675`) at Muon's generic published default
+learning rate (0.02) — never tuned for this loss landscape. Reads as
+"viable, not yet competitive under a default LR," not a verdict either
+way — a learning-rate sweep on the toy is the next cheap step before
+deciding whether the real `Int8AdamW`-style hand-integration is worth
+building.
+
 ---
 
 ## RL design
