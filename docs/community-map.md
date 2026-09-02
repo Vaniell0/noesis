@@ -979,6 +979,36 @@ emitted). The visible→latent curriculum is a plug-in recipe for the word-searc
 track. Also read arXiv 2602.21204 for the theoretical grounding: TTT = delta-rule
 linear attention = WKV update. Neither paper requires architecture changes.
 
+### 3.9 SANE (arXiv 2608.22354) — independent confirmation of H25's own
+divergence finding, at a much larger scale
+
+BlinkDL relayed this 2026-08-25, ahead of it being folded in here: "State
+Anomaly Neutralization for Stable Extreme-Context Delta-Rule [models]" tracks
+RWKV-7 over sequences up to 100M tokens and identifies a failure pattern —
+"localized norm explosion atop a relatively sparse substrate" — as delta-rule
+state extrapolates past where it was trained/stable.
+
+**Why this matters for H25, precisely**: `hypotheses/H25.md`'s "Third
+follow-up" (2026-09-02, this project's own toy-scale finding, see
+[[project_noesis_rl_track]]) independently found the exact same *shape* of
+result on `micro_wkv.py`'s toy recurrence — a near-degenerate eigenvalue pair
+(spectral radius ~0.9998) makes the affine fixed-point iteration stable at
+the trained horizon (T=8) but diverging by orders of magnitude when the same
+operator is iterated further (t=1024: 39x the trained-horizon error) —
+verified two independent ways (closed-form eigendecomposition and brute-force
+float64 iteration) before being reported. SANE is the same phenomenon class
+— delta-rule state instability under context extrapolation — found
+empirically at real-model, 100M-token scale, not derived from a toy's closed
+form. This is convergent evidence across scale and method (see
+[[feedback_noesis_convergent_evidence]]), not a coincidence to wave off:
+whatever mechanism SANE proposes to neutralize the anomaly is worth reading
+against H25's own `M_max`/`−β·M` budget-safety design (rl-track.md's Phase 2
+section already cites the toy finding as the reason to bound recurrence
+depth — SANE may describe the same wall from the other, empirical side, or
+suggest a mitigation beyond just bounding depth). Not yet read in full or
+acted on — flagged here so it doesn't get lost the way the original
+power-iteration synthesis nearly did.
+
 ---
 
 ## Maintenance
