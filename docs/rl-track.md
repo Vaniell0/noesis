@@ -513,6 +513,15 @@ of manual hookup against the `.z`/state-dict `FusedLinear` path that
 `Int8AdamW` got, per the blocker noted above — this session's work only
 cleared the precondition, it didn't build the integration).
 
+**Backlog idea, not started (user, 2026-09-02): once the real
+hand-integration exists and has run for real, consider upstreaming it as
+a FORGE PR** (`dk4248/FORGE`, same repo `Int8AdamW`'s approach already
+has a merged PR in, `project_noesis_forge_bptt` memory) — a
+`fused_muon_update`-style kernel/wrapper mirroring how
+`optimizer_only_adamw_int8state` is exposed today. Explicitly contingent
+on the integration actually working and being worth sharing — "if it
+even makes sense" was the user's own framing, not a commitment.
+
 ---
 
 ## RL design
