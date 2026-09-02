@@ -1,0 +1,100 @@
+{
+  "_meta": {
+    "experiment": "muon_vs_adam_toy_lr_sweep",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-02",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/muon_vs_adam_toy.py",
+    "summary": {
+      "purpose": "does tuning muon_lr close the gap to Adam seen at Muon's generic default (0.02)? single seed per point, not a statistically robust sweep"
+    }
+  },
+  "adam": {
+    "task": "multiply",
+    "n_steps": 4,
+    "head_size": 8,
+    "id_r2": 0.999862639442358,
+    "ood_r2": 0.8674684314415199,
+    "ablation_a_gate_0_r2": -0.20950086798725387,
+    "ablation_a_gate_1_r2": 0.9706454304804409,
+    "stable_rank_by_step": [
+      0.0,
+      1.0000001071654663,
+      1.0013731357898754,
+      1.0040558301202767,
+      1.045865660329438
+    ],
+    "train_seconds": 33.539307760001975,
+    "optimizer": "adam"
+  },
+  "muon_sweep": [
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.005,
+      "id_r2": 0.9997368398028006,
+      "ood_r2": 0.8419044619847422,
+      "ablation_a_gate_0_r2": 0.0033326161846857216,
+      "train_seconds": 52.0385725399974,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.01,
+      "id_r2": 0.9995361561363056,
+      "ood_r2": 0.8070179868179139,
+      "ablation_a_gate_0_r2": -0.026063854410171228,
+      "train_seconds": 48.004142809004406,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.02,
+      "id_r2": 0.9988965881910342,
+      "ood_r2": 0.7781890334285979,
+      "ablation_a_gate_0_r2": -0.03407451584138488,
+      "train_seconds": 44.56193329700909,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.04,
+      "id_r2": 0.9966115251375438,
+      "ood_r2": 0.77553178899393,
+      "ablation_a_gate_0_r2": -0.09395937615189376,
+      "train_seconds": 55.04153946500446,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.08,
+      "id_r2": 0.9724697766642894,
+      "ood_r2": 0.8101831435824519,
+      "ablation_a_gate_0_r2": -1.5925700107273646,
+      "train_seconds": 47.12763088000065,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    }
+  ]
+}

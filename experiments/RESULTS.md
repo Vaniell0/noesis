@@ -64,6 +64,7 @@ expands on.
 
 | H | Model | Date | Status | Metric | Value | Result | Code |
 |---|-------|------|--------|--------|-------|--------|------|
+| H25 | — | 2026-09-02 |  | purpose | does tuning muon_lr close the gap to Adam seen at Muon's generic default (0.02)? single seed per point, not a statistically robust sweep | `experiments/A0_state_probe/results/muon_vs_adam_lr_sweep.json` | `experiments/A0_state_probe/muon_vs_adam_toy.py` |
 | H25 | — | 2026-09-02 |  | purpose | cheap precondition check before hand-integrating Muon into the real G1i full-FT stack (docs/rl-track.md 'Adam vs. Muon' note, 2026-09-02) — held-out R² only, no VRAM comparison possible without a GPU | `experiments/A0_state_probe/results/muon_vs_adam_toy.json` | `experiments/A0_state_probe/muon_vs_adam_toy.py` |
 | H8 | /root/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth | 2026-08-18 |  | medium sigma-slope | 1.67 | `experiments/_common/results/a05_g1h_reverify/a05.json` | `experiments/A0_state_probe/a05_analyze.py` |
 | H8 | /root/.libs/models/rwkv7/rwkv7-g1h-2.9b-20260710-ctx10240.pth | 2026-08-18 |  | narrative sigma-slope | 1.58 | `experiments/_common/results/a05_g1h_reverify/a05.json` | `experiments/A0_state_probe/a05_analyze.py` |

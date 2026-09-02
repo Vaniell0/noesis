@@ -191,7 +191,7 @@ def train_task_muon(task: str, n_steps: int, head_size: int, n_train_steps: int 
 
     result = {
         "optimizer": "muon+adamw", "task": task, "n_steps": n_steps, "head_size": head_size,
-        "id_r2": id_r2, "ood_r2": ood_r2, "ablation_a_gate_0_r2": r2_gate0,
+        "muon_lr": muon_lr, "id_r2": id_r2, "ood_r2": ood_r2, "ablation_a_gate_0_r2": r2_gate0,
         "train_seconds": train_seconds, "n_muon_params": len(muon_params),
         "n_adam_params": len(adam_params),
     }
@@ -208,9 +208,47 @@ def main() -> int:
     ap.add_argument("--train-steps", type=int, default=4000)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--muon-lr", type=float, default=0.02)
+    ap.add_argument("--lr-sweep", type=str, default=None,
+                     help="Comma-separated muon_lr values, e.g. '0.005,0.01,0.02,0.04,0.08'. "
+                          "Runs the Muon side only (Adam baseline computed once) at each, "
+                          "skips the single-run --muon-lr path.")
     ap.add_argument("--out", type=Path, default=None,
-                     help="If set, write both results as JSON via save_result.")
+                     help="If set, write results as JSON via save_result.")
     args = ap.parse_args()
+
+    if args.lr_sweep is not None:
+        print(f"=== baseline: Adam, freeze_final_readout=True (existing micro_wkv.py protocol) ===")
+        t0 = time.perf_counter()
+        adam_result = train_task(args.task, args.steps, args.head_size,
+                                  n_train_steps=args.train_steps, seed=args.seed,
+                                  freeze_final_readout=True)
+        adam_result["train_seconds"] = time.perf_counter() - t0
+        adam_result["optimizer"] = "adam"
+
+        sweep = []
+        for lr in [float(x) for x in args.lr_sweep.split(",")]:
+            print(f"\n=== Muon lr={lr} ===")
+            r = train_task_muon(args.task, args.steps, args.head_size,
+                                 n_train_steps=args.train_steps, seed=args.seed, muon_lr=lr)
+            sweep.append(r)
+
+        print(f"\n=== sweep summary ===")
+        print(f"  Adam (reference): id_r2={adam_result['id_r2']:.4f} ood_r2={adam_result['ood_r2']:.4f} "
+              f"ablation={adam_result['ablation_a_gate_0_r2']:.4f}")
+        for r in sweep:
+            print(f"  Muon lr={r['muon_lr']:<6}: id_r2={r['id_r2']:.4f} ood_r2={r['ood_r2']:.4f} "
+                  f"ablation={r['ablation_a_gate_0_r2']:.4f}")
+
+        if args.out is not None:
+            save_result(
+                args.out, {"adam": adam_result, "muon_sweep": sweep},
+                experiment="muon_vs_adam_toy_lr_sweep", hypothesis=["H25"],
+                summary={"purpose": "does tuning muon_lr close the gap to Adam seen at "
+                                     "Muon's generic default (0.02)? single seed per point, "
+                                     "not a statistically robust sweep"},
+                script=str(Path(__file__).relative_to(_REPO_ROOT)),
+            )
+        return 0
 
     print(f"=== baseline: Adam, freeze_final_readout=True (existing micro_wkv.py protocol) ===")
     t0 = time.perf_counter()
