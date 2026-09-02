@@ -281,6 +281,21 @@ class MuonHybrid:
     coefficient set, worse than reusing the canonical one directly (same
     reasoning as the toy script this was validated against).
 
+    Momentum warmup (linear 0.85 -> `momentum` over `momentum_warmup_steps`,
+    default 500) is the one concrete tuning choice pulled from BlinkDL's own
+    reference usage (github.com/BlinkDL/modded-nanogpt-rwkv, train_rwkv7.py:
+    `frac = min(step/500, 1); optimizer3.param_groups[0]['momentum'] =
+    (1-frac)*0.85 + frac*0.95`) rather than left at a flat 0.95 from step 1
+    — everything else in that reference (Newton-Schulz coefficients,
+    backend_steps=5, the w1/w2 low-rank-decay exclusion) already matched
+    what this class already did independently, but the warmup did not and
+    is cheap/safe to carry over. That script is nanoGPT-scale (124M,
+    from-scratch pretraining) with several other per-group-tuned learning
+    rates (wte, head, LayerNorm scalars each on their own Adam instance)
+    that don't transfer to a 2.9B finetune's single shared `--lr` for
+    `other_params` — not replicated here, a different and much more
+    task-specific tuning question.
+
     Named-parameter selection (unlike Int8AdamW's dim()==2 catch-all,
     which is fine for a generic AdamW variant but wrong here): Muon's own
     usage guidance excludes embeddings and output heads — only genuine
@@ -295,6 +310,7 @@ class MuonHybrid:
     """
 
     def __init__(self, named_params, lr: float = 0.02, momentum: float = 0.95,
+                 momentum_start: float = 0.85, momentum_warmup_steps: int = 500,
                  weight_decay: float = 0.0, ns_steps: int = 5):
         named_params = list(named_params)
         self.muon_params: list = []
@@ -304,9 +320,12 @@ class MuonHybrid:
                              and (".att." in name or ".ffn." in name))
             (self.muon_params if is_hidden_2d else self.other_params).append(p)
         self.lr = lr
-        self.momentum = momentum
+        self.momentum_final = momentum
+        self.momentum_start = momentum_start
+        self.momentum_warmup_steps = momentum_warmup_steps
         self.weight_decay = weight_decay
         self.ns_steps = ns_steps
+        self._step_count = 0
         self._momentum_buf = {id(p): torch.zeros_like(p) for p in self.muon_params}
 
     def zero_grad(self, set_to_none: bool = True) -> None:
@@ -315,11 +334,15 @@ class MuonHybrid:
 
     @torch.no_grad()
     def step(self) -> None:
+        self._step_count += 1
+        frac = min(self._step_count / self.momentum_warmup_steps, 1.0) \
+            if self.momentum_warmup_steps > 0 else 1.0
+        momentum = (1 - frac) * self.momentum_start + frac * self.momentum_final
         for p in self.muon_params:
             if p.grad is None:
                 continue
             buf = self._momentum_buf[id(p)]
-            update = _muon_update(p.grad, buf, beta=self.momentum, ns_steps=self.ns_steps)
+            update = _muon_update(p.grad, buf, beta=momentum, ns_steps=self.ns_steps)
             p.mul_(1 - self.lr * self.weight_decay)
             p.add_(update.reshape(p.shape).to(p.dtype), alpha=-self.lr)
 

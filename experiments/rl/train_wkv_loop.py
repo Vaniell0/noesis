@@ -519,6 +519,11 @@ def main():
                     help="Muon's own published default — different scale than "
                          "--lr (tuned for Adam/AdamW), not shared on purpose.")
     ap.add_argument("--muon-momentum", type=float, default=0.95)
+    ap.add_argument("--muon-momentum-start", type=float, default=0.85,
+                    help="Momentum warmup start (BlinkDL's modded-nanogpt-rwkv "
+                         "reference: linear ramp 0.85->--muon-momentum over "
+                         "--muon-momentum-warmup-steps, not flat from step 1).")
+    ap.add_argument("--muon-momentum-warmup-steps", type=int, default=500)
     ap.add_argument("--muon-weight-decay", type=float, default=0.0)
     args = ap.parse_args()
     if args.forge and args.muon:
@@ -576,6 +581,8 @@ def main():
             if mlp_delta:
                 named_params += [(f"mlp_delta.{n}", p) for n, p in mlp_delta.named_parameters()]
             muon_optimizer = MuonHybrid(named_params, lr=args.muon_lr, momentum=args.muon_momentum,
+                                         momentum_start=args.muon_momentum_start,
+                                         momentum_warmup_steps=args.muon_momentum_warmup_steps,
                                          weight_decay=args.muon_weight_decay)
             params = muon_optimizer.other_params
             print(f"[train] Muon enabled: {len(muon_optimizer.muon_params)} hidden matrices "

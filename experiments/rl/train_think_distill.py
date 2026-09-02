@@ -797,6 +797,11 @@ def main() -> int:
                           "than --lr (which is tuned for Adam/AdamW), not "
                           "shared with it on purpose.")
     ap.add_argument("--muon-momentum", type=float, default=0.95)
+    ap.add_argument("--muon-momentum-start", type=float, default=0.85,
+                     help="Momentum warmup start (BlinkDL's modded-nanogpt-rwkv "
+                          "reference: linear ramp 0.85->--muon-momentum over "
+                          "--muon-momentum-warmup-steps, not flat from step 1).")
+    ap.add_argument("--muon-momentum-warmup-steps", type=int, default=500)
     ap.add_argument("--muon-weight-decay", type=float, default=0.0)
     ap.add_argument("--grad-clip", type=float, default=1.0,
                      help="Max gradient norm (torch.nn.utils.clip_grad_norm_) "
@@ -1017,6 +1022,8 @@ def main() -> int:
         if think_marker is not None:
             named_params += [(f"think_marker.{n}", p) for n, p in think_marker.named_parameters()]
         muon_optimizer = MuonHybrid(named_params, lr=args.muon_lr, momentum=args.muon_momentum,
+                                     momentum_start=args.muon_momentum_start,
+                                     momentum_warmup_steps=args.muon_momentum_warmup_steps,
                                      weight_decay=args.muon_weight_decay)
         params = muon_optimizer.other_params
         print(f"[distill] Muon enabled: {len(muon_optimizer.muon_params)} hidden matrices "
