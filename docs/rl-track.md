@@ -443,6 +443,34 @@ way — a learning-rate sweep on the toy is the next cheap step before
 deciding whether the real `Int8AdamW`-style hand-integration is worth
 building.
 
+**LR sweep, same day** (`--lr-sweep`, `experiments/A0_state_probe/results/
+muon_vs_adam_lr_sweep.json`, single seed per point — a direction, not a
+statistically robust result): `id_r2` falls monotonically as `muon_lr`
+rises (0.9997 @ 0.005 → 0.9995 @ 0.01 → 0.9989 @ 0.02 → 0.9966 @ 0.04 →
+0.9725 @ 0.08, the last not even converged by step 4000). At `lr=0.005`
+(4x below Muon's generic default) the gap to Adam nearly closes:
+`id_r2=0.9997`/`ood_r2=0.8419` vs. Adam's `0.9999`/`0.8675` — the earlier
+"underperforms" reading was an artifact of the untuned default, not a
+real ceiling on what Muon can reach here.
+
+**Decision (user, 2026-09-02): proceed with the real hand-integration,
+scoped to Phase 1.5/2 only, not Phase 3.** Two independent reasons stack:
+(1) the memory case never depended on this toy's R² at all — Muon drops
+`Int8AdamW`'s ~5.8GB int8 second-moment buffer entirely (§Known risks
+#9's actual fixed-cost problem), which is real headroom regardless of
+how the LR sweep turned out; (2) Phase 1.5/2 are supervised distillation
+(teacher/student CE + state-distillation), not RL — an unfamiliar
+optimizer's quirks are far cheaper to diagnose there than inside GRPO's
+own policy-gradient noise, so this is the lower-risk place to spend the
+integration effort first. Phase 3's optimizer choice is explicitly left
+open/deferred — RL's loss landscape and Muon's interaction with
+advantage-weighted updates are untested, and a new VM before Phase 3 is
+likely anyway, so nothing about Phase 1.5/2's choice commits Phase 3.
+**Not yet done: the actual hand-integration** (Muon needs the same kind
+of manual hookup against the `.z`/state-dict `FusedLinear` path that
+`Int8AdamW` got, per the blocker noted above — this session's work only
+cleared the precondition, it didn't build the integration).
+
 ---
 
 ## RL design
