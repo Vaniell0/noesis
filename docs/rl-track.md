@@ -1745,6 +1745,37 @@ settled.
     launch with this logging active and read the curve before touching
     config again.
 
+    **2026-09-02, real GPU run with the RSS logging active — reproduced
+    the exact same kill, but in ~3 steps instead of ~57-59, on a
+    freshly-booted 15GB VM (uptime 44min, 15GB free at launch, no
+    leftover state from anything else).** `dmesg`: `Out of memory: Killed
+    process (python3) ... anon-rss:15627920kB` — essentially identical
+    RSS at time of kill to the original (`15647628kB`), reached in a small
+    fraction of the steps. The `_rss_mb()` logging never got a chance to
+    print even once: every micro-batch this run (`--forge
+    --forge-offload-state --batch 1 --grad-accum-steps 2 --grad-cp`,
+    `PYTORCH_CUDA_ALLOC_CONF` NOT set this time, unlike whatever the
+    original run had) was ALSO hitting CUDA VRAM OOM and retrying
+    internally (`CUDACachingAllocator.cpp` warnings, 8+ in the first 3
+    steps) before the host-level kill happened — the run never completed
+    a single clean step. **New candidate mechanism, not yet confirmed**:
+    the two OOM failure modes may not be independent. Repeated failed CUDA
+    allocation attempts inside a backward pass that is ALSO doing
+    `Int8AdamW`'s per-parameter CPU↔GPU `.to()` staging could be leaving
+    orphaned host-side buffers behind on each failed/retried transfer,
+    which would explain both observations at once: slow accumulation
+    across many *clean* steps if VRAM pressure is low (the original run),
+    and fast accumulation to the same ceiling if VRAM pressure triggers
+    OOM-retry storms from the start (this run) — same host-RAM sink, two
+    different feed rates depending on how much CUDA-side retrying is
+    happening per step. If true, this reframes the debugging strategy:
+    reproducing the crash for real diagnosis (heap snapshots, `tracemalloc`,
+    or watching `_rss_mb()` climb during a deliberately VRAM-constrained
+    run) no longer needs a slow 57-step wait — a VRAM-OOM-heavy config
+    reproduces it in minutes. Not yet tested in isolation (a VRAM-safe
+    config with zero OOM retries, run long enough to see whether RSS still
+    climbs without any retry storms, would falsify or confirm this).
+
 ---
 
 ## State metrics — what to measure before and during A1.5
