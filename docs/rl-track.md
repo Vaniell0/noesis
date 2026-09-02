@@ -1814,10 +1814,27 @@ settled.
     **This closes item 11**: the fix for real full-FT runs going forward
     is `--dynamic-phase-stop`, not a different optimizer, not more VRAM
     headroom, and not `Int8AdamW`/`Muon`-specific at all — it would have
-    hit the same wall regardless of which optimizer sits under it,
-    including the Muon runs in the note above (which also omitted this
-    flag; their OOM finding should be re-tested with it before drawing any
-    further conclusion about Muon's own memory footprint on this card).
+    hit the same wall regardless of which optimizer sits under it.
+
+    **Re-tested Muon with `--dynamic-phase-stop` immediately after
+    (2026-09-02, same session): still does not fit — this was not the
+    same confound.** Identical command to the confirmed-working Adam run
+    above, `--forge --forge-offload-state` swapped for `--muon`: OOM'd
+    continuously for 100+ seconds of wall time (40+ `mapping failed`
+    warnings, never completing a single step) before being killed. This
+    rules out the phase-repeat confound as the (sole) explanation for
+    Muon's earlier OOM finding — `MuonHybrid`'s own fixed cost (eager
+    per-param momentum buffer, no offload) genuinely does not fit this
+    16GB card even at the corrected, now-confirmed-minimal config. The
+    tension noted above (an offloaded `MuonHybrid` would reintroduce the
+    exact swap pattern this leak turned out NOT to be about, so that
+    specific worry is moot now — but offloading would still cost the
+    PCIe-transfer-time tradeoff `Int8AdamW` already accepted, for a
+    benefit — avoiding a second-moment buffer — `Int8AdamW`'s int8
+    quantization already captures cheaply) stands: Muon on this card
+    still needs its own memory-reduction story before it's worth building
+    further, independent of the leak question this section was originally
+    about.
 
 ---
 
