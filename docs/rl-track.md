@@ -1542,12 +1542,24 @@ settled.
     specifically to test whether batch/VRAM-shaped memory was the cause
     — it wasn't: RAM climbed to the same ~15GB ceiling by step 59 again,
     nearly identical timing. **Growth is not proportional to batch
-    size** — something accumulates roughly per-step regardless.
-    Suspected but unconfirmed: the CUDA allocator
+    size** — something accumulates roughly per-step regardless. Original
+    (2026-08-23) suspects were the CUDA allocator
     (`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` was set) or
     `Int8AdamW(offload_state=True)`'s CPU↔GPU staging `.to()` swap
-    (`loader.py::Int8AdamW.step()`) — not anything in this project's own
-    code changed that night.
+    (`loader.py::Int8AdamW.step()`).
+
+    **The CUDA-allocator half of that was never a coherent suspect for
+    THIS symptom (caught 2026-09-02, category error carried forward
+    uncritically for over a week): `PYTORCH_CUDA_ALLOC_CONF` governs the
+    CUDA driver's DEVICE (VRAM) segment-mapping strategy — it has no
+    mechanism that touches host RAM at all.** The leak is confirmed host
+    RSS (`anon-rss` in the kernel OOM-killer log above, not a CUDA/VRAM
+    error), so this was never the right shape of explanation regardless
+    of what review turned up. The `Int8AdamW` CPU-offload `.to()` swap
+    remains the one suspect that actually touches host memory by
+    construction and is still open — see the FORGE-source review below,
+    which narrows but doesn't close it. Not anything in this project's
+    own code changed that night.
 
     **2026-09-02 follow-up (no GPU available to reproduce, local-only
     work): one candidate ruled out, instrumentation added instead of
