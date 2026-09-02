@@ -525,6 +525,13 @@ def main():
                          "--muon-momentum-warmup-steps, not flat from step 1).")
     ap.add_argument("--muon-momentum-warmup-steps", type=int, default=500)
     ap.add_argument("--muon-weight-decay", type=float, default=0.0)
+    ap.add_argument("--muon-offload-state", action="store_true",
+                    help="Keep MuonHybrid's momentum buffer in CPU RAM, "
+                         "same per-param staging pattern as "
+                         "--forge-offload-state. Needed on this project's "
+                         "16GB T4 -- the eager on-GPU buffer alone doesn't "
+                         "fit even at the smallest working full-FT config "
+                         "(docs/rl-track.md 'Adam vs. Muon' note).")
     args = ap.parse_args()
     if args.forge and args.muon:
         raise ValueError("--forge and --muon are alternatives, not both")
@@ -583,7 +590,8 @@ def main():
             muon_optimizer = MuonHybrid(named_params, lr=args.muon_lr, momentum=args.muon_momentum,
                                          momentum_start=args.muon_momentum_start,
                                          momentum_warmup_steps=args.muon_momentum_warmup_steps,
-                                         weight_decay=args.muon_weight_decay)
+                                         weight_decay=args.muon_weight_decay,
+                                         offload_state=args.muon_offload_state)
             params = muon_optimizer.other_params
             print(f"[train] Muon enabled: {len(muon_optimizer.muon_params)} hidden matrices "
                   f"on Muon (lr={args.muon_lr}), {len(params)} params on AdamW")

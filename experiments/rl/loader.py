@@ -307,11 +307,31 @@ class MuonHybrid:
     stays out here too, for the same "output layer, not hidden" logic.
     Matches RWKV-PEFT's `RWKV7` naming: `blocks.N.att.*.weight` /
     `blocks.N.ffn.*.weight`.
+
+    `offload_state=True` (added 2026-09-02, after a real GPU run confirmed
+    the eager-on-GPU momentum buffer alone doesn't fit this project's 16GB
+    T4 even at the smallest working full-FT config — `docs/rl-track.md`
+    "Adam vs. Muon" note): same pattern as `Int8AdamW.step()` — keeps every
+    param's momentum buffer in CPU RAM, stages one parameter's buffer onto
+    GPU at a time inside `step()`, applies the update, moves it back. Costs
+    PCIe transfer time per param per step for the VRAM this buffer would
+    otherwise hold at all times. The earlier worry that this would
+    reintroduce the suspected host-RAM leak no longer applies — that leak's
+    real cause (`--dynamic-phase-stop` missing, unrelated to any optimizer's
+    CPU↔GPU staging) is now known and fixed (§Known risks #11) — but the
+    tradeoff itself (VRAM for time) is real and Muon's own version of it is
+    a worse deal than `Int8AdamW`'s: `Int8AdamW` int8-quantizes its state on
+    top of offloading (≈4x smaller transfer per param), `MuonHybrid` here
+    does not (moves the buffer at full precision) since Muon's own
+    reference implementations don't quantize this state and doing so
+    without evidence it doesn't hurt orthogonalization quality would be
+    speculative.
     """
 
     def __init__(self, named_params, lr: float = 0.02, momentum: float = 0.95,
                  momentum_start: float = 0.85, momentum_warmup_steps: int = 500,
-                 weight_decay: float = 0.0, ns_steps: int = 5):
+                 weight_decay: float = 0.0, ns_steps: int = 5,
+                 offload_state: bool = False):
         named_params = list(named_params)
         self.muon_params: list = []
         self.other_params: list = []
@@ -325,8 +345,12 @@ class MuonHybrid:
         self.momentum_warmup_steps = momentum_warmup_steps
         self.weight_decay = weight_decay
         self.ns_steps = ns_steps
+        self.offload_state = offload_state
         self._step_count = 0
         self._momentum_buf = {id(p): torch.zeros_like(p) for p in self.muon_params}
+        if offload_state:
+            for k in list(self._momentum_buf):
+                self._momentum_buf[k] = self._momentum_buf[k].to("cpu")
 
     def zero_grad(self, set_to_none: bool = True) -> None:
         for p in self.muon_params:
@@ -342,9 +366,13 @@ class MuonHybrid:
             if p.grad is None:
                 continue
             buf = self._momentum_buf[id(p)]
+            if self.offload_state:
+                buf = buf.to(p.device)
             update = _muon_update(p.grad, buf, beta=momentum, ns_steps=self.ns_steps)
             p.mul_(1 - self.lr * self.weight_decay)
             p.add_(update.reshape(p.shape).to(p.dtype), alpha=-self.lr)
+            if self.offload_state:
+                self._momentum_buf[id(p)] = buf.to("cpu")
 
 
 def _stub_deepspeed_if_missing() -> None:
