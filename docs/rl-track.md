@@ -1515,6 +1515,52 @@ settled.
     "collapse" signal traced back to text construction, not training
     instability.
 
+11. **STILL OPEN, 2026-08-23 — real system-RAM leak (not VRAM) killed the
+    Phase 1.5 full-FT run (`train_think_distill.py`) twice around step
+    ~57-59, host memory only, undocumented here until now (was only in
+    memory, not repo canon).** `dmesg`: kernel OOM-killer SIGKILLed the
+    process (`anon-rss:15647628kB`) on a 15GB-RAM VM — not a CUDA/VRAM
+    error, so none of `_is_oom_error`'s guards (item 9's descendants)
+    could ever catch it, a kernel SIGKILL isn't a Python exception at
+    all. Relaunched `--resume` with `--batch 1 --grad-accum-steps 2`
+    (same effective batch=2 statistics, lower peak VRAM per micro-batch)
+    specifically to test whether batch/VRAM-shaped memory was the cause
+    — it wasn't: RAM climbed to the same ~15GB ceiling by step 59 again,
+    nearly identical timing. **Growth is not proportional to batch
+    size** — something accumulates roughly per-step regardless.
+    Suspected but unconfirmed: the CUDA allocator
+    (`PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` was set) or
+    `Int8AdamW(offload_state=True)`'s CPU↔GPU staging `.to()` swap
+    (`loader.py::Int8AdamW.step()`) — not anything in this project's own
+    code changed that night.
+
+    **2026-09-02 follow-up (no GPU available to reproduce, local-only
+    work): one candidate ruled out, instrumentation added instead of
+    another blind config change.** Reviewed FORGE's actual source
+    (`github.com/dk4248/FORGE`, `src/fused_grad_optimizer/{state.py,
+    autograd.py,kernel.py}`) — `optimizer_only_adamw_int8state` is a
+    `@triton.autotune`'d kernel, which raised the obvious suspicion that
+    varying call shapes could grow Triton's host-side compiled-kernel
+    cache indefinitely (a well-known host-RAM leak pattern with dynamic
+    shapes). **Ruled out**: `Int8AdamW.step()` calls this kernel once per
+    *parameter*, and every parameter's shape is fixed for the entire run
+    (weight matrices don't change shape) — the same handful of shapes
+    recur every step, so Triton's autotune cache should saturate
+    immediately and never grow. `state.py::FusedOptimizerState.
+    ensure_buffers()` also only allocates once (`if self.m_q is None`
+    guard), not on every `step()` call. Nothing in the reviewed FORGE
+    source shows an obvious per-step host allocation that isn't freed.
+    **Added instead**: `train_think_distill.py::_rss_mb()` (reads
+    `VmRSS` from `/proc/self/status`, same convention as
+    `vm_watchdog.py`'s `/proc/uptime` parsing, no new dependency) logged
+    every step in both the console line and `distill_log.jsonl`'s
+    `rss_mb` field — the actual growth curve (linear vs. step-like, and
+    whether it lines up with `--ckpt-every`) is still unmeasured; this
+    makes it visible on the very next launch instead of needing a
+    dedicated debugging pass. Next real step still needs a GPU/VM:
+    launch with this logging active and read the curve before touching
+    config again.
+
 ---
 
 ## State metrics — what to measure before and during A1.5

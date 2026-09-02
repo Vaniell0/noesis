@@ -144,6 +144,28 @@ def _is_oom_error(exc: BaseException) -> bool:
     return isinstance(exc, RuntimeError) and "out of memory" in str(exc).lower()
 
 
+def _rss_mb() -> Optional[float]:
+    """Host (system) RSS in MiB, read from /proc/self/status (Linux only,
+    same convention as vm_watchdog.py's /proc/uptime parsing — no psutil
+    dependency). Added 2026-09-02, for the still-unresolved leak that
+    kernel-OOM-killed two Phase 1.5 runs around step ~57-59 on a 15GB-RAM
+    VM (project_noesis_rl_track memory, 2026-08-23): host RAM, not VRAM,
+    climbed to the same ceiling regardless of --batch, so the growth is
+    per-step, not per-example. Logging this every step is the
+    previously-flagged, not-yet-done instrumentation needed to see the
+    actual growth curve (linear? step-like? tied to --ckpt-every?) instead
+    of guessing at another config change blind. Returns None off-Linux or
+    if unreadable — never fatal to the training loop over a metrics read."""
+    try:
+        with open("/proc/self/status") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) / 1024.0
+    except (FileNotFoundError, ValueError, IndexError):
+        pass
+    return None
+
+
 def load_examples(path: Path) -> List[Dict[str, List[int]]]:
     """Split a step9-style combined_train.pt into per-example
     prompt/think/answer token-id lists, using its own state_mask/loss_mask
@@ -1136,10 +1158,12 @@ def main() -> int:
         grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
         m_counts_str = f" m_counts={m_counts}" if m_weights is not None else ""
         oom_str = " (partial: a micro-batch OOM'd)" if step_oom else ""
+        rss_mb = _rss_mb()
+        rss_str = f" rss_mb={rss_mb:.1f}" if rss_mb is not None else ""
         print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
               f"norm_penalty={mean_norm_penalty:.4f} cos_sim={mean_cos_sim:.4f} "
               f"clipo_loss={mean_clipo_loss:.4f} n_answer_tok={n_tok_sum} "
-              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}{m_counts_str}{oom_str}")
+              f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}{m_counts_str}{oom_str}{rss_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
                                  "state_loss": mean_state,
@@ -1148,7 +1172,8 @@ def main() -> int:
                                  "clipo_loss": mean_clipo_loss,
                                  "n_phase_tok": n_phase_tok_sum,
                                  "m_counts": m_counts if m_weights is not None else None,
-                                 "grad_norm": float(grad_norm) if grad_norm is not None else None}) + "\n")
+                                 "grad_norm": float(grad_norm) if grad_norm is not None else None,
+                                 "rss_mb": rss_mb}) + "\n")
 
         if kalman_watch is not None:
             field_values = {"answer_ce": mean_ce, "state_loss": mean_state,
