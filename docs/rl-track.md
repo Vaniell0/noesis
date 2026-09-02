@@ -1687,10 +1687,9 @@ settled.
     "collapse" signal traced back to text construction, not training
     instability.
 
-11. **STILL OPEN, 2026-08-23 — real system-RAM leak (not VRAM) killed the
-    Phase 1.5 full-FT run (`train_think_distill.py`) twice around step
-    ~57-59, host memory only, undocumented here until now (was only in
-    memory, not repo canon).** `dmesg`: kernel OOM-killer SIGKILLed the
+11. **RESOLVED 2026-09-02 (was open since 2026-08-23) — real system-RAM leak
+    (not VRAM) killed the Phase 1.5 full-FT run (`train_think_distill.py`)
+    twice around step ~57-59, host memory only.** `dmesg`: kernel OOM-killer SIGKILLed the
     process (`anon-rss:15647628kB`) on a 15GB-RAM VM — not a CUDA/VRAM
     error, so none of `_is_oom_error`'s guards (item 9's descendants)
     could ever catch it, a kernel SIGKILL isn't a Python exception at
@@ -1772,9 +1771,53 @@ settled.
     reproducing the crash for real diagnosis (heap snapshots, `tracemalloc`,
     or watching `_rss_mb()` climb during a deliberately VRAM-constrained
     run) no longer needs a slow 57-step wait — a VRAM-OOM-heavy config
-    reproduces it in minutes. Not yet tested in isolation (a VRAM-safe
-    config with zero OOM retries, run long enough to see whether RSS still
-    climbs without any retry storms, would falsify or confirm this).
+    reproduces it in minutes.
+
+    **Real root cause found and fixed, same session, same day.** The VRAM-
+    OOM-retry theory above turned out to be a red herring — the actual VRAM
+    fit problem was a config mismatch, not a card-capacity one. Checked
+    `g1i_think_distill_full2.log` (a historical run that reached step 1000
+    with **zero** OOM warnings, on this same card, with `--forge
+    --forge-offload-state --batch 1 --think-marker`, i.e. the same nominal
+    config as the crashing runs above) — its per-step log lines predate
+    `cos_sim`/`norm_penalty`/`clipo_loss`/`rss_mb` entirely, meaning it ran
+    an older version of this script. `git log` on `train_think_distill.py`
+    found the actual change: commit `bdd8223` (2026-08-22) "restored" each
+    M-phase repeating its marker feed **up to `chunk_lens[i]` times** (the
+    real per-example teacher-chunk token count — 15-25 tokens routinely,
+    per the `seq_len (25)`/`seq_len (19)` warnings already visible in every
+    crash log above) instead of the older "fixed single step" per phase.
+    `--dynamic-phase-stop` was added *in that same commit* specifically to
+    cap this (exit early once the WKV state stops moving, a state-delta
+    criterion) but is opt-in — every crashing run above omitted it, so
+    every phase was unrolling BPTT through its full real chunk length by
+    default, several times deeper than the historical working config.
+    (CLIPO/`cos_sim`/`norm_penalty`, added around the same time, were
+    checked and ruled out directly by reading `distill_step()` — they're
+    just small per-layer WKV-state-vector ops on tensors already computed
+    for `state_loss`, not extra forward passes or large activations.)
+
+    **Confirmed fix, real GPU run, 2026-09-02**: same command as the
+    crashing runs (`--forge --forge-offload-state --batch 1 --grad-cp
+    --think-marker --M 1`, raw `rwkv7-g1i-2.9b-20260805-ctx16384.pth`,
+    `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`), **plus
+    `--dynamic-phase-stop`** — 100/100 steps completed, zero VRAM OOM,
+    zero host-RAM growth after warmup: `rss_mb` climbed 10061→13083 over
+    the first ~4 steps (allocator/buffer-pool warmup, not a leak), then
+    sat flat at **13086.3 from step ~46 through step 100** — sailing
+    straight through the historical ~57-59-step kill point without
+    moving. `n_phase_tok` (repeats actually spent per phase) was 2-3 for
+    every logged example, confirming the state-delta exit criterion fires
+    almost immediately in practice — consistent with this session's own
+    H25 finding that the affine WKV recurrence converges to its fixed
+    point quickly (see `hypotheses/H25.md`'s "power-iteration reading").
+    **This closes item 11**: the fix for real full-FT runs going forward
+    is `--dynamic-phase-stop`, not a different optimizer, not more VRAM
+    headroom, and not `Int8AdamW`/`Muon`-specific at all — it would have
+    hit the same wall regardless of which optimizer sits under it,
+    including the Muon runs in the note above (which also omitted this
+    flag; their OOM finding should be re-tested with it before drawing any
+    further conclusion about Muon's own memory footprint on this card).
 
 ---
 
