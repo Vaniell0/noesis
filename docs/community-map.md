@@ -228,6 +228,17 @@ under $2.
 measured (tuned or not, RWKV or Transformer). "States install dispositions,
 not procedures." Multi-step procedures must live in the agent harness.
 
+**Reframe (synthesis, 2026-09-02 — no new measurement, restates the law
+above as an architectural stance rather than a gap):** the industry's actual
+response to 0/2 recall is not to keep trying to fix recurrence into carrying
+exact multi-turn history, but to externalize history into a precise external
+store and treat the recurrent state as a single-use, forgetful *working*
+register that gets re-primed each turn. That is exactly what Track B (see
+`ROADMAP.md` §Track B — Memory) already is: this project's own working-vs-
+external-memory split was arrived at independently, and the law above is
+better read as confirming Track B's split is the right one, not as an open
+problem Track B still needs to solve.
+
 **Checkpoint hygiene:** g1g and g1h bases deleted from BlinkDL/RWKV-LM main
 on 2026-08-05/08-08. Resolve snapshot `6d5762253b34` preserves them. SHA256
 everything before relying on a checkpoint.
@@ -269,6 +280,18 @@ state readout, 2.9B policy, no retraining. Free 57 → corrected 64, peaks 65.
 Gain by size: **+7 (1.5B), +6 (2.9B), +2 (7.2B)** — smaller models benefit
 most. 1.5B tuned + corrector ≈ bare 2.9B tuned (63). CPU-deployable at
 inference, no GPU required.
+
+**Read together with H24's DE gap (synthesis, 2026-09-02 — connects two
+already-recorded numbers, no new measurement):** `hypotheses/H24.md`'s
+decoding-efficiency numbers — step9b-e1 DE=0.15 vs. Gemma4 e4b DE=7.26, at
+*worse* raw accuracy for Gemma4 (37.5% vs. 39.6%) — and this corrector's
+gain-by-size curve above point at the same underlying claim from two
+directions: intelligence is present but the readout is narrow (DE), and a
+narrower state/readout suffers more interference reading it back out
+(shrinking corrector gain as size grows — more room, less superposition,
+less for a post-hoc corrector to fix). Under this reading 2.9B is a
+reasoned point on that curve, not an arbitrary model-size choice for this
+project.
 
 **Decision layer depth fraction (2026-08-12):** corpus-only CV picks L16/24
 at 1.5B ≈ L21/32 at 2.9B — both ≈ **0.67 depth fraction**, independent of

@@ -410,6 +410,24 @@ The old ε-mask / two-phase-SFT framing that used to live in this section is gon
 SFT was skipped entirely (see §Step10 SFT below), and ε-mask doesn't exist in the
 WKV-loop design (`−β·M` replaces it, see §RL design).
 
+**Adam vs. Muon (open, not implemented — synthesis 2026-09-02, from a
+conversation whose session state was lost before it reached a commit).** The
+"Muon doesn't work well on LoRA factors" objection no longer applies now that
+Phase 1.5 merged the LoRA delta into base weights and moved to full FT (see
+above). Muon's actual draw for this project: it carries only a momentum buffer,
+no second-moment (`v`) state — a direct answer to the fixed-cost VRAM wall in
+§Known risks #9 (weights 5.896GB + grad 5.895GB + Adam's own ~5.8GB int8
+second-moment buffers is exactly what `Int8AdamW(offload_state=True)` exists to
+work around; Muon would shrink that third term at the source instead of
+offloading it). Real blocker: trainable state in this stack lives in the
+`.z`/state-dict path `Int8AdamW` was hand-integrated against
+(`experiments/rl/loader.py`), not as ordinary `nn.Parameter`s a stock Muon
+implementation expects — it needs the same kind of manual integration work
+`Int8AdamW` already got, not a drop-in swap. Cheap test before touching a real
+run: reuse the frozen-readout `micro_wkv.py` toy from H25 (`hypotheses/H25.md`)
+to compare OOD R² and VRAM profile between Int8AdamW and a hand-integrated
+Muon, before spending a real GPU session on it.
+
 ---
 
 ## RL design
