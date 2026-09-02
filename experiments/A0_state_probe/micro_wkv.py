@@ -580,6 +580,7 @@ def jacobian_spectral_sampling(head_size: int = 8, n_samples: int = 2000,
     destabilizing the linear part through this specific channel."""
     g = torch.Generator().manual_seed(seed)
     spectral_radii = []
+    spectral_gaps = []
     decay_only_radii = []
     n_complex = 0
     for _ in range(n_samples):
@@ -590,17 +591,38 @@ def jacobian_spectral_sampling(head_size: int = 8, n_samples: int = 2000,
         decay = decay_from_logit(w)
         A = torch.diag(decay) - torch.outer(kk * a_gate, kk)
         eigvals = torch.linalg.eigvals(A)
-        spectral_radii.append(eigvals.abs().max().item())
+        mags = eigvals.abs().sort(descending=True).values
+        spectral_radii.append(mags[0].item())
+        # Spectral gap |lambda_2|/|lambda_1| (synthesis, 2026-09-02, see
+        # docs/rl-track.md's power-iteration reading of the repeated-marker
+        # cycle in hypotheses/H25.md): this ratio, not the radius alone,
+        # sets classical power iteration's geometric convergence rate
+        # (error(T) ~ (lambda_2/lambda_1)^T) — the radius says whether the
+        # repeated-marker mechanism is stable at all, the gap says how many
+        # ticks it needs before further repeats buy nothing.
+        spectral_gaps.append((mags[1] / mags[0]).item())
         decay_only_radii.append(decay.max().item())
         if eigvals.imag.abs().max().item() > 1e-4:
             n_complex += 1
     spectral_radii_t = torch.tensor(spectral_radii)
+    spectral_gaps_t = torch.tensor(spectral_gaps)
     decay_only_t = torch.tensor(decay_only_radii)
     n_above_1 = (spectral_radii_t > 1.0).float().mean().item()
     print(f"  {n_samples} random (k,w,a_gate) draws, head_size={head_size}:")
     print(f"  spectral radius of A: mean={spectral_radii_t.mean():.4f} "
           f"std={spectral_radii_t.std():.4f} range=[{spectral_radii_t.min():.4f}, "
           f"{spectral_radii_t.max():.4f}]")
+    print(f"  spectral gap |l2/l1|: mean={spectral_gaps_t.mean():.4f} "
+          f"std={spectral_gaps_t.std():.4f} range=[{spectral_gaps_t.min():.4f}, "
+          f"{spectral_gaps_t.max():.4f}]")
+    # Ticks to reach eps residual of the initial gap under the classical
+    # power-iteration bound, T ~ ln(eps)/ln(gap) — reported at the MEDIAN
+    # gap only, since it's a monotone but nonlinear function of gap and
+    # the mean of T over gaps is not the same as T at the mean gap.
+    median_gap = spectral_gaps_t.median().item()
+    import math
+    ticks_to_1pct = math.log(0.01) / math.log(median_gap) if 0 < median_gap < 1 else float("inf")
+    print(f"  median gap -> predicted ticks to 1% residual: {ticks_to_1pct:.2f}")
     print(f"  complex-eigenvalue fraction (rotation, not pure decay): {n_complex / n_samples:.4f}")
     print(f"  fraction with radius > 1.0 (locally expanding): {n_above_1:.4f}")
     print(f"  pure-decay-only radius (a_gate=0 baseline): mean={decay_only_t.mean():.4f}")
@@ -624,6 +646,10 @@ def jacobian_spectral_sampling(head_size: int = 8, n_samples: int = 2000,
 
     return {"spectral_radius_mean": spectral_radii_t.mean().item(),
             "spectral_radius_std": spectral_radii_t.std().item(),
+            "spectral_gap_mean": spectral_gaps_t.mean().item(),
+            "spectral_gap_median": median_gap,
+            "spectral_gap_std": spectral_gaps_t.std().item(),
+            "predicted_ticks_to_1pct_at_median_gap": ticks_to_1pct,
             "complex_fraction": n_complex / n_samples,
             "fraction_above_1": n_above_1,
             "a_gate_sweep": sweep}
@@ -688,6 +714,84 @@ def pseudo_inverse_ceiling(head_size: int = 8, n_drift_ticks: int = 4,
               f"||rewind(S1)-S0||/||S0||={final_rel:.4f} (started at {drift_rel:.4f})")
 
     return {"drift_rel": drift_rel, "ceiling_by_T": results}
+
+
+def verify_power_iteration_prediction(head_size: int = 8, n_drift_ticks: int = 4,
+                                       opt_steps: int = 1500, seed: int = 1,
+                                       T: int = 8) -> dict:
+    """Synthesis, 2026-09-02: does `pseudo_inverse_ceiling`'s diminishing-
+    returns curve (T=1/4/8 -> 75.7%/58.3%/55.8% relative error) actually
+    match classical power iteration's geometric prediction, error(t) ~
+    (|lambda_2/lambda_1|)^t, or just look similarly-shaped? Take ONE
+    T-optimized `(r,k,v,w,a_gate)` (same protocol as
+    `pseudo_inverse_ceiling`, not re-optimized per tick this time), trace
+    that SAME fixed operator applied tick-by-tick, and compare the real
+    per-tick relative error to the prediction from its own A's spectral
+    gap.
+
+    Real result (T=8, seed=1): full spectrum magnitudes ~[0.9998, 0.9998,
+    0.9896, 0.9477, 0.9113, 0.9003, 0.5527, 0.2147] — the top TWO
+    eigenvalues are essentially degenerate (gap~1.0000), so the naive
+    formula predicts almost no decay (~0.9997 by t=8), but the real
+    relative error drops from ~1.06 (t=1) to ~0.56 (t=8), a genuine ~47%
+    reduction. The textbook two-eigenvalue formula is the wrong level of
+    description here: the optimizer lands on a near-degenerate top pair,
+    and the observed contraction comes from the fuller spectrum's gradual
+    decay (down to 0.21), not a clean dominant/subdominant split. The
+    QUALITATIVE reading (monotone contraction, no rotation, diminishing
+    returns) still holds — see this file's `jacobian_spectral_sampling`
+    and hypotheses/H25.md's power-iteration synthesis — it's the specific
+    quantitative 2-eigenvalue prediction that doesn't survive contact
+    with the actual optimized operator."""
+    g = torch.Generator().manual_seed(seed)
+    S0 = torch.randn(1, head_size, head_size, generator=g)
+    S0 = S0 / S0.norm() * 10.0
+    S1 = S0.clone()
+    for _ in range(n_drift_ticks):
+        c = _random_step_controls(head_size, g)
+        _, S1 = micro_wkv_step(S1, c["r"], c["k"], c["v"], c["w"], c["a_gate"])
+
+    torch.manual_seed(42)
+    r = torch.randn(1, head_size, requires_grad=True)
+    k = torch.randn(1, head_size, requires_grad=True)
+    v = torch.randn(1, head_size, requires_grad=True)
+    w_raw = torch.randn(1, head_size, requires_grad=True)
+    a_logit = torch.randn(1, head_size, requires_grad=True)
+    opt = torch.optim.Adam([r, k, v, w_raw, a_logit], lr=0.05)
+    for _ in range(opt_steps):
+        opt.zero_grad()
+        w = -F.softplus(-w_raw) - 0.5
+        a_gate = torch.sigmoid(a_logit)
+        state = S1.clone()
+        for _ in range(T):
+            _, state = micro_wkv_step(state, r, k, v, w, a_gate)
+        loss = F.mse_loss(state, S0)
+        loss.backward()
+        opt.step()
+
+    with torch.no_grad():
+        w_final = -F.softplus(-w_raw) - 0.5
+        a_gate_final = torch.sigmoid(a_logit)
+        state = S1.clone()
+        real_errors = []
+        for _ in range(T):
+            _, state = micro_wkv_step(state, r, k, v, w_final, a_gate_final)
+            real_errors.append((state - S0).norm().item() / S0.norm().item())
+
+        kk = F.normalize(k.squeeze(0), p=2.0, dim=-1, eps=1e-8)
+        decay = decay_from_logit(w_final.squeeze(0))
+        A = torch.diag(decay) - torch.outer(kk * a_gate_final.squeeze(0), kk)
+        mags = torch.linalg.eigvals(A).abs().sort(descending=True).values.tolist()
+        gap = mags[1] / mags[0]
+
+    predicted = [gap ** t for t in range(T)]
+    print(f"  full spectrum magnitudes: {[round(m, 4) for m in mags]}")
+    print(f"  spectral_radius={mags[0]:.4f}  spectral_gap(l2/l1)={gap:.4f}")
+    print(f"  {'t':>3} {'real_rel_err':>14} {'gap^(t-1) predicted':>20}")
+    for t in range(T):
+        print(f"  {t + 1:>3} {real_errors[t]:>14.4f} {predicted[t]:>20.4f}")
+    return {"spectrum": mags, "spectral_gap": gap, "real_errors": real_errors,
+            "predicted_by_gap": predicted}
 
 
 # --------------------------------------------------------------------------- #
@@ -799,6 +903,14 @@ def main() -> int:
                           "radius sampling of the recurrence's per-step linear "
                           "operator across random controls, plus an a_gate sweep "
                           "isolating erase-rewrite's own effect on stability.")
+    ap.add_argument("--verify-power-iteration", action="store_true",
+                     help="2026-09-02: does pseudo_inverse_ceiling's diminishing-"
+                          "returns curve match classical power iteration's "
+                          "error~(lambda2/lambda1)^t prediction? Traces ONE "
+                          "T-optimized operator tick-by-tick against its own "
+                          "spectral gap. Real result: qualitatively yes, "
+                          "quantitatively no (near-degenerate top eigenvalue "
+                          "pair) — see function docstring and hypotheses/H25.md.")
     ap.add_argument("--capacity-sweep", choices=["head-size", "chain-length"], default=None,
                      help="RSC design question (2026-08-24): does capacity scale "
                           "with state dimension (head-size, fixed chain length) or "
@@ -819,6 +931,9 @@ def main() -> int:
         return 0
     if args.jacobian:
         jacobian_spectral_sampling(head_size=args.head_size, seed=args.seed)
+        return 0
+    if args.verify_power_iteration:
+        verify_power_iteration_prediction(head_size=args.head_size, seed=args.seed)
         return 0
     if args.capacity_sweep == "head-size":
         head_size_sweep(seed=args.seed)
