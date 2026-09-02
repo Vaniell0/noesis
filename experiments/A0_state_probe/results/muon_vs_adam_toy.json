@@ -1,0 +1,45 @@
+{
+  "_meta": {
+    "experiment": "muon_vs_adam_toy",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-02",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/muon_vs_adam_toy.py",
+    "summary": {
+      "purpose": "cheap precondition check before hand-integrating Muon into the real G1i full-FT stack (docs/rl-track.md 'Adam vs. Muon' note, 2026-09-02) \u2014 held-out R\u00b2 only, no VRAM comparison possible without a GPU"
+    }
+  },
+  "adam": {
+    "task": "multiply",
+    "n_steps": 4,
+    "head_size": 8,
+    "id_r2": 0.999862639442358,
+    "ood_r2": 0.8674684314415199,
+    "ablation_a_gate_0_r2": -0.20950086798725387,
+    "ablation_a_gate_1_r2": 0.9706454304804409,
+    "stable_rank_by_step": [
+      0.0,
+      1.0000001071654663,
+      1.0013731357898754,
+      1.0040558301202767,
+      1.045865660329438
+    ],
+    "train_seconds": 34.73429144799593,
+    "optimizer": "adam"
+  },
+  "muon": {
+    "optimizer": "muon+adamw",
+    "task": "multiply",
+    "n_steps": 4,
+    "head_size": 8,
+    "id_r2": 0.9988965881910342,
+    "ood_r2": 0.7781890334285979,
+    "ablation_a_gate_0_r2": -0.03407451584138488,
+    "train_seconds": 59.09424595400196,
+    "n_muon_params": 3,
+    "n_adam_params": 8
+  }
+}
