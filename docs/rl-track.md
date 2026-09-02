@@ -513,6 +513,20 @@ of manual hookup against the `.z`/state-dict `FusedLinear` path that
 `Int8AdamW` got, per the blocker noted above — this session's work only
 cleared the precondition, it didn't build the integration).
 
+**BlinkDL's answer, Discord #state-and-finetuning, 2026-09-02 (asked
+in response to this session's Muon-vs-Adam finding): "muon works for
+rwkv7 pretraining, but for finetuning a trained rwkv7 model, no idea.
+please let us know."** Confirms Muon is architecturally compatible with
+RWKV-7's update mechanics at least for pretraining — no fundamental
+incompatibility with the per-channel decay / rank-1 write structure. Our
+specific case (full-FT on an already-pretrained G1i checkpoint, not
+pretraining from scratch) is explicitly unknown territory, including to
+him — real motivation to actually finish the hand-integration and report
+back, not just a nice-to-have. A separate community member ("Tomeno")
+raised a skeptical question in the same exchange about state/decay
+averaging under Muon relative to RWKV4-style decay — not yet parsed
+carefully enough to answer here, flagged rather than guessed at.
+
 **Backlog idea, not started (user, 2026-09-02): once the real
 hand-integration exists and has run for real, consider upstreaming it as
 a FORGE PR** (`dk4248/FORGE`, same repo `Int8AdamW`'s approach already
