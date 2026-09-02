@@ -218,6 +218,112 @@ class Int8AdamW:
                 state.v_scale = state.v_scale.to("cpu")
 
 
+def zeropower_via_newtonschulz5(G: torch.Tensor, steps: int) -> torch.Tensor:
+    """Copied near-verbatim from github.com/KellerJordan/Muon (muon.py,
+    MIT-style research code, no license header in the source file) — see
+    MuonHybrid's docstring for why this isn't re-derived from the paper.
+    """
+    assert G.ndim >= 2
+    a, b, c = (3.4445, -4.7750, 2.0315)
+    X = G.bfloat16()
+    if G.size(-2) > G.size(-1):
+        X = X.mT
+    X = X / (X.norm(dim=(-2, -1), keepdim=True) + 1e-7)
+    for _ in range(steps):
+        A = X @ X.mT
+        B = b * A + c * A @ A
+        X = a * X + B @ X
+    if G.size(-2) > G.size(-1):
+        X = X.mT
+    return X
+
+
+def _muon_update(grad: torch.Tensor, momentum: torch.Tensor, beta: float,
+                  ns_steps: int, nesterov: bool = True) -> torch.Tensor:
+    momentum.lerp_(grad, 1 - beta)
+    update = grad.lerp_(momentum, beta) if nesterov else momentum
+    if update.ndim == 4:
+        update = update.view(len(update), -1)
+    update = zeropower_via_newtonschulz5(update, steps=ns_steps)
+    update *= max(1, update.size(-2) / update.size(-1)) ** 0.5
+    return update
+
+
+class MuonHybrid:
+    """Muon (momentum + Newton-Schulz orthogonalization) for RWKV-7's
+    hidden 2D weight matrices, alternative to `Int8AdamW` for the same
+    "what optimizes the big att/ffn projection matrices" role. Everything
+    else (embeddings, head, LayerNorm, time_decay/time_first, and any
+    side module like ThinkChain/_MLPDelta) is exposed via `other_params`
+    for the caller's existing plain `torch.optim.AdamW`, same calling
+    convention as `Int8AdamW.other_params`.
+
+    Why this exists (docs/rl-track.md "Adam vs. Muon" note, 2026-09-02):
+    `Int8AdamW`'s CPU-offload `.to()` dance (`offload_state=True`) is the
+    prime remaining suspect for the still-open Phase 1.5 host-RAM leak
+    (hypotheses/H25.md). Muon carries only ONE momentum buffer per param
+    (no second moment at all), so it has no analogous state to offload —
+    if the leak lives in that swap path, switching to Muon removes the
+    mechanism entirely rather than needing it root-caused. Precondition
+    checked on a CPU toy first (same delta-rule recurrence family as the
+    real model, `experiments/A0_state_probe/muon_vs_adam_toy.py`): 5-seed
+    check found Muon reaches Adam-comparable held-out R² (hypotheses/
+    H25.md, "Second follow-up") — not a training-quality gamble, only an
+    untested-at-real-scale one. Locked decision: Phase 1.5/2 only, Phase
+    3 (actual RL) deferred since Muon's finetuning behavior on RWKV-7 is
+    unknown even upstream (BlinkDL, Discord, 2026-09-02: "muon works for
+    rwkv7 pretraining... but for finetuning a trained rwkv7 model, no
+    idea. please let us know").
+
+    Newton-Schulz coefficients and the momentum/orthogonalization update
+    itself are copied near-verbatim from github.com/KellerJordan/Muon —
+    re-deriving from the published algorithm would risk a subtly wrong
+    coefficient set, worse than reusing the canonical one directly (same
+    reasoning as the toy script this was validated against).
+
+    Named-parameter selection (unlike Int8AdamW's dim()==2 catch-all,
+    which is fine for a generic AdamW variant but wrong here): Muon's own
+    usage guidance excludes embeddings and output heads — only genuine
+    hidden linear-layer weights belong here. `emb.weight` is 2D but is a
+    lookup table, not a matrix-product participant; orthogonalizing its
+    gradient has no justification the way it does for att/ffn projection
+    weights. `head` is already excluded from FusedLinear wrapping
+    upstream (`wrap_rwkv7_excluding_head`) for an unrelated reason and
+    stays out here too, for the same "output layer, not hidden" logic.
+    Matches RWKV-PEFT's `RWKV7` naming: `blocks.N.att.*.weight` /
+    `blocks.N.ffn.*.weight`.
+    """
+
+    def __init__(self, named_params, lr: float = 0.02, momentum: float = 0.95,
+                 weight_decay: float = 0.0, ns_steps: int = 5):
+        named_params = list(named_params)
+        self.muon_params: list = []
+        self.other_params: list = []
+        for name, p in named_params:
+            is_hidden_2d = (p.ndim == 2 and name.endswith(".weight")
+                             and (".att." in name or ".ffn." in name))
+            (self.muon_params if is_hidden_2d else self.other_params).append(p)
+        self.lr = lr
+        self.momentum = momentum
+        self.weight_decay = weight_decay
+        self.ns_steps = ns_steps
+        self._momentum_buf = {id(p): torch.zeros_like(p) for p in self.muon_params}
+
+    def zero_grad(self, set_to_none: bool = True) -> None:
+        for p in self.muon_params:
+            p.grad = None if set_to_none else (p.grad.zero_() if p.grad is not None else None)
+
+    @torch.no_grad()
+    def step(self) -> None:
+        for p in self.muon_params:
+            if p.grad is None:
+                continue
+            buf = self._momentum_buf[id(p)]
+            update = _muon_update(p.grad, buf, beta=self.momentum, ns_steps=self.ns_steps)
+            p.mul_(1 - self.lr * self.weight_decay)
+            p.add_(update.reshape(p.shape).to(p.dtype), alpha=-self.lr)
+
+
 def _stub_deepspeed_if_missing() -> None:
     """rwkvt/rwkv7/model.py does `import deepspeed` at module scope.
 

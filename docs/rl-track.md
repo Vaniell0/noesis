@@ -436,8 +436,9 @@ The old ε-mask / two-phase-SFT framing that used to live in this section is gon
 SFT was skipped entirely (see §Step10 SFT below), and ε-mask doesn't exist in the
 WKV-loop design (`−β·M` replaces it, see §RL design).
 
-**Adam vs. Muon (open, not implemented — synthesis 2026-09-02, from a
-conversation whose session state was lost before it reached a commit).** The
+**Adam vs. Muon (hand-integration written 2026-09-02, not yet run on the
+real model/GPU — synthesis started from a conversation whose session state
+was lost before it reached a commit).** The
 "Muon doesn't work well on LoRA factors" objection no longer applies now that
 Phase 1.5 merged the LoRA delta into base weights and moved to full FT (see
 above). Muon's actual draw for this project: it carries only a momentum buffer,
@@ -508,10 +509,28 @@ integration effort first. Phase 3's optimizer choice is explicitly left
 open/deferred — RL's loss landscape and Muon's interaction with
 advantage-weighted updates are untested, and a new VM before Phase 3 is
 likely anyway, so nothing about Phase 1.5/2's choice commits Phase 3.
-**Not yet done: the actual hand-integration** (Muon needs the same kind
-of manual hookup against the `.z`/state-dict `FusedLinear` path that
-`Int8AdamW` got, per the blocker noted above — this session's work only
-cleared the precondition, it didn't build the integration).
+**Hand-integration done (2026-09-02): `MuonHybrid` in `experiments/rl/loader.py`**,
+same interface as `Int8AdamW` (`.other_params`, `.zero_grad()`, `.step()`) so it
+drops into the same call sites — `--muon` flag added alongside `--forge` in both
+`train_think_distill.py` and `train_wkv_loop.py` (mutually exclusive with
+`--forge`; separate `--muon-lr`/`--muon-momentum`/`--muon-weight-decay` since
+Muon's LR scale has nothing to do with Adam's `--lr`). Selection is by
+parameter *name*, not `Int8AdamW`'s dim()==2 catch-all: only
+`blocks.N.att.*.weight` / `blocks.N.ffn.*.weight` go to Muon (matches Muon's
+own usage guidance — embeddings and output heads are excluded on purpose,
+`emb.weight` is a lookup table not a matrix-product participant, and `head`
+was already carved out of FusedLinear wrapping for an unrelated reason
+upstream). Newton-Schulz coefficients and the momentum update are copied
+near-verbatim from github.com/KellerJordan/Muon, same reasoning as the toy
+script. Verified so far, CPU-only (no GPU on this machine): a unit test
+against a toy module with real RWKV7 parameter names confirms the
+muon/other split lands exactly on the intended params (embedding, head,
+LayerNorm all correctly excluded) and that a few real optimizer steps move
+every trainable parameter without error, including through the rectangular
+`ffn.key`/`ffn.value` matrices (not just square `att.*` ones). This checks
+the integration's *mechanics* only — it says nothing about the real model's
+training dynamics, VRAM profile, or whether the leak (§Known risks #11)
+goes away; that needs an actual GPU run.
 
 **BlinkDL's answer, Discord #state-and-finetuning, 2026-09-02 (asked
 in response to this session's Muon-vs-Adam finding): "muon works for

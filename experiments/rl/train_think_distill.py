@@ -784,6 +784,20 @@ def main() -> int:
                           "(full-FT hit the ceiling even at G=2/batch=2/M_max=4 there).")
     ap.add_argument("--forge", action="store_true")
     ap.add_argument("--forge-offload-state", action="store_true")
+    ap.add_argument("--muon", action="store_true",
+                     help="Use Muon (loader.py::MuonHybrid) instead of Int8AdamW "
+                          "for the att/ffn hidden weight matrices — alternative "
+                          "answer to the same fixed-cost VRAM problem --forge "
+                          "targets, with no CPU-offload state (see MuonHybrid's "
+                          "docstring). Mutually exclusive with --forge. Not yet "
+                          "run at real scale — precondition-checked on a CPU toy "
+                          "only (hypotheses/H25.md 'Second follow-up').")
+    ap.add_argument("--muon-lr", type=float, default=0.02,
+                     help="Muon's own published default — a different scale "
+                          "than --lr (which is tuned for Adam/AdamW), not "
+                          "shared with it on purpose.")
+    ap.add_argument("--muon-momentum", type=float, default=0.95)
+    ap.add_argument("--muon-weight-decay", type=float, default=0.0)
     ap.add_argument("--grad-clip", type=float, default=1.0,
                      help="Max gradient norm (torch.nn.utils.clip_grad_norm_) "
                           "before the optimizer step. 0 disables clipping. "
@@ -981,13 +995,15 @@ def main() -> int:
         print(f"[distill] Phase 1.5 per-example M sampling: weights={m_weights} "
               f"for M=0..{args.M}")
 
+    assert not (args.forge and args.muon), "--forge and --muon are alternatives, not both"
     int8_optimizer = None
+    muon_optimizer = None
     params = [p for p in loaded.model.parameters() if p.requires_grad]
     if think_marker is not None:
         params += list(think_marker.parameters())
     all_trainable_params = list(params)  # kept separately: `params` gets
-    # reassigned to int8_optimizer.other_params below when --forge is on
-    # (a subset — the rest is managed inside int8_optimizer), but grad
+    # reassigned to int8_optimizer/muon_optimizer.other_params below (a
+    # subset — the rest is managed inside that optimizer), but grad
     # clipping needs the full set regardless of which optimizer owns each.
     if args.forge:
         from experiments.rl.loader import Int8AdamW
@@ -995,6 +1011,16 @@ def main() -> int:
                                     offload_state=args.forge_offload_state)
         params = int8_optimizer.other_params
         print("[distill] FORGE enabled (int8-optimizer-only path)")
+    elif args.muon:
+        from experiments.rl.loader import MuonHybrid
+        named_params = [(n, p) for n, p in loaded.model.named_parameters() if p.requires_grad]
+        if think_marker is not None:
+            named_params += [(f"think_marker.{n}", p) for n, p in think_marker.named_parameters()]
+        muon_optimizer = MuonHybrid(named_params, lr=args.muon_lr, momentum=args.muon_momentum,
+                                     weight_decay=args.muon_weight_decay)
+        params = muon_optimizer.other_params
+        print(f"[distill] Muon enabled: {len(muon_optimizer.muon_params)} hidden matrices "
+              f"on Muon (lr={args.muon_lr}), {len(params)} params on AdamW")
     optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -1052,8 +1078,10 @@ def main() -> int:
         step += 1
         global_step = step
         optimizer.zero_grad()
-        if args.forge and int8_optimizer is not None:
+        if int8_optimizer is not None:
             int8_optimizer.zero_grad()
+        if muon_optimizer is not None:
+            muon_optimizer.zero_grad()
 
         # --grad-accum-steps (2026-08-23, built for future use — NOT applied
         # to the run this was built alongside, which is already training on
@@ -1120,8 +1148,10 @@ def main() -> int:
             print(f"[distill] step {step}: entire step OOM'd, skipping this "
                   f"optimizer step entirely", file=sys.stderr)
             optimizer.zero_grad()
-            if args.forge and int8_optimizer is not None:
+            if int8_optimizer is not None:
                 int8_optimizer.zero_grad()
+            if muon_optimizer is not None:
+                muon_optimizer.zero_grad()
             continue
 
         ce_t = torch.stack(agg_ce_list).mean()
@@ -1135,8 +1165,10 @@ def main() -> int:
                 grad_norm = torch.nn.utils.clip_grad_norm_(all_trainable_params, args.grad_clip)
             else:
                 grad_norm = None
-            if args.forge and int8_optimizer is not None:
+            if int8_optimizer is not None:
                 int8_optimizer.step()
+            if muon_optimizer is not None:
+                muon_optimizer.step()
             optimizer.step()
         except Exception as e:
             if not _is_oom_error(e):
@@ -1144,8 +1176,10 @@ def main() -> int:
             print(f"[distill] WARNING: OOM during grad-clip/optimizer step at step {step} "
                   f"— skipping this optimizer step entirely (weights unchanged)", file=sys.stderr)
             optimizer.zero_grad()
-            if args.forge and int8_optimizer is not None:
+            if int8_optimizer is not None:
                 int8_optimizer.zero_grad()
+            if muon_optimizer is not None:
+                muon_optimizer.zero_grad()
             gc.collect()
             torch.cuda.empty_cache()
             continue

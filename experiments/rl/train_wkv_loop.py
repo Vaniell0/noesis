@@ -505,7 +505,24 @@ def main():
                          "G/M_max/answer-length, confirmed down to the most "
                          "minimal config tried, so activation-memory tuning "
                          "alone could never close the gap.")
+    ap.add_argument("--muon", action="store_true",
+                    help="Use Muon (loader.py::MuonHybrid) instead of Int8AdamW "
+                         "for the att/ffn hidden weight matrices — same fixed-"
+                         "cost VRAM problem --forge targets, no CPU-offload "
+                         "state needed (MuonHybrid keeps one momentum buffer "
+                         "per param, nothing to offload). Mutually exclusive "
+                         "with --forge. Precondition-checked on a CPU toy only "
+                         "so far (hypotheses/H25.md 'Second follow-up') — "
+                         "finetuning behavior on a trained RWKV-7 is unknown "
+                         "even upstream (BlinkDL, 2026-09-02).")
+    ap.add_argument("--muon-lr", type=float, default=0.02,
+                    help="Muon's own published default — different scale than "
+                         "--lr (tuned for Adam/AdamW), not shared on purpose.")
+    ap.add_argument("--muon-momentum", type=float, default=0.95)
+    ap.add_argument("--muon-weight-decay", type=float, default=0.0)
     args = ap.parse_args()
+    if args.forge and args.muon:
+        raise ValueError("--forge and --muon are alternatives, not both")
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -532,12 +549,15 @@ def main():
     # the resulting .grad tensors — same optimizer-state memory win,
     # without touching backward() or truncating gradient flow.
     int8_optimizer = None
+    muon_optimizer = None
     if args.forge:
         if loaded.backend != "peft":
             raise ValueError("--forge requires --device cuda (backend='peft') — "
                               "FORGE's kernels are CUDA-only")
         print(f"[train] FORGE enabled (int8-optimizer-only path, "
               f"NOT fused-into-backward — see loader.py::Int8AdamW)")
+    if args.muon and loaded.backend != "peft":
+        raise ValueError("--muon requires --device cuda (backend='peft')")
 
     # Optimiser (only for peft backend with grad)
     optimizer = None
@@ -550,6 +570,16 @@ def main():
             int8_optimizer = Int8AdamW(params, lr=args.lr, weight_decay=0.01,
                                         offload_state=args.forge_offload_state)
             params = int8_optimizer.other_params
+        elif args.muon:
+            from experiments.rl.loader import MuonHybrid
+            named_params = [(n, p) for n, p in loaded.model.named_parameters() if p.requires_grad]
+            if mlp_delta:
+                named_params += [(f"mlp_delta.{n}", p) for n, p in mlp_delta.named_parameters()]
+            muon_optimizer = MuonHybrid(named_params, lr=args.muon_lr, momentum=args.muon_momentum,
+                                         weight_decay=args.muon_weight_decay)
+            params = muon_optimizer.other_params
+            print(f"[train] Muon enabled: {len(muon_optimizer.muon_params)} hidden matrices "
+                  f"on Muon (lr={args.muon_lr}), {len(params)} params on AdamW")
         optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=0.01)
 
     # Corpus + curriculum
@@ -674,6 +704,8 @@ def main():
             optimizer.zero_grad()
             if int8_optimizer is not None:
                 int8_optimizer.zero_grad()
+            if muon_optimizer is not None:
+                muon_optimizer.zero_grad()
             # wkv_grpo_loss calls .backward() internally, once per rollout
             # (not once here) — see its docstring. Ordinary autograd
             # (no forge_manager passed) — --forge no longer fuses anything
@@ -698,6 +730,8 @@ def main():
             optimizer.step()
             if int8_optimizer is not None:
                 int8_optimizer.step()
+            if muon_optimizer is not None:
+                muon_optimizer.step()
 
         # Curriculum update
         accuracy = float((all_rewards_flat > 0).float().mean().item())
