@@ -532,6 +532,51 @@ the integration's *mechanics* only — it says nothing about the real model's
 training dynamics, VRAM profile, or whether the leak (§Known risks #11)
 goes away; that needs an actual GPU run.
 
+**First real GPU run, 2026-09-02 (Alberta, T4 16GB): OOMs on backward every
+single step, even at the most minimal config.** `--muon --grad-cp --batch 1
+--think-marker --M 1`, raw `rwkv7-g1i-2.9b-20260805-ctx16384.pth` (full-FT,
+no LoRA) — the smallest full-FT config this stack supports. Ran all 20
+smoke-test steps without crashing (the existing `_is_oom_error` try/except
+around `micro_total.backward()` caught it and skipped every time), but
+`grad_norm=0.0000` and the `(partial: a micro-batch OOM'd)` tag appear on
+**20/20 steps** — forward succeeds (loss values are real and change per
+step), backward never completes even once. No real gradient was ever
+applied; the checkpoint this run "completed" to is untrained noise, deleted
+rather than kept. `[distill] Muon enabled: 192 hidden matrices on Muon,
+871 params on AdamW` confirms the split ran (matches the toy-verified
+selection logic).
+
+**Reading, not yet independently profiled**: the CUDA allocator's own OOM
+message at the moment of failure reports as little as ~12MB free out of the
+~16GB card (`free: 12189696, total: 16704405504`) on the very first step —
+i.e. something already consumes essentially the entire card before the
+backward pass gets far, the same *fixed-cost* shape as `Int8AdamW`
+(without `offload_state`) hit before (§Known risks #9, measured ~17.4GB
+fixed cost alone on this card). Plausible arithmetic for why: weights
+(~5.9GB bf16) + first-backward grad buffers (~5.9GB) + `MuonHybrid`'s
+momentum buffer, allocated eagerly in `__init__` for all 192 muon_params
+(bf16, likely ~4.5-5GB given att/ffn dominate parameter count) already
+sums close to or past 16GB, before `other_params`' AdamW state or any
+activation memory. Not confirmed by a direct `torch.cuda.memory_allocated()`
+snapshot (skipped to save GPU time given the allocator's own free-memory
+number already makes the fixed-cost explanation the only one consistent
+with failing on the very first step at minimum batch) — if this needs
+re-litigating later, that snapshot is the next thing to add, not another
+blind config change.
+
+**The tension this creates, worth flagging plainly rather than patching
+around silently**: the whole draw of Muon over `Int8AdamW` was carrying
+only one buffer with *no* CPU-offload dance needed — removing the exact
+mechanism suspected in the still-open host-RAM leak (§Known risks #11).
+If `MuonHybrid` also needs an `Int8AdamW`-style `offload_state` to fit this
+16GB card, that hoped-for side benefit doesn't hold: an offloaded Muon
+would reintroduce the same per-step CPU↔GPU `.to()` swap pattern that is
+the #1 remaining leak suspect, just wrapped around a different optimizer.
+Not decided here — this is a real fork (add offload to `MuonHybrid` and
+accept the leak risk returns; or find a smaller `MuonHybrid` footprint some
+other way; or accept LoRA rather than full-FT for the Muon path, reversing
+Phase 1.5's own move away from LoRA) rather than a bug with one obvious fix.
+
 **BlinkDL's answer, Discord #state-and-finetuning, 2026-09-02 (asked
 in response to this session's Muon-vs-Adam finding): "muon works for
 rwkv7 pretraining, but for finetuning a trained rwkv7 model, no idea.
