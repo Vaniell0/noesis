@@ -212,9 +212,58 @@ def main() -> int:
                      help="Comma-separated muon_lr values, e.g. '0.005,0.01,0.02,0.04,0.08'. "
                           "Runs the Muon side only (Adam baseline computed once) at each, "
                           "skips the single-run --muon-lr path.")
+    ap.add_argument("--n-seeds", type=int, default=None,
+                     help="Run Adam and Muon (at --muon-lr) across seeds 0..n-1, report "
+                          "mean/std per metric instead of a single seed's point estimate. "
+                          "Added after a single-seed comparison (seed=0) turned out to be "
+                          "misleadingly favorable to Adam on ood_r2 - it happened to be one "
+                          "of Adam's better seeds. Skips --lr-sweep and the single-run path.")
     ap.add_argument("--out", type=Path, default=None,
                      help="If set, write results as JSON via save_result.")
     args = ap.parse_args()
+
+    if args.n_seeds is not None:
+        adam_runs, muon_runs = [], []
+        for seed in range(args.n_seeds):
+            a = train_task(args.task, args.steps, args.head_size,
+                            n_train_steps=args.train_steps, seed=seed,
+                            freeze_final_readout=True)
+            a["optimizer"] = "adam"
+            adam_runs.append(a)
+            m = train_task_muon(args.task, args.steps, args.head_size,
+                                 n_train_steps=args.train_steps, seed=seed,
+                                 muon_lr=args.muon_lr)
+            muon_runs.append(m)
+            print(f"seed={seed}: adam(id_r2={a['id_r2']:.4f} ood_r2={a['ood_r2']:.4f} "
+                  f"ablation={a['ablation_a_gate_0_r2']:+.4f})  "
+                  f"muon(id_r2={m['id_r2']:.4f} ood_r2={m['ood_r2']:.4f} "
+                  f"ablation={m['ablation_a_gate_0_r2']:+.4f})")
+
+        def _stats(runs, key):
+            vals = [r[key] for r in runs]
+            mean = sum(vals) / len(vals)
+            var = sum((x - mean) ** 2 for x in vals) / len(vals)
+            return mean, var ** 0.5, min(vals), max(vals)
+
+        print(f"\n=== {args.n_seeds}-seed summary (muon_lr={args.muon_lr}) ===")
+        for name, runs in (("adam", adam_runs), ("muon", muon_runs)):
+            for key in ("id_r2", "ood_r2", "ablation_a_gate_0_r2"):
+                mean, std, lo, hi = _stats(runs, key)
+                print(f"  {name:5s} {key:24s} mean={mean:+.4f} std={std:.4f} "
+                      f"range=[{lo:+.4f}, {hi:+.4f}]")
+
+        if args.out is not None:
+            save_result(
+                args.out, {"adam": adam_runs, "muon": muon_runs,
+                           "muon_lr": args.muon_lr, "n_seeds": args.n_seeds},
+                experiment="muon_vs_adam_toy_multiseed", hypothesis=["H25"],
+                summary={"purpose": "is the Adam-vs-Muon quality/mechanism difference "
+                                     "real across seeds, or an artifact of seed=0? Also "
+                                     "checks whether the a_gate=0 ablation effect (H25's "
+                                     "'delta-rule necessary' claim) is optimizer-dependent"},
+                script=str(Path(__file__).relative_to(_REPO_ROOT)),
+            )
+        return 0
 
     if args.lr_sweep is not None:
         print(f"=== baseline: Adam, freeze_final_readout=True (existing micro_wkv.py protocol) ===")

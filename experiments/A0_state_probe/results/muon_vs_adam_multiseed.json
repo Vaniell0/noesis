@@ -1,0 +1,171 @@
+{
+  "_meta": {
+    "experiment": "muon_vs_adam_toy_multiseed",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-02",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/muon_vs_adam_toy.py",
+    "summary": {
+      "purpose": "is the Adam-vs-Muon quality/mechanism difference real across seeds, or an artifact of seed=0? Also checks whether the a_gate=0 ablation effect (H25's 'delta-rule necessary' claim) is optimizer-dependent"
+    }
+  },
+  "adam": [
+    {
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "id_r2": 0.999862639442358,
+      "ood_r2": 0.8674684314415199,
+      "ablation_a_gate_0_r2": -0.20950086798725387,
+      "ablation_a_gate_1_r2": 0.9706454304804409,
+      "stable_rank_by_step": [
+        0.0,
+        1.0000001071654663,
+        1.0013731357898754,
+        1.0040558301202767,
+        1.045865660329438
+      ],
+      "optimizer": "adam"
+    },
+    {
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "id_r2": 0.9987261117114105,
+      "ood_r2": 0.6919986513996411,
+      "ablation_a_gate_0_r2": -2.661639425045529,
+      "ablation_a_gate_1_r2": 0.9861457337743088,
+      "stable_rank_by_step": [
+        0.0,
+        1.0000000289831692,
+        1.0681509493144727,
+        1.0701813952610755,
+        1.002103256650605
+      ],
+      "optimizer": "adam"
+    },
+    {
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "id_r2": 0.9994234472450001,
+      "ood_r2": 0.6956456154976042,
+      "ablation_a_gate_0_r2": -3.2949878471275555,
+      "ablation_a_gate_1_r2": 0.9872553096631759,
+      "stable_rank_by_step": [
+        0.0,
+        0.9999999642925126,
+        1.0038122404694312,
+        1.0559950976435728,
+        1.0018841258992726
+      ],
+      "optimizer": "adam"
+    },
+    {
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "id_r2": 0.999938113750552,
+      "ood_r2": 0.6298312958529643,
+      "ablation_a_gate_0_r2": -0.2495916041592623,
+      "ablation_a_gate_1_r2": 0.36198102399373133,
+      "stable_rank_by_step": [
+        0.0,
+        0.9999999998658265,
+        1.0004632564393126,
+        1.0014298297256268,
+        1.0039996235833073
+      ],
+      "optimizer": "adam"
+    },
+    {
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "id_r2": 0.9998702164393578,
+      "ood_r2": 0.8394843577032949,
+      "ablation_a_gate_0_r2": -0.46518933946033436,
+      "ablation_a_gate_1_r2": 0.9196164161528249,
+      "stable_rank_by_step": [
+        0.0,
+        1.0000000194154275,
+        1.002468607944464,
+        1.0024832591884227,
+        1.0420072983335753
+      ],
+      "optimizer": "adam"
+    }
+  ],
+  "muon": [
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.005,
+      "id_r2": 0.9997368398028006,
+      "ood_r2": 0.8419044619847422,
+      "ablation_a_gate_0_r2": 0.0033326161846857216,
+      "train_seconds": 65.77758981799707,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.005,
+      "id_r2": 0.9997211040699793,
+      "ood_r2": 0.6908194354308439,
+      "ablation_a_gate_0_r2": -0.058373560859311446,
+      "train_seconds": 64.92386317900673,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.005,
+      "id_r2": 0.9997981591427333,
+      "ood_r2": 0.8424494683971601,
+      "ablation_a_gate_0_r2": -0.007754352686190513,
+      "train_seconds": 49.28224668899202,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.005,
+      "id_r2": 0.9995866722717274,
+      "ood_r2": 0.8506461276361585,
+      "ablation_a_gate_0_r2": -0.00421506001430183,
+      "train_seconds": 50.165926509012934,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    },
+    {
+      "optimizer": "muon+adamw",
+      "task": "multiply",
+      "n_steps": 4,
+      "head_size": 8,
+      "muon_lr": 0.005,
+      "id_r2": 0.999586232560325,
+      "ood_r2": 0.8608088746077671,
+      "ablation_a_gate_0_r2": -0.07610299617827465,
+      "train_seconds": 59.304255452996586,
+      "n_muon_params": 3,
+      "n_adam_params": 8
+    }
+  ],
+  "muon_lr": 0.005,
+  "n_seeds": 5
+}
