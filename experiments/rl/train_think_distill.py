@@ -405,6 +405,7 @@ def distill_step(
     norm_anchor_threshold: float = 300.0,
     dynamic_phase_stop: bool = False,
     eps_plateau: float = 0.05,
+    rewind_last_phase: bool = False,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
     norm_penalty, cos_sim, student_repr, teacher_repr, n_answer_tokens,
@@ -479,6 +480,47 @@ def distill_step(
     (comfortably above base, below the observed blowup range), same
     "set from measurement, not derived" convention as
     state_loss_clamp's own 100.0 and training/state_reg.py's clamps.
+
+    rewind_last_phase (2026-09-04, Phase 1.5 M=2 role): when True AND
+    M_eff==2 specifically (not 3 — see below), phase 2's target is NOT
+    `teacher_states[1]` (the teacher's own second think-chunk) — it's
+    `state_origin`, the student's own state captured right after the
+    shared entry marker, BEFORE phase 1 explored anything. Phase 1 still
+    targets the teacher's real chunk as always; only the LAST phase, and
+    only at M=2, is asked to move state back toward where it started
+    instead of forward toward more teacher content — "explore, then
+    return" as a minimal, foldable-into-Phase-1.5 version of Phase 2's
+    still-unbuilt rewind marker, using the same clamped-L2 state_loss
+    machinery already validated for phase 1 rather than a new loss
+    family (`L_tPC`, `docs/rl-track.md` §State metrics) that isn't
+    implemented anywhere yet — deliberately the smaller, already-proven
+    mechanism, not the more principled one, given limited time before a
+    real GPU run.
+
+    Why M=2 only, not "M>=2" or M=3 — corrected 2026-09-04, same day
+    written, after conflating two unlike things: H10's "silent"/N sweep
+    (N=2 33.3% -> N=3 6.3%) is NOT evidence about this mechanism —
+    `docs/effort-frontier.md` itself already identifies H10's N with
+    `wkv_loop.py`'s SELF-FEED loop (one operator applied to its own
+    output repeatedly), the mechanism ThinkChain's distinct-per-phase
+    markers specifically replaced BECAUSE of that failure mode — citing
+    it here re-imports the exact "M names two different mechanisms"
+    confusion this project already caught once. Dropped. fleeb83's own
+    reported attractor-collapse past N=3 on his G1h LoRA
+    (`docs/community-map.md`'s "Looped World Models" entry) is at least
+    about a comparable trained-marker mechanism, but is confounded two
+    ways, neither ruled out: (1) LoRA's low-rank capacity may simply
+    lack the expressiveness to stay stable at 3 units, an artifact
+    full-FT (this whole Phase 1.5 stage's point) could remove rather
+    than inherit; (2) his task domain is unverified against this
+    project's matrix/arithmetic/xor/wordsearch curriculum, not
+    confirmed comparable. So: NOT "two independent confirmed
+    instabilities" — one citation was wrong, the other is real but weak
+    and possibly inapplicable under full-FT specifically. M=2-only stays
+    the default here for a plainer reason: there is no positive evidence
+    M=3 is safe for THIS mechanism either, and a wrong default should
+    fail toward less compute, not more — not because instability was
+    reconfirmed twice.
     """
     device = loaded.device
     prompt = torch.tensor([ex["prompt_ids"]], dtype=torch.long, device=device)
@@ -522,22 +564,40 @@ def distill_step(
     # ceiling, not mandatory — see --dynamic-phase-stop below). One
     # call per repeat (not a single batched [B,T,D] call) specifically
     # so an early-exit check can run between repeats. Repeating a
-    # CONSTANT embedding is not the old loop-collapse failure mode:
-    # R/K/V/decay/a/g are derived from `x` and `time_shift(x) - x`, and
-    # the latter is exactly zero from the second repeat onward
-    # (identical consecutive inputs) — so this is a fixed, well-defined
-    # transformation applied T times to the evolving WKV state (like a
-    # constant decay rate applied for T steps), not a self-referential
-    # loop whose own transformation drifts as its input grows more
-    # confident/homogeneous (see distill_step's M>1 docstring section
-    # for why THAT was the actual collapse mechanism). Mirrors the
-    # teacher's M_eff real, naturally-distinct chunks with M_eff
+    # CONSTANT embedding is NOT the old loop-collapse failure mode above
+    # (that one was self-feed drift: R/K/V/decay/a/g computed from an
+    # increasingly confident/homogeneous SELF-GENERATED input; here
+    # time_shift(x)-x is exactly zero from the second repeat onward
+    # because x itself never changes). **Correction, 2026-09-04: ruling
+    # out THAT failure mode is not the same as ruling out failure in
+    # general.** A constant embedding repeated T times is literally
+    # `x_{t+1}=Ax_t+b` — H25's divergence proof (`hypotheses/H25.md`,
+    # "Third follow-up") shows exactly this construct, run past its
+    # verified-safe horizon, diverges monotonically toward the
+    # operator's own fixed point, not the target (T<=8: low error;
+    # T=16: already 0.821 relative error, rising). This project's real
+    # `chunk_lens[i]` values run 15-25+ tokens routinely (see
+    # `project_noesis_rl_track` memory, the RAM-leak investigation) —
+    # past the toy-verified-safe zone, on a toy analog of this exact
+    # mechanism, not proof this real run was harmed, but not the "fixed,
+    # well-defined, therefore safe" reassurance this comment used to
+    # give either. `--dynamic-phase-stop` below only helps if its exit
+    # is a genuine ceiling, not a live metric a bad training step could
+    # push past — not re-verified against that standard here. Mirrors
+    # the teacher's M_eff real, naturally-distinct chunks with M_eff
     # explicitly-distinct learned signals, each given the same real budget.
     state_s = loaded.new_state(batch=1)
     logits, state_s = loaded.forward_stateful(prompt, state_s)
     if think_marker is not None:
         marker = think_marker.step(0).to(dtype=loaded.embedding_weight.dtype).view(1, 1, -1)
         logits, state_s = loaded.forward_stateful_embeds(marker, state_s)
+    # state_origin: student's own state right after entering think-mode,
+    # before any phase has explored anything — the M=2 rewind target
+    # (see rewind_last_phase in the docstring above). Captured
+    # unconditionally (cheap — a detached clone of already-computed
+    # tensors) rather than gated on rewind_last_phase, simpler than
+    # threading the flag through this one extra branch.
+    state_origin: Dict[int, torch.Tensor] = {L: state_s.wkv[L].detach().clone() for L in layers}
     state_loss = torch.zeros((), device=device, dtype=torch.float32)
     norm_penalty = torch.zeros((), device=device, dtype=torch.float32)
     cos_sim_sum = torch.zeros((), device=device, dtype=torch.float32)
@@ -590,7 +650,8 @@ def distill_step(
                             break
                     prev_phase_wkv = cur_phase_wkv
         student_wkv = state_s.wkv
-        teacher_wkv = teacher_states[i]
+        is_rewind_phase = rewind_last_phase and M_eff == 2 and i == M_eff - 1
+        teacher_wkv = state_origin if is_rewind_phase else teacher_states[i]
         for L in layers:
             s_flat = student_wkv[L].float().flatten()
             t_flat = teacher_wkv[L].float().detach().flatten()
@@ -692,6 +753,7 @@ def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
                     norm_anchor_threshold=args.norm_anchor_threshold,
                     dynamic_phase_stop=args.dynamic_phase_stop,
                     eps_plateau=args.eps_plateau,
+                    rewind_last_phase=args.rewind_last_phase,
                 )
         except Exception as e:
             # Same pattern as train_wkv_loop.py's per-rollout OOM
@@ -889,6 +951,17 @@ def main() -> int:
                           "not absolute — so it scales with however large the "
                           "state has grown, e.g. from --norm-anchor-weight "
                           "drift).")
+    ap.add_argument("--rewind-at-m2", dest="rewind_last_phase", action="store_true",
+                     help="Phase 1.5, 2026-09-04: for examples sampled at M=2 "
+                          "(see --m-weights) only, phase 2's target is the "
+                          "student's own state right after entering think-mode "
+                          "(before phase 1 explored), not the teacher's second "
+                          "think-chunk — 'explore, then return', a minimal "
+                          "version of Phase 2's still-unbuilt rewind marker. "
+                          "M=3 deliberately not given this or any other role yet "
+                          "— see distill_step's rewind_last_phase docstring for "
+                          "why (two independent real reports of instability "
+                          "specifically at 3 repeated/looped units).")
     ap.add_argument("--norm-anchor-weight", type=float, default=0.0,
                      help="Weight on a soft penalty for the student's own WKV "
                           "state norm exceeding --norm-anchor-threshold, added "

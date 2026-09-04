@@ -29,19 +29,52 @@ not resolved — read it before assuming the two stages share a curriculum.
    break and an M=0 path that doesn't degrade, across M=0..3, not just the one
    trained M. Plumbing, not meaning, yet — but see the 2026-08-23 addition to
    Phase 2 below: this stage may already be doing more than plumbing.
-   **Curriculum design, 2026-08-23 (concern raised, not yet implemented):**
-   the M=0 degradation already observed on v3 (LoRA reshaping weights toward
+   **Curriculum design, 2026-08-23 — concern raised AND fixed the same day
+   (corrected 2026-09-04: this bullet said "not yet implemented" for two
+   weeks after the fix landed; found only by cross-checking `git log`
+   against this file, not by rereading the code first).** The M=0
+   degradation already observed on v3 (LoRA reshaping weights toward
    "expect the phase marker") is a real risk for full-FT, which has no LoRA
    bottleneck limiting how far it can go — worse, not better, without a fix.
-   Proposed fix, Birdie-style (arXiv 2411.01030, already in
-   `docs/community-map.md`'s §"Aligned techniques"): extend
-   `_CategoryBatcher` with a second stratification axis — M/difficulty, not
-   just task category — so every batch keeps a fraction of plain, no-marker,
-   simple-response examples (M=0, not task-specific) alongside the M=1..3
-   harder-task examples, continuously through training, not as an early
-   curriculum stage that gets left behind. Not "train easy first, then
-   hard" (that's exactly the sequential pattern that would let M=0 be
-   forgotten again) — concurrent mixing, every batch.
+   Fix, Birdie-style (arXiv 2411.01030, already in
+   `docs/community-map.md`'s §"Aligned techniques"), **shipped same day,
+   commit `deab9869`:** `_run_micro_batch` samples each example's M
+   independently (`--m-weights w0,w1,...,wM`, weighted random draw over
+   M=0..--M per example — M=0 routes to the relax batcher, M>0 to
+   `distill_step`), not a fixed --M for the whole run — concurrent mixing,
+   every batch, not an early curriculum stage. **Never actually run:** no
+   result file, log, or checkpoint anywhere in this repo references
+   `--m-weights` or `--rewind-at-m2` (the M=2 addition below) as of
+   2026-09-04 — implemented, untested. First real use is the planned
+   Phase 1.5 GPU run.
+   **M=2 addition, 2026-09-04 (`distill_step`'s `rewind_last_phase`,
+   `--rewind-at-m2`):** at M=2 specifically (not M=3 — see below), phase
+   2's target is the student's own state right after entering think-mode,
+   not the teacher's second think-chunk — "explore, then return," a
+   minimal, already-buildable version of Phase 2's still-unbuilt rewind
+   marker, using the same clamped-L2 state_loss already validated for
+   phase 1 rather than the more principled but unimplemented `L_tPC`
+   (§State metrics below) — a deliberate, time-boxed simplification, not
+   a claim that L2-to-a-fixed-point is the right loss long-term (see the
+   "don't repeat the Dreamer mistake" bullet just below — same caveat
+   applies here too, kept soft/clamped, not tightened). Scoped to M=2
+   only, not M>=2 generally — **corrected same day, after conflating two
+   unlike things**: H10's N (N=2 33.3% -> N=3 6.3%) is not evidence
+   here at all — this file's own §Track status above already identifies
+   H10's N with `wkv_loop.py`'s SELF-FEED loop, the mechanism ThinkChain
+   replaced specifically because it homogenises; citing it for
+   ThinkChain-M re-imports the "M names two different mechanisms"
+   confusion already caught once in this project. Dropped. fleeb83's
+   attractor-collapse past N=3 on his G1h LoRA
+   (`docs/community-map.md`'s "Looped World Models" entry) is at least
+   about a comparable trained-marker mechanism, but confounded two ways,
+   neither ruled out: LoRA's low-rank capacity may be the actual cause
+   (an artifact full-FT — this whole stage's point — could remove, not
+   inherit), and his task domain is unverified against this project's
+   curriculum. M=2-only stays the default for a plainer reason: no
+   positive evidence M=3 is safe for this mechanism either, and an
+   unverified default should fail toward less compute — not because
+   instability was independently reconfirmed, which it wasn't.
 
 3. **Phase 2 — give M>1 real meaning (designed, revised 2026-08-23, not
    built).** Original framing (kept in the appendix below for the reasoning
@@ -60,7 +93,19 @@ not resolved — read it before assuming the two stages share a curriculum.
      contraction applied T times — not the self-feed loop's homogenisation
      failure, since R/K/V/decay's time-shift delta is exactly zero from the
      second repeat onward). The "smooth" in "smoothly retreat" is this:
-     several ticks of contraction, not one L2-driven jump.
+     several ticks of contraction, not one L2-driven jump. **Correction,
+     2026-09-04: "not the self-feed homogenisation failure" rules out only
+     ONE risk, not safety in general — it says nothing about the OTHER one
+     this file's own §Root cause / §Sharpened bullets below establish for
+     the exact same construct (a fixed embedding repeated T times IS
+     `x_{t+1}=Ax_t+b`, and H25's divergence proof shows that diverges past
+     its verified-safe horizon, not plateaus). This bullet predates that
+     finding (written 2026-08-23, proof landed 2026-09-02) and never got
+     updated to match. Apply the same conclusion here: `dynamic-phase-stop`
+     alone is not sufficient protection unless it enforces a genuine hard
+     tick ceiling at/near the verified-safe horizon — a soft/live-metric
+     exit is exactly the "expensive, not broken" mistake §Made concrete
+     below already named.**
    - **Loss: mirror L_state, don't repeat the Dreamer mistake.** The original
      framing's L2-to-a-fixed-target approach is exactly the strict-target
      mistake already diagnosed for teacher-state matching generally (see
