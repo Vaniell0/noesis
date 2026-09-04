@@ -148,18 +148,18 @@ touch pieces implicitly).*
 | H9 | SUPPORTED | 0.65 | 0.650 | `H9.md` |
 | H10 | PARTIAL | 0.5 | 0.500 | `H10.md` |
 | H11 | no structured record | - | - | `H11.md` |
-| H12 | no structured record | - | - | `H12.md` |
+| H12 | DEPRIORITIZED | 0.25 | 0.250 | `H12.md` |
 | H13a | no structured record | - | - | `H13a.md` |
 | H13b | no structured record | - | - | `H13b.md` |
 | H14 | no structured record | - | - | `H14.md` |
 | H15 | no structured record | - | - | `H15.md` |
 | H16 | RETRACTED | 0.2 | 0.200 | `H16.md` |
-| H17 | no structured record | - | - | `H17.md` |
-| H18 | no structured record | - | - | `H18.md` |
+| H17 | CONTESTED | 0.3 | 0.099 | `H17.md` |
+| H18 | PARTIAL | 0.4 | 0.400 | `H18.md` |
 | H19 | no structured record | - | - | `H19.md` |
-| H20 | no structured record | - | - | `H20.md` |
-| H21 | no structured record | - | - | `H21.md` |
-| H22 | no structured record | - | - | `H22.md` |
+| H20 | CONTESTED | 0.4 | 0.182 | `H20.md` |
+| H21 | SUPPORTED | 0.75 | 0.565 | `H21.md` |
+| H22 | CONTESTED | 0.4 | 0.069 | `H22.md` |
 | H23 | no structured record | - | - | `H23.md` |
 | H24 | no structured record | - | - | `H24.md` |
-| H25 | no structured record | - | - | `H25.md` |
+| H25 | PARTIAL | - | - | `H25.md` |

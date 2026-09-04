@@ -265,6 +265,122 @@ class FrozenFinalReadoutController(StagedController):
         return c
 
 
+class ParityController(nn.Module):
+    """WKV-native replica of arXiv 2505.21024's (London & Kanade, NeurIPS
+    2025) pause-token discriminator: a constant-depth Transformer proven
+    unable to express parity gains strict expressivity (up to AC0/TC0)
+    once pause tokens are added — empirically demonstrated on a 2-layer
+    Transformer that learns parity WITH pause tokens, not without.
+
+    Corrected design (2026-09-03) — the first version revealed bits one
+    per step, which silently gives the recurrence n_bits of "free" depth
+    regardless of n_extra: parity is trivial for any genuine recurrence
+    once it is fed one bit per timestep (that's just a running XOR
+    accumulator), so n_extra=0 already solved it and the comparison
+    tested nothing about pause-token-style extra computation. Fixed
+    here: ALL n_bits are revealed simultaneously at step 0 (one wide
+    input, not staged over n_bits steps) — the controller has no other
+    source of depth than `n_extra` silent (zero-input) steps afterward,
+    genuinely mirroring a constant-depth Transformer's only lever
+    (pause tokens). Final r/w frozen at the last step (same
+    FrozenFinalReadoutController discipline — closes the readout's own
+    bilinear shortcut). Target: parity (XOR) of all n_bits, evaluated on
+    held-out BIT PATTERNS never seen in any form during training."""
+
+    def __init__(self, head_size: int, n_bits: int, n_extra: int, hidden: int = 64):
+        super().__init__()
+        self.head_size = head_size
+        self.n_bits = n_bits
+        self.n_extra = n_extra
+        self.n_steps = 1 + n_extra  # step 0 = all bits at once; rest = silent
+        self.step_embed = nn.Embedding(self.n_steps, 8)
+        self.net = nn.Sequential(
+            nn.Linear(n_bits + 8, hidden), nn.Tanh(),
+            nn.Linear(hidden, hidden), nn.Tanh(),
+            nn.Linear(hidden, 4 * head_size + head_size),  # r,k,v,a_gate_logit,w_raw
+        )
+        self.final_r = nn.Parameter(torch.randn(head_size) * 0.1)
+        self.final_w_raw = nn.Parameter(torch.randn(head_size) * 0.1)
+        self.readout = nn.Linear(head_size, 1)
+
+    def step_controls(self, x: torch.Tensor, step: int) -> dict:
+        """x: [B, n_bits] — the real bits at step 0, all-zero (blank) on
+        every silent step after."""
+        B = x.shape[0]
+        step_e = self.step_embed(torch.full((B,), step, dtype=torch.long, device=x.device))
+        raw = self.net(torch.cat([x, step_e], dim=-1))
+        r, k, v, a_logit, w_raw = raw.split(self.head_size, dim=-1)
+        if step == self.n_steps - 1:
+            r = self.final_r.unsqueeze(0).expand(B, -1)
+            w_raw = self.final_w_raw.unsqueeze(0).expand(B, -1)
+        return {"r": r, "k": k, "v": v, "a_logit": a_logit, "w_raw": w_raw}
+
+    def forward(self, bits: torch.Tensor) -> torch.Tensor:
+        """bits: [B, n_bits] of 0./1. Returns logits [B] (BCEWithLogits target)."""
+        B = bits.shape[0]
+        state = torch.zeros(B, self.head_size, self.head_size, device=bits.device)
+        out = None
+        for t in range(self.n_steps):
+            x = bits if t == 0 else torch.zeros_like(bits)
+            c = self.step_controls(x, t)
+            a_gate = torch.sigmoid(c["a_logit"])
+            w = -F.softplus(-c["w_raw"]) - 0.5
+            out, state = micro_wkv_step(state, c["r"], c["k"], c["v"], w, a_gate)
+        return self.readout(out).squeeze(-1)
+
+
+def train_parity_task(n_bits: int, n_extra: int, head_size: int = 8,
+                       n_train_steps: int = 4000, lr: float = 3e-3,
+                       seed: int = 0, test_frac: float = 0.2) -> dict:
+    """arXiv 2505.21024 replica (see ParityController docstring). Held-out
+    split is over the 2**n_bits DISTINCT PATTERNS, not resampled noise —
+    a pattern in the test set is never seen in any form during training,
+    so held-out accuracy above chance is genuine parity computation, not
+    interpolation or memorisation."""
+    torch.manual_seed(seed)
+    all_patterns = torch.cartesian_prod(*[torch.tensor([0.0, 1.0])] * n_bits)
+    if n_bits == 1:
+        all_patterns = all_patterns.unsqueeze(-1)
+    n_total = all_patterns.shape[0]
+    g = torch.Generator().manual_seed(seed)
+    perm = torch.randperm(n_total, generator=g)
+    n_test = max(1, int(n_total * test_frac))
+    test_idx, train_idx = perm[:n_test], perm[n_test:]
+    train_patterns, test_patterns = all_patterns[train_idx], all_patterns[test_idx]
+    parity = lambda b: b.sum(dim=-1) % 2  # noqa: E731
+
+    model = ParityController(head_size, n_bits, n_extra)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    batch_size = min(64, train_patterns.shape[0])
+
+    losses = []
+    for step in range(n_train_steps):
+        idx = torch.randint(0, train_patterns.shape[0], (batch_size,), generator=g)
+        bits = train_patterns[idx]
+        y_hat = model(bits)
+        loss = F.binary_cross_entropy_with_logits(y_hat, parity(bits))
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+        losses.append(loss.item())
+        if step % 1000 == 0 or step == n_train_steps - 1:
+            print(f"  [parity n={n_bits} extra={n_extra}] step {step}: train_bce={loss.item():.5f}")
+
+    with torch.no_grad():
+        y_train = model(train_patterns)
+        train_acc = ((y_train > 0).float() == parity(train_patterns)).float().mean().item()
+        y_test = model(test_patterns)
+        test_acc = ((y_test > 0).float() == parity(test_patterns)).float().mean().item()
+
+    result = {"n_bits": n_bits, "n_extra": n_extra, "head_size": head_size,
+              "n_train_patterns": int(train_patterns.shape[0]),
+              "n_test_patterns": int(test_patterns.shape[0]),
+              "train_acc": train_acc, "held_out_acc": test_acc}
+    print(f"  [parity n={n_bits} extra={n_extra}] train_acc={train_acc:.4f}  "
+          f"held_out_acc={test_acc:.4f}  (chance=0.5, {test_patterns.shape[0]} unseen patterns)")
+    return result
+
+
 class ChainedController(nn.Module):
     """The 'reproduce fleeb83, but exact operations' extension
     (2026-08-23): not just solving one fixed operation, but SELECTING

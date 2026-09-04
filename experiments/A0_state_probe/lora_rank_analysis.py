@@ -44,13 +44,21 @@ def _rank_r_energy(sv: torch.Tensor, r: int) -> float:
     return top_r / total
 
 
-def analyze(base_path: str, trained_path: str, lora_rank: int) -> Dict:
+def analyze(base_path: str, trained_path: str | None, lora_rank: int) -> Dict:
     print("Loading base checkpoint...")
     base = torch.load(base_path, map_location="cpu", weights_only=True)
-    print("Loading trained checkpoint...")
-    trained = torch.load(trained_path, map_location="cpu", weights_only=True)
+    single = trained_path is None
+    if single:
+        print("No --trained given: analysing base weights directly "
+              "(effective_rank/energy of the matrix itself, not a delta). "
+              "Answers 'how much room does this matrix have', not "
+              "'how much did training use'.")
+        trained = None
+    else:
+        print("Loading trained checkpoint...")
+        trained = torch.load(trained_path, map_location="cpu", weights_only=True)
 
-    common = set(base.keys()) & set(trained.keys())
+    common = set(base.keys()) if single else set(base.keys()) & set(trained.keys())
     # Only 2D matrices large enough for meaningful SVD
     mats = [k for k in common
             if len(base[k].shape) == 2 and min(base[k].shape) >= 32]
@@ -60,13 +68,16 @@ def analyze(base_path: str, trained_path: str, lora_rank: int) -> Dict:
     results = []
     for key in sorted(mats):
         b = base[key].float()
-        t = trained[key].float()
-        delta = t - b
-        frob = float(delta.norm())
-        if frob < 1e-8:
+        if single:
+            mat = b
+        else:
+            t = trained[key].float()
+            mat = t - b
+        frob = float(mat.norm())
+        if not single and frob < 1e-8:
             continue  # unchanged weight
 
-        sv = torch.linalg.svdvals(delta)
+        sv = torch.linalg.svdvals(mat)
         eff_rank = _effective_rank(sv, threshold=0.01)
         energy_r = _rank_r_energy(sv, lora_rank)
 
@@ -86,7 +97,7 @@ def analyze(base_path: str, trained_path: str, lora_rank: int) -> Dict:
             "key": key,
             "shape": list(base[key].shape),
             "type": wtype,
-            "delta_frob": frob,
+            "frob": frob,
             "effective_rank": eff_rank,
             f"top{lora_rank}_energy": energy_r,
             "sigma1": float(sv[0]),
@@ -104,7 +115,7 @@ def analyze(base_path: str, trained_path: str, lora_rank: int) -> Dict:
     for wtype, rows in sorted(by_type.items()):
         mean_er = sum(r["effective_rank"] for r in rows) / len(rows)
         mean_en = sum(r[f"top{lora_rank}_energy"] for r in rows) / len(rows)
-        mean_fr = sum(r["delta_frob"] for r in rows) / len(rows)
+        mean_fr = sum(r["frob"] for r in rows) / len(rows)
         print(f"{wtype:<12} {len(rows):>6} {mean_er:>14.1f} {mean_en:>16.3f} {mean_fr:>12.4f}")
 
     # Highlight outliers: matrices with eff_rank > lora_rank (unexpected for LoRA)
@@ -112,7 +123,7 @@ def analyze(base_path: str, trained_path: str, lora_rank: int) -> Dict:
     print(f"\nMatrices with effective_rank > {lora_rank} (unexpected if pure LoRA): {len(outliers)}")
     for r in sorted(outliers, key=lambda x: -x["effective_rank"])[:10]:
         print(f"  {r['key']}: eff_rank={r['effective_rank']}, "
-              f"top{lora_rank}_energy={r[f'top{lora_rank}_energy']:.3f}, frob={r['delta_frob']:.4f}")
+              f"top{lora_rank}_energy={r[f'top{lora_rank}_energy']:.3f}, frob={r['frob']:.4f}")
 
     # Low-rank confirmation: att_proj matrices with top-r energy
     att = [r for r in results if r["type"] == "att_proj"]
@@ -144,7 +155,10 @@ def analyze(base_path: str, trained_path: str, lora_rank: int) -> Dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", required=True)
-    ap.add_argument("--trained", required=True)
+    ap.add_argument("--trained", default=None,
+                     help="Omit to analyse --base's own weights directly "
+                          "(effective_rank of the matrix itself), instead "
+                          "of a trained-minus-base delta.")
     ap.add_argument("--lora-rank", type=int, default=32)
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
@@ -156,8 +170,9 @@ def main() -> int:
     }
 
     out_path = save_result(
-        args.out, result, experiment="lora_rank", hypothesis=["H16"],
-        model=args.trained, script=__file__,
+        args.out, result, experiment="lora_rank",
+        hypothesis=["H16"] if args.trained else [],
+        model=args.trained or args.base, script=__file__,
     )
     print(f"\nSaved -> {out_path}")
     return 0

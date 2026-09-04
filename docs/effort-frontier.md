@@ -168,6 +168,43 @@ If the post-RL curve is flat (single M dominates), the registry has one
 useful setting and M is runtime clutter, not a dial. That's a real possible
 outcome, not assumed away.
 
+## Sweep design, Effort registry, Dependency chain — STALE (2026-09-03)
+
+**Everything from here to the next `---` describes the self-feed
+`wkv_loop.py` M mechanism (`train_wkv_loop.py`, A1.5 RL checkpoint).
+That track is paused by explicit decision (`docs/rl-track.md`'s
+appendix: an RL-trained checkpoint's internal M-step was never real
+task content, just chat-template scaffolding — RL had nothing to
+select for). The live mechanism is ThinkChain
+(`experiments/rl/train_think_distill.py`), and per this file's own
+2026-08-23 note above ("M now names two different mechanisms"),
+ThinkChain-M is not the single linear scalar this section assumes —
+adding a phase changes *what kind* of computation happens, not just
+how much, and rewind ticks (Phase 2, designed but not built) settle
+state rather than doing answer-relevant work, so pricing them like
+explore ticks isn't obviously right either. Kept below as a historical
+record of the self-feed-M design, not a live plan. A ThinkChain-native
+effort registry needs its own design — not started, and not
+buildable yet: it needs a real multi-phase (M>1) trained checkpoint,
+which needs Phase 2 (rewind marker) built and Phase 1.5 (full-FT)
+done first. Don't resume this section's plan as written once those
+land — redesign it around distinct phase-kind + rewind-budget, not a
+single `M_max`.
+
+**New grounding for the redesign, 2026-09-04 — the loop channel is not
+a generic "more compute" knob, there's now a small citable demonstration
+of that.** `hypotheses/H25.md`'s parity replica of arXiv 2505.21024
+(pause tokens strictly increase constant-depth Transformer expressivity)
+found the WKV-native analog: held-out accuracy 0.882 (`n_extra=0`) ->
+0.980 (1) -> 1.000 (2) -> plateau — a real, structured jump from adding
+loop steps, not a smooth "more M, somewhat better" curve. Consistent
+with this file's own step-function prediction for math tasks (§H25
+connection below) rather than the old single-scalar `effort=fast/
+normal/deep` framing: whatever a ThinkChain-native registry ends up
+being, "more phases = more of the same kind of gain" is the wrong
+mental model to redesign it around — expect thresholds tied to what a
+task actually needs written/held, not a dial.
+
 ## Sweep design
 
 **Axis: M ∈ {0, 1, 2, 4, 8, 16, 32}.** (0 = `M_max` set to 0, i.e. answer

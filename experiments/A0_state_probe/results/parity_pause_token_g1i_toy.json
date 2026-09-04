@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "experiment": "parity_pause_token",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-04",
+    "status": "done",
+    "model": "toy_cell",
+    "script": "experiments/A0_state_probe/micro_wkv.py"
+  },
+  "task": "parity_pause_token_replica",
+  "reference": "arXiv 2505.21024 (London & Kanade, NeurIPS 2025) \u2014 pause tokens strictly increase constant-depth Transformer expressivity, demonstrated on learning parity",
+  "design": "all n_bits revealed at step 0 (single wide input, not staged over n_bits steps), n_extra silent zero-input steps before a frozen final readout \u2014 WKV-native analog of pause tokens",
+  "n_bits": 8,
+  "head_size": 8,
+  "sweep": [
+    {
+      "n_bits": 8,
+      "n_extra": 0,
+      "head_size": 8,
+      "n_train_patterns": 205,
+      "n_test_patterns": 51,
+      "train_acc": 1.0,
+      "held_out_acc": 0.8823529481887817
+    },
+    {
+      "n_bits": 8,
+      "n_extra": 1,
+      "head_size": 8,
+      "n_train_patterns": 205,
+      "n_test_patterns": 51,
+      "train_acc": 1.0,
+      "held_out_acc": 0.9803921580314636
+    },
+    {
+      "n_bits": 8,
+      "n_extra": 2,
+      "head_size": 8,
+      "n_train_patterns": 205,
+      "n_test_patterns": 51,
+      "train_acc": 1.0,
+      "held_out_acc": 1.0
+    },
+    {
+      "n_bits": 8,
+      "n_extra": 4,
+      "head_size": 8,
+      "n_train_patterns": 205,
+      "n_test_patterns": 51,
+      "train_acc": 1.0,
+      "held_out_acc": 0.9411764740943909
+    },
+    {
+      "n_bits": 8,
+      "n_extra": 8,
+      "head_size": 8,
+      "n_train_patterns": 205,
+      "n_test_patterns": 51,
+      "train_acc": 0.995121955871582,
+      "held_out_acc": 0.9803921580314636
+    }
+  ]
+}

@@ -128,6 +128,35 @@ not resolved — read it before assuming the two stages share a curriculum.
      bound M_max/chain-phases defensively (fail closed, not just
      expensively) rather than assume "more ticks than needed" is merely
      inefficient.
+   - **Made concrete, 2026-09-04 — "fail closed" above means `−β·M`
+     alone is the wrong mechanism, not just an incomplete one.** A linear
+     per-tick penalty models running-past-budget as "more expensive,"
+     which is exactly what the divergence finding above rules out — GRPO
+     could rationally decide the extra reward from a better answer is
+     worth outrunning `−β·M`, and pay for it with actively corrupted
+     state, not just a worse cost/benefit ratio. Needs a genuine hard cap
+     at/near the trained horizon (e.g. `T ≤ 8-12`, matching where
+     `pseudo_inverse_ceiling`'s ceiling was actually measured), not a
+     steeper penalty coefficient — "expensive" and "broken" aren't the
+     same failure mode and shouldn't share one linear term.
+   - **Root cause, stated as a fix, 2026-09-04 — the repeated-marker
+     collapse (this section's own "fixed transformation applied T times"
+     finding above, and H25's real-non-rotating-spectrum proof of why)
+     is a property of the marker being CONSTANT across a phase's repeat
+     ticks, not of repetition itself.** If the embedding fed at each tick
+     within a phase varies tick-to-tick (state-dependent — a function of
+     the current state, not a fixed input — or explicitly parameterised
+     as `T` distinct learned vectors instead of one vector repeated `T`
+     times), the operator applied at each step is no longer the same
+     `A`, and the "must contract to a single trajectory" algebra above no
+     longer applies by construction. Not yet built or decided between the
+     two variants (state-dependent vs. `T` distinct vectors); explicit
+     diversity-pressure reward (trajectory diversity reward, icophy
+     2026-08-13, `hypotheses/H10.md` / this file's own copy above) is a
+     complementary patch on TOP of a constant marker, not a substitute
+     for removing the constant-marker constraint at its source — expect
+     it to fight the architecture and likely lose without this change,
+     not just be redundant with it.
    - **New validation step, ahead of building any of this (2026-08-23,
      arXiv 2602.08100, "Emergent Search and Backtracking in Latent Reasoning
      Models," Huginn-0125):** backtracking in looped latent reasoning showed
