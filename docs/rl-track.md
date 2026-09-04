@@ -148,15 +148,53 @@ not resolved — read it before assuming the two stages share a curriculum.
      the current state, not a fixed input — or explicitly parameterised
      as `T` distinct learned vectors instead of one vector repeated `T`
      times), the operator applied at each step is no longer the same
-     `A`, and the "must contract to a single trajectory" algebra above no
-     longer applies by construction. Not yet built or decided between the
-     two variants (state-dependent vs. `T` distinct vectors); explicit
-     diversity-pressure reward (trajectory diversity reward, icophy
-     2026-08-13, `hypotheses/H10.md` / this file's own copy above) is a
-     complementary patch on TOP of a constant marker, not a substitute
-     for removing the constant-marker constraint at its source — expect
-     it to fight the architecture and likely lose without this change,
-     not just be redundant with it.
+     `A`. Originally framed below as a neutral two-way fork, not yet
+     decided.
+   - **Sharpened, 2026-09-04, same day — not a neutral fork; the
+     divergence finding is itself an asymmetric argument for `T`
+     distinct vectors over state-dependent, not just a reason the
+     constant marker is broken.** The divergence result this whole
+     bullet leans on (`hypotheses/H25.md`'s "third follow-up",
+     2026-09-02: a T=8-trained rewind marker run past its horizon heads
+     toward its *own operator's* fixed point, not the target —
+     `‖x*-S0‖/‖S0‖≈252`, confirmed twice independently, closed-form
+     eigendecomposition and direct float64 iteration to t=1024,
+     identical numbers) is a proof about **iterating one fixed function
+     repeatedly** — constant-embedding WKV is literally `x_{t+1}=Ax_t+b`,
+     a linear recurrence, so Banach/power-iteration machinery applies
+     directly (real, non-rotating eigenspectrum,
+     `jacobian_spectral_sampling`). `T` distinct vectors (one unique
+     vector per tick, used once each within a phase) escapes this
+     *categorically*: no operator is applied more than once within a
+     phase, so there is no iterated map and nothing for it to have a
+     fixed point of — the argument doesn't apply because its
+     precondition (repeating one operator) is absent by construction,
+     not because it was checked and passed. **State-dependent embedding
+     does not have the same guarantee — correcting the "by construction"
+     claim above, which treated the two variants symmetrically.** A
+     state-dependent embedding still applies the *same function* `h`
+     (current state → next state, `h` itself incorporating the
+     state-dependent injected vector) at every tick — only `h`'s input
+     changes per tick, not `h` itself. Repeatedly iterating one function,
+     linear or not, is exactly the general setup a Banach-type
+     fixed-point argument covers: a contraction converges to a unique
+     attractor regardless of linearity. H25's specific proof technique
+     (closed-form eigenspectrum) doesn't transfer to a nonlinear
+     state-dependent `h`, but the qualitative risk it exists to catch —
+     one repeatedly-applied map, run past its trained horizon, landing
+     somewhere unrelated to the target — is not obviously avoided by
+     making the map state-dependent. It would need its own, currently
+     nonexistent, argument or empirical check before trusting it the
+     same way. **Net: build `T` distinct vectors first** — it inherits a
+     safety argument from an existing result; state-dependent doesn't
+     have one yet and isn't obviously exempt. Still not built; this
+     changes which variant to build first, not whether building is
+     warranted. Explicit diversity-pressure reward (trajectory diversity
+     reward, icophy 2026-08-13, `hypotheses/H10.md` / this file's own
+     copy above) remains a complementary patch on TOP of a constant
+     marker, not a substitute for removing the constant-marker
+     constraint at its source — expect it to fight the architecture and
+     likely lose without this change, not just be redundant with it.
    - **New validation step, ahead of building any of this (2026-08-23,
      arXiv 2602.08100, "Emergent Search and Backtracking in Latent Reasoning
      Models," Huginn-0125):** backtracking in looped latent reasoning showed
