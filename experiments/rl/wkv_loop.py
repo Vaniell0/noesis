@@ -23,6 +23,13 @@ Exit criterion (built-in, zero-parameter):
 
 Later this can be replaced by a learned MLP gate over WKV state (H16
 gate head) — the loop already exposes wkv_state at each step for that.
+
+`generate_rollout_latent_chain` (below, separate from the above) is a
+different design, not a variant of this one: model-decided marker
+presence instead of tau_commit/eps_plateau — the model itself, via its
+own logits, decides whether to keep generating privately or answer.
+See its own docstring for the reasoning and requirements
+(`loader.py::extend_vocab_for_marker` must run first).
 """
 from __future__ import annotations
 
@@ -254,6 +261,177 @@ def generate_rollout(
         answer_ids=answer_ids,
         answer_log_probs=answer_log_probs,
         M=M_used,
+        entropy_trajectory=entropy_traj,
+        wkv_stability=stability_traj,
+        exit_reason=exit_reason,
+        text=text,
+    )
+
+
+def _feed_token(loaded: LoadedModel, token_id: int, state):
+    """One ordinary token, either backend — same dispatch generate_rollout
+    inlines at each of its own three call sites; factored out here since
+    generate_rollout_latent_chain needs it twice (marker, chain tokens)
+    plus the answer-decode loop below, and duplicating the peft/blink
+    branch three times in one function invites the two copies drifting
+    apart silently."""
+    if loaded.backend == "peft":
+        step_input = torch.tensor([[token_id]], dtype=torch.long,
+                                  device=loaded.device)
+    else:
+        step_input = [token_id]
+    return loaded.forward_stateful(step_input, state)
+
+
+def generate_rollout_latent_chain(
+    loaded: LoadedModel,
+    prompt: str,
+    *,
+    marker_id: int,
+    M_max: int = 8,
+    chain_len: int = 16,
+    chain_temperature: float = 0.8,
+    max_answer_tokens: int = 32,
+    answer_temperature: float = 0.7,
+    eos_id: int = 0,
+) -> WKVLoopRollout:
+    """Marker-gated self-feed rollout: prefill -> [round loop] -> answer.
+
+    Flow (design settled 2026-09-04, after an earlier version of this
+    function's first draft imported machinery — Coconut-style continuous
+    feed, tight per-round step caps — that nobody had actually asked
+    for; see the two docstring notes below for what changed and why):
+
+        prompt -> prefill -> state
+                              |
+        [round loop, up to M_max rounds]:
+            argmax(logits) == marker_id ?
+                no  -> break, fall through to answer decode
+                yes -> feed marker_id (ordinary token, ordinary embedding)
+                       -> generate a "thought": up to chain_len ordinary
+                          SAMPLED tokens (temperature, not argmax), fed
+                          back one at a time exactly like any other
+                          generated text — no special mechanism, same
+                          code path prompt tokens go through
+                       -> back to the top of the loop
+                              |
+        decode answer (unchanged pattern: sampled, temperature,
+        stops on eos_id)
+
+    The model runs exactly as it always does; the only addition is that
+    sometimes, after the marker, its own output goes back to it as input
+    instead of out to the user — nothing about *how* it generates
+    changes, and nothing bypasses the ordinary embedding lookup or the
+    ordinary ffm/attention-mix weights at any step, marker or chain
+    token alike.
+
+    Structurally separate from `generate_rollout` above, not a
+    `feed_mode` variant of it — this changes the EXIT logic (marker
+    presence decided by the model's own logits, not
+    tau_commit/eps_plateau). Kept as its own function so the four
+    existing callers of `generate_rollout` (train_wkv_loop.py, eval.py,
+    sweep_alpha.py, this module's own smoke test) are untouched.
+
+    Why a real vocab token for the marker, not an injected embedding
+    (ThinkChain's approach, train_think_distill.py:84-121): the model
+    has to be able to natively CHOOSE to re-emit it through ordinary
+    sampling for the presence-check above to mean anything — the LM
+    head only assigns probability to real vocab ids. Same native
+    mechanism this module already relies on for `eos_id` in the answer
+    decode below. `marker_id` must come from
+    `loader.py::extend_vocab_for_marker(loaded)`, called once by the
+    caller before any rollout — this function does not validate that
+    `marker_id` is collision-free, it trusts the caller.
+
+    **Changed from this function's first draft, same day: dropped the
+    Coconut-style continuous ("expected embedding") sub-loop and the
+    K/M_max hard caps that were sized off `hypotheses/H25.md`'s toy
+    divergence proof.** That proof is about a LITERALLY CONSTANT input
+    fed to the recurrence every step (x_t identical, so r/k/v/w/a/g
+    become constant too, giving a literal fixed affine map
+    `x_{t+1}=Ax_t+b`) — a narrow precondition. Ordinary sampled
+    generation doesn't meet it: each chain token's embedding differs
+    (real sampling diversity), so there is no constant input for the
+    argument to apply to. What CAN still degenerate a sampled loop is
+    the separate, unrelated, well-documented failure of GREEDY/
+    deterministic decoding collapsing into repetition — which is why
+    chain tokens use `chain_temperature`-sampling here, not argmax, and
+    is a solved problem (temperature/nucleus sampling), not one that
+    needs a horizon-matched hard cap. `M_max`/`chain_len` remain as
+    ordinary loop-hygiene bounds (don't run forever on a pathological
+    input), not safety-critical values copied from an unrelated proof.
+
+    NOT YET RUN against a real checkpoint — new code, no GPU available
+    in this session to smoke-test, though (unlike the first draft) this
+    version no longer requires the peft backend specifically, since it
+    only feeds ordinary discrete tokens — `generate_rollout`'s
+    `_smoke()` pattern (CPU/blink) should exercise this directly once
+    `marker_id` exists on a real loaded checkpoint. Mirrors
+    `generate_rollout`'s helpers (`_last_vec`, `_entropy_of_logits`,
+    `_wkv_delta_norm`, `_sample_token`) so it reuses the same
+    conventions.
+    """
+    tok = loaded.tokenizer
+    prompt_ids = tok.encode(prompt)
+
+    with torch.no_grad():
+        state = loaded.new_state(batch=1)
+        if loaded.backend == "peft":
+            input_ids = torch.tensor([prompt_ids], dtype=torch.long,
+                                     device=loaded.device)
+        else:
+            input_ids = prompt_ids
+        logits, state = loaded.forward_stateful(input_ids, state)
+
+        entropy_traj: List[float] = []
+        stability_traj: List[float] = []
+        prev_wkv: Optional[torch.Tensor] = None
+        exit_reason = "M_max"
+        rounds_used = 0
+
+        for round_idx in range(M_max):
+            v = _last_vec(logits)
+            entropy_traj.append(_entropy_of_logits(v))
+            cur_wkv = loaded.wkv_stack(state)
+            stability_traj.append(_wkv_delta_norm(cur_wkv, prev_wkv))
+            prev_wkv = cur_wkv
+
+            if int(v.argmax().item()) != marker_id:
+                exit_reason = "no_marker"
+                break
+
+            logits, state = _feed_token(loaded, marker_id, state)
+
+            for _ in range(chain_len):
+                next_id = _sample_token(logits, chain_temperature)
+                logits, state = _feed_token(loaded, next_id, state)
+
+            rounds_used = round_idx + 1
+        else:
+            exit_reason = "M_max"
+
+        # --- decode answer (same pattern as generate_rollout) -------------
+        answer_ids: List[int] = []
+        answer_log_probs: List[float] = []
+        for _ in range(max_answer_tokens):
+            v = _last_vec(logits)
+            lp_vec = F.log_softmax(v.float(), dim=-1)
+            next_id = _sample_token(v, answer_temperature)
+            answer_ids.append(next_id)
+            answer_log_probs.append(float(lp_vec[next_id].item()))
+            if next_id == eos_id:
+                break
+            logits, state = _feed_token(loaded, next_id, state)
+
+    text_ids = answer_ids[:-1] if answer_ids and answer_ids[-1] == eos_id else answer_ids
+    text = tok.decode(text_ids)
+
+    return WKVLoopRollout(
+        prompt_ids=prompt_ids,
+        prompt_text=prompt,
+        answer_ids=answer_ids,
+        answer_log_probs=answer_log_probs,
+        M=rounds_used,
         entropy_trajectory=entropy_traj,
         wkv_stability=stability_traj,
         exit_reason=exit_reason,

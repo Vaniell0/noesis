@@ -527,6 +527,71 @@ class LoadedModel:
         return w
 
 
+def extend_vocab_for_marker(loaded: "LoadedModel", init_std: float = 0.02) -> int:
+    """Append one fresh, genuinely-reserved token id (embedding row + head
+    row) and return its id. peft backend only.
+
+    Why a real vocab id, not an injected non-vocab embedding (the
+    ThinkChain approach, `experiments/rl/train_think_distill.py:84-121`):
+    a non-vocab embedding can be FED to the model, but the model can
+    never natively CHOOSE to emit it again — the LM head only produces
+    probabilities over the real vocabulary. `wkv_loop.py::
+    generate_rollout_latent_chain`'s marker-presence check
+    (`argmax(logits) == marker_id`) needs the model to be ABLE to
+    select the marker through ordinary sampling, the same way it
+    already natively selects `eos_id` in the answer-decode loop — that
+    requires a real output-head row, not just an input-embedding row.
+
+    Both `model.emb.weight` [V,D] and `model.head.weight` [V,D] (+ bias
+    [V], if present) grow by exactly one row, initialized
+    `randn(...) * init_std` — same init convention as ThinkChain's own
+    marker vectors, so the new parameters start in the same regime as
+    every other trained-from-scratch marker in this project. The new
+    row is a real `nn.Parameter`, trainable by the ordinary optimizer —
+    no separate wiring needed.
+
+    Mutates `loaded.model` and `loaded.vocab_size` in place; returns the
+    new id (`old vocab_size`). NOT idempotent — calling this twice on
+    the same `loaded` silently appends a second row instead of raising;
+    callers are responsible for calling it at most once per loaded
+    model (e.g. once in a training-setup script, never inside a loop).
+    """
+    import torch.nn as nn
+
+    if loaded.backend != "peft":
+        raise RuntimeError(
+            "extend_vocab_for_marker requires peft backend (the marker "
+            "is only useful together with generate_rollout_latent_chain's "
+            "K latent sub-steps, which are peft/GPU-only)"
+        )
+    emb = loaded.model.emb
+    head = loaded.model.head
+    old_v, d = emb.weight.shape
+    if head.weight.shape[0] != old_v:
+        raise RuntimeError(
+            f"emb/head vocab size mismatch before extension "
+            f"({old_v} vs {head.weight.shape[0]}) — refusing to guess "
+            f"which is stale"
+        )
+
+    new_emb_row = torch.randn(1, d, device=emb.weight.device,
+                               dtype=emb.weight.dtype) * init_std
+    emb.weight = nn.Parameter(torch.cat([emb.weight.data, new_emb_row], dim=0))
+    emb.num_embeddings = old_v + 1
+
+    new_head_row = torch.randn(1, d, device=head.weight.device,
+                                dtype=head.weight.dtype) * init_std
+    head.weight = nn.Parameter(torch.cat([head.weight.data, new_head_row], dim=0))
+    head.out_features = old_v + 1
+    if head.bias is not None:
+        new_bias = torch.zeros(1, device=head.bias.device, dtype=head.bias.dtype)
+        head.bias = nn.Parameter(torch.cat([head.bias.data, new_bias], dim=0))
+
+    loaded.vocab_size = old_v + 1
+    loaded._emb_weight = None   # cached property — force re-read of the new tensor
+    return old_v
+
+
 @dataclass
 class _PeftState:
     shift: torch.Tensor
