@@ -136,8 +136,8 @@ touch pieces implicitly).*
 | H | Status | Prior | Posterior | File |
 |---|--------|-------|-----------|------|
 | H0 | CONTESTED | 0.6 | 0.333 | `H0.md` |
-| H1 | no structured record | - | - | `H1.md` |
-| H2 | no structured record | - | - | `H2.md` |
+| H1 | RETRACTED | - | - | `H1.md` |
+| H2 | WITHDRAWN | - | - | `H2.md` |
 | H3 | no structured record | - | - | `H3.md` |
 | H4a | no structured record | - | - | `H4a.md` |
 | H4b | no structured record | - | - | `H4b.md` |
