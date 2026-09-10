@@ -387,7 +387,17 @@ def _stub_deepspeed_if_missing() -> None:
     except ImportError:
         pass
     import types
+    import importlib.machinery
     stub = types.ModuleType("deepspeed")
+    # Found 2026-09-10: a manually-built ModuleType has __spec__=None, which
+    # sys.modules-aware code treats differently from "not installed" --
+    # transformers 5.17.0's is_deepspeed_available() calls
+    # importlib.util.find_spec("deepspeed"), and find_spec RAISES
+    # ValueError("deepspeed.__spec__ is None") for an already-imported
+    # module whose __spec__ is literally None, instead of returning None
+    # like it would for a genuinely absent module. A real (loader=None)
+    # ModuleSpec satisfies that check without deepspeed actually existing.
+    stub.__spec__ = importlib.machinery.ModuleSpec("deepspeed", loader=None)
     ckpt = types.ModuleType("deepspeed.checkpointing")
     def _no_ckpt(*args, **kwargs):
         raise RuntimeError(

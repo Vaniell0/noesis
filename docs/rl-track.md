@@ -1948,6 +1948,16 @@ settled.
     further, independent of the leak question this section was originally
     about.
 
+    **2026-09-10 follow-up, on a different box (Brenna, A30 24GB VRAM /
+    8GB RAM): this item's own fix (`--dynamic-phase-stop`) confirmed
+    again, and its 13GB RSS steady-state number turned out to be the
+    real constraint — Brenna's 8GB doesn't clear it, Adam-full-FT+offload
+    hangs in swap regardless of correct config. Muon, needing no
+    offloaded optimizer state, ran the full Phase 1.5 shape (M-mixing +
+    rewind) clean on the same box. Live gap-tracking matrix (config vs
+    outcome, updated in place as gaps close, not a history entry):
+    [`docs/phase15-gap-matrix.md`](phase15-gap-matrix.md).
+
 ---
 
 ## State metrics — what to measure before and during A1.5

@@ -1,0 +1,23 @@
+# G1i + old (Lightning/RWKV-PEFT) pipeline + Muon diagnostic, 2026-09-10.
+#
+# Purpose: test whether Muon's collapse (found today on the NEW pipeline,
+# train_think_distill.py) reproduces through a genuinely different codebase
+# path — this project's original Lightning trainer, with the REAL state_reg
+# (L_state) mechanism active via training/light_rwkv_state_reg_patch.py, not
+# a stripped-down diagnostic. Also checks whether fleeb83's N=3
+# attractor-collapse (docs/rl-track.md, "attractor-collapse past N=3 on his
+# G1h LoRA") shows up here, on a different checkpoint/lineage (G1i, not G1h).
+#
+# work_layers is deliberately FLAT (not work_layers_inside/outside) — the
+# two-tier scheme is unimplemented (see load_state_reg_config's ValueError
+# guard) and historically silently fell back to this exact default
+# (12, 16, 20) anyway (confirmed via step9/step9b's own train.log) — using
+# it explicitly here matches what step9's flagship result actually ran on,
+# not what its yaml merely intended.
+
+state_reg:
+  mode: trajectory_reg
+  alpha: 1.0e-3
+  lambda_delta: 1.0
+  lambda_curvature: 1.0
+  work_layers: [12, 16, 20]

@@ -282,6 +282,30 @@ def load_state_reg_config(pilot_yaml_path: str) -> StateRegConfig:
         kwargs["lambda_curvature"] = float(sr["lambda_curvature"])
     if "work_layers" in sr and sr["work_layers"]:
         kwargs["work_layers"] = tuple(int(x) for x in sr["work_layers"])
+    elif "work_layers_inside" in sr or "work_layers_outside" in sr:
+        # Found 2026-09-10 (canon-doc review, 2026-09-06/08): pilot_step9/
+        # step9b/step10.yaml use work_layers_inside/work_layers_outside, a
+        # two-tier scheme this function never learned to read — it silently
+        # fell through to StateRegConfig's bare DEFAULT_WORK_LAYERS (12,16,20)
+        # instead, confirmed via those runs' own train.log
+        # ("work_layers=(12, 16, 20)") for BOTH step9 and step9b. That means
+        # the flagship step9 e0 checkpoint (43.75%, best result on record)
+        # never got L_state on the documented 8-layer set at all — a silent
+        # no-op, not a crash. This function still doesn't know how the two
+        # tiers should combine (inside/outside_epsilon in
+        # light_rwkv_state_reg_patch.py blend an ALPHA scalar per chunk, but
+        # nothing there ever switches WHICH layer set is captured — likely
+        # this two-tier layer split was never actually wired up, only the
+        # epsilon-alpha blend was). Raising instead of guessing, so this
+        # can't repeat silently — resolve which layer set(s) to use as an
+        # explicit call before relying on this config again.
+        raise ValueError(
+            f"{pilot_yaml_path}: state_reg block has "
+            f"work_layers_inside/work_layers_outside, which this loader "
+            f"does not implement (see comment above) — add explicit "
+            f"'work_layers' to the yaml, or resolve the inside/outside "
+            f"design question first. Not silently defaulting."
+        )
     return StateRegConfig(**kwargs)
 
 

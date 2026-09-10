@@ -382,7 +382,20 @@ def main() -> int:
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--resume", type=Path, default=None,
                      help="Optional checkpoint dir to load on top of --model (LoRA or "
-                          "full-FT); also tried for model/think_marker.chain.pt.")
+                          "full-FT); also tried for model/think_marker.chain.pt. NOTE: "
+                          "under --lora-r 0 against a checkpoint that has lora_A/B keys "
+                          "(e.g. a LoRA-trained marker checkpoint applied to an "
+                          "already-merged base model), this raises on 'unexpected keys' "
+                          "-- use --warm-start-marker instead in that case (see "
+                          "train_think_distill.py::warm_start_marker, resolved "
+                          "2026-09-10 in eval_thinkchain.py).")
+    ap.add_argument("--warm-start-marker", type=Path, default=None,
+                     help="Load ONLY the trained ThinkChain marker (meta.pt's "
+                          "mlp_delta) from a checkpoint dir, without touching base "
+                          "model weights -- for a checkpoint whose LoRA delta is "
+                          "already folded into --model (the merge step) and whose "
+                          "lora_A/B keys would otherwise be 'unexpected' under "
+                          "--lora-r 0. Mutually exclusive with --resume.")
     ap.add_argument("--lora-r", type=int, default=0)
     ap.add_argument("--lora-alpha", type=int, default=0)
     ap.add_argument("--work-layers", default=",".join(str(x) for x in DEFAULT_WORK_LAYERS),
@@ -430,9 +443,13 @@ def main() -> int:
             print(f"[state_trajectory_probe] resumed base weights from {args.resume} at step {step}; "
                   f"WARNING: think_marker NOT loaded (checkpoint's mlp_delta doesn't match "
                   f"ThinkChain's shape — likely a pre-ThinkChain checkpoint): {e}")
+    elif args.warm_start_marker is not None:
+        from experiments.rl.train_think_distill import warm_start_marker
+        warm_start_marker(args.warm_start_marker, think_marker)
     else:
-        print("[state_trajectory_probe] no --resume — randomly-initialized ThinkChain "
-              "(mechanism-only comparison, no trained weights)")
+        print("[state_trajectory_probe] no --resume/--warm-start-marker — "
+              "randomly-initialized ThinkChain (mechanism-only comparison, "
+              "no trained weights)")
 
     capture_layers = (set(range(loaded.n_layer)) if args.capture_layers == "all"
                        else set(int(x) for x in args.capture_layers.split(",")))

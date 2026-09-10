@@ -205,6 +205,21 @@ being, "more phases = more of the same kind of gain" is the wrong
 mental model to redesign it around — expect thresholds tied to what a
 task actually needs written/held, not a dial.
 
+**Third self-feed mechanism, 2026-09-05 — do not conflate with either
+mechanism above.** `experiments/rl/wkv_loop.py::generate_rollout_latent_chain`
+(+ `experiments/rl/loader.py::extend_vocab_for_marker`), built 2026-09-04,
+is neither this section's paused GRPO-M nor ThinkChain-M. A single real
+vocab-id marker is fed once per round (not repeated), followed by
+ordinarily-sampled tokens each round — genuinely distinct content per
+tick, not a constant repeated, so it doesn't inherit this section's
+repeated-operator caveat either. Currently diagnostic-only: no training
+signal yet (marker embedding is cold-start/untrained, sampled-token
+rollout isn't differentiable — no GRPO-style recompute pass built).
+Doesn't belong in this file's registry/sweep design above — it has no
+effort/`M_max` notion at all yet, being untrained. Full design reasoning
+and status: `docs/rl-track.md`'s Track status section and memory
+`project_noesis_rl_track`.
+
 ## Sweep design
 
 **Axis: M ∈ {0, 1, 2, 4, 8, 16, 32}.** (0 = `M_max` set to 0, i.e. answer

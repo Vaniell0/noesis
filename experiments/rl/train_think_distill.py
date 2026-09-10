@@ -406,13 +406,30 @@ def distill_step(
     dynamic_phase_stop: bool = False,
     eps_plateau: float = 0.05,
     rewind_last_phase: bool = False,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int]:
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int, torch.Tensor]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
     norm_penalty, cos_sim, student_repr, teacher_repr, n_answer_tokens,
-    n_phase_tokens_used) — caller combines/weights/backwards (norm_penalty is unscaled here,
+    n_phase_tokens_used, rewind_loss) — caller combines/weights/backwards (norm_penalty is unscaled here,
     weighted by --norm-anchor-weight at the call site, same convention
     as state_loss/--l-state-weight; cos_sim is diagnostic-only, logged
     but never added to the loss).
+
+    state_loss vs. rewind_loss (split 2026-09-05): both are the same
+    clamped-L2 machinery below, just accumulated separately depending on
+    is_rewind_phase, so each gets its OWN weight at the call site
+    (--l-state-weight, --rewind-state-weight). Needed because the two
+    targets are philosophically different, not just numerically: explore
+    phases' target (teacher's own think chunk) is exactly the "L2 to
+    teacher's WKV trajectory" objective the user settled should be 0 (not
+    a needed training signal — see feedback_noesis_standing_positions
+    memory: "what matters is answer convergence, not matching the
+    teacher's WKV trajectory"), while the rewind phase's target
+    (state_after_phase1, see rewind_last_phase below) is a different
+    objective the standing position never addressed. Before this split
+    both shared one `state_loss` tensor and one `--l-state-weight`, so
+    setting that to 0 (as settled) silently zeroed rewind_last_phase's
+    only training signal too — found 2026-09-05 while preparing a real
+    run, not caught when rewind_last_phase was first added 2026-09-04.
 
     student_repr/teacher_repr (added 2026-08-21, for the CLIPO-style
     in-batch contrastive term — see _clipo_contrastive_loss): the final
@@ -481,20 +498,28 @@ def distill_step(
     "set from measurement, not derived" convention as
     state_loss_clamp's own 100.0 and training/state_reg.py's clamps.
 
-    rewind_last_phase (2026-09-04, Phase 1.5 M=2 role): when True AND
-    M_eff==2 specifically (not 3 — see below), phase 2's target is NOT
-    `teacher_states[1]` (the teacher's own second think-chunk) — it's
-    `state_origin`, the student's own state captured right after the
-    shared entry marker, BEFORE phase 1 explored anything. Phase 1 still
-    targets the teacher's real chunk as always; only the LAST phase, and
-    only at M=2, is asked to move state back toward where it started
-    instead of forward toward more teacher content — "explore, then
-    return" as a minimal, foldable-into-Phase-1.5 version of Phase 2's
-    still-unbuilt rewind marker, using the same clamped-L2 state_loss
-    machinery already validated for phase 1 rather than a new loss
-    family (`L_tPC`, `docs/rl-track.md` §State metrics) that isn't
-    implemented anywhere yet — deliberately the smaller, already-proven
-    mechanism, not the more principled one, given limited time before a
+    rewind_last_phase (2026-09-04, Phase 1.5 M=2 role; target corrected
+    2026-09-09): when True AND M_eff==2 specifically (not 3 — see below),
+    phase 2's target is NOT `teacher_states[1]` (the teacher's own second
+    think-chunk) — it's `state_after_phase1`, the student's own state
+    captured at the END of phase 1 (after phase 1 explored, BEFORE phase
+    2 takes its own step). Originally this targeted `state_origin`
+    (before phase 1 explored AT ALL, i.e. before the shared entry
+    marker's work too) — that taught "undo phase 1's exploration as
+    well," a dead-end, non-composable skill, not "stop advancing." Fixed
+    to target the post-phase-1 state instead: "don't take the second
+    step," which is the actual, reusable meaning of M=2 acting like M=1.
+    Free to compute — the state at the end of phase 1's loop iteration
+    was already there, just wasn't being saved. Phase 1 still targets the
+    teacher's real chunk as always; only the LAST phase, and only at
+    M=2, is asked to hold state where phase 1 left it instead of moving
+    forward toward more teacher content — "explore, then stop" as a
+    minimal, foldable-into-Phase-1.5 version of Phase 2's still-unbuilt
+    rewind marker, using the same clamped-L2 state_loss machinery already
+    validated for phase 1 rather than a new loss family (`L_tPC`,
+    `docs/rl-track.md` §State metrics) that isn't implemented anywhere
+    yet — deliberately the smaller, already-proven mechanism, not the
+    more principled one, given limited time before a
     real GPU run.
 
     Why M=2 only, not "M>=2" or M=3 — corrected 2026-09-04, same day
@@ -591,14 +616,18 @@ def distill_step(
     if think_marker is not None:
         marker = think_marker.step(0).to(dtype=loaded.embedding_weight.dtype).view(1, 1, -1)
         logits, state_s = loaded.forward_stateful_embeds(marker, state_s)
-    # state_origin: student's own state right after entering think-mode,
-    # before any phase has explored anything — the M=2 rewind target
-    # (see rewind_last_phase in the docstring above). Captured
-    # unconditionally (cheap — a detached clone of already-computed
-    # tensors) rather than gated on rewind_last_phase, simpler than
-    # threading the flag through this one extra branch.
-    state_origin: Dict[int, torch.Tensor] = {L: state_s.wkv[L].detach().clone() for L in layers}
+    # state_after_phase1: student's own state at the END of phase 1 (not
+    # before it) — the M=2 rewind target (see rewind_last_phase in the
+    # docstring above), captured once phase index 0's loop below
+    # finishes. Fixed 2026-09-09: this used to be captured HERE, before
+    # phase 1 ran at all (`state_origin`), which made the rewind target
+    # "undo phase 1 too," not "stop after phase 1." None is a valid
+    # placeholder since it's overwritten before first read (is_rewind_phase
+    # is never true at i==0).
+    state_after_phase1: Optional[Dict[int, torch.Tensor]] = None
     state_loss = torch.zeros((), device=device, dtype=torch.float32)
+    rewind_loss = torch.zeros((), device=device, dtype=torch.float32)
+    n_explore_phases = 0
     norm_penalty = torch.zeros((), device=device, dtype=torch.float32)
     cos_sim_sum = torch.zeros((), device=device, dtype=torch.float32)
     last_student_parts: List[torch.Tensor] = []
@@ -651,7 +680,14 @@ def distill_step(
                     prev_phase_wkv = cur_phase_wkv
         student_wkv = state_s.wkv
         is_rewind_phase = rewind_last_phase and M_eff == 2 and i == M_eff - 1
-        teacher_wkv = state_origin if is_rewind_phase else teacher_states[i]
+        teacher_wkv = state_after_phase1 if is_rewind_phase else teacher_states[i]
+        if not is_rewind_phase:
+            n_explore_phases += 1
+        if rewind_last_phase and M_eff == 2 and i == 0:
+            # Snapshot phase 1's end state now, before phase 2's loop
+            # (further down / next iteration) moves state_s.wkv again —
+            # this IS the rewind target read above on the next iteration.
+            state_after_phase1 = {L: state_s.wkv[L].detach().clone() for L in layers}
         for L in layers:
             s_flat = student_wkv[L].float().flatten()
             t_flat = teacher_wkv[L].float().detach().flatten()
@@ -678,7 +714,10 @@ def distill_step(
             # diverge *further* next step. Cap set empirically from the
             # pre-blowup stable range (weighted-sum ~25-40).
             dist = torch.linalg.vector_norm(d.flatten()).clamp(max=state_loss_clamp)
-            state_loss = state_loss + layer_weights[L] * dist
+            if is_rewind_phase:
+                rewind_loss = rewind_loss + layer_weights[L] * dist
+            else:
+                state_loss = state_loss + layer_weights[L] * dist
             # Soft anchor on the student's OWN absolute norm — see
             # docstring. Unlike `dist` above (distance to teacher, hard
             # clamped), this is unclamped-below (relu(...) is 0 while
@@ -687,7 +726,14 @@ def distill_step(
             # gradient while the student is within a normal range.
             student_norm = torch.linalg.vector_norm(s_flat)
             norm_penalty = norm_penalty + layer_weights[L] * F.relu(student_norm - norm_anchor_threshold) ** 2
-    state_loss = state_loss / M_eff  # keep scale comparable across M
+    # Divide by each accumulator's OWN phase count, not M_eff uniformly —
+    # when rewind_last_phase pulls the last phase out of state_loss (see
+    # is_rewind_phase above), M_eff no longer equals the explore-phase
+    # count. For every non-rewind config n_explore_phases == M_eff exactly
+    # (is_rewind_phase is never True), so this is a no-op there — same
+    # numbers as before this split. rewind_loss is always exactly one
+    # phase's sum when used (M=2, last phase only), so no division needed.
+    state_loss = state_loss / n_explore_phases if n_explore_phases > 0 else state_loss
     norm_penalty = norm_penalty / M_eff
     cos_sim_mean = cos_sim_sum / M_eff  # diagnostic only, not in the loss
     student_repr = torch.cat(last_student_parts)
@@ -708,7 +754,7 @@ def distill_step(
     answer_ce = -token_lp.mean()
 
     return (answer_ce, state_loss, norm_penalty, cos_sim_mean, student_repr, teacher_repr,
-            len(answer_ids), n_phase_tokens_used)
+            len(answer_ids), n_phase_tokens_used, rewind_loss)
 
 
 def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
@@ -721,12 +767,14 @@ def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
     be inline in main()'s training loop.
 
     Returns (ce_list, state_list, norm_penalty_list, cos_sim_list,
-    student_repr_list, teacher_repr_list, n_tok_sum, n_phase_tok_sum), or
-    None if every example in this micro-batch OOM'd (nothing usable at
-    all — the caller skips this micro-batch's contribution entirely,
-    same as the old single-batch code's "entire batch OOM'd" case)."""
+    student_repr_list, teacher_repr_list, n_tok_sum, n_phase_tok_sum,
+    rewind_list), or None if every example in this micro-batch OOM'd
+    (nothing usable at all — the caller skips this micro-batch's
+    contribution entirely, same as the old single-batch code's "entire
+    batch OOM'd" case)."""
     ce_list, state_list, norm_penalty_list, cos_sim_list = [], [], [], []
     student_repr_list, teacher_repr_list = [], []
+    rewind_list = []
     n_tok_sum = n_phase_tok_sum = n_skipped = 0
     for _ in range(args.batch):
         # Phase 1.5 (2026-08-23): per-example M, sampled independently —
@@ -740,12 +788,12 @@ def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
             if M_i == 0:
                 ex = relax_batcher.next()
                 ce, n_tok = relax_step(loaded, ex)
-                state_loss = norm_penalty = cos_sim = None
+                state_loss = norm_penalty = cos_sim = rewind_loss = None
                 student_repr = teacher_repr = None
                 n_phase_tok = 0
             else:
                 ex = batcher.next()
-                ce, state_loss, norm_penalty, cos_sim, student_repr, teacher_repr, n_tok, n_phase_tok = distill_step(
+                ce, state_loss, norm_penalty, cos_sim, student_repr, teacher_repr, n_tok, n_phase_tok, rewind_loss = distill_step(
                     loaded, ex, layers, layer_weights,
                     state_loss_clamp=args.state_loss_clamp,
                     M=M_i,
@@ -789,13 +837,15 @@ def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
             cos_sim_list.append(cos_sim)
             student_repr_list.append(student_repr)
             teacher_repr_list.append(teacher_repr)
+            rewind_list.append(rewind_loss)
         n_tok_sum += n_tok
         n_phase_tok_sum += n_phase_tok
 
     if not ce_list:
         return None
     return (ce_list, state_list, norm_penalty_list, cos_sim_list,
-            student_repr_list, teacher_repr_list, n_tok_sum, n_phase_tok_sum)
+            student_repr_list, teacher_repr_list, n_tok_sum, n_phase_tok_sum,
+            rewind_list)
 
 
 # --------------------------------------------------------------------------- #
@@ -958,10 +1008,29 @@ def main() -> int:
                           "(before phase 1 explored), not the teacher's second "
                           "think-chunk — 'explore, then return', a minimal "
                           "version of Phase 2's still-unbuilt rewind marker. "
-                          "M=3 deliberately not given this or any other role yet "
-                          "— see distill_step's rewind_last_phase docstring for "
-                          "why (two independent real reports of instability "
-                          "specifically at 3 repeated/looped units).")
+                          "Needs --rewind-state-weight > 0 to actually train "
+                          "anything (this flag alone only selects the target, "
+                          "see distill_step docstring's 2026-09-05 note). M=3 "
+                          "deliberately not given this or any other role yet — "
+                          "see distill_step's rewind_last_phase docstring for "
+                          "why (NOT two confirmed instabilities — one citation "
+                          "was about a different mechanism, the other is real "
+                          "but confounded with LoRA capacity; the default just "
+                          "fails toward less compute absent positive safety "
+                          "evidence for M=3).")
+    ap.add_argument("--rewind-state-weight", type=float, default=0.0,
+                     help="Weight on rewind_loss (--rewind-at-m2's phase-2 "
+                          "target only) — SEPARATE from --l-state-weight, "
+                          "which now covers explore phases only (split "
+                          "2026-09-05). 0 (default, same convention as "
+                          "--clipo-weight/--norm-anchor-weight) = --rewind-at-m2 "
+                          "runs but that phase gets no state-matching signal at "
+                          "all, only whatever answer_ce provides — set nonzero "
+                          "to actually train the rewind target. No tuned value "
+                          "exists yet; 0.01 is the only empirically-run "
+                          "magnitude for this clamped-L2 machinery (step500's "
+                          "explore-phase l_state_weight), offered as a starting "
+                          "point, not a verified-good number for this new use.")
     ap.add_argument("--norm-anchor-weight", type=float, default=0.0,
                      help="Weight on a soft penalty for the student's own WKV "
                           "state norm exceeding --norm-anchor-threshold, added "
@@ -1191,6 +1260,7 @@ def main() -> int:
         # default, off in every run so far), but real if ever combined with
         # --grad-accum-steps > 1 and --clipo-weight > 0 together.
         agg_ce_list, agg_state_list, agg_norm_penalty_list, agg_cos_sim_list = [], [], [], []
+        agg_rewind_list = []
         n_tok_sum = n_phase_tok_sum = 0
         m_counts = {m: 0 for m in range(args.M + 1)}
         grad_norm = None
@@ -1203,21 +1273,25 @@ def main() -> int:
             if micro_result is None:
                 continue  # this whole micro-batch OOM'd on every example — skip it, not fatal
             (ce_list, state_list, norm_penalty_list, cos_sim_list,
-             student_repr_list, teacher_repr_list, n_tok, n_phase_tok) = micro_result
+             student_repr_list, teacher_repr_list, n_tok, n_phase_tok,
+             rewind_list) = micro_result
             agg_ce_list.extend(ce_list)
             agg_state_list.extend(state_list)
             agg_norm_penalty_list.extend(norm_penalty_list)
             agg_cos_sim_list.extend(cos_sim_list)
+            agg_rewind_list.extend(rewind_list)
             n_tok_sum += n_tok
             n_phase_tok_sum += n_phase_tok
 
             micro_ce_t = torch.stack(ce_list).mean()
             micro_state_t = torch.stack(state_list).mean() if state_list else torch.zeros((), device=loaded.device)
             micro_norm_penalty_t = torch.stack(norm_penalty_list).mean() if norm_penalty_list else torch.zeros((), device=loaded.device)
+            micro_rewind_t = torch.stack(rewind_list).mean() if rewind_list else torch.zeros((), device=loaded.device)
             micro_clipo_loss = torch.zeros((), device=loaded.device)
             if args.clipo_weight > 0 and len(student_repr_list) >= 2:
                 micro_clipo_loss = _clipo_contrastive_loss(student_repr_list, teacher_repr_list, tau=args.clipo_tau)
             micro_total = (micro_ce_t + args.l_state_weight * micro_state_t
+                           + args.rewind_state_weight * micro_rewind_t
                            + args.norm_anchor_weight * micro_norm_penalty_t
                            + args.clipo_weight * micro_clipo_loss) / args.grad_accum_steps
             try:
@@ -1244,6 +1318,7 @@ def main() -> int:
 
         ce_t = torch.stack(agg_ce_list).mean()
         state_t = torch.stack(agg_state_list).mean() if agg_state_list else torch.zeros((), device=loaded.device)
+        rewind_t = torch.stack(agg_rewind_list).mean() if agg_rewind_list else torch.zeros((), device=loaded.device)
         norm_penalty_t = torch.stack(agg_norm_penalty_list).mean() if agg_norm_penalty_list else torch.zeros((), device=loaded.device)
         cos_sim_t = torch.stack(agg_cos_sim_list).mean() if agg_cos_sim_list else torch.zeros((), device=loaded.device)
         clipo_loss = torch.zeros((), device=loaded.device)  # diagnostic-only aggregate below is per-micro-batch, not recomputed here
@@ -1274,21 +1349,25 @@ def main() -> int:
 
         mean_ce = float(ce_t.item())
         mean_state = float(state_t.item())
+        mean_rewind = float(rewind_t.item())
         mean_norm_penalty = float(norm_penalty_t.item())
         mean_cos_sim = float(cos_sim_t.item())
         mean_clipo_loss = float(clipo_loss.item())
         grad_norm_str = f" grad_norm={float(grad_norm):.4f}" if grad_norm is not None else ""
         m_counts_str = f" m_counts={m_counts}" if m_weights is not None else ""
+        rewind_str = f" rewind_loss={mean_rewind:.4f}" if args.rewind_last_phase else ""
         oom_str = " (partial: a micro-batch OOM'd)" if step_oom else ""
         rss_mb = _rss_mb()
         rss_str = f" rss_mb={rss_mb:.1f}" if rss_mb is not None else ""
-        print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f} "
+        print(f"[distill] step {step}: answer_ce={mean_ce:.4f} state_loss={mean_state:.4f}"
+              f"{rewind_str} "
               f"norm_penalty={mean_norm_penalty:.4f} cos_sim={mean_cos_sim:.4f} "
               f"clipo_loss={mean_clipo_loss:.4f} n_answer_tok={n_tok_sum} "
               f"n_phase_tok={n_phase_tok_sum}{grad_norm_str}{m_counts_str}{oom_str}{rss_str}")
         with open(log_path, "a") as f:
             f.write(json.dumps({"step": step, "answer_ce": mean_ce,
                                  "state_loss": mean_state,
+                                 "rewind_loss": mean_rewind if args.rewind_last_phase else None,
                                  "norm_penalty": mean_norm_penalty,
                                  "cos_sim": mean_cos_sim,
                                  "clipo_loss": mean_clipo_loss,
@@ -1299,6 +1378,7 @@ def main() -> int:
 
         if kalman_watch is not None:
             field_values = {"answer_ce": mean_ce, "state_loss": mean_state,
+                             "rewind_loss": mean_rewind,
                              "norm_penalty": mean_norm_penalty, "cos_sim": mean_cos_sim}
             for t in kalman_watch["tracks"]:
                 if t.field in field_values:

@@ -1,0 +1,37 @@
+# Minimal GPU dependency set for experiments/rl/* (train_think_distill.py,
+# wkv_loop.py, loader.py peft backend) — NOT training/rwkv-peft's full
+# requirements.txt, which also serves that repo's own vendored Lightning
+# CLI trainer (train.py) that this project's own code doesn't call into.
+#
+# Verified 2026-09-05 by grepping actual imports across experiments/rl/*.py
+# and the specific rwkvt/rwkv7/{model,att,ffn,block}.py + operator/rwkvop.py
+# modules loader.py's peft branch pulls in — not copied from
+# training/rwkv-peft/requirements.txt or pyproject.toml on faith.
+#
+# Deliberately OMITTED (confirmed unused on this code path):
+#   deepspeed      - imported at module scope by rwkvt/rwkv7/model.py, but
+#                    loader.py::_stub_deepspeed_if_missing() fakes the module
+#                    before that import runs; nothing here calls into it for
+#                    real. Also the slowest/most fragile step in the older
+#                    training/bootstrap_pilot_gpu.sh (3-8 min compile).
+#   bitsandbytes   - not imported anywhere in experiments/rl/*; Int8AdamW/
+#                    MuonHybrid (loader.py) are this project's own
+#                    hand-rolled optimizers, not bitsandbytes-based.
+#   lightning, wandb, datasets, jsonlines, pandas, pyarrow, transformer-lens
+#                  - dependencies of rwkv-peft's OWN train.py CLI / separate
+#                    R-lens probe work, not of anything train_think_distill.py
+#                    or wkv_loop.py actually imports.
+#
+# torch is intentionally NOT pinned here -- install it separately, matched to
+# the VM's actual GPU/CUDA driver (see bootstrap_gpu_a30.sh). Installing it
+# from this file via plain PyPI risks silently landing a CPU-only wheel.
+
+einops
+peft>=0.17.1
+rwkv>=0.8.30
+rwkv-fla>=0.7.202508221413
+ninja  # rwkv package JIT-compiles a CUDA matmul kernel on first `backend="blink"`
+       # load (rwkv/model.py's `load(...)`) -- fails with "Ninja is required
+       # to load C++ extensions" without it. Found 2026-09-10, only surfaces
+       # the first time the blink path is actually exercised (peft-only runs
+       # never hit this import).
