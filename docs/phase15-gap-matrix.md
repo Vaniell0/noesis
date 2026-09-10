@@ -345,6 +345,38 @@ has never been evaluated for real generation quality:
   checkpoint was saved (`--epoch_save 999`, set to dodge the RAM-crisis-
   on-save risk seen earlier), so there is nothing to eval yet.**
 
+**SVD delta analysis result (2026-09-10, ran locally, no VM):** `step500 -
+raw_base` (`lora_rank_analysis.py`, 482 matrices). `att_proj` (n=128):
+mean top-32 energy 0.904, mean effective_rank 899.6/2560 — **consistent
+with step500's own known construction** (Phase 1 was itself trained as
+LoRA r=32 on attention projections), so this is confirmatory, not new
+evidence about Adam's bias — of course a rank-32-LoRA-built delta is
+~90% captured by its top 32 singular values. **`ffn` (n=64) is the
+actually unexpected part:** mean top-32 energy only 0.827, mean
+effective_rank 1642.8/2560, and 190 of 482 matrices show
+effective_rank > 32 — several `ffn.value.weight` matrices at
+near-FULL rank (2552-2560/2560). If Phase 1's LoRA never targeted FFN
+matrices at all (attention-only `target_modules`, matching step9's own
+`[receptance, key, value, output]` convention), FFN deltas should be
+exactly zero, not near-full-rank with real Frobenius mass
+(0.09-0.15/layer). **Resolved same session: this is bf16 round-trip noise, not a training
+effect.** `target_modules=["receptance","key","value","output"]`
+(`experiments/rl/train_think_distill.py`/`loader.py`, matching step9's
+own convention) confirms Phase 1's LoRA never touched FFN at all —
+direct check of `blocks.0.ffn.value.weight` confirms it: not
+byte-identical between base and step500, but max abs diff ≈ 1.5e-4,
+consistent with bf16 merge/save/load rounding, not a real weight
+change. Random noise has full rank by construction (spread evenly
+across all singular directions), which is exactly the "near-2560
+effective rank" pattern seen — the FFN result is an artifact, not
+evidence. Net: this SVD analysis doesn't actually test the reframed
+hypothesis (it just confirms step500's own known LoRA construction on
+attention weights, and shows FFN is untouched modulo rounding noise).
+**Still need a real Adam-full-FT checkpoint to test whether Adam's
+OWN bias (not LoRA's structural constraint) concentrates capability —
+none exists yet, full-FT Adam has never survived to produce one on
+this hardware.**
+
 **Cheap, VM-free next step (queued, not yet run):** `experiments/A0_state_probe/lora_rank_analysis.py` already has a no-delta SVD mode (used for "Base G1i weight-SVD" — near-full-rank, `att_proj≈2391/2560`) and a delta mode (`base` vs `trained`). Running it with `--base` = raw G1i (`rwkv7-g1i-2.9b-20260805-ctx16384.pth`) and `--trained` = `step500-merged.pth` directly tests the reframed hypothesis above: is step500's own Adam delta low-rank/concentrated (matching the toy result's Adam behavior), unlike G1i's own near-full-rank base weights? Pure local SVD, no GPU/VM needed, reuses existing code.
 
 **Next session, top priority: rerun that exact config with a real, RAM-safe
