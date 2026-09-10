@@ -390,12 +390,19 @@ See `docs/rl-track.md` for the full design.
     not a compute campaign, and is the minimum-cost path to
     converting the SaaS §2 "correct answers without prior
     knowledge" narrative from wager to measurement.
-  - **Full-scale A1 / H12b campaign.** Full Variant C corpus,
-    multiple epochs, ablations, plus H12b LoRA + H12b.i utilisation
-    regularizer (K=4 WKV slots with slot-usage entropy + cross-slot
-    dissimilarity losses, <24 GPU-hours at 0.4B) if the H12a v2
-    verdict lands as width-bottleneck. Cloud VM (RTX 4090) is the training platform; local machine is CPU-only.
-    Only worth spending once the pilot confirms the direction holds.
+  - **Full-scale A1 campaign.** Full Variant C corpus, multiple
+    epochs, ablations. Cloud VM (RTX 4090) is the training platform;
+    local machine is CPU-only. Only worth spending once the pilot
+    confirms the direction holds.
+    **H12b dropped from this campaign, 2026-08-20 (see hypotheses/H12.md)
+    — not conditional on the H12a v2 width-bottleneck verdict as this
+    bullet used to say; user's decision was architectural (WKV judged
+    sufficient with M, multi-slot state judged heavy engineering with
+    no guaranteed payoff), not data-dependent. The K=4 slot-entropy
+    regularizer described here was never built. Follow-up work on
+    "remember more if needed" moved to H17 instead.** Stale line found
+    and corrected 2026-09-10 while resolving a book-flagged discrepancy
+    between this file and H12.md's status.
   Prerequisite for either: an eval-suite that gives the H7-relevant
   metrics (mixed reasoning + current-facts tasks; retrieval-parity
   contrast) prepared and CPU-baselined on the un-tuned G1d-0.4B

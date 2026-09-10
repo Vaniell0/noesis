@@ -1,5 +1,7 @@
 # noesis
 
+[![Support on Boosty](https://img.shields.io/badge/Boosty-support-orange)](https://boosty.to/vaniello/single-payment/donation/827359/target?share=target_link)
+
 *Cognitive runtime for the machine.*
 
 The machine already sees everything on it — every keystroke, focus
@@ -115,8 +117,10 @@ Not running yet (stubs):
 - Tool-call dispatcher (design in `docs/dsl.md`).
 - Extension surface (Phase-2 docs, `docs/extensions.md`).
 - Lens persistence (pending state save/load API in `noesis-rwkv-sys`).
-- Multi-slot LoRA H12b architectural treatment (behavioral baseline run 2026-08-07;
-  architectural intervention with H12b.i regularizer is Phase 2).
+- ~~Multi-slot LoRA H12b architectural treatment~~ — dropped 2026-08-20,
+  not Phase 2 work (see hypotheses/H12.md): WKV judged sufficient with M,
+  follow-up moved to H17. Line kept struck-through rather than deleted;
+  found stale 2026-09-10 via a book-flagged discrepancy against H12.md.
 
 ## Hard constraints
 

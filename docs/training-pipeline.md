@@ -176,7 +176,7 @@ so they get split into chunks where L_state = 0. Extraction collapsed from
 | Keep RFC fraction dominant (≥25%) | RFC = best signal for multi-step state-carry |
 | Harder RFCs (CRC, bitfield exercises) | bit_decoding 0/16 is the remaining wall |
 | Reduce hhrlhf or normalize format | Suspected noise source in step 9b mix |
-| Wire H12b.i hookup in `light_rwkv.py` | `compute_h12bi_aux()` implemented but not connected |
+| ~~Wire H12b.i hookup in `light_rwkv.py`~~ | Dropped, not a live change — H12b/H12b.i deprioritized 2026-08-20 (hypotheses/H12.md); `compute_h12bi_aux()` stays implemented-but-unwired, not a gap to close |
 
 Config base: **already built, corrected 2026-08-23** —
 `training/config/pilot_step10.yaml` (2026-08-14) implements the row above
