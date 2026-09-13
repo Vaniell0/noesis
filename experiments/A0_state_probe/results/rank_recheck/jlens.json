@@ -1,0 +1,3394 @@
+{
+  "_meta": {
+    "experiment": "jlens",
+    "hypothesis": [
+      "H8"
+    ],
+    "date": "2026-09-13",
+    "status": "done",
+    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/A0_state_probe/jlens_probe.py"
+  },
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "n_tokens": 32,
+  "work_layers": [
+    0,
+    4,
+    8,
+    12,
+    16,
+    20,
+    24,
+    28
+  ],
+  "layer_stats": {
+    "0": {
+      "mean_sigma1": 0.2770122300367802,
+      "mean_stable_rank": 1.2914905928856322,
+      "mean_frob": 0.28420509115094317,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 0.06415465474128723,
+          "frob": 0.0729343593120575,
+          "stable_rank": 1.2924328863800703,
+          "participation_ratio": 4.059152869177021,
+          "effective_rank_entropy": 6.824106693267822,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.31894251704216003,
+          "frob": 0.33841827511787415,
+          "stable_rank": 1.1258558287776226,
+          "participation_ratio": 2.7485122600375913,
+          "effective_rank_entropy": 5.046104431152344,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.0364316701889038,
+          "frob": 1.0391689538955688,
+          "stable_rank": 1.005289105799266,
+          "participation_ratio": 1.3609797352515483,
+          "effective_rank_entropy": 2.107571840286255,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 2.0931246280670166,
+          "frob": 2.098937749862671,
+          "stable_rank": 1.0055622048985513,
+          "participation_ratio": 1.2717264917572486,
+          "effective_rank_entropy": 1.781309723854065,
+          "numerical_rank_1pct": 3,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.3634515702724457,
+          "frob": 0.3643287122249603,
+          "stable_rank": 1.004832557928457,
+          "participation_ratio": 1.2998230342583055,
+          "effective_rank_entropy": 1.9083044528961182,
+          "numerical_rank_1pct": 3,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.641957402229309,
+          "frob": 1.6592679023742676,
+          "stable_rank": 1.0211963464589593,
+          "participation_ratio": 1.4712151661227777,
+          "effective_rank_entropy": 2.151167631149292,
+          "numerical_rank_1pct": 3,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.17836566269397736,
+          "frob": 0.18492662906646729,
+          "stable_rank": 1.0749206422016078,
+          "participation_ratio": 2.4682732266493264,
+          "effective_rank_entropy": 4.665974140167236,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.2286057472229004,
+          "frob": 1.2313793897628784,
+          "stable_rank": 1.0045202024625186,
+          "participation_ratio": 1.2696792190969717,
+          "effective_rank_entropy": 1.8167195320129395,
+          "numerical_rank_1pct": 3,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 2.2035722732543945,
+          "frob": 2.221619129180908,
+          "stable_rank": 1.0164467091723899,
+          "participation_ratio": 1.4535338684208743,
+          "effective_rank_entropy": 2.1691489219665527,
+          "numerical_rank_1pct": 4,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.20617516338825226,
+          "frob": 0.20834799110889435,
+          "stable_rank": 1.021188557556755,
+          "participation_ratio": 1.8561793026607878,
+          "effective_rank_entropy": 3.5616378784179688,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.0215071402490139,
+          "frob": 0.02785084769129753,
+          "stable_rank": 1.6769167442246977,
+          "participation_ratio": 6.3910938849271535,
+          "effective_rank_entropy": 11.042901039123535,
+          "numerical_rank_1pct": 24,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.43681997060775757,
+          "frob": 0.5191206336021423,
+          "stable_rank": 1.4123151304827406,
+          "participation_ratio": 3.309489994201758,
+          "effective_rank_entropy": 5.305546283721924,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.024074412882328033,
+          "frob": 0.026124974712729454,
+          "stable_rank": 1.1776069163755802,
+          "participation_ratio": 4.8098655712807314,
+          "effective_rank_entropy": 9.88026237487793,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.14450715482234955,
+          "frob": 0.16273431479930878,
+          "stable_rank": 1.2681761417529438,
+          "participation_ratio": 5.725893956320164,
+          "effective_rank_entropy": 10.730554580688477,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.25580403208732605,
+          "frob": 0.2632128894329071,
+          "stable_rank": 1.0587648968987453,
+          "participation_ratio": 2.614042433387558,
+          "effective_rank_entropy": 5.528172969818115,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.10243579745292664,
+          "frob": 0.10590242594480515,
+          "stable_rank": 1.06882920485441,
+          "participation_ratio": 2.294780199185609,
+          "effective_rank_entropy": 4.260640621185303,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.02888932265341282,
+          "frob": 0.04233163967728615,
+          "stable_rank": 2.147115772913144,
+          "participation_ratio": 13.13357308742772,
+          "effective_rank_entropy": 17.799442291259766,
+          "numerical_rank_1pct": 25,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.053325384855270386,
+          "frob": 0.0643046572804451,
+          "stable_rank": 1.4541756185681445,
+          "participation_ratio": 4.761618387235484,
+          "effective_rank_entropy": 8.728315353393555,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.016994159668684006,
+          "frob": 0.023687923327088356,
+          "stable_rank": 1.942918515993746,
+          "participation_ratio": 8.571981458230141,
+          "effective_rank_entropy": 13.469656944274902,
+          "numerical_rank_1pct": 25,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.014091935008764267,
+          "frob": 0.017550433054566383,
+          "stable_rank": 1.5510807531244981,
+          "participation_ratio": 7.92388552154715,
+          "effective_rank_entropy": 13.456170082092285,
+          "numerical_rank_1pct": 26,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.01037310715764761,
+          "frob": 0.015272918157279491,
+          "stable_rank": 2.167835462193638,
+          "participation_ratio": 6.567771265517969,
+          "effective_rank_entropy": 9.412096977233887,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.0054359836503863335,
+          "frob": 0.006992067210376263,
+          "stable_rank": 1.6544547369258766,
+          "participation_ratio": 8.850649593868214,
+          "effective_rank_entropy": 13.835150718688965,
+          "numerical_rank_1pct": 25,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.050360288470983505,
+          "frob": 0.055133748799562454,
+          "stable_rank": 1.1985568212165798,
+          "participation_ratio": 4.970654199966265,
+          "effective_rank_entropy": 9.680702209472656,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.2190541923046112,
+          "frob": 0.22717176377773285,
+          "stable_rank": 1.0754879812524758,
+          "participation_ratio": 1.7720602738819766,
+          "effective_rank_entropy": 2.6474804878234863,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.004224293399602175,
+          "frob": 0.004854483995586634,
+          "stable_rank": 1.3206203148639617,
+          "participation_ratio": 5.015969837479405,
+          "effective_rank_entropy": 8.32125473022461,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.010975050739943981,
+          "frob": 0.013115308247506618,
+          "stable_rank": 1.4280516893504718,
+          "participation_ratio": 5.524182754257533,
+          "effective_rank_entropy": 9.476881980895996,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.08075640350580215,
+          "frob": 0.08526118099689484,
+          "stable_rank": 1.1146762534171895,
+          "participation_ratio": 2.590917965211064,
+          "effective_rank_entropy": 4.8395562171936035,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.008030494675040245,
+          "frob": 0.008901931345462799,
+          "stable_rank": 1.228807567997279,
+          "participation_ratio": 3.033735852197068,
+          "effective_rank_entropy": 4.471452236175537,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.014938311651349068,
+          "frob": 0.017398573458194733,
+          "stable_rank": 1.3565139020033516,
+          "participation_ratio": 5.594722773450053,
+          "effective_rank_entropy": 10.058034896850586,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.008528606966137886,
+          "frob": 0.008638669736683369,
+          "stable_rank": 1.0259767856452386,
+          "participation_ratio": 1.5583863157239681,
+          "effective_rank_entropy": 2.302147150039673,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.05581877380609512,
+          "frob": 0.056420791894197464,
+          "stable_rank": 1.0216867726836167,
+          "participation_ratio": 1.7073528745800237,
+          "effective_rank_entropy": 2.8801586627960205,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.006839406210929155,
+          "frob": 0.008502579294145107,
+          "stable_rank": 1.5454842213086453,
+          "participation_ratio": 7.617421201707229,
+          "effective_rank_entropy": 12.827736854553223,
+          "numerical_rank_1pct": 24,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.01825743168592453,
+          "frob": 0.019082067534327507,
+          "stable_rank": 1.0923743329934303,
+          "participation_ratio": 2.7958816219783764,
+          "effective_rank_entropy": 5.21158504486084,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.01721247285604477,
+          "frob": 0.02359219454228878,
+          "stable_rank": 1.8786684557484878,
+          "participation_ratio": 5.629939708977152,
+          "effective_rank_entropy": 8.462712287902832,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.009532312862575054,
+          "frob": 0.010506759397685528,
+          "stable_rank": 1.21490129076268,
+          "participation_ratio": 2.7479558800407564,
+          "effective_rank_entropy": 3.8648569583892822,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.006457757204771042,
+          "frob": 0.006906507536768913,
+          "stable_rank": 1.1438090923002573,
+          "participation_ratio": 2.3984304321327223,
+          "effective_rank_entropy": 3.507948875427246,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.023832019418478012,
+          "frob": 0.024185482412576675,
+          "stable_rank": 1.0298828351519933,
+          "participation_ratio": 1.6338807255579155,
+          "effective_rank_entropy": 2.3501060009002686,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.07866347581148148,
+          "frob": 0.08248157054185867,
+          "stable_rank": 1.099429989611658,
+          "participation_ratio": 2.3179944498069642,
+          "effective_rank_entropy": 3.556187152862549,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.005217341706156731,
+          "frob": 0.005593892186880112,
+          "stable_rank": 1.1495546028568684,
+          "participation_ratio": 2.712003835256523,
+          "effective_rank_entropy": 4.119225978851318,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 0.012750877998769283,
+          "frob": 0.01604132354259491,
+          "stable_rank": 1.5827058703167372,
+          "participation_ratio": 4.286065329945602,
+          "effective_rank_entropy": 5.844656467437744,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 0.004224293399602175,
+          "p25": 0.012750877998769283,
+          "median": 0.050360288470983505,
+          "p75": 0.20617516338825226,
+          "p90": 1.0364316701889038,
+          "max": 2.2035722732543945,
+          "mean": 0.2770122300367802,
+          "std": 0.5504724374334263
+        },
+        "stable_rank": {
+          "min": 1.0045202024625186,
+          "p25": 1.0587648968987453,
+          "median": 1.1776069163755802,
+          "p75": 1.4280516893504718,
+          "p90": 1.6769167442246977,
+          "max": 2.167835462193638,
+          "mean": 1.2914905928856322,
+          "std": 0.31619336623163086
+        },
+        "participation_ratio": {
+          "min": 1.2696792190969717,
+          "p25": 1.8561793026607878,
+          "median": 2.7958816219783764,
+          "p75": 5.524182754257533,
+          "p90": 7.617421201707229,
+          "max": 13.13357308742772,
+          "mean": 3.9530319139678176,
+          "std": 2.6123398595948784
+        },
+        "effective_rank_entropy": {
+          "min": 1.781309723854065,
+          "p25": 3.507948875427246,
+          "median": 5.21158504486084,
+          "p75": 9.476881980895996,
+          "p90": 12.827736854553223,
+          "max": 17.799442291259766,
+          "mean": 6.4975909918546675,
+          "std": 4.082062048198098
+        },
+        "numerical_rank_1pct": {
+          "min": 3.0,
+          "p25": 6.0,
+          "median": 12.0,
+          "p75": 21.0,
+          "p90": 24.0,
+          "max": 26.0,
+          "mean": 13.15,
+          "std": 7.498499849969993
+        }
+      }
+    },
+    "4": {
+      "mean_sigma1": 9.346363526582717,
+      "mean_stable_rank": 1.210988091852431,
+      "mean_frob": 10.089153891801834,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 13.381237983703613,
+          "frob": 14.091400146484375,
+          "stable_rank": 1.1089595512368882,
+          "participation_ratio": 3.7505348074988825,
+          "effective_rank_entropy": 7.949849605560303,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.889878273010254,
+          "frob": 15.149101257324219,
+          "stable_rank": 1.3812621294162872,
+          "participation_ratio": 3.2186569123348288,
+          "effective_rank_entropy": 5.524266242980957,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 4.371151447296143,
+          "frob": 4.985836982727051,
+          "stable_rank": 1.3010214050527598,
+          "participation_ratio": 4.37761422369754,
+          "effective_rank_entropy": 7.937915802001953,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.918170928955078,
+          "frob": 12.274282455444336,
+          "stable_rank": 1.0606522231879714,
+          "participation_ratio": 3.0553796917870737,
+          "effective_rank_entropy": 6.967776298522949,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.303600311279297,
+          "frob": 15.723428726196289,
+          "stable_rank": 1.3968704670651062,
+          "participation_ratio": 5.158357001100034,
+          "effective_rank_entropy": 8.903663635253906,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.370001316070557,
+          "frob": 6.791703224182129,
+          "stable_rank": 1.1367850581287524,
+          "participation_ratio": 4.159006118969602,
+          "effective_rank_entropy": 8.303092002868652,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.346985816955566,
+          "frob": 9.612958908081055,
+          "stable_rank": 1.0577207014427639,
+          "participation_ratio": 2.729286782182672,
+          "effective_rank_entropy": 5.862068176269531,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.51684284210205,
+          "frob": 11.662260055541992,
+          "stable_rank": 1.0254123928561323,
+          "participation_ratio": 2.128096900095011,
+          "effective_rank_entropy": 4.456320285797119,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.65251636505127,
+          "frob": 10.353425979614258,
+          "stable_rank": 1.1505011910890255,
+          "participation_ratio": 4.6369182484254985,
+          "effective_rank_entropy": 9.767071723937988,
+          "numerical_rank_1pct": 22,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.159603118896484,
+          "frob": 10.677080154418945,
+          "stable_rank": 1.104463888182023,
+          "participation_ratio": 2.535465405330043,
+          "effective_rank_entropy": 4.538265228271484,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.90276336669922,
+          "frob": 17.803285598754883,
+          "stable_rank": 1.1093916545920373,
+          "participation_ratio": 3.783410838460749,
+          "effective_rank_entropy": 7.981137752532959,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.019363880157471,
+          "frob": 8.92721939086914,
+          "stable_rank": 2.1995367368180014,
+          "participation_ratio": 6.793102009031231,
+          "effective_rank_entropy": 10.452346801757812,
+          "numerical_rank_1pct": 22,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.20335054397583,
+          "frob": 6.966175556182861,
+          "stable_rank": 1.2610612573318276,
+          "participation_ratio": 3.2331308377494823,
+          "effective_rank_entropy": 5.829756259918213,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.959620475769043,
+          "frob": 13.418597221374512,
+          "stable_rank": 1.0720861055947781,
+          "participation_ratio": 2.6381849779155244,
+          "effective_rank_entropy": 5.19806432723999,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.062986373901367,
+          "frob": 7.85060977935791,
+          "stable_rank": 1.6766159659931674,
+          "participation_ratio": 8.62080829489436,
+          "effective_rank_entropy": 14.347796440124512,
+          "numerical_rank_1pct": 28,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.572072982788086,
+          "frob": 11.102160453796387,
+          "stable_rank": 1.1027947609412518,
+          "participation_ratio": 3.1659706966209296,
+          "effective_rank_entropy": 6.793485641479492,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.010714530944824,
+          "frob": 8.089486122131348,
+          "stable_rank": 1.019763251429928,
+          "participation_ratio": 2.1352379216949324,
+          "effective_rank_entropy": 4.619089126586914,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.197742462158203,
+          "frob": 13.004894256591797,
+          "stable_rank": 1.3488159743339097,
+          "participation_ratio": 5.4860191524761825,
+          "effective_rank_entropy": 10.087157249450684,
+          "numerical_rank_1pct": 22,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.923986434936523,
+          "frob": 21.41204071044922,
+          "stable_rank": 1.0471942798056924,
+          "participation_ratio": 3.1492233109238503,
+          "effective_rank_entropy": 7.246153354644775,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.650980472564697,
+          "frob": 8.235123634338379,
+          "stable_rank": 1.1585267347230275,
+          "participation_ratio": 3.1464316833627044,
+          "effective_rank_entropy": 5.769036293029785,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.891343116760254,
+          "frob": 10.107987403869629,
+          "stable_rank": 1.0442845427368912,
+          "participation_ratio": 2.805477521289152,
+          "effective_rank_entropy": 6.303554534912109,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.963497161865234,
+          "frob": 8.582746505737305,
+          "stable_rank": 1.1615687301020874,
+          "participation_ratio": 3.1342446175099545,
+          "effective_rank_entropy": 6.079267501831055,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 22.344467163085938,
+          "frob": 23.155858993530273,
+          "stable_rank": 1.0739443737229037,
+          "participation_ratio": 2.8018841633207767,
+          "effective_rank_entropy": 5.998700141906738,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.869080543518066,
+          "frob": 14.856222152709961,
+          "stable_rank": 1.147417394659423,
+          "participation_ratio": 4.674110199648091,
+          "effective_rank_entropy": 9.424216270446777,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.658337116241455,
+          "frob": 6.895683288574219,
+          "stable_rank": 1.0725635977793617,
+          "participation_ratio": 2.948850450695247,
+          "effective_rank_entropy": 6.401561737060547,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 17.574098587036133,
+          "frob": 18.164867401123047,
+          "stable_rank": 1.0683617903144316,
+          "participation_ratio": 3.971372934814514,
+          "effective_rank_entropy": 9.424908638000488,
+          "numerical_rank_1pct": 23,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.9690704345703125,
+          "frob": 8.613020896911621,
+          "stable_rank": 2.082080873673915,
+          "participation_ratio": 5.0355403982829845,
+          "effective_rank_entropy": 8.367289543151855,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 3.7447760105133057,
+          "frob": 4.2121968269348145,
+          "stable_rank": 1.265218755699269,
+          "participation_ratio": 2.6404804884362103,
+          "effective_rank_entropy": 4.191253185272217,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.7382402420043945,
+          "frob": 6.132213592529297,
+          "stable_rank": 1.142028897415711,
+          "participation_ratio": 4.525452233796483,
+          "effective_rank_entropy": 9.363858222961426,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.9593071937561035,
+          "frob": 8.276175498962402,
+          "stable_rank": 1.0812070010335832,
+          "participation_ratio": 2.9016345192786592,
+          "effective_rank_entropy": 5.651251792907715,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 2.703758716583252,
+          "frob": 3.242295503616333,
+          "stable_rank": 1.4380345581408986,
+          "participation_ratio": 4.336810358673029,
+          "effective_rank_entropy": 7.1570000648498535,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.032711029052734,
+          "frob": 8.29179859161377,
+          "stable_rank": 1.0655484492870055,
+          "participation_ratio": 2.18467131324156,
+          "effective_rank_entropy": 3.5455877780914307,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.695549011230469,
+          "frob": 9.229207992553711,
+          "stable_rank": 1.1265094842475438,
+          "participation_ratio": 2.3304723978063064,
+          "effective_rank_entropy": 3.7195682525634766,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.770929336547852,
+          "frob": 11.926132202148438,
+          "stable_rank": 1.0265443886159134,
+          "participation_ratio": 1.577346693978296,
+          "effective_rank_entropy": 2.2790393829345703,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.3222479820251465,
+          "frob": 7.703132152557373,
+          "stable_rank": 1.1067405720739325,
+          "participation_ratio": 2.268247876890003,
+          "effective_rank_entropy": 3.5918588638305664,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.118941307067871,
+          "frob": 5.651369571685791,
+          "stable_rank": 1.2188411768303908,
+          "participation_ratio": 2.5184842822266074,
+          "effective_rank_entropy": 3.5742199420928955,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 3.3885550498962402,
+          "frob": 3.493788957595825,
+          "stable_rank": 1.0630758313305773,
+          "participation_ratio": 2.3103921840696584,
+          "effective_rank_entropy": 3.9341495037078857,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.055944442749023,
+          "frob": 8.253149032592773,
+          "stable_rank": 1.0495580164681868,
+          "participation_ratio": 2.048925970831602,
+          "effective_rank_entropy": 3.2409722805023193,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.413724899291992,
+          "frob": 7.310979843139648,
+          "stable_rank": 1.2993630633312971,
+          "participation_ratio": 2.380594210394281,
+          "effective_rank_entropy": 3.131159543991089,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.2263917922973633,
+          "frob": 1.3362586498260498,
+          "stable_rank": 1.1871964474125813,
+          "participation_ratio": 2.5651244962575466,
+          "effective_rank_entropy": 3.674687623977661,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 1.2263917922973633,
+          "p25": 6.20335054397583,
+          "median": 8.055944442749023,
+          "p75": 11.770929336547852,
+          "p90": 13.869080543518066,
+          "max": 22.344467163085938,
+          "mean": 9.346363526582717,
+          "std": 4.598309842726042
+        },
+        "stable_rank": {
+          "min": 1.019763251429928,
+          "p25": 1.0683617903144316,
+          "median": 1.1265094842475438,
+          "p75": 1.2610612573318276,
+          "p90": 1.3968704670651062,
+          "max": 2.1995367368180014,
+          "mean": 1.210988091852431,
+          "std": 0.2531361486369621
+        },
+        "participation_ratio": {
+          "min": 1.577346693978296,
+          "p25": 2.535465405330043,
+          "median": 3.1342446175099545,
+          "p75": 4.159006118969602,
+          "p90": 5.0355403982829845,
+          "max": 8.62080829489436,
+          "mean": 3.4465238281498025,
+          "std": 1.379712335104008
+        },
+        "effective_rank_entropy": {
+          "min": 2.2790393829345703,
+          "p25": 4.456320285797119,
+          "median": 6.079267501831055,
+          "p75": 7.981137752532959,
+          "p90": 9.424908638000488,
+          "max": 14.347796440124512,
+          "mean": 6.439710426330566,
+          "std": 2.530032129545768
+        },
+        "numerical_rank_1pct": {
+          "min": 5.0,
+          "p25": 12.0,
+          "median": 16.0,
+          "p75": 19.0,
+          "p90": 22.0,
+          "max": 28.0,
+          "mean": 15.2,
+          "std": 5.4644304369257
+        }
+      }
+    },
+    "8": {
+      "mean_sigma1": 9.490203273296355,
+      "mean_stable_rank": 1.1729439002855904,
+      "mean_frob": 10.196073615550995,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 8.321656227111816,
+          "frob": 9.750020980834961,
+          "stable_rank": 1.3727503363752136,
+          "participation_ratio": 3.0696968509361597,
+          "effective_rank_entropy": 5.012279510498047,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.88322639465332,
+          "frob": 15.054779052734375,
+          "stable_rank": 1.0231860163898276,
+          "participation_ratio": 2.065701302268221,
+          "effective_rank_entropy": 4.097446441650391,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.144442081451416,
+          "frob": 7.855932712554932,
+          "stable_rank": 1.2090906709884144,
+          "participation_ratio": 3.233488200271162,
+          "effective_rank_entropy": 5.813847064971924,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.89059829711914,
+          "frob": 9.269984245300293,
+          "stable_rank": 1.087166386118092,
+          "participation_ratio": 2.9116679236452496,
+          "effective_rank_entropy": 5.912572383880615,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.779428482055664,
+          "frob": 9.564553260803223,
+          "stable_rank": 1.1868528828544334,
+          "participation_ratio": 3.4383763036078907,
+          "effective_rank_entropy": 6.690725326538086,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.779447555541992,
+          "frob": 14.453744888305664,
+          "stable_rank": 1.1002646443696567,
+          "participation_ratio": 3.4300081248488006,
+          "effective_rank_entropy": 7.195183277130127,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.391905784606934,
+          "frob": 14.725157737731934,
+          "stable_rank": 1.0468472025928777,
+          "participation_ratio": 2.4551368529880224,
+          "effective_rank_entropy": 4.771126747131348,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.886088371276855,
+          "frob": 17.281986236572266,
+          "stable_rank": 1.1834593947996255,
+          "participation_ratio": 2.9598480989880565,
+          "effective_rank_entropy": 5.279250621795654,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.433409214019775,
+          "frob": 6.810835838317871,
+          "stable_rank": 1.57128872944968,
+          "participation_ratio": 4.228184594302577,
+          "effective_rank_entropy": 7.720966815948486,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.856619834899902,
+          "frob": 13.987381935119629,
+          "stable_rank": 1.1836389911452105,
+          "participation_ratio": 2.8623487705199886,
+          "effective_rank_entropy": 4.808736801147461,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.257941246032715,
+          "frob": 16.580610275268555,
+          "stable_rank": 1.1808891881376615,
+          "participation_ratio": 2.4031975842448485,
+          "effective_rank_entropy": 3.5590596199035645,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.463113784790039,
+          "frob": 6.466637134552002,
+          "stable_rank": 1.401123740197518,
+          "participation_ratio": 7.7384304208092995,
+          "effective_rank_entropy": 13.65552043914795,
+          "numerical_rank_1pct": 26,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.027022361755371,
+          "frob": 10.28691577911377,
+          "stable_rank": 1.0525104135210885,
+          "participation_ratio": 2.973649187974157,
+          "effective_rank_entropy": 6.692826271057129,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.278594970703125,
+          "frob": 8.020121574401855,
+          "stable_rank": 1.2141344926591513,
+          "participation_ratio": 4.803500069374411,
+          "effective_rank_entropy": 9.513787269592285,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.04517650604248,
+          "frob": 13.565667152404785,
+          "stable_rank": 1.081390113378221,
+          "participation_ratio": 3.066866874067746,
+          "effective_rank_entropy": 6.327511310577393,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.011168479919434,
+          "frob": 13.229639053344727,
+          "stable_rank": 1.213180645468762,
+          "participation_ratio": 3.7333350859520844,
+          "effective_rank_entropy": 6.99404239654541,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.053960800170898,
+          "frob": 15.640822410583496,
+          "stable_rank": 1.2385732446311744,
+          "participation_ratio": 2.970450517413449,
+          "effective_rank_entropy": 4.50481653213501,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.898179531097412,
+          "frob": 9.199149131774902,
+          "stable_rank": 1.3565672127854824,
+          "participation_ratio": 4.722640496941991,
+          "effective_rank_entropy": 8.951493263244629,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.234688758850098,
+          "frob": 13.211004257202148,
+          "stable_rank": 1.1659658045147558,
+          "participation_ratio": 3.890831647775409,
+          "effective_rank_entropy": 7.903161525726318,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.568037986755371,
+          "frob": 9.144911766052246,
+          "stable_rank": 1.1391902847948419,
+          "participation_ratio": 3.4674742991926175,
+          "effective_rank_entropy": 6.7340898513793945,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.197202205657959,
+          "frob": 7.218027114868164,
+          "stable_rank": 1.356580858398232,
+          "participation_ratio": 5.359351873148861,
+          "effective_rank_entropy": 9.583640098571777,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.797756195068359,
+          "frob": 7.616732120513916,
+          "stable_rank": 1.255469581899214,
+          "participation_ratio": 4.780943577739001,
+          "effective_rank_entropy": 9.031025886535645,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.000335693359375,
+          "frob": 8.696059226989746,
+          "stable_rank": 1.1814859386629653,
+          "participation_ratio": 2.8935981619923226,
+          "effective_rank_entropy": 5.098951816558838,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.308671951293945,
+          "frob": 5.542325019836426,
+          "stable_rank": 1.0899641235253674,
+          "participation_ratio": 2.891764435749606,
+          "effective_rank_entropy": 5.722859859466553,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.259885787963867,
+          "frob": 21.023853302001953,
+          "stable_rank": 1.0768386862235568,
+          "participation_ratio": 2.2415614520452487,
+          "effective_rank_entropy": 4.010529518127441,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.209122657775879,
+          "frob": 14.65837574005127,
+          "stable_rank": 1.0642341067798164,
+          "participation_ratio": 2.60038612484563,
+          "effective_rank_entropy": 5.105688095092773,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.961531639099121,
+          "frob": 6.775834083557129,
+          "stable_rank": 1.2918432485246234,
+          "participation_ratio": 5.484722931761714,
+          "effective_rank_entropy": 10.072857856750488,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.545523166656494,
+          "frob": 8.463136672973633,
+          "stable_rank": 1.2580097157135834,
+          "participation_ratio": 4.804587825175612,
+          "effective_rank_entropy": 8.99514102935791,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.454694747924805,
+          "frob": 8.290523529052734,
+          "stable_rank": 1.2368134024771886,
+          "participation_ratio": 3.5023400017452366,
+          "effective_rank_entropy": 6.085692405700684,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.137744903564453,
+          "frob": 12.252056121826172,
+          "stable_rank": 1.0189243555512724,
+          "participation_ratio": 1.7027690708045398,
+          "effective_rank_entropy": 2.97391676902771,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.933964252471924,
+          "frob": 6.033740520477295,
+          "stable_rank": 1.0339115992648422,
+          "participation_ratio": 1.9233002163184787,
+          "effective_rank_entropy": 3.2867588996887207,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.158225059509277,
+          "frob": 8.538000106811523,
+          "stable_rank": 1.42266161602599,
+          "participation_ratio": 3.3499141715148726,
+          "effective_rank_entropy": 4.938060283660889,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.003513336181641,
+          "frob": 7.161768913269043,
+          "stable_rank": 1.045703802720675,
+          "participation_ratio": 1.8468006972814972,
+          "effective_rank_entropy": 2.862278461456299,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 4.003309726715088,
+          "frob": 4.237712383270264,
+          "stable_rank": 1.1205327943800787,
+          "participation_ratio": 2.7294733863519713,
+          "effective_rank_entropy": 4.892500877380371,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 4.781467914581299,
+          "frob": 5.0209503173828125,
+          "stable_rank": 1.1026796414519031,
+          "participation_ratio": 2.6384442925933063,
+          "effective_rank_entropy": 4.596349239349365,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.742300987243652,
+          "frob": 10.204483032226562,
+          "stable_rank": 1.0971321203357465,
+          "participation_ratio": 2.138374181982734,
+          "effective_rank_entropy": 3.2667346000671387,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.489188194274902,
+          "frob": 5.574559211730957,
+          "stable_rank": 1.0313470349481464,
+          "participation_ratio": 1.7874124442514978,
+          "effective_rank_entropy": 2.868412494659424,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.79962682723999,
+          "frob": 5.98588752746582,
+          "stable_rank": 1.0652633965396139,
+          "participation_ratio": 2.039918745900571,
+          "effective_rank_entropy": 3.14123797416687,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.047601699829102,
+          "frob": 8.222163200378418,
+          "stable_rank": 1.043852746303272,
+          "participation_ratio": 1.7415306081007762,
+          "effective_rank_entropy": 2.5117599964141846,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.571757316589355,
+          "frob": 12.226901054382324,
+          "stable_rank": 1.1164368465258394,
+          "participation_ratio": 2.282046742819567,
+          "effective_rank_entropy": 3.3299896717071533,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 4.003309726715088,
+          "p25": 6.797756195068359,
+          "median": 8.321656227111816,
+          "p75": 12.234688758850098,
+          "p90": 14.391905784606934,
+          "max": 20.259885787963867,
+          "mean": 9.490203273296355,
+          "std": 3.7730372577230056
+        },
+        "stable_rank": {
+          "min": 1.0189243555512724,
+          "p25": 1.0768386862235568,
+          "median": 1.1659658045147558,
+          "p75": 1.2368134024771886,
+          "p90": 1.356580858398232,
+          "max": 1.57128872944968,
+          "mean": 1.1729439002855904,
+          "std": 0.12741378632465508
+        },
+        "participation_ratio": {
+          "min": 1.7027690708045398,
+          "p25": 2.4031975842448485,
+          "median": 2.970450517413449,
+          "p75": 3.5023400017452366,
+          "p90": 4.803500069374411,
+          "max": 7.7384304208092995,
+          "mean": 3.22910185370613,
+          "std": 1.230238699711926
+        },
+        "effective_rank_entropy": {
+          "min": 2.5117599964141846,
+          "p25": 4.097446441650391,
+          "median": 5.279250621795654,
+          "p75": 6.99404239654541,
+          "p90": 9.031025886535645,
+          "max": 13.65552043914795,
+          "mean": 5.862820732593536,
+          "std": 2.4211254989615614
+        },
+        "numerical_rank_1pct": {
+          "min": 6.0,
+          "p25": 10.0,
+          "median": 13.0,
+          "p75": 18.0,
+          "p90": 21.0,
+          "max": 26.0,
+          "mean": 13.65,
+          "std": 5.096812729539903
+        }
+      }
+    },
+    "12": {
+      "mean_sigma1": 16.95889256000519,
+      "mean_stable_rank": 1.1806920142918207,
+      "mean_frob": 18.201721954345704,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 33.87306213378906,
+          "frob": 37.33845520019531,
+          "stable_rank": 1.2150769277353797,
+          "participation_ratio": 4.194276108303345,
+          "effective_rank_entropy": 8.22089958190918,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 21.74275016784668,
+          "frob": 21.945648193359375,
+          "stable_rank": 1.018750592386708,
+          "participation_ratio": 1.5839751242345403,
+          "effective_rank_entropy": 2.3667993545532227,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.35001277923584,
+          "frob": 11.948037147521973,
+          "stable_rank": 1.10815478829593,
+          "participation_ratio": 2.6884328708172527,
+          "effective_rank_entropy": 4.857679843902588,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.836565017700195,
+          "frob": 21.261051177978516,
+          "stable_rank": 1.1487790995847729,
+          "participation_ratio": 4.266241223619836,
+          "effective_rank_entropy": 8.70703125,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.49188804626465,
+          "frob": 21.318063735961914,
+          "stable_rank": 1.1961556501023443,
+          "participation_ratio": 2.459791302445615,
+          "effective_rank_entropy": 3.970527172088623,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 34.88928985595703,
+          "frob": 37.42795944213867,
+          "stable_rank": 1.1508216956598167,
+          "participation_ratio": 3.0990110624206286,
+          "effective_rank_entropy": 5.964748382568359,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 17.29534149169922,
+          "frob": 17.737003326416016,
+          "stable_rank": 1.0517250353583665,
+          "participation_ratio": 2.242005406473635,
+          "effective_rank_entropy": 3.9711968898773193,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.721975326538086,
+          "frob": 10.778841972351074,
+          "stable_rank": 1.2292357447659155,
+          "participation_ratio": 3.4669528183328104,
+          "effective_rank_entropy": 6.033915042877197,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.999688148498535,
+          "frob": 12.038843154907227,
+          "stable_rank": 1.0065366511788285,
+          "participation_ratio": 1.3726046998443022,
+          "effective_rank_entropy": 2.0609042644500732,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.784553527832031,
+          "frob": 13.480708122253418,
+          "stable_rank": 1.3085765836361474,
+          "participation_ratio": 3.0280124129915906,
+          "effective_rank_entropy": 4.727038860321045,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 17.21832275390625,
+          "frob": 17.791698455810547,
+          "stable_rank": 1.067709556633446,
+          "participation_ratio": 2.0851809786881876,
+          "effective_rank_entropy": 3.6308724880218506,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.526915550231934,
+          "frob": 15.332612037658691,
+          "stable_rank": 1.1140007159970835,
+          "participation_ratio": 3.6184497367506214,
+          "effective_rank_entropy": 7.188422203063965,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 28.684879302978516,
+          "frob": 30.613584518432617,
+          "stable_rank": 1.1389963013322528,
+          "participation_ratio": 2.9346086206676096,
+          "effective_rank_entropy": 5.164552211761475,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.034415245056152,
+          "frob": 12.578168869018555,
+          "stable_rank": 1.0924079620448757,
+          "participation_ratio": 2.6744799765089,
+          "effective_rank_entropy": 4.970608711242676,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.90822696685791,
+          "frob": 12.23037338256836,
+          "stable_rank": 1.0548366834925091,
+          "participation_ratio": 2.389051707124028,
+          "effective_rank_entropy": 4.598150730133057,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.561752319335938,
+          "frob": 14.120466232299805,
+          "stable_rank": 1.4915944204399554,
+          "participation_ratio": 5.949258376863166,
+          "effective_rank_entropy": 10.44530200958252,
+          "numerical_rank_1pct": 22,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.33346939086914,
+          "frob": 11.585243225097656,
+          "stable_rank": 1.540721336366843,
+          "participation_ratio": 4.614510133768331,
+          "effective_rank_entropy": 7.953430652618408,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 25.84640884399414,
+          "frob": 26.15601348876953,
+          "stable_rank": 1.0241007535596867,
+          "participation_ratio": 1.882779726343069,
+          "effective_rank_entropy": 3.2734334468841553,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 40.34177017211914,
+          "frob": 41.343143463134766,
+          "stable_rank": 1.0502606332406912,
+          "participation_ratio": 2.1927680571263743,
+          "effective_rank_entropy": 4.128452777862549,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.339250564575195,
+          "frob": 13.429457664489746,
+          "stable_rank": 1.0135707944979673,
+          "participation_ratio": 1.6055571462062488,
+          "effective_rank_entropy": 2.5923779010772705,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.566976547241211,
+          "frob": 15.030495643615723,
+          "stable_rank": 1.0646522152763607,
+          "participation_ratio": 2.4585192519267376,
+          "effective_rank_entropy": 4.625454902648926,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.663158416748047,
+          "frob": 14.289636611938477,
+          "stable_rank": 1.273380777371451,
+          "participation_ratio": 4.800964988908184,
+          "effective_rank_entropy": 8.85254192352295,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.827789306640625,
+          "frob": 16.528562545776367,
+          "stable_rank": 1.2425599699574974,
+          "participation_ratio": 4.55282683604124,
+          "effective_rank_entropy": 8.36606502532959,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.184479713439941,
+          "frob": 14.354714393615723,
+          "stable_rank": 1.6472425037561327,
+          "participation_ratio": 5.009977392064974,
+          "effective_rank_entropy": 8.283821105957031,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.87317180633545,
+          "frob": 16.55204200744629,
+          "stable_rank": 1.0873659412978358,
+          "participation_ratio": 3.0492720511801172,
+          "effective_rank_entropy": 5.707818984985352,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 32.88432312011719,
+          "frob": 33.731815338134766,
+          "stable_rank": 1.0522080364341635,
+          "participation_ratio": 2.5325554966459327,
+          "effective_rank_entropy": 4.97461462020874,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.224065780639648,
+          "frob": 11.900527954101562,
+          "stable_rank": 1.1241701545400982,
+          "participation_ratio": 3.8263596739441197,
+          "effective_rank_entropy": 7.94148588180542,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.079797744750977,
+          "frob": 12.642200469970703,
+          "stable_rank": 1.0952821748499868,
+          "participation_ratio": 3.0751662030388105,
+          "effective_rank_entropy": 6.0802459716796875,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.828110694885254,
+          "frob": 12.817895889282227,
+          "stable_rank": 1.1743639716523744,
+          "participation_ratio": 4.533899427497858,
+          "effective_rank_entropy": 8.918733596801758,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.959877014160156,
+          "frob": 22.033349990844727,
+          "stable_rank": 1.1050542677232382,
+          "participation_ratio": 3.5462688332878045,
+          "effective_rank_entropy": 7.34537410736084,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.672216415405273,
+          "frob": 22.640932083129883,
+          "stable_rank": 1.199539401898481,
+          "participation_ratio": 4.573829973547461,
+          "effective_rank_entropy": 9.013288497924805,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.361719131469727,
+          "frob": 15.632728576660156,
+          "stable_rank": 1.599233325992419,
+          "participation_ratio": 5.226843645881934,
+          "effective_rank_entropy": 8.98778247833252,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 18.50653648376465,
+          "frob": 18.75236701965332,
+          "stable_rank": 1.0267433373230228,
+          "participation_ratio": 1.7132674825995626,
+          "effective_rank_entropy": 2.721135139465332,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.461697578430176,
+          "frob": 13.151859283447266,
+          "stable_rank": 1.1138325158380744,
+          "participation_ratio": 3.179300676210848,
+          "effective_rank_entropy": 6.019773006439209,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.837952613830566,
+          "frob": 12.383956909179688,
+          "stable_rank": 1.0943737565331308,
+          "participation_ratio": 2.3008597531838624,
+          "effective_rank_entropy": 3.7842230796813965,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.653111457824707,
+          "frob": 15.107586860656738,
+          "stable_rank": 1.4255929287592164,
+          "participation_ratio": 4.859827291730258,
+          "effective_rank_entropy": 8.210481643676758,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.352090835571289,
+          "frob": 13.942038536071777,
+          "stable_rank": 1.5083455366930636,
+          "participation_ratio": 4.676092469547829,
+          "effective_rank_entropy": 7.951303482055664,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.657448768615723,
+          "frob": 12.044645309448242,
+          "stable_rank": 1.0675322400062348,
+          "participation_ratio": 2.2818715766389643,
+          "effective_rank_entropy": 3.929586887359619,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 21.756196975708008,
+          "frob": 22.88756561279297,
+          "stable_rank": 1.1067084867127968,
+          "participation_ratio": 2.755678704648536,
+          "effective_rank_entropy": 4.652785301208496,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.224444389343262,
+          "frob": 11.188584327697754,
+          "stable_rank": 1.19748710274773,
+          "participation_ratio": 2.694249331395874,
+          "effective_rank_entropy": 4.021852016448975,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 9.33346939086914,
+          "p25": 11.828110694885254,
+          "median": 13.339250564575195,
+          "p75": 19.836565017700195,
+          "p90": 28.684879302978516,
+          "max": 40.34177017211914,
+          "mean": 16.95889256000519,
+          "std": 7.658245192015178
+        },
+        "stable_rank": {
+          "min": 1.0065366511788285,
+          "p25": 1.0675322400062348,
+          "median": 1.1140007159970835,
+          "p75": 1.2150769277353797,
+          "p90": 1.4915944204399554,
+          "max": 1.6472425037561327,
+          "mean": 1.1806920142918207,
+          "std": 0.16739852854496703
+        },
+        "participation_ratio": {
+          "min": 1.3726046998443022,
+          "p25": 2.389051707124028,
+          "median": 3.0492720511801172,
+          "p75": 4.266241223619836,
+          "p90": 4.800964988908184,
+          "max": 5.949258376863166,
+          "mean": 3.249889463736275,
+          "std": 1.1546385920944018
+        },
+        "effective_rank_entropy": {
+          "min": 2.0609042644500732,
+          "p25": 4.021852016448975,
+          "median": 5.707818984985352,
+          "p75": 7.953430652618408,
+          "p90": 8.85254192352295,
+          "max": 10.44530200958252,
+          "mean": 5.880367785692215,
+          "std": 2.2186633694006916
+        },
+        "numerical_rank_1pct": {
+          "min": 5.0,
+          "p25": 10.0,
+          "median": 13.0,
+          "p75": 18.0,
+          "p90": 20.0,
+          "max": 22.0,
+          "mean": 13.65,
+          "std": 4.5964660338133685
+        }
+      }
+    },
+    "16": {
+      "mean_sigma1": 22.8495361328125,
+      "mean_stable_rank": 1.2290966109778876,
+      "mean_frob": 24.925199270248413,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 20.95098114013672,
+          "frob": 22.548757553100586,
+          "stable_rank": 1.1583411963506312,
+          "participation_ratio": 2.962248466733269,
+          "effective_rank_entropy": 5.595885276794434,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 31.514127731323242,
+          "frob": 34.3828125,
+          "stable_rank": 1.1903432565325724,
+          "participation_ratio": 2.7103529944898925,
+          "effective_rank_entropy": 4.773240089416504,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.07769012451172,
+          "frob": 20.53428077697754,
+          "stable_rank": 1.0459995505435664,
+          "participation_ratio": 2.2699198558984786,
+          "effective_rank_entropy": 4.413840293884277,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.511301040649414,
+          "frob": 11.805354118347168,
+          "stable_rank": 1.0517419933493701,
+          "participation_ratio": 2.1114785185695046,
+          "effective_rank_entropy": 3.73720383644104,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 27.317354202270508,
+          "frob": 27.707754135131836,
+          "stable_rank": 1.0287867988347814,
+          "participation_ratio": 1.8774582591364406,
+          "effective_rank_entropy": 3.1418426036834717,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 21.181459426879883,
+          "frob": 24.436187744140625,
+          "stable_rank": 1.3309297901438975,
+          "participation_ratio": 4.025552647119476,
+          "effective_rank_entropy": 7.352685928344727,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.767695426940918,
+          "frob": 13.618781089782715,
+          "stable_rank": 1.1377620661309702,
+          "participation_ratio": 3.696189678826704,
+          "effective_rank_entropy": 7.342267990112305,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 22.723115921020508,
+          "frob": 23.18527603149414,
+          "stable_rank": 1.0410911949745,
+          "participation_ratio": 2.429263895755169,
+          "effective_rank_entropy": 4.987075328826904,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 44.236629486083984,
+          "frob": 45.337120056152344,
+          "stable_rank": 1.0503736036501874,
+          "participation_ratio": 2.29940026635196,
+          "effective_rank_entropy": 4.478053092956543,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.718768119812012,
+          "frob": 15.091114044189453,
+          "stable_rank": 1.6583594899097143,
+          "participation_ratio": 5.162441760231103,
+          "effective_rank_entropy": 8.770161628723145,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 18.572063446044922,
+          "frob": 20.365585327148438,
+          "stable_rank": 1.202467856727857,
+          "participation_ratio": 4.828471240103132,
+          "effective_rank_entropy": 9.576064109802246,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 18.02550506591797,
+          "frob": 21.70502281188965,
+          "stable_rank": 1.4499252354404457,
+          "participation_ratio": 3.8378012723400645,
+          "effective_rank_entropy": 6.6665120124816895,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.70370101928711,
+          "frob": 22.091676712036133,
+          "stable_rank": 1.1385743179381371,
+          "participation_ratio": 3.6088026182377098,
+          "effective_rank_entropy": 7.082920551300049,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.860088348388672,
+          "frob": 21.078454971313477,
+          "stable_rank": 1.1264585000415368,
+          "participation_ratio": 4.0265991857121275,
+          "effective_rank_entropy": 8.477447509765625,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 27.11701011657715,
+          "frob": 30.38951301574707,
+          "stable_rank": 1.2559254905917434,
+          "participation_ratio": 3.480673807026371,
+          "effective_rank_entropy": 6.2567596435546875,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.69530200958252,
+          "frob": 18.236934661865234,
+          "stable_rank": 1.3500950054434053,
+          "participation_ratio": 4.715185031988515,
+          "effective_rank_entropy": 8.187572479248047,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 41.14379119873047,
+          "frob": 42.08555603027344,
+          "stable_rank": 1.0463031292395548,
+          "participation_ratio": 2.102777894170034,
+          "effective_rank_entropy": 3.8329105377197266,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 53.76896667480469,
+          "frob": 57.87150955200195,
+          "stable_rank": 1.1584205177939781,
+          "participation_ratio": 3.2970935970007256,
+          "effective_rank_entropy": 6.276031017303467,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.619150161743164,
+          "frob": 20.062232971191406,
+          "stable_rank": 1.4572729878101915,
+          "participation_ratio": 5.542230337456173,
+          "effective_rank_entropy": 9.644906044006348,
+          "numerical_rank_1pct": 22,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.815653800964355,
+          "frob": 13.70184326171875,
+          "stable_rank": 1.1430795535124363,
+          "participation_ratio": 3.8229124120112856,
+          "effective_rank_entropy": 7.834045886993408,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 22.18160057067871,
+          "frob": 23.1104679107666,
+          "stable_rank": 1.0855047195843213,
+          "participation_ratio": 3.2717347992279437,
+          "effective_rank_entropy": 6.9283576011657715,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 22.66771125793457,
+          "frob": 23.252763748168945,
+          "stable_rank": 1.0522860531617315,
+          "participation_ratio": 2.5934435780017053,
+          "effective_rank_entropy": 5.253137111663818,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 46.884246826171875,
+          "frob": 48.571224212646484,
+          "stable_rank": 1.0732581924421933,
+          "participation_ratio": 1.96133965215926,
+          "effective_rank_entropy": 3.0775933265686035,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 33.075897216796875,
+          "frob": 46.25790023803711,
+          "stable_rank": 1.9559086301490098,
+          "participation_ratio": 3.3123502330902053,
+          "effective_rank_entropy": 5.012687683105469,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.68619155883789,
+          "frob": 19.470258712768555,
+          "stable_rank": 1.3615355788205792,
+          "participation_ratio": 4.399213120303547,
+          "effective_rank_entropy": 8.051677703857422,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.977914810180664,
+          "frob": 18.354352951049805,
+          "stable_rank": 1.168717258991867,
+          "participation_ratio": 3.8905993557573217,
+          "effective_rank_entropy": 7.626414775848389,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.381158828735352,
+          "frob": 10.917704582214355,
+          "stable_rank": 1.3544085904776857,
+          "participation_ratio": 4.345289914638244,
+          "effective_rank_entropy": 8.055620193481445,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.565163612365723,
+          "frob": 18.955474853515625,
+          "stable_rank": 1.4830710472061923,
+          "participation_ratio": 5.511186382552245,
+          "effective_rank_entropy": 9.521893501281738,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 28.219242095947266,
+          "frob": 29.140504837036133,
+          "stable_rank": 1.0663590321143241,
+          "participation_ratio": 2.1437522339954573,
+          "effective_rank_entropy": 3.596578359603882,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.260425567626953,
+          "frob": 13.961838722229004,
+          "stable_rank": 1.2968034100281614,
+          "participation_ratio": 5.338755893775293,
+          "effective_rank_entropy": 9.664538383483887,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 18.745018005371094,
+          "frob": 19.865501403808594,
+          "stable_rank": 1.1231230446509632,
+          "participation_ratio": 3.471538196303659,
+          "effective_rank_entropy": 6.685576438903809,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.521049499511719,
+          "frob": 15.18954086303711,
+          "stable_rank": 1.4716611602705822,
+          "participation_ratio": 4.836218913334963,
+          "effective_rank_entropy": 8.05931568145752,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.99717903137207,
+          "frob": 21.618412017822266,
+          "stable_rank": 1.060048355984503,
+          "participation_ratio": 2.318018719333057,
+          "effective_rank_entropy": 4.255847930908203,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 24.922149658203125,
+          "frob": 28.026336669921875,
+          "stable_rank": 1.2646247296444724,
+          "participation_ratio": 3.8303779085949867,
+          "effective_rank_entropy": 6.382994174957275,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 50.390533447265625,
+          "frob": 51.11754608154297,
+          "stable_rank": 1.0290632821187262,
+          "participation_ratio": 2.0034208821485087,
+          "effective_rank_entropy": 3.7332706451416016,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.411240577697754,
+          "frob": 11.643285751342773,
+          "stable_rank": 1.5305846781845052,
+          "participation_ratio": 6.104390266134989,
+          "effective_rank_entropy": 9.693593978881836,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.30360984802246,
+          "frob": 20.536022186279297,
+          "stable_rank": 1.1317632485302016,
+          "participation_ratio": 2.163588758694798,
+          "effective_rank_entropy": 3.2523386478424072,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.01504135131836,
+          "frob": 20.49104881286621,
+          "stable_rank": 1.161271659590719,
+          "participation_ratio": 3.778986679302635,
+          "effective_rank_entropy": 7.4727559089660645,
+          "numerical_rank_1pct": 18,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.667390823364258,
+          "frob": 18.63136100769043,
+          "stable_rank": 1.414151074436223,
+          "participation_ratio": 4.20530692995777,
+          "effective_rank_entropy": 6.85188627243042,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 30.788326263427734,
+          "frob": 31.66065788269043,
+          "stable_rank": 1.0574691577690611,
+          "participation_ratio": 1.904046994066125,
+          "effective_rank_entropy": 2.8882532119750977,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 9.381158828735352,
+          "p25": 15.69530200958252,
+          "median": 20.07769012451172,
+          "p75": 27.11701011657715,
+          "p90": 41.14379119873047,
+          "max": 53.76896667480469,
+          "mean": 22.8495361328125,
+          "std": 10.975148444847608
+        },
+        "stable_rank": {
+          "min": 1.0287867988347814,
+          "p25": 1.0663590321143241,
+          "median": 1.1584205177939781,
+          "p75": 1.3500950054434053,
+          "p90": 1.4716611602705822,
+          "max": 1.9559086301490098,
+          "mean": 1.2290966109778876,
+          "std": 0.20054837887458157
+        },
+        "participation_ratio": {
+          "min": 1.8774582591364406,
+          "p25": 2.318018719333057,
+          "median": 3.6088026182377098,
+          "p75": 4.20530692995777,
+          "p90": 5.162441760231103,
+          "max": 6.104390266134989,
+          "mean": 3.504760328763271,
+          "std": 1.1619645106825416
+        },
+        "effective_rank_entropy": {
+          "min": 2.8882532119750977,
+          "p25": 4.478053092956543,
+          "median": 6.685576438903809,
+          "p75": 8.051677703857422,
+          "p90": 9.521893501281738,
+          "max": 9.693593978881836,
+          "mean": 6.362293934822082,
+          "std": 2.0863742368424942
+        },
+        "numerical_rank_1pct": {
+          "min": 7.0,
+          "p25": 11.0,
+          "median": 15.0,
+          "p75": 18.0,
+          "p90": 20.0,
+          "max": 22.0,
+          "mean": 14.725,
+          "std": 4.347341141433462
+        }
+      }
+    },
+    "20": {
+      "mean_sigma1": 18.361436009407043,
+      "mean_stable_rank": 1.2466306061219263,
+      "mean_frob": 20.135702252388,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 13.19775390625,
+          "frob": 14.025375366210938,
+          "stable_rank": 1.1293509839861071,
+          "participation_ratio": 3.3359051981828367,
+          "effective_rank_entropy": 6.611084461212158,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 18.21990966796875,
+          "frob": 18.821897506713867,
+          "stable_rank": 1.0671718710375648,
+          "participation_ratio": 2.657596548113956,
+          "effective_rank_entropy": 5.1608452796936035,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.081974029541016,
+          "frob": 15.135550498962402,
+          "stable_rank": 1.3385970931425972,
+          "participation_ratio": 4.839113152458521,
+          "effective_rank_entropy": 9.092697143554688,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 25.804031372070312,
+          "frob": 26.123348236083984,
+          "stable_rank": 1.0249025109936045,
+          "participation_ratio": 1.7531116574136318,
+          "effective_rank_entropy": 2.9146218299865723,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 22.01710319519043,
+          "frob": 24.331350326538086,
+          "stable_rank": 1.2212710649206997,
+          "participation_ratio": 4.71012096087557,
+          "effective_rank_entropy": 9.037630081176758,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.81481647491455,
+          "frob": 14.19199275970459,
+          "stable_rank": 1.2264842627390744,
+          "participation_ratio": 3.9143353103088887,
+          "effective_rank_entropy": 7.104040145874023,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 23.818910598754883,
+          "frob": 28.083431243896484,
+          "stable_rank": 1.3901336278573866,
+          "participation_ratio": 3.437100437650728,
+          "effective_rank_entropy": 5.712212562561035,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 28.254173278808594,
+          "frob": 28.53407096862793,
+          "stable_rank": 1.0199109759109553,
+          "participation_ratio": 1.7921904972612568,
+          "effective_rank_entropy": 3.286928176879883,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 49.37153625488281,
+          "frob": 51.37934112548828,
+          "stable_rank": 1.0829883363031665,
+          "participation_ratio": 2.539806297174856,
+          "effective_rank_entropy": 4.670217990875244,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 30.306638717651367,
+          "frob": 30.73278045654297,
+          "stable_rank": 1.0283197178697947,
+          "participation_ratio": 1.9150461082685064,
+          "effective_rank_entropy": 3.6042330265045166,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 23.084692001342773,
+          "frob": 24.727001190185547,
+          "stable_rank": 1.1473468574126533,
+          "participation_ratio": 3.454736796717186,
+          "effective_rank_entropy": 6.781966209411621,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.322227478027344,
+          "frob": 15.007285118103027,
+          "stable_rank": 1.2689677276167262,
+          "participation_ratio": 4.518544803818163,
+          "effective_rank_entropy": 8.019111633300781,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.905882835388184,
+          "frob": 15.944695472717285,
+          "stable_rank": 1.5263601604120685,
+          "participation_ratio": 5.6761983386464845,
+          "effective_rank_entropy": 9.819806098937988,
+          "numerical_rank_1pct": 23,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 33.089637756347656,
+          "frob": 34.86629867553711,
+          "stable_rank": 1.1102676007635355,
+          "participation_ratio": 2.80686579673938,
+          "effective_rank_entropy": 5.342445373535156,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.212942123413086,
+          "frob": 13.355708122253418,
+          "stable_rank": 1.1958955247632665,
+          "participation_ratio": 4.53349421353852,
+          "effective_rank_entropy": 8.865172386169434,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.311532020568848,
+          "frob": 13.468570709228516,
+          "stable_rank": 1.417751654586632,
+          "participation_ratio": 5.012837544101627,
+          "effective_rank_entropy": 8.989851951599121,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.08680534362793,
+          "frob": 16.772987365722656,
+          "stable_rank": 1.4177374543271681,
+          "participation_ratio": 6.433640587012785,
+          "effective_rank_entropy": 11.739136695861816,
+          "numerical_rank_1pct": 26,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.7277193069458,
+          "frob": 11.438009262084961,
+          "stable_rank": 1.3825435698434696,
+          "participation_ratio": 5.550166966439571,
+          "effective_rank_entropy": 9.831205368041992,
+          "numerical_rank_1pct": 22,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 27.128938674926758,
+          "frob": 29.73175048828125,
+          "stable_rank": 1.201089447392121,
+          "participation_ratio": 3.2783194240104643,
+          "effective_rank_entropy": 5.732324123382568,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.619918823242188,
+          "frob": 18.153562545776367,
+          "stable_rank": 1.193070027031696,
+          "participation_ratio": 4.350935971884625,
+          "effective_rank_entropy": 8.757472038269043,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.806795120239258,
+          "frob": 21.494726181030273,
+          "stable_rank": 1.0672187641443125,
+          "participation_ratio": 2.391805912945696,
+          "effective_rank_entropy": 4.346053123474121,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.33413028717041,
+          "frob": 12.185140609741211,
+          "stable_rank": 1.155805319476507,
+          "participation_ratio": 3.476149654924441,
+          "effective_rank_entropy": 6.469472885131836,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.093570709228516,
+          "frob": 20.743892669677734,
+          "stable_rank": 1.1803375014438713,
+          "participation_ratio": 3.3807616003424674,
+          "effective_rank_entropy": 6.285494804382324,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.353470802307129,
+          "frob": 10.912957191467285,
+          "stable_rank": 1.1109972322139392,
+          "participation_ratio": 2.9315659931196003,
+          "effective_rank_entropy": 5.614785194396973,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 18.528778076171875,
+          "frob": 20.11086082458496,
+          "stable_rank": 1.1780609534884767,
+          "participation_ratio": 3.6876540574836185,
+          "effective_rank_entropy": 6.672120094299316,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 22.25786018371582,
+          "frob": 23.63138198852539,
+          "stable_rank": 1.1272270988145403,
+          "participation_ratio": 3.2777465133583905,
+          "effective_rank_entropy": 6.330502986907959,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.27094841003418,
+          "frob": 11.122267723083496,
+          "stable_rank": 1.1726424017356527,
+          "participation_ratio": 3.203808006857922,
+          "effective_rank_entropy": 5.91429328918457,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.73952579498291,
+          "frob": 15.001551628112793,
+          "stable_rank": 1.6329438561340701,
+          "participation_ratio": 6.560375467846918,
+          "effective_rank_entropy": 10.40323257446289,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.762558937072754,
+          "frob": 15.610748291015625,
+          "stable_rank": 1.1182120125549715,
+          "participation_ratio": 2.8407122529342663,
+          "effective_rank_entropy": 5.0942182540893555,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 14.595952033996582,
+          "frob": 19.906843185424805,
+          "stable_rank": 1.8601156029419212,
+          "participation_ratio": 6.827800301868845,
+          "effective_rank_entropy": 11.018678665161133,
+          "numerical_rank_1pct": 24,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.237213134765625,
+          "frob": 20.764310836791992,
+          "stable_rank": 1.1650665398254525,
+          "participation_ratio": 4.128483509924955,
+          "effective_rank_entropy": 8.057243347167969,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.467512130737305,
+          "frob": 21.56766700744629,
+          "stable_rank": 1.1103917499352087,
+          "participation_ratio": 3.456727029709497,
+          "effective_rank_entropy": 6.8860392570495605,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.78884506225586,
+          "frob": 13.194833755493164,
+          "stable_rank": 1.4957462858381128,
+          "participation_ratio": 6.187345149136787,
+          "effective_rank_entropy": 10.385196685791016,
+          "numerical_rank_1pct": 21,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.928816795349121,
+          "frob": 18.405757904052734,
+          "stable_rank": 1.3351817149070053,
+          "participation_ratio": 3.5325729803987542,
+          "effective_rank_entropy": 5.438485145568848,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.564157485961914,
+          "frob": 15.276122093200684,
+          "stable_rank": 1.7450113121282207,
+          "participation_ratio": 4.920854671239733,
+          "effective_rank_entropy": 8.069483757019043,
+          "numerical_rank_1pct": 19,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.319040298461914,
+          "frob": 11.701569557189941,
+          "stable_rank": 1.2859071765053303,
+          "participation_ratio": 4.887923849485866,
+          "effective_rank_entropy": 8.704092979431152,
+          "numerical_rank_1pct": 17,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 24.93819236755371,
+          "frob": 26.92104721069336,
+          "stable_rank": 1.1653434995667176,
+          "participation_ratio": 3.1218908034111053,
+          "effective_rank_entropy": 5.602537631988525,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 23.489627838134766,
+          "frob": 24.517812728881836,
+          "stable_rank": 1.0894597125745875,
+          "participation_ratio": 2.3552034524224283,
+          "effective_rank_entropy": 3.700654983520508,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.90873908996582,
+          "frob": 22.564311981201172,
+          "stable_rank": 1.2845667646988481,
+          "participation_ratio": 4.141334545655627,
+          "effective_rank_entropy": 7.218928337097168,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.694561958312988,
+          "frob": 14.969279289245605,
+          "stable_rank": 1.1948282770390193,
+          "participation_ratio": 3.3811733818033503,
+          "effective_rank_entropy": 5.99313497543335,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 9.7277193069458,
+          "p25": 12.81481647491455,
+          "median": 16.619918823242188,
+          "p75": 22.25786018371582,
+          "p90": 27.128938674926758,
+          "max": 49.37153625488281,
+          "mean": 18.361436009407043,
+          "std": 7.882567223178321
+        },
+        "stable_rank": {
+          "min": 1.0199109759109553,
+          "p25": 1.1182120125549715,
+          "median": 1.193070027031696,
+          "p75": 1.3351817149070053,
+          "p90": 1.4957462858381128,
+          "max": 1.8601156029419212,
+          "mean": 1.2466306061219263,
+          "std": 0.19059381944022488
+        },
+        "participation_ratio": {
+          "min": 1.7531116574136318,
+          "p25": 3.1218908034111053,
+          "median": 3.476149654924441,
+          "p75": 4.71012096087557,
+          "p90": 5.6761983386464845,
+          "max": 6.827800301868845,
+          "mean": 3.8800488936371957,
+          "std": 1.294670237067855
+        },
+        "effective_rank_entropy": {
+          "min": 2.9146218299865723,
+          "p25": 5.602537631988525,
+          "median": 6.672120094299316,
+          "p75": 8.757472038269043,
+          "p90": 9.831205368041992,
+          "max": 11.739136695861816,
+          "mean": 6.98194128870964,
+          "std": 2.187354963508995
+        },
+        "numerical_rank_1pct": {
+          "min": 8.0,
+          "p25": 13.0,
+          "median": 16.0,
+          "p75": 20.0,
+          "p90": 21.0,
+          "max": 26.0,
+          "mean": 15.825,
+          "std": 4.554599323760543
+        }
+      }
+    },
+    "24": {
+      "mean_sigma1": 14.9456658244133,
+      "mean_stable_rank": 1.0954834728508829,
+      "mean_frob": 15.580232334136962,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 5.039363384246826,
+          "frob": 5.094455242156982,
+          "stable_rank": 1.0219841254481388,
+          "participation_ratio": 1.5684852738722916,
+          "effective_rank_entropy": 2.4021360874176025,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.9591383934021,
+          "frob": 7.004853248596191,
+          "stable_rank": 1.0131812313383277,
+          "participation_ratio": 1.5330473196372847,
+          "effective_rank_entropy": 2.3971471786499023,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.576076984405518,
+          "frob": 7.761493682861328,
+          "stable_rank": 1.049546919973348,
+          "participation_ratio": 1.9441154547139334,
+          "effective_rank_entropy": 3.276580810546875,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 24.944969177246094,
+          "frob": 25.197265625,
+          "stable_rank": 1.0203305383469319,
+          "participation_ratio": 1.8900229827803834,
+          "effective_rank_entropy": 3.617345094680786,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.728569030761719,
+          "frob": 13.1793794631958,
+          "stable_rank": 1.0720888036566627,
+          "participation_ratio": 1.9884382491771144,
+          "effective_rank_entropy": 3.1423499584198,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.23646354675293,
+          "frob": 16.443557739257812,
+          "stable_rank": 1.025672452994467,
+          "participation_ratio": 1.6737454422844207,
+          "effective_rank_entropy": 2.751554489135742,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 40.30085372924805,
+          "frob": 41.546993255615234,
+          "stable_rank": 1.0627979459680184,
+          "participation_ratio": 2.5506939793553935,
+          "effective_rank_entropy": 4.78700065612793,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.702564239501953,
+          "frob": 15.721342086791992,
+          "stable_rank": 1.0023931218760718,
+          "participation_ratio": 1.1812422926088435,
+          "effective_rank_entropy": 1.501477837562561,
+          "numerical_rank_1pct": 4,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.484527587890625,
+          "frob": 8.60290813446045,
+          "stable_rank": 1.028099714178911,
+          "participation_ratio": 1.5326645822978258,
+          "effective_rank_entropy": 2.180487632751465,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.801259517669678,
+          "frob": 5.95932674407959,
+          "stable_rank": 1.0552365082035648,
+          "participation_ratio": 2.2424280559174323,
+          "effective_rank_entropy": 3.9821722507476807,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.393027305603027,
+          "frob": 12.758220672607422,
+          "stable_rank": 1.059803638396352,
+          "participation_ratio": 2.0887561712520863,
+          "effective_rank_entropy": 3.6159586906433105,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.692049026489258,
+          "frob": 21.141239166259766,
+          "stable_rank": 1.0438879423163625,
+          "participation_ratio": 2.2477887872126243,
+          "effective_rank_entropy": 4.439720630645752,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.8335700035095215,
+          "frob": 7.078908920288086,
+          "stable_rank": 1.0730929798328852,
+          "participation_ratio": 2.0309282409966847,
+          "effective_rank_entropy": 3.2821741104125977,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 17.626693725585938,
+          "frob": 17.665624618530273,
+          "stable_rank": 1.004422143548135,
+          "participation_ratio": 1.2603579626631614,
+          "effective_rank_entropy": 1.7066150903701782,
+          "numerical_rank_1pct": 4,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.799793720245361,
+          "frob": 6.9565348625183105,
+          "stable_rank": 1.046633076950921,
+          "participation_ratio": 1.6152626585044663,
+          "effective_rank_entropy": 2.216963052749634,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.54619598388672,
+          "frob": 16.62908363342285,
+          "stable_rank": 1.010044032012751,
+          "participation_ratio": 1.5940780248260717,
+          "effective_rank_entropy": 2.781324625015259,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.476385116577148,
+          "frob": 12.861824035644531,
+          "stable_rank": 1.06274136132193,
+          "participation_ratio": 2.1845363130300277,
+          "effective_rank_entropy": 3.84973406791687,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.02362632751465,
+          "frob": 16.08954429626465,
+          "stable_rank": 1.0082445201876131,
+          "participation_ratio": 1.4047740351284317,
+          "effective_rank_entropy": 2.087151288986206,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.26025104522705,
+          "frob": 13.33389663696289,
+          "stable_rank": 1.402226021298769,
+          "participation_ratio": 3.9728275384411784,
+          "effective_rank_entropy": 6.461051940917969,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.235919952392578,
+          "frob": 13.562178611755371,
+          "stable_rank": 1.0499065747027938,
+          "participation_ratio": 1.7119937459926722,
+          "effective_rank_entropy": 2.419818878173828,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.926844120025635,
+          "frob": 7.037646293640137,
+          "stable_rank": 1.032247982043057,
+          "participation_ratio": 1.660362871678159,
+          "effective_rank_entropy": 2.5648233890533447,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.99245548248291,
+          "frob": 7.126825332641602,
+          "stable_rank": 1.0388020783736978,
+          "participation_ratio": 2.027561583515202,
+          "effective_rank_entropy": 3.5358808040618896,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 5.1137189865112305,
+          "frob": 5.2046732902526855,
+          "stable_rank": 1.0358890176428601,
+          "participation_ratio": 2.0284579328499728,
+          "effective_rank_entropy": 3.6939916610717773,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 9.409392356872559,
+          "frob": 9.66163158416748,
+          "stable_rank": 1.0543329745748493,
+          "participation_ratio": 1.7689652717846147,
+          "effective_rank_entropy": 2.627298593521118,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.420125007629395,
+          "frob": 10.304021835327148,
+          "stable_rank": 1.4975332098623768,
+          "participation_ratio": 2.6697717090752926,
+          "effective_rank_entropy": 3.6875393390655518,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 6.545186996459961,
+          "frob": 6.633962154388428,
+          "stable_rank": 1.0273108180434842,
+          "participation_ratio": 1.8237962652986712,
+          "effective_rank_entropy": 3.1043663024902344,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 8.546855926513672,
+          "frob": 8.947154998779297,
+          "stable_rank": 1.0958652503314066,
+          "participation_ratio": 1.9814466026610635,
+          "effective_rank_entropy": 2.9829177856445312,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.956542015075684,
+          "frob": 14.716500282287598,
+          "stable_rank": 1.111868512803686,
+          "participation_ratio": 2.310968918690762,
+          "effective_rank_entropy": 3.752293586730957,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.642082214355469,
+          "frob": 10.737783432006836,
+          "stable_rank": 1.0180662999263774,
+          "participation_ratio": 1.605253578605076,
+          "effective_rank_entropy": 2.56655216217041,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.129732131958008,
+          "frob": 20.697975158691406,
+          "stable_rank": 1.0572549600469217,
+          "participation_ratio": 2.7870353703912287,
+          "effective_rank_entropy": 5.610133171081543,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.965633392333984,
+          "frob": 21.441606521606445,
+          "stable_rank": 1.045920485181735,
+          "participation_ratio": 2.0665868977082753,
+          "effective_rank_entropy": 3.502154588699341,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 21.800390243530273,
+          "frob": 25.05942726135254,
+          "stable_rank": 1.3213374556305029,
+          "participation_ratio": 5.1882793929280835,
+          "effective_rank_entropy": 9.33475112915039,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 10.819706916809082,
+          "frob": 12.730731010437012,
+          "stable_rank": 1.3844449463272352,
+          "participation_ratio": 5.7457033485373366,
+          "effective_rank_entropy": 10.185486793518066,
+          "numerical_rank_1pct": 20,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 21.258928298950195,
+          "frob": 22.29704475402832,
+          "stable_rank": 1.10004861044043,
+          "participation_ratio": 2.025557881104399,
+          "effective_rank_entropy": 2.8991148471832275,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 30.431013107299805,
+          "frob": 30.739028930664062,
+          "stable_rank": 1.0203459973861926,
+          "participation_ratio": 1.982261063550434,
+          "effective_rank_entropy": 3.8143062591552734,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.16069507598877,
+          "frob": 14.524998664855957,
+          "stable_rank": 1.2180764546685987,
+          "participation_ratio": 2.834814772685136,
+          "effective_rank_entropy": 4.190134048461914,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 42.36666488647461,
+          "frob": 42.98214340209961,
+          "stable_rank": 1.0292658945918143,
+          "participation_ratio": 1.6507399297515193,
+          "effective_rank_entropy": 2.4386415481567383,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 29.628124237060547,
+          "frob": 30.787179946899414,
+          "stable_rank": 1.079770619181053,
+          "participation_ratio": 2.0449081517117835,
+          "effective_rank_entropy": 3.067591905593872,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 17.119277954101562,
+          "frob": 17.587404251098633,
+          "stable_rank": 1.0554377059781654,
+          "participation_ratio": 2.199816630849314,
+          "effective_rank_entropy": 3.8467307090759277,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.931965827941895,
+          "frob": 19.402923583984375,
+          "stable_rank": 1.4831859884479148,
+          "participation_ratio": 2.8104685414268697,
+          "effective_rank_entropy": 3.5685322284698486,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 5.039363384246826,
+          "p25": 8.420125007629395,
+          "median": 13.16069507598877,
+          "p75": 17.626693725585938,
+          "p90": 24.944969177246094,
+          "max": 42.36666488647461,
+          "mean": 14.9456658244133,
+          "std": 8.81539953909215
+        },
+        "stable_rank": {
+          "min": 1.0023931218760718,
+          "p25": 1.0273108180434842,
+          "median": 1.0499065747027938,
+          "p75": 1.0730929798328852,
+          "p90": 1.3213374556305029,
+          "max": 1.4975332098623768,
+          "mean": 1.0954834728508829,
+          "std": 0.1293441018970436
+        },
+        "participation_ratio": {
+          "min": 1.1812422926088435,
+          "p25": 1.660362871678159,
+          "median": 2.025557881104399,
+          "p75": 2.2424280559174323,
+          "p90": 2.8104685414268697,
+          "max": 5.7457033485373366,
+          "mean": 2.185723595637388,
+          "std": 0.9073493954394983
+        },
+        "effective_rank_entropy": {
+          "min": 1.501477837562561,
+          "p25": 2.56655216217041,
+          "median": 3.2821741104125977,
+          "p75": 3.8143062591552734,
+          "p90": 4.78700065612793,
+          "max": 10.185486793518066,
+          "mean": 3.596800130605698,
+          "std": 1.7134390260376675
+        },
+        "numerical_rank_1pct": {
+          "min": 4.0,
+          "p25": 6.0,
+          "median": 8.0,
+          "p75": 9.0,
+          "p90": 12.0,
+          "max": 20.0,
+          "mean": 8.375,
+          "std": 3.57552443705815
+        }
+      }
+    },
+    "28": {
+      "mean_sigma1": 17.441462856531142,
+      "mean_stable_rank": 1.1478406032597517,
+      "mean_frob": 18.297351396083833,
+      "n_head": 40,
+      "head_size": 64,
+      "per_head": [
+        {
+          "sigma1": 7.594604969024658,
+          "frob": 8.081661224365234,
+          "stable_rank": 1.1323766470526722,
+          "participation_ratio": 2.9386769894528997,
+          "effective_rank_entropy": 5.407569885253906,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 21.687929153442383,
+          "frob": 22.31826400756836,
+          "stable_rank": 1.058972420131,
+          "participation_ratio": 2.334979743693319,
+          "effective_rank_entropy": 4.48339319229126,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 16.397764205932617,
+          "frob": 16.59996795654297,
+          "stable_rank": 1.0248144141218682,
+          "participation_ratio": 1.8128166246807589,
+          "effective_rank_entropy": 3.12934947013855,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 48.939876556396484,
+          "frob": 50.24970245361328,
+          "stable_rank": 1.0542442714587252,
+          "participation_ratio": 2.1553340586302716,
+          "effective_rank_entropy": 3.917973279953003,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.472532868385315,
+          "frob": 1.8730735778808594,
+          "stable_rank": 1.618004333114069,
+          "participation_ratio": 3.1197782197263217,
+          "effective_rank_entropy": 4.845016002655029,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 28.42573356628418,
+          "frob": 28.903881072998047,
+          "stable_rank": 1.0339248202979492,
+          "participation_ratio": 1.8361750143249926,
+          "effective_rank_entropy": 3.1679747104644775,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 25.503843307495117,
+          "frob": 26.05184555053711,
+          "stable_rank": 1.043435784241989,
+          "participation_ratio": 2.3449611672892976,
+          "effective_rank_entropy": 4.6993913650512695,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.425704002380371,
+          "frob": 14.700760841369629,
+          "stable_rank": 1.1989621929199432,
+          "participation_ratio": 3.152281711402175,
+          "effective_rank_entropy": 5.556314468383789,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 2.9228146076202393,
+          "frob": 2.961610794067383,
+          "stable_rank": 1.0267233291552098,
+          "participation_ratio": 1.996215588832612,
+          "effective_rank_entropy": 3.786994695663452,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.353260040283203,
+          "frob": 12.736248016357422,
+          "stable_rank": 1.0629671618131598,
+          "participation_ratio": 2.7781902856138303,
+          "effective_rank_entropy": 5.844467639923096,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 3.572871446609497,
+          "frob": 3.896993398666382,
+          "stable_rank": 1.189664656624161,
+          "participation_ratio": 2.941537755869716,
+          "effective_rank_entropy": 5.129640102386475,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 11.734832763671875,
+          "frob": 12.09990406036377,
+          "stable_rank": 1.0631879462247293,
+          "participation_ratio": 2.6618307236742718,
+          "effective_rank_entropy": 5.122458457946777,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.87091064453125,
+          "frob": 16.377613067626953,
+          "stable_rank": 1.0648722746664248,
+          "participation_ratio": 2.7935710518447547,
+          "effective_rank_entropy": 5.75177001953125,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 15.565692901611328,
+          "frob": 15.750638961791992,
+          "stable_rank": 1.0239044664710417,
+          "participation_ratio": 1.661248892174723,
+          "effective_rank_entropy": 2.6825931072235107,
+          "numerical_rank_1pct": 7,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 24.87186622619629,
+          "frob": 25.94755744934082,
+          "stable_rank": 1.0883691371144455,
+          "participation_ratio": 3.071018757820679,
+          "effective_rank_entropy": 6.326639652252197,
+          "numerical_rank_1pct": 15,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 51.422515869140625,
+          "frob": 54.676631927490234,
+          "stable_rank": 1.130568463024094,
+          "participation_ratio": 3.0102084359353634,
+          "effective_rank_entropy": 5.5413899421691895,
+          "numerical_rank_1pct": 13,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 21.079998016357422,
+          "frob": 22.23402976989746,
+          "stable_rank": 1.1124877417519499,
+          "participation_ratio": 2.643548628542535,
+          "effective_rank_entropy": 4.553029537200928,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 2.614734649658203,
+          "frob": 2.943943977355957,
+          "stable_rank": 1.2676630694231845,
+          "participation_ratio": 3.1470197336936847,
+          "effective_rank_entropy": 5.202666282653809,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.13234519958496,
+          "frob": 19.6655330657959,
+          "stable_rank": 1.0565134495721278,
+          "participation_ratio": 2.213046111437753,
+          "effective_rank_entropy": 4.097206115722656,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.388961791992188,
+          "frob": 21.500282287597656,
+          "stable_rank": 1.1119828775733391,
+          "participation_ratio": 2.7849705330335386,
+          "effective_rank_entropy": 4.879307270050049,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 20.201358795166016,
+          "frob": 20.896617889404297,
+          "stable_rank": 1.0700173960586528,
+          "participation_ratio": 2.303879285472565,
+          "effective_rank_entropy": 3.951375961303711,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 32.366493225097656,
+          "frob": 32.86452102661133,
+          "stable_rank": 1.0310110465212252,
+          "participation_ratio": 1.9823796226713464,
+          "effective_rank_entropy": 3.645916223526001,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.554123044013977,
+          "frob": 1.5816326141357422,
+          "stable_rank": 1.0357153753251003,
+          "participation_ratio": 2.1835779730568796,
+          "effective_rank_entropy": 4.197431564331055,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 7.291645526885986,
+          "frob": 8.643552780151367,
+          "stable_rank": 1.4051849211495657,
+          "participation_ratio": 2.5772145446070094,
+          "effective_rank_entropy": 3.846160888671875,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 18.377073287963867,
+          "frob": 18.57902717590332,
+          "stable_rank": 1.0220996635986606,
+          "participation_ratio": 1.5480691992781697,
+          "effective_rank_entropy": 2.2334327697753906,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 17.592914581298828,
+          "frob": 17.87192726135254,
+          "stable_rank": 1.031970275591899,
+          "participation_ratio": 1.59151991798156,
+          "effective_rank_entropy": 2.3467023372650146,
+          "numerical_rank_1pct": 5,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 2.6855883598327637,
+          "frob": 3.0236661434173584,
+          "stable_rank": 1.2676191234392815,
+          "participation_ratio": 2.663380807631084,
+          "effective_rank_entropy": 4.13212776184082,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 19.137279510498047,
+          "frob": 21.424402236938477,
+          "stable_rank": 1.2533057349447387,
+          "participation_ratio": 3.7676600033873204,
+          "effective_rank_entropy": 6.740402698516846,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.453041076660156,
+          "frob": 14.270976066589355,
+          "stable_rank": 1.1252950775419652,
+          "participation_ratio": 2.559041641965342,
+          "effective_rank_entropy": 4.0837907791137695,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 13.285677909851074,
+          "frob": 14.304828643798828,
+          "stable_rank": 1.1593054584481426,
+          "participation_ratio": 2.9959898734233175,
+          "effective_rank_entropy": 5.0048370361328125,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 2.2937793731689453,
+          "frob": 2.51672625541687,
+          "stable_rank": 1.203839734279527,
+          "participation_ratio": 3.6553123437438084,
+          "effective_rank_entropy": 6.451267719268799,
+          "numerical_rank_1pct": 14,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 22.888324737548828,
+          "frob": 24.7072811126709,
+          "stable_rank": 1.1652574813659224,
+          "participation_ratio": 2.378361457049388,
+          "effective_rank_entropy": 3.5801682472229004,
+          "numerical_rank_1pct": 8,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.9116278886795044,
+          "frob": 2.001296281814575,
+          "stable_rank": 1.0960138983645122,
+          "participation_ratio": 3.3483169064819402,
+          "effective_rank_entropy": 6.758692264556885,
+          "numerical_rank_1pct": 16,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 25.10129165649414,
+          "frob": 25.62371253967285,
+          "stable_rank": 1.0420581805371183,
+          "participation_ratio": 2.0430089235874136,
+          "effective_rank_entropy": 3.4604296684265137,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 17.01968765258789,
+          "frob": 18.94566535949707,
+          "stable_rank": 1.2391290905173618,
+          "participation_ratio": 3.287577252895119,
+          "effective_rank_entropy": 5.574850082397461,
+          "numerical_rank_1pct": 12,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 1.748388648033142,
+          "frob": 2.0408401489257812,
+          "stable_rank": 1.3625172923975268,
+          "participation_ratio": 2.7862769853714626,
+          "effective_rank_entropy": 4.22319221496582,
+          "numerical_rank_1pct": 11,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 42.60108947753906,
+          "frob": 44.21084213256836,
+          "stable_rank": 1.0770011405320143,
+          "participation_ratio": 2.328374645968835,
+          "effective_rank_entropy": 3.905186414718628,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 36.361602783203125,
+          "frob": 36.971866607666016,
+          "stable_rank": 1.033848063086401,
+          "participation_ratio": 1.9356223487122501,
+          "effective_rank_entropy": 3.322636127471924,
+          "numerical_rank_1pct": 9,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 24.71105194091797,
+          "frob": 25.228458404541016,
+          "stable_rank": 1.0423149334760209,
+          "participation_ratio": 1.8157710835844236,
+          "effective_rank_entropy": 2.7708959579467773,
+          "numerical_rank_1pct": 6,
+          "n_singular_values": 64
+        },
+        {
+          "sigma1": 12.097681999206543,
+          "frob": 16.616071701049805,
+          "stable_rank": 1.8864807864623507,
+          "participation_ratio": 4.045117005142417,
+          "effective_rank_entropy": 5.544954776763916,
+          "numerical_rank_1pct": 10,
+          "n_singular_values": 64
+        }
+      ],
+      "dist": {
+        "sigma1": {
+          "min": 1.472532868385315,
+          "p25": 7.594604969024658,
+          "median": 17.01968765258789,
+          "p75": 22.888324737548828,
+          "p90": 32.366493225097656,
+          "max": 51.422515869140625,
+          "mean": 17.441462856531142,
+          "std": 12.455341135006304
+        },
+        "stable_rank": {
+          "min": 1.0220996635986606,
+          "p25": 1.0423149334760209,
+          "median": 1.0883691371144455,
+          "p75": 1.189664656624161,
+          "p90": 1.2676630694231845,
+          "max": 1.8864807864623507,
+          "mean": 1.1478406032597517,
+          "std": 0.17044062628740375
+        },
+        "participation_ratio": {
+          "min": 1.5480691992781697,
+          "p25": 2.1553340586302716,
+          "median": 2.643548628542535,
+          "p75": 2.9959898734233175,
+          "p90": 3.287577252895119,
+          "max": 4.045117005142417,
+          "mean": 2.5798465462421287,
+          "std": 0.6035742590882364
+        },
+        "effective_rank_entropy": {
+          "min": 2.2334327697753906,
+          "p25": 3.786994695663452,
+          "median": 4.48339319229126,
+          "p75": 5.407569885253906,
+          "p90": 5.844467639923096,
+          "max": 6.758692264556885,
+          "mean": 4.49748991727829,
+          "std": 1.1627498966671612
+        },
+        "numerical_rank_1pct": {
+          "min": 5.0,
+          "p25": 9.0,
+          "median": 11.0,
+          "p75": 13.0,
+          "p90": 15.0,
+          "max": 16.0,
+          "mean": 11.0,
+          "std": 2.7386127875258306
+        }
+      }
+    }
+  }
+}

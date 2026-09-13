@@ -59,14 +59,61 @@ PROMPT = (
 
 
 def _svd_stats(J: torch.Tensor) -> Dict[str, float]:
+    """Spectrum statistics for one head's WKV state matrix.
+
+    `stable_rank` alone was misleading and is kept only for continuity with
+    earlier results: it is ‖A‖²_F/σ₁², an ENERGY-CONCENTRATION measure, not a
+    count of live directions. A matrix can have 32 non-negligible singular
+    values and still report stable_rank≈1.3 if one of them dominates — so the
+    low numbers this probe has been reporting (~1.2-1.3) never actually
+    established that the state uses one direction, only that one direction
+    holds most of the energy. The three added measures separate those:
+
+    - `participation_ratio` = (Σσ)²/Σσ² — effective number of comparable
+      singular values, less dominated by the largest one.
+    - `effective_rank_entropy` = exp(H(p)), p_i = σ_i/Σσ — the entropy-based
+      effective rank (Roy & Vetterli); the standard "how many directions are
+      meaningfully in play" number.
+    - `numerical_rank_1pct` = #{σ_i > 0.01·σ₁} — a plain count of directions
+      above a 1% threshold, the crudest and least interpretable-away measure.
+
+    All four come from the same svdvals call, so this costs nothing extra.
+    """
     try:
         sv = torch.linalg.svdvals(J.float())
         sigma1 = float(sv[0])
         frob = float(J.float().norm())
-        stable_rank = (frob ** 2) / (sigma1 ** 2 + 1e-12)
-        return {"sigma1": sigma1, "stable_rank": stable_rank, "frob": frob}
+        sv_sum = float(sv.sum())
+        sv_sq_sum = float((sv ** 2).sum())
+        p = sv / (sv_sum + 1e-12)
+        entropy = float(-(p * (p + 1e-12).log()).sum())
+        return {
+            "sigma1": sigma1,
+            "frob": frob,
+            "stable_rank": (frob ** 2) / (sigma1 ** 2 + 1e-12),
+            "participation_ratio": (sv_sum ** 2) / (sv_sq_sum + 1e-12),
+            "effective_rank_entropy": float(torch.exp(torch.tensor(entropy))),
+            "numerical_rank_1pct": int((sv > 0.01 * sigma1).sum()),
+            "n_singular_values": int(sv.numel()),
+        }
     except Exception as e:
         return {"sigma1": 0.0, "stable_rank": 0.0, "frob": 0.0, "error": str(e)}
+
+
+def _dist(vals) -> Dict[str, float]:
+    """min/median/max/p90 + spread of a per-head series. The point is to make
+    'is this uniform across heads or driven by a few of them' answerable from
+    the saved file, which it has not been in any previous run."""
+    xs = sorted(float(v) for v in vals)
+    if not xs:
+        return {}
+    n = len(xs)
+    def q(f: float) -> float:
+        return xs[min(n - 1, max(0, int(round(f * (n - 1)))))]
+    mean = sum(xs) / n
+    var = sum((x - mean) ** 2 for x in xs) / n
+    return {"min": xs[0], "p25": q(0.25), "median": q(0.5), "p75": q(0.75),
+            "p90": q(0.90), "max": xs[-1], "mean": mean, "std": var ** 0.5}
 
 
 def _analyze(model, tokenizer, work_layers: List[int], n_tokens: int) -> Dict:
@@ -88,11 +135,26 @@ def _analyze(model, tokenizer, work_layers: List[int], n_tokens: int) -> Dict:
             s_L = state[idx].float().cpu()  # (n_head, H, H) WKV matrix
             n_head, H, _ = s_L.shape
             per_head_stats = [_svd_stats(s_L[h]) for h in range(n_head)]
+            # Every earlier run of this probe computed exactly these per-head
+            # stats and then threw the distribution away, keeping only the
+            # mean over 40 heads. "37 heads at 1.0 plus 3 heads at 5.0" and
+            # "all 40 heads at 1.3" produced an identical saved record, so no
+            # existing artifact can distinguish uniform collapse from a few
+            # specialised read-heads — a distinction that changes the reading
+            # completely. The distribution is kept now; the mean_* keys stay
+            # for continuity with the older files and the diff printer below.
             layer_stats[L] = {
                 "mean_sigma1": sum(x["sigma1"] for x in per_head_stats) / n_head,
                 "mean_stable_rank": sum(x["stable_rank"] for x in per_head_stats) / n_head,
                 "mean_frob": sum(x["frob"] for x in per_head_stats) / n_head,
                 "n_head": n_head,
+                "head_size": H,
+                "per_head": per_head_stats,
+                "dist": {
+                    key: _dist(x[key] for x in per_head_stats if key in x)
+                    for key in ("sigma1", "stable_rank", "participation_ratio",
+                                "effective_rank_entropy", "numerical_rank_1pct")
+                },
             }
         except Exception as e:
             layer_stats[L] = {"error": str(e)}

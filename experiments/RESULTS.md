@@ -86,6 +86,7 @@ expands on.
 | H25, H26 | — | 2026-09-10 |  | held-out OOD R², adam | +0.7580 ± 0.0678 | `experiments/A0_state_probe/results/muon_vs_adam_toy_10seed.json` | `experiments/A0_state_probe/muon_vs_adam_toy.py` |
 | H25, H26 | — | 2026-09-10 |  | held-out OOD R², muon | +0.7763 ± 0.0111 | `experiments/A0_state_probe/results/muon_vs_adam_toy_10seed.json` | `experiments/A0_state_probe/muon_vs_adam_toy.py` |
 | H25 | toy_cell | 2026-09-04 |  | — | status=done | `experiments/A0_state_probe/results/parity_pause_token_g1i_toy.json` | `experiments/A0_state_probe/micro_wkv.py` |
+| H8 | models/rwkv7-g1i-2.9b-20260805-ctx16384.pth | 2026-09-13 |  | — | status=done | `experiments/A0_state_probe/results/rank_recheck/jlens.json` | `experiments/A0_state_probe/jlens_probe.py` |
 | H26 | — | 2026-09-13 |  | strongest |corr(dS, fixed weight norm)| | 0.731 | `experiments/A0_state_probe/results/step_geometry_mismatch.json` | `experiments/A0_state_probe/step_geometry_probe.py` |
 | H26 | — | 2026-09-13 |  | CV(dS per own-norm step), adam | 0.39 | `experiments/A0_state_probe/results/step_geometry_mismatch.json` | `experiments/A0_state_probe/step_geometry_probe.py` |
 | H26 | — | 2026-09-13 |  | CV(dS per own-norm step), muon | 0.24 | `experiments/A0_state_probe/results/step_geometry_mismatch.json` | `experiments/A0_state_probe/step_geometry_probe.py` |

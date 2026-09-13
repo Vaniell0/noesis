@@ -149,6 +149,95 @@ answer that results, `−β·M` rewards getting there in fewer steps, and
 `−γ·Σ ReLU(ΔH_t)` penalizes steps that make the model *less* confident. None
 of these reward surface form.
 
+## Why M should help at all — measured, 2026-09-13
+
+Until now M was justified by cost shape and by the K-sweep prior ("same
+mechanism, so K's numbers transfer"). Neither says *why* extra internal steps
+would recover anything. This does, and it is the first mechanistic argument
+for the axis rather than an empirical hope.
+
+`jlens_probe.py` was rewritten this day after the realisation that
+`stable_rank` — the number every previous state-rank reading in this project
+rested on — is an **energy-concentration** ratio (‖A‖²_F/σ₁²), not a count of
+live directions. A matrix with one dominant singular value plus thirty-one
+real ones scores ~1.03 on it (`test_jlens_spectrum.py` pins this down). The
+project's measured 1.1-1.3 sits exactly in that regime, so "the state is
+nearly rank-1" was never established by that statistic. The probe now also
+reports entropy-effective rank, participation ratio, and a plain count of
+directions above 1% of σ₁ — and keeps the per-head distribution, which every
+earlier run computed and then averaged away.
+
+Re-measured on **G1i base**, 32-token prompt, per head, 64 dimensions
+available (`experiments/A0_state_probe/results/rank_recheck/jlens.json`):
+
+| L | stable_rank | eff. rank (entropy) | directions > 1% of σ₁ | per-head min/med/max |
+|---|---|---|---|---|
+| 0 | 1.291 | 6.50 | 13.2 | 3 / 12 / 26 |
+| 4 | 1.211 | 6.44 | 15.2 | 5 / 16 / 28 |
+| 8 | 1.173 | 5.86 | 13.7 | 6 / 13 / 26 |
+| 12 | 1.181 | 5.88 | 13.7 | 5 / 13 / 22 |
+| 16 | 1.229 | 6.36 | 14.7 | 7 / 15 / 22 |
+| 20 | 1.247 | 6.98 | **15.8** | 8 / 16 / 26 |
+| 24 | 1.095 | 3.60 | **8.4** | 4 / 8 / 20 |
+| 28 | 1.148 | 4.50 | 11.0 | 5 / 11 / 16 |
+
+**The state is not collapsed — it is superposed.** 13-16 live directions of
+64, up to 28 in individual heads, with the energy concentrated in roughly one
+of them. The content is present; a single-pass readout weighted by magnitude
+extracts a fraction of it. That is what M is for: not "more compute", but
+**repeated extraction from a state that demonstrably carries more than one
+pass retrieves**. This is the same phenomenon the readout-corrector scaling
+curve shows from the outside (+7 / +6 / +2 rubric at 1.5B / 2.9B / 7.2B — the
+smaller the model, the more an external read-correction recovers), and the
+same phenomenon the looped-transformer results exploit: the win is in
+extraction, not in storage.
+
+Two structural details that fall out of the per-head distribution, neither
+visible in any earlier artifact:
+
+- **The narrowing is late.** Breadth builds through the middle (L4-L20:
+  13-16) and drops sharply at L24 (8.4, eff. rank 3.60) and L28 (11.0) —
+  immediately before readout. The bottleneck is at the exit, not spread
+  through depth.
+- **Width and strength are close to independent across heads.**
+  corr(directions, σ₁) = +0.30 at L4: the widest head there (28 directions)
+  has σ₁ = 6.06, below that layer's mean of 9.35, while a 5-direction head
+  carries σ₁ = 11.77. There are quiet-and-wide heads, and a magnitude-weighted
+  readout is exactly what would miss them.
+
+### What this predicts about `feed_mode` — ordinary vs. latent tokens
+
+This turns `feed_mode` from an implementation detail into a testable
+consequence, and the prediction is sharp enough to be wrong:
+
+- **`discrete`** samples a real vocabulary token and feeds it back. That
+  projects the state through the vocabulary bottleneck — whatever the
+  magnitude-weighted readout produced, quantised to one token. If the state
+  holds 13-16 directions and the readout sees mostly one, a discrete token
+  can carry back approximately that one. **Prediction: `discrete` recovers
+  little of the measured breadth, and its M-curve should flatten early.**
+- **`expected`** feeds back `softmax(logits) @ emb.weight` — a mixture, no
+  vocabulary projection, differentiable. It can carry more than one
+  direction's worth per step. **Prediction: `expected` should extract more
+  per M step than `discrete`, and the gap should widen with M.**
+
+If the two feed modes give the same M-curve, this mechanistic story is wrong
+and M's benefit (where it exists) comes from something else. Worth stating
+plainly because the first real M-sweep data (2026-08-18, G1i base, discrete,
+M_max=16: 12.5% vs. 33.3% for the retired `state_readout` baseline) was run
+in `discrete` mode only — i.e. in exactly the mode this section predicts is
+the weaker of the two, which is a confound in the only M data currently held.
+
+### Connection to DE
+
+`DE = accuracy / mean_output_words_for_correct_answer × 100` (H24). If M works
+the way this section argues — more of the already-present state content
+extracted per pass — then M should raise accuracy **without** raising emitted
+token count, since the extra work happens in the loop and not in the visible
+output. That is precisely what DE measures, and it is why DE, not raw
+accuracy, is the right frontier metric for this axis: raw accuracy would also
+go up if the model simply talked more, and DE would not.
+
 ## Framing — the frontier is now one-dimensional
 
 Quality vs. M is the frontier; `feed_mode` picks which of three ways M steps
