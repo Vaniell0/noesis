@@ -68,6 +68,9 @@ expands on.
 | — | models/rwkv7-g1i-2.9b-20260805-ctx16384.pth | 2026-09-03 |  | att_proj mean effective_rank | 2391.6 | `experiments/A0_state_probe/results/base_weight_rank_g1i.json` | `experiments/A0_state_probe/lora_rank_analysis.py` |
 | — | models/rwkv7-g1i-2.9b-20260805-ctx16384.pth | 2026-09-03 |  | ffn mean effective_rank | 2560.0 | `experiments/A0_state_probe/results/base_weight_rank_g1i.json` | `experiments/A0_state_probe/lora_rank_analysis.py` |
 | — | models/rwkv7-g1i-2.9b-20260805-ctx16384.pth | 2026-09-03 |  | emb_head mean effective_rank | 2559.0 | `experiments/A0_state_probe/results/base_weight_rank_g1i.json` | `experiments/A0_state_probe/lora_rank_analysis.py` |
+| H26 | — | 2026-09-13 |  | live directions, plain adam / muon | 6.59 / 7.42 | `experiments/A0_state_probe/results/breadth_growth_toy.json` | `experiments/A0_state_probe/breadth_growth_probe.py` |
+| H26 | — | 2026-09-13 |  | live directions, best breadth arm | 16.00 (muon_breadth_L0.1) | `experiments/A0_state_probe/results/breadth_growth_toy.json` | `experiments/A0_state_probe/breadth_growth_probe.py` |
+| H26 | — | 2026-09-13 |  | id_r2, plain best / best breadth arm | +0.9991 / +0.9987 | `experiments/A0_state_probe/results/breadth_growth_toy.json` | `experiments/A0_state_probe/breadth_growth_probe.py` |
 | H16 | /home/vaniello/.libs/models/rwkv7/rwkv-step9b-e1.pth | 2026-09-03 |  | overall_mean_best_cos | 0.0391 | `experiments/A0_state_probe/results/cosine_alignment_step9b_e1.json` | `experiments/A0_state_probe/cosine_alignment.py` |
 | H16 | /home/vaniello/.libs/models/rwkv7/rwkv-step9b-e1.pth | 2026-09-04 |  | overall_real_mean_best_cos | 0.0391 | `experiments/A0_state_probe/results/cosine_alignment_step9b_e1_nullcontrolled.json` | `experiments/A0_state_probe/cosine_alignment.py` |
 | H16 | /home/vaniello/.libs/models/rwkv7/rwkv-step9b-e1.pth | 2026-09-04 |  | overall_null_mean | 0.0358 | `experiments/A0_state_probe/results/cosine_alignment_step9b_e1_nullcontrolled.json` | `experiments/A0_state_probe/cosine_alignment.py` |
@@ -87,6 +90,7 @@ expands on.
 | H25, H26 | — | 2026-09-10 |  | held-out OOD R², muon | +0.7763 ± 0.0111 | `experiments/A0_state_probe/results/muon_vs_adam_toy_10seed.json` | `experiments/A0_state_probe/muon_vs_adam_toy.py` |
 | H25 | toy_cell | 2026-09-04 |  | — | status=done | `experiments/A0_state_probe/results/parity_pause_token_g1i_toy.json` | `experiments/A0_state_probe/micro_wkv.py` |
 | H8 | models/rwkv7-g1i-2.9b-20260805-ctx16384.pth | 2026-09-13 |  | — | status=done | `experiments/A0_state_probe/results/rank_recheck/jlens.json` | `experiments/A0_state_probe/jlens_probe.py` |
+| H8 | models/rwkv7-g1i-2.9b-zlk_phase1_v3-step500-merged.pth | 2026-09-13 |  | — | status=done | `experiments/A0_state_probe/results/rank_recheck_step500/jlens.json` | `experiments/A0_state_probe/jlens_probe.py` |
 | H26 | — | 2026-09-13 |  | strongest |corr(dS, fixed weight norm)| | 0.731 | `experiments/A0_state_probe/results/step_geometry_mismatch.json` | `experiments/A0_state_probe/step_geometry_probe.py` |
 | H26 | — | 2026-09-13 |  | CV(dS per own-norm step), adam | 0.39 | `experiments/A0_state_probe/results/step_geometry_mismatch.json` | `experiments/A0_state_probe/step_geometry_probe.py` |
 | H26 | — | 2026-09-13 |  | CV(dS per own-norm step), muon | 0.24 | `experiments/A0_state_probe/results/step_geometry_mismatch.json` | `experiments/A0_state_probe/step_geometry_probe.py` |

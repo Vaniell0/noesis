@@ -168,4 +168,4 @@ touch pieces implicitly).*
 | H23 | no structured record | - | - | `H23.md` |
 | H24 | no structured record | - | - | `H24.md` |
 | H25 | PARTIAL | - | - | `H25.md` |
-| H26 | PARTIAL | 0.4 | 0.594 | `H26.md` |
+| H26 | PARTIAL | 0.4 | 0.712 | `H26.md` |

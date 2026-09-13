@@ -1,0 +1,341 @@
+{
+  "_meta": {
+    "experiment": "breadth_growth_toy",
+    "hypothesis": [
+      "H26"
+    ],
+    "date": "2026-09-13",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/breadth_growth_probe.py",
+    "summary": {
+      "live directions, plain adam / muon": "6.59 / 7.42",
+      "live directions, best breadth arm": "16.00 (muon_breadth_L0.1)",
+      "id_r2, plain best / best breadth arm": "+0.9991 / +0.9987"
+    }
+  },
+  "runs": [
+    {
+      "arm": "adam",
+      "seed": 0,
+      "breadth_weight": 0.0,
+      "id_r2": -0.008061142704311575,
+      "ablation_a_gate_0_r2": -0.008061034335227202,
+      "live_directions_final": 8.0,
+      "entropy_rank_final": 4.3655009269714355,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam",
+      "seed": 1,
+      "breadth_weight": 0.0,
+      "id_r2": 0.0009805278436737508,
+      "ablation_a_gate_0_r2": 0.0009805278436737508,
+      "live_directions_final": 8.0,
+      "entropy_rank_final": 5.31599235534668,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam",
+      "seed": 2,
+      "breadth_weight": 0.0,
+      "id_r2": 0.9996861370032014,
+      "ablation_a_gate_0_r2": -2.6923688695106356,
+      "live_directions_final": 3.7639999389648438,
+      "entropy_rank_final": 2.0993754863739014,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon",
+      "seed": 0,
+      "breadth_weight": 0.0,
+      "id_r2": 0.9993002738397017,
+      "ablation_a_gate_0_r2": -0.6091948567165641,
+      "live_directions_final": 7.6020002365112305,
+      "entropy_rank_final": 3.861527681350708,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon",
+      "seed": 1,
+      "breadth_weight": 0.0,
+      "id_r2": 0.9989328799412248,
+      "ablation_a_gate_0_r2": -0.012534114019174813,
+      "live_directions_final": 6.910999774932861,
+      "entropy_rank_final": 3.9990813732147217,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon",
+      "seed": 2,
+      "breadth_weight": 0.0,
+      "id_r2": 0.9990546571257051,
+      "ablation_a_gate_0_r2": -0.06527366574266158,
+      "live_directions_final": 7.756999969482422,
+      "entropy_rank_final": 4.26914119720459,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon_breadth_L0.01",
+      "seed": 0,
+      "breadth_weight": 0.01,
+      "id_r2": 0.9989032095148476,
+      "ablation_a_gate_0_r2": -0.006219951962152415,
+      "live_directions_final": 15.99899959564209,
+      "entropy_rank_final": 15.869084358215332,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon_breadth_L0.01",
+      "seed": 1,
+      "breadth_weight": 0.01,
+      "id_r2": 0.9993651231592108,
+      "ablation_a_gate_0_r2": -0.3734586258617627,
+      "live_directions_final": 16.0,
+      "entropy_rank_final": 15.884383201599121,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon_breadth_L0.01",
+      "seed": 2,
+      "breadth_weight": 0.01,
+      "id_r2": 0.9985057971670952,
+      "ablation_a_gate_0_r2": -0.06256144709590128,
+      "live_directions_final": 16.0,
+      "entropy_rank_final": 15.910329818725586,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam_breadth_L0.01",
+      "seed": 0,
+      "breadth_weight": 0.01,
+      "id_r2": 0.9997909397916167,
+      "ablation_a_gate_0_r2": -5.860004048668989,
+      "live_directions_final": 15.0,
+      "entropy_rank_final": 14.588652610778809,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam_breadth_L0.01",
+      "seed": 1,
+      "breadth_weight": 0.01,
+      "id_r2": 0.9999405892093199,
+      "ablation_a_gate_0_r2": -0.20615133241981343,
+      "live_directions_final": 15.996999740600586,
+      "entropy_rank_final": 15.67138671875,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam_breadth_L0.01",
+      "seed": 2,
+      "breadth_weight": 0.01,
+      "id_r2": 0.9998674241552159,
+      "ablation_a_gate_0_r2": -0.2723701157454914,
+      "live_directions_final": 15.975000381469727,
+      "entropy_rank_final": 15.478277206420898,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon_breadth_L0.1",
+      "seed": 0,
+      "breadth_weight": 0.1,
+      "id_r2": 0.9986187142112792,
+      "ablation_a_gate_0_r2": 0.004140457603630132,
+      "live_directions_final": 16.0,
+      "entropy_rank_final": 15.977609634399414,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon_breadth_L0.1",
+      "seed": 1,
+      "breadth_weight": 0.1,
+      "id_r2": 0.9982173814269754,
+      "ablation_a_gate_0_r2": -0.05651584438440738,
+      "live_directions_final": 16.0,
+      "entropy_rank_final": 15.97679328918457,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "muon_breadth_L0.1",
+      "seed": 2,
+      "breadth_weight": 0.1,
+      "id_r2": 0.9991434960765219,
+      "ablation_a_gate_0_r2": -0.8550648299375339,
+      "live_directions_final": 16.0,
+      "entropy_rank_final": 15.978402137756348,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam_breadth_L0.1",
+      "seed": 0,
+      "breadth_weight": 0.1,
+      "id_r2": 0.9994271798051008,
+      "ablation_a_gate_0_r2": -0.03687713243265622,
+      "live_directions_final": 15.994999885559082,
+      "entropy_rank_final": 15.823230743408203,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam_breadth_L0.1",
+      "seed": 1,
+      "breadth_weight": 0.1,
+      "id_r2": 0.9998709789566517,
+      "ablation_a_gate_0_r2": -0.03796445202915022,
+      "live_directions_final": 15.993000030517578,
+      "entropy_rank_final": 15.828667640686035,
+      "head_size": 16,
+      "rank_ceiling": 16
+    },
+    {
+      "arm": "adam_breadth_L0.1",
+      "seed": 2,
+      "breadth_weight": 0.1,
+      "id_r2": 0.9996328311149186,
+      "ablation_a_gate_0_r2": -0.05099112829416175,
+      "live_directions_final": 15.991999626159668,
+      "entropy_rank_final": 15.807055473327637,
+      "head_size": 16,
+      "rank_ceiling": 16
+    }
+  ],
+  "summary": {
+    "adam": {
+      "id_r2": {
+        "mean": 0.33086850738085455,
+        "std": 0.4729398863998226
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -0.8998164586673963,
+        "std": 1.2675313399614203
+      },
+      "live_directions_final": {
+        "mean": 6.587999979654948,
+        "std": 1.9968695788430588
+      },
+      "entropy_rank_final": {
+        "mean": 3.9269562562306723,
+        "std": 1.3492953942994108
+      }
+    },
+    "muon": {
+      "id_r2": {
+        "mean": 0.9990959369688772,
+        "std": 0.00015280180681466352
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -0.2290008788261335,
+        "std": 0.26969854862680853
+      },
+      "live_directions_final": {
+        "mean": 7.423333326975505,
+        "std": 0.36775941475984814
+      },
+      "entropy_rank_final": {
+        "mean": 4.04325008392334,
+        "std": 0.16931302535232762
+      }
+    },
+    "muon_breadth_L0.01": {
+      "id_r2": {
+        "mean": 0.9989247099470512,
+        "std": 0.00035114763430790986
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -0.1474133416399388,
+        "std": 0.16148466161975555
+      },
+      "live_directions_final": {
+        "mean": 15.999666531880697,
+        "std": 0.00047159513693789695
+      },
+      "entropy_rank_final": {
+        "mean": 15.887932459513346,
+        "std": 0.017024392832677794
+      }
+    },
+    "adam_breadth_L0.01": {
+      "id_r2": {
+        "mean": 0.9998663177187175,
+        "std": 6.109912823176793e-05
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -2.112841832278098,
+        "std": 2.6497817191581277
+      },
+      "live_directions_final": {
+        "mean": 15.657333374023438,
+        "std": 0.4648916478810372
+      },
+      "entropy_rank_final": {
+        "mean": 15.246105511983236,
+        "std": 0.47152664040298187
+      }
+    },
+    "muon_breadth_L0.1": {
+      "id_r2": {
+        "mean": 0.9986598639049254,
+        "std": 0.0003792027241389026
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -0.302480072239437,
+        "std": 0.3915203124342459
+      },
+      "live_directions_final": {
+        "mean": 16.0,
+        "std": 0.0
+      },
+      "entropy_rank_final": {
+        "mean": 15.977601687113443,
+        "std": 0.0006568337188072372
+      }
+    },
+    "adam_breadth_L0.1": {
+      "id_r2": {
+        "mean": 0.9996436632922236,
+        "std": 0.00018134207781281216
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -0.04194423758532273,
+        "std": 0.006412500271578332
+      },
+      "live_directions_final": {
+        "mean": 15.993333180745443,
+        "std": 0.0012472986602221018
+      },
+      "entropy_rank_final": {
+        "mean": 15.819651285807291,
+        "std": 0.009178991666459442
+      }
+    }
+  },
+  "verdict": "rank ceiling for this config = min(n_steps=16, head=16) = 16  [!] best arm is AT the ceiling \u2014 this config cannot show growth, rerun with more recurrence steps. best breadth arm: muon_breadth_L0.1 live=16.00 vs plain best 7.42; quality +0.9987 vs +0.9991. -> breadth CAN be built and the task survives it",
+  "breadth_grew": true,
+  "quality_kept": true,
+  "config": {
+    "seeds": 3,
+    "steps": 16,
+    "head_size": 16,
+    "train_steps": 4000,
+    "batch_size": 64,
+    "muon_lr": 0.02,
+    "adam_lr": 0.003,
+    "breadth_weights": "0.01,0.1",
+    "out": "experiments/A0_state_probe/results/breadth_growth_toy.json"
+  }
+}
