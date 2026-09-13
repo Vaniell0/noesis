@@ -253,14 +253,29 @@ def main() -> int:
                       f"range=[{lo:+.4f}, {hi:+.4f}]")
 
         if args.out is not None:
+            # hypothesis=["H25","H26"]: found while testing H25 (and it limits
+            # H25's "delta-rule is necessary" claim to Adam-found solutions),
+            # but the finding itself is about optimizers shaping mechanism —
+            # H26's founding evidence. summary carries the headline NUMBERS,
+            # not a prose purpose: these are the rows that reach RESULTS.md,
+            # and a purpose string there means the actual result never
+            # appears in the index (that was the case until 2026-09-13).
+            def _ms(runs, key):
+                mean, std, _, _ = _stats(runs, key)
+                return f"{mean:+.4f} ± {std:.4f}"
+
             save_result(
                 args.out, {"adam": adam_runs, "muon": muon_runs,
                            "muon_lr": args.muon_lr, "n_seeds": args.n_seeds},
-                experiment="muon_vs_adam_toy_multiseed", hypothesis=["H25"],
-                summary={"purpose": "is the Adam-vs-Muon quality/mechanism difference "
-                                     "real across seeds, or an artifact of seed=0? Also "
-                                     "checks whether the a_gate=0 ablation effect (H25's "
-                                     "'delta-rule necessary' claim) is optimizer-dependent"},
+                experiment="muon_vs_adam_toy_multiseed", hypothesis=["H25", "H26"],
+                summary={
+                    f"a_gate=0 ablation R², adam (n={args.n_seeds} seeds)":
+                        _ms(adam_runs, "ablation_a_gate_0_r2"),
+                    f"a_gate=0 ablation R², muon (n={args.n_seeds} seeds)":
+                        _ms(muon_runs, "ablation_a_gate_0_r2"),
+                    "held-out OOD R², adam": _ms(adam_runs, "ood_r2"),
+                    "held-out OOD R², muon": _ms(muon_runs, "ood_r2"),
+                },
                 script=str(Path(__file__).relative_to(_REPO_ROOT)),
             )
         return 0

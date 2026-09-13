@@ -2,14 +2,18 @@
   "_meta": {
     "experiment": "muon_vs_adam_toy_multiseed",
     "hypothesis": [
-      "H25"
+      "H25",
+      "H26"
     ],
     "date": "2026-09-10",
     "status": "done",
     "model": null,
     "script": "experiments/A0_state_probe/muon_vs_adam_toy.py",
     "summary": {
-      "purpose": "is the Adam-vs-Muon quality/mechanism difference real across seeds, or an artifact of seed=0? Also checks whether the a_gate=0 ablation effect (H25's 'delta-rule necessary' claim) is optimizer-dependent"
+      "a_gate=0 ablation R\u00b2, adam (n=10 seeds)": "-2.6186 \u00b1 2.2229",
+      "a_gate=0 ablation R\u00b2, muon (n=10 seeds)": "-0.2952 \u00b1 0.5631",
+      "held-out OOD R\u00b2, adam": "+0.7580 \u00b1 0.0678",
+      "held-out OOD R\u00b2, muon": "+0.7763 \u00b1 0.0111"
     }
   },
   "adam": [

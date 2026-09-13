@@ -206,6 +206,15 @@ data ruled out WKV-saturation) — so this training corpus (step9b's own) is
 the right one to test it on, but no multi-pass eval has been run yet on
 either the LoRA or full-FT Muon checkpoint from today.
 
+**Formalized 2026-09-13 → `hypotheses/H26.md`.** Everything in this file is an
+observation log; the claim it kept circling — that the optimizer's geometry
+selects which internal mechanism a solution uses, and that for a recurrent-state
+model the right step metric may be induced by the state rather than fixed in
+advance — now has its own hypothesis with pre-registered refutation criteria and
+a cheap CPU-scale first experiment (`experiments/A0_state_probe/step_geometry_probe.py`).
+Read H26 for what is actually being tested; read this file for what was observed
+while flailing at it on real hardware.
+
 ## Toy-scale Muon vs. Adam, controlled (`experiments/A0_state_probe/muon_vs_adam_toy.py`, H25)
 
 **10-seed rerun (2026-09-10) of the toy multiplication task, extending

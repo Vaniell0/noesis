@@ -131,6 +131,11 @@ touch pieces implicitly).*
 - **H25** — WKV state is a learnable computational substrate for
   approximate linear algebra without CoT tokens. *(wager, Phase 3)*
 
+**Training geometry — how the optimizer shapes the model.**
+- **H26** — The optimizer's geometry selects which internal mechanism a
+  solution uses; for a recurrent-state model the right metric is induced
+  by the state, not fixed in advance. *(wager, cross-cutting)*
+
 <!-- AUTO-GENERATED BELOW: do not hand-edit — regenerate via `python experiments/regenerate_hyp_index.py` -->
 
 | H | Status | Prior | Posterior | File |
@@ -144,7 +149,7 @@ touch pieces implicitly).*
 | H5 | no structured record | - | - | `H5.md` |
 | H6 | no structured record | - | - | `H6.md` |
 | H7 | no structured record | - | - | `H7.md` |
-| H8 | SUPPORTED | 0.6 | 0.588 | `H8.md` |
+| H8 | SUPPORTED | 0.6 | 0.650 | `H8.md` |
 | H9 | SUPPORTED | 0.65 | 0.650 | `H9.md` |
 | H10 | PARTIAL | 0.5 | 0.500 | `H10.md` |
 | H11 | no structured record | - | - | `H11.md` |
@@ -163,3 +168,4 @@ touch pieces implicitly).*
 | H23 | no structured record | - | - | `H23.md` |
 | H24 | no structured record | - | - | `H24.md` |
 | H25 | PARTIAL | - | - | `H25.md` |
+| H26 | PARTIAL | 0.4 | 0.594 | `H26.md` |
