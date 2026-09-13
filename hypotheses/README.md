@@ -149,7 +149,7 @@ touch pieces implicitly).*
 | H5 | no structured record | - | - | `H5.md` |
 | H6 | no structured record | - | - | `H6.md` |
 | H7 | no structured record | - | - | `H7.md` |
-| H8 | SUPPORTED | 0.6 | 0.650 | `H8.md` |
+| H8 | SUPPORTED | 0.6 | 0.707 | `H8.md` |
 | H9 | SUPPORTED | 0.65 | 0.650 | `H9.md` |
 | H10 | PARTIAL | 0.5 | 0.500 | `H10.md` |
 | H11 | no structured record | - | - | `H11.md` |

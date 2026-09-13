@@ -1,0 +1,13 @@
+{
+  "ts": 1789281456.1838465,
+  "ts_human": "2026-09-13 09:37:36",
+  "progress": [
+    0,
+    1
+  ],
+  "probe": "jlens",
+  "probe_index": 1,
+  "probe_total": 1,
+  "model": "models/rwkv7-g1i-2.9b-zlk_phase1_v3-step500-merged.pth",
+  "message": "running jlens (1/1)"
+}

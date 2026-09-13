@@ -184,13 +184,36 @@ available (`experiments/A0_state_probe/results/rank_recheck/jlens.json`):
 **The state is not collapsed — it is superposed.** 13-16 live directions of
 64, up to 28 in individual heads, with the energy concentrated in roughly one
 of them. The content is present; a single-pass readout weighted by magnitude
-extracts a fraction of it. That is what M is for: not "more compute", but
-**repeated extraction from a state that demonstrably carries more than one
-pass retrieves**. This is the same phenomenon the readout-corrector scaling
-curve shows from the outside (+7 / +6 / +2 rubric at 1.5B / 2.9B / 7.2B — the
-smaller the model, the more an external read-correction recovers), and the
-same phenomenon the looped-transformer results exploit: the win is in
-extraction, not in storage.
+extracts a fraction of it.
+
+**M is the mechanism for traversing that breadth — and M is a chain length,
+not a repeat count.** Stating this explicitly because this project has already
+caught the "M names two different mechanisms" confusion once (`docs/rl-track.md`)
+and it is easy to re-import. M is the number of *distinct* phases, each with
+its own learned marker `chain[i]`; repeating one marker is a different knob
+(`--phase-repeat-ticks`), on a different axis. The distinction is measured, not
+assumed (`docs/phase15-gap-matrix.md`, repeat-count vs. M-count isolation):
+repeating the same marker inside a phase converges within about four ticks
+(`delta_cos_prev` → 0.997), while crossing into a new phase resets the
+direction near-orthogonally (`delta_cos_prev` = 0.097). Phases do different
+directional work; repeats do the same work harder and stop paying almost
+immediately.
+
+So the mechanistic claim is not "read the same thing again until it comes out
+cleaner" — it is that **a chain of M near-orthogonal phases can engage
+different parts of a state that holds 13-16 live directions, where one readout
+pass engages approximately one.** This is the same phenomenon the
+readout-corrector scaling curve shows from the outside (+7 / +6 / +2 rubric at
+1.5B / 2.9B / 7.2B — the smaller the model, the more an external
+read-correction recovers), and the same one looped architectures exploit: the
+win is in extraction, not in storage.
+
+**Quantitative prediction that follows, and can be wrong:** useful M should be
+bounded by the available breadth rather than unbounded. With 13-16 live
+directions mid-stack and 8.4 at L24, there is nothing left to traverse much
+past that, so the M-vs-quality curve should saturate in that neighbourhood
+rather than continuing to pay. If a future M-sweep keeps gaining well beyond
+~16, this reading of what M is doing is wrong.
 
 Two structural details that fall out of the per-head distribution, neither
 visible in any earlier artifact:
@@ -218,8 +241,9 @@ consequence, and the prediction is sharp enough to be wrong:
   little of the measured breadth, and its M-curve should flatten early.**
 - **`expected`** feeds back `softmax(logits) @ emb.weight` — a mixture, no
   vocabulary projection, differentiable. It can carry more than one
-  direction's worth per step. **Prediction: `expected` should extract more
-  per M step than `discrete`, and the gap should widen with M.**
+  direction's worth across a phase boundary. **Prediction: `expected` should
+  carry more between phases than `discrete`, and the gap should widen with
+  chain length.**
 
 If the two feed modes give the same M-curve, this mechanistic story is wrong
 and M's benefit (where it exists) comes from something else. Worth stating
