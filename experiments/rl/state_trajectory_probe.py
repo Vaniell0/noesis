@@ -117,6 +117,44 @@ def _state_norms(wkv, layers) -> dict[int, float]:
     return {L: float(torch.linalg.vector_norm(wkv[L].float().flatten()).item()) for L in layers}
 
 
+def _spectrum(wkv, layers) -> dict[int, dict]:
+    """Per-layer spectral breadth of the WKV state, averaged over heads.
+
+    Added 2026-09-13. `delta_cos_prev` above answers "is the mechanism doing
+    the same directional work again" but says nothing about how MANY
+    directions the state is holding while it does it — and that is the
+    quantity the M axis is supposed to traverse (docs/effort-frontier.md).
+    G1i base carries 13-16 live directions of 64 after an ordinary prompt;
+    the open question this measures is what a marker-driven phase does to
+    that number: preserve it (a chain has breadth to traverse), or collapse
+    it (the mechanism destroys the thing it exists to exploit).
+
+    `stable_rank` is reported for continuity with older traces but is an
+    energy-concentration ratio, not a direction count — see
+    `experiments/A0_state_probe/jlens_probe.py::_svd_stats`, whose
+    implementation is reused here rather than re-derived.
+    """
+    from experiments.A0_state_probe.jlens_probe import _svd_stats
+
+    out: dict[int, dict] = {}
+    for L in layers:
+        s = wkv[L].float()
+        if s.dim() == 4:       # [B, n_head, h, h] — peft backend, batch first
+            s = s[0]
+        if s.dim() != 3:
+            continue
+        per_head = [_svd_stats(s[h]) for h in range(s.shape[0])]
+        keys = ("stable_rank", "participation_ratio",
+                "effective_rank_entropy", "numerical_rank_1pct")
+        out[L] = {k: sum(x[k] for x in per_head) / len(per_head)
+                  for k in keys if all(k in x for x in per_head)}
+        if out[L]:
+            nr = [x["numerical_rank_1pct"] for x in per_head if "numerical_rank_1pct" in x]
+            out[L]["numerical_rank_min"] = min(nr)
+            out[L]["numerical_rank_max"] = max(nr)
+    return out
+
+
 def _delta_norms(wkv, prev_wkv, layers) -> dict[int, float] | None:
     """‖S_t - S_{t-1}‖ per layer — true displacement, not difference of
     norms (a state can rotate a lot at near-constant magnitude, or barely
@@ -288,6 +326,7 @@ def trace_prompt(loaded, prompt_text: str, layers, capture_layers, save_raw: boo
              "norms": _state_norms(state.wkv, layers),
              "delta_norms": _delta_norms(state.wkv, prev_wkv, layers),
              "delta_cos_prev": cos_prev,
+             "spectrum": _spectrum(state.wkv, layers),
              "rkvwag": cap}
         return d, new_delta
 

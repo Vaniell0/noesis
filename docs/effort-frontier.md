@@ -225,8 +225,17 @@ visible in any earlier artifact:
 - **Width and strength are close to independent across heads.**
   corr(directions, σ₁) = +0.30 at L4: the widest head there (28 directions)
   has σ₁ = 6.06, below that layer's mean of 9.35, while a 5-direction head
-  carries σ₁ = 11.77. There are quiet-and-wide heads, and a magnitude-weighted
-  readout is exactly what would miss them.
+  carries σ₁ = 11.77. Quiet-and-wide heads exist.
+  *First reading of this was wrong and is corrected here rather than deleted:*
+  it looked like an intervention point ("a magnitude-weighted readout would
+  miss them"), but RWKV-7 normalises per head already — `self.ln_x =
+  nn.GroupNorm(H, C)` with `num_groups = n_head`, so each head's channels are
+  their own normalisation group and every head reaches the mixer at unit
+  variance regardless of its σ₁. Quiet heads are not down-weighted; they are
+  equalised. Whether equalising a genuinely low-signal head is good (it also
+  amplifies its noise) is a separate and untested question — but the
+  "readout ignores them" version of the concern does not survive reading the
+  architecture.
 
 ### What this predicts about `feed_mode` — ordinary vs. latent tokens
 
