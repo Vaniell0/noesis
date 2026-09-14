@@ -50,7 +50,9 @@ from experiments.A0_state_probe.muon_vs_adam_toy import (
     SingleDeviceMuon,
     _split_muon_adam_params,
 )
+from experiments._common.convergence import CONVERGED_ID_R2 as _CONVERGED_ID_R2
 from experiments._common.results import save_result
+from experiments._common.runtime import limit_threads, progress
 
 
 # Below this many measurement points a Pearson r is not interpretable: any
@@ -61,6 +63,10 @@ from experiments._common.results import save_result
 # relying on the caller to pick sane flags, because that verdict is written
 # into a hypothesis record.
 MIN_POINTS_FOR_CORR = 30
+
+# Shared with every other toy probe — see experiments/_common/convergence.py
+# for why this is one definition in one place and not three local copies.
+CONVERGED_ID_R2 = _CONVERGED_ID_R2
 
 
 def _pearson(xs: list[float], ys: list[float]) -> float:
@@ -231,6 +237,7 @@ def run_one(optimizer: str, seed: int, n_steps: int, head_size: int,
         "optimizer": optimizer,
         "seed": seed,
         "id_r2": id_r2,
+        "converged": bool(id_r2 > CONVERGED_ID_R2),
         "own_norm_key": own_norm_key,
         "n_measurements": len(rows),
         # Does the optimizer actually hold its own norm constant? (sanity: for
@@ -264,8 +271,16 @@ def main() -> int:
     ap.add_argument("--measure-every", type=int, default=20)
     ap.add_argument("--muon-lr", type=float, default=0.02)
     ap.add_argument("--adam-lr", type=float, default=3e-3)
+    ap.add_argument("--threads", type=int, default=None,
+                    help="cap torch intra-op threads (default 4, or "
+                         "$NOESIS_PROBE_THREADS). Set this when running "
+                         "several probes at once: torch otherwise sizes "
+                         "its pool from the core count and concurrent "
+                         "probes oversubscribe the machine.")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
+    n_threads = limit_threads(args.threads)
+    progress(f"[{Path(__file__).stem}] torch threads = {n_threads}")
 
     all_runs = []
     for opt_name in ("adam", "muon"):
@@ -274,7 +289,7 @@ def main() -> int:
                         args.train_steps, args.batch_size, args.measure_every,
                         args.muon_lr, args.adam_lr, args.probe_batch)
             all_runs.append(r)
-            print(f"[{opt_name} seed={seed}] id_r2={r['id_r2']:.4f}  "
+            progress(f"[{opt_name} seed={seed}] id_r2={r['id_r2']:.4f}  "
                   f"CV(own {r['own_norm_key']})={r['cv_own_norm']:.3f}  "
                   f"CV(dS)={r['cv_dS_abs']:.3f}  "
                   f"CV(dS/own)={r['cv_ratio_dS_per_own_norm']:.3f}  "
@@ -283,28 +298,39 @@ def main() -> int:
                   f"corr(dS,inf)={r['corr_dS_vs_inf_max']:+.3f}")
 
     def agg(opt_name: str, key: str) -> tuple[float, float]:
-        vals = [r[key] for r in all_runs if r["optimizer"] == opt_name and r[key] == r[key]]
+        vals = [r[key] for r in all_runs
+                if r["optimizer"] == opt_name and r["converged"] and r[key] == r[key]]
         if not vals:
             return float("nan"), float("nan")
         return sum(vals) / len(vals), statistics.pstdev(vals)
 
-    print("\n=== summary over seeds ===")
+    print("\n=== summary over seeds (CONVERGED runs only) ===")
     summary_rows = {}
     for opt_name in ("adam", "muon"):
-        line = {}
+        runs_o = [r for r in all_runs if r["optimizer"] == opt_name]
+        n_ok = sum(1 for r in runs_o if r["converged"])
+        line = {"converged_frac": (n_ok / len(runs_o)) if runs_o else 0.0,
+                "n_converged": n_ok, "n_seeds": len(runs_o)}
+        if n_ok == 0:
+            print(f"  {opt_name:5s} NO CONVERGED RUN — every statistic for this "
+                  f"arm is measured on a model that never learned the task, and "
+                  f"is reported as NaN rather than as a number")
         for key in ("id_r2", "cv_own_norm", "cv_dS_abs", "cv_ratio_dS_per_own_norm",
                     "corr_dS_vs_spec_max", "corr_dS_vs_fro_total", "corr_dS_vs_inf_max"):
             m, s = agg(opt_name, key)
             line[key] = {"mean": m, "std": s}
-            print(f"  {opt_name:5s} {key:28s} {m:+.4f} +- {s:.4f}")
+            print(f"  {opt_name:5s} {key:28s} {m:+.4f} +- {s:.4f}"
+                  + ("" if n_ok == len(runs_o) else f"   [{n_ok}/{len(runs_o)} seeds]"))
         summary_rows[opt_name] = line
 
     # Pre-registered verdict, computed rather than eyeballed — and refused
     # outright if the run was too short for the correlations to mean anything.
     n_points = min(r["n_measurements"] for r in all_runs)
+    live_opts = [o for o in ("adam", "muon") if summary_rows[o]["n_converged"] > 0]
+    dead_opts = [o for o in ("adam", "muon") if summary_rows[o]["n_converged"] == 0]
     corrs = [
         abs(summary_rows[o][k]["mean"])
-        for o in ("adam", "muon")
+        for o in live_opts
         for k in ("corr_dS_vs_spec_max", "corr_dS_vs_fro_total", "corr_dS_vs_inf_max")
         if summary_rows[o][k]["mean"] == summary_rows[o][k]["mean"]
     ]
@@ -319,7 +345,13 @@ def main() -> int:
         verdict = (f"strongest |corr(dS, any fixed norm)| = {worst_corr:.3f} "
                    f"-> H26 strong-version premise "
                    f"{'REFUTED' if premise_refuted else 'survives'} "
-                   f"(pre-registered threshold 0.9, n={n_points} points/run)")
+                   f"(pre-registered threshold 0.9, n={n_points} points/run, "
+                   f"over converged arms: {', '.join(live_opts)})")
+        if dead_opts:
+            verdict += ("\n[!] NOT EVALUABLE for " + ", ".join(dead_opts) +
+                        " — no seed of that arm learned the task at this "
+                        "configuration, so this T is void for it and must not "
+                        "be scored as a pass or a failure")
     print(f"\n{verdict}")
 
     if args.out is not None:

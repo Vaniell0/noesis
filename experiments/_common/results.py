@@ -14,6 +14,7 @@ below that marker.
 from __future__ import annotations
 
 import inspect
+import hashlib as _hashlib
 import json
 from datetime import date as _date
 from pathlib import Path
@@ -85,6 +86,24 @@ def save_result(
     if summary is None:
         summary = data.get("_summary")
 
+    # Content hash of the generating script, not just its path.
+    #
+    # Added 2026-09-14 after a result file turned out to have been produced by
+    # code that was edited WHILE the run was in flight: `rank_recheck/jlens.json`
+    # has an mtime ten minutes NEWER than the probe source, yet lacks the fields
+    # that source writes — the process had imported the pre-edit module and held
+    # it in memory. A file's timestamp therefore says nothing about which code
+    # version produced it, and that is exactly the question asked when a result
+    # looks wrong. The hash answers it: if it does not match the script on disk
+    # today, the result predates the current code.
+    script_sha = None
+    try:
+        _src = Path(script).resolve()
+        if _src.is_file():
+            script_sha = _hashlib.sha256(_src.read_bytes()).hexdigest()[:12]
+    except Exception:
+        pass
+
     meta = {
         "experiment": experiment,
         "hypothesis": list(hypothesis),
@@ -92,6 +111,7 @@ def save_result(
         "status": status,
         "model": model if model is not None else data.get("model"),
         "script": script_rel,
+        "script_sha256_12": script_sha,
     }
     if summary:
         meta["summary"] = dict(summary)

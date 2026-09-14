@@ -1,0 +1,862 @@
+{
+  "_meta": {
+    "experiment": "lineage_toy",
+    "hypothesis": [
+      "H26",
+      "H25"
+    ],
+    "date": "2026-09-14",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/lineage_probe.py",
+    "summary": {
+      "old-skill change from the pretrained base, per arm": "lora_adam -0.1027; lora_muon -0.3581; full_adam -0.0925; full_muon -0.2439; direct_full_adam -0.1314; direct_full_muon -0.2028",
+      "new skill reached, per arm": "lora_adam +0.9890; lora_muon +0.9716; full_adam +0.9873; full_muon +0.9740; direct_full_adam +0.9947; direct_full_muon +0.9925",
+      "live directions added by the LoRA stage": "-0.43"
+    }
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "stage0": {
+        "old_r2": 0.9987463129429458,
+        "new_r2": -2.3306546444906986,
+        "ablation_a_gate_0_r2": -0.2667734757454383,
+        "live_directions": 6.169921875,
+        "entropy_rank": 3.3842532634735107
+      },
+      "stage1": {
+        "old_r2": 0.6287207804008268,
+        "new_r2": 0.9882063502109253,
+        "ablation_a_gate_0_r2": -107.47992655883347,
+        "live_directions": 5.263671875,
+        "entropy_rank": 2.097794532775879,
+        "d_live_vs_stage0": -0.90625,
+        "d_old_vs_stage0": -0.370025532542119,
+        "d_new_vs_stage0": 3.318860994701624
+      },
+      "stage2": {
+        "lora_adam": {
+          "old_r2": 0.9353778960206842,
+          "new_r2": 0.9701460580455031,
+          "ablation_a_gate_0_r2": -14.068128095790305,
+          "live_directions": 5.853515625,
+          "entropy_rank": 2.649916648864746,
+          "reference_stage": "stage1",
+          "d_old": 0.3066571156198574,
+          "d_new": -0.018060292165422154,
+          "d_live": 0.58984375,
+          "d_old_vs_stage0": -0.06336841692226158,
+          "d_live_vs_stage0": -0.31640625
+        },
+        "lora_muon": {
+          "old_r2": 0.720487072459487,
+          "new_r2": 0.9759738427315188,
+          "ablation_a_gate_0_r2": -7.303172549821975,
+          "live_directions": 5.884765625,
+          "entropy_rank": 3.224189043045044,
+          "reference_stage": "stage1",
+          "d_old": 0.09176629205866016,
+          "d_new": -0.012232507479406518,
+          "d_live": 0.62109375,
+          "d_old_vs_stage0": -0.27825924048345885,
+          "d_live_vs_stage0": -0.28515625
+        },
+        "full_adam": {
+          "old_r2": 0.9424408586750944,
+          "new_r2": 0.9670607265000729,
+          "ablation_a_gate_0_r2": -4.807916269701388,
+          "live_directions": 6.25390625,
+          "entropy_rank": 3.0101397037506104,
+          "reference_stage": "stage1",
+          "d_old": 0.3137200782742676,
+          "d_new": -0.02114562371085238,
+          "d_live": 0.990234375,
+          "d_old_vs_stage0": -0.056305454267851385,
+          "d_live_vs_stage0": 0.083984375
+        },
+        "full_muon": {
+          "old_r2": 0.9029920873041558,
+          "new_r2": 0.9929119124651626,
+          "ablation_a_gate_0_r2": -0.20565568163014358,
+          "live_directions": 5.62890625,
+          "entropy_rank": 2.4250576496124268,
+          "reference_stage": "stage1",
+          "d_old": 0.274271306903329,
+          "d_new": 0.00470556225423735,
+          "d_live": 0.365234375,
+          "d_old_vs_stage0": -0.09575422563878999,
+          "d_live_vs_stage0": -0.541015625
+        },
+        "direct_full_adam": {
+          "old_r2": 0.9491544267065757,
+          "new_r2": 0.9940291812009441,
+          "ablation_a_gate_0_r2": -5.647171543305765,
+          "live_directions": 7.18359375,
+          "entropy_rank": 3.756847858428955,
+          "reference_stage": "stage0",
+          "d_old": -0.04959188623637012,
+          "d_new": 3.3246838256916424,
+          "d_live": 1.013671875,
+          "d_old_vs_stage0": -0.04959188623637012,
+          "d_live_vs_stage0": 1.013671875
+        },
+        "direct_full_muon": {
+          "old_r2": 0.9339739839679249,
+          "new_r2": 0.9804458962328221,
+          "ablation_a_gate_0_r2": -0.7899398536928424,
+          "live_directions": 6.88671875,
+          "entropy_rank": 3.71749210357666,
+          "reference_stage": "stage0",
+          "d_old": -0.06477232897502094,
+          "d_new": 3.311100540723521,
+          "d_live": 0.716796875,
+          "d_old_vs_stage0": -0.06477232897502094,
+          "d_live_vs_stage0": 0.716796875
+        }
+      }
+    },
+    {
+      "seed": 1,
+      "stage0": {
+        "old_r2": 0.9985207860175171,
+        "new_r2": -2.1904501470873714,
+        "ablation_a_gate_0_r2": -0.15216036840831904,
+        "live_directions": 5.205078125,
+        "entropy_rank": 2.9002578258514404
+      },
+      "stage1": {
+        "old_r2": 0.8363856793520853,
+        "new_r2": 0.9948520166455503,
+        "ablation_a_gate_0_r2": -2.162581019635778,
+        "live_directions": 4.49609375,
+        "entropy_rank": 2.5890629291534424,
+        "d_live_vs_stage0": -0.708984375,
+        "d_old_vs_stage0": -0.16213510666543185,
+        "d_new_vs_stage0": 3.1853021637329215
+      },
+      "stage2": {
+        "lora_adam": {
+          "old_r2": 0.9641473906032988,
+          "new_r2": 0.991476960089931,
+          "ablation_a_gate_0_r2": -2.31241926269029,
+          "live_directions": 4.525390625,
+          "entropy_rank": 2.711658477783203,
+          "reference_stage": "stage1",
+          "d_old": 0.1277617112512135,
+          "d_new": -0.0033750565556193157,
+          "d_live": 0.029296875,
+          "d_old_vs_stage0": -0.034373395414218355,
+          "d_live_vs_stage0": -0.6796875
+        },
+        "lora_muon": {
+          "old_r2": 0.27267927015834803,
+          "new_r2": 0.9841518990762472,
+          "ablation_a_gate_0_r2": -0.31880783723894246,
+          "live_directions": 3.896484375,
+          "entropy_rank": 2.7367520332336426,
+          "reference_stage": "stage1",
+          "d_old": -0.5637064091937373,
+          "d_new": -0.010700117569303114,
+          "d_live": -0.599609375,
+          "d_old_vs_stage0": -0.7258415158591691,
+          "d_live_vs_stage0": -1.30859375
+        },
+        "full_adam": {
+          "old_r2": 0.9719081549017147,
+          "new_r2": 0.9825236163513464,
+          "ablation_a_gate_0_r2": -3.202088072626438,
+          "live_directions": 4.474609375,
+          "entropy_rank": 2.772083044052124,
+          "reference_stage": "stage1",
+          "d_old": 0.13552247554962937,
+          "d_new": -0.0123284002942039,
+          "d_live": -0.021484375,
+          "d_old_vs_stage0": -0.026612631115802476,
+          "d_live_vs_stage0": -0.73046875
+        },
+        "full_muon": {
+          "old_r2": 0.7183847947194488,
+          "new_r2": 0.9868898638912278,
+          "ablation_a_gate_0_r2": -3.2420941817929574,
+          "live_directions": 4.45703125,
+          "entropy_rank": 2.4730706214904785,
+          "reference_stage": "stage1",
+          "d_old": -0.11800088463263647,
+          "d_new": -0.007962152754322549,
+          "d_live": -0.0390625,
+          "d_old_vs_stage0": -0.2801359912980683,
+          "d_live_vs_stage0": -0.748046875
+        },
+        "direct_full_adam": {
+          "old_r2": 0.8897183857922608,
+          "new_r2": 0.9979968026704632,
+          "ablation_a_gate_0_r2": -1.655505159677423,
+          "live_directions": 5.50390625,
+          "entropy_rank": 3.6603996753692627,
+          "reference_stage": "stage0",
+          "d_old": -0.10880240022525633,
+          "d_new": 3.1884469497578345,
+          "d_live": 0.298828125,
+          "d_old_vs_stage0": -0.10880240022525633,
+          "d_live_vs_stage0": 0.298828125
+        },
+        "direct_full_muon": {
+          "old_r2": 0.6963832516853112,
+          "new_r2": 0.9969622951191693,
+          "ablation_a_gate_0_r2": -0.2135349037084957,
+          "live_directions": 6.779296875,
+          "entropy_rank": 3.6343672275543213,
+          "reference_stage": "stage0",
+          "d_old": -0.3021375343322059,
+          "d_new": 3.187412442206541,
+          "d_live": 1.57421875,
+          "d_old_vs_stage0": -0.3021375343322059,
+          "d_live_vs_stage0": 1.57421875
+        }
+      }
+    },
+    {
+      "seed": 2,
+      "stage0": {
+        "old_r2": 0.9978040312148756,
+        "new_r2": -2.223222712511821,
+        "ablation_a_gate_0_r2": -1.7977874687419169,
+        "live_directions": 4.78125,
+        "entropy_rank": 3.0778820514678955
+      },
+      "stage1": {
+        "old_r2": 0.8699565345303977,
+        "new_r2": 0.980342071948093,
+        "ablation_a_gate_0_r2": -19.574057454519306,
+        "live_directions": 5.82421875,
+        "entropy_rank": 3.4199907779693604,
+        "d_live_vs_stage0": 1.04296875,
+        "d_old_vs_stage0": -0.12784749668447792,
+        "d_new_vs_stage0": 3.203564784459914
+      },
+      "stage2": {
+        "lora_adam": {
+          "old_r2": 0.8109971597943774,
+          "new_r2": 0.9980123053503812,
+          "ablation_a_gate_0_r2": -15.69843377402513,
+          "live_directions": 6.193359375,
+          "entropy_rank": 3.9473795890808105,
+          "reference_stage": "stage1",
+          "d_old": -0.05895937473602031,
+          "d_new": 0.017670233402288238,
+          "d_live": 0.369140625,
+          "d_old_vs_stage0": -0.18680687142049823,
+          "d_live_vs_stage0": 1.412109375
+        },
+        "lora_muon": {
+          "old_r2": 0.548395141224977,
+          "new_r2": 0.9819962966004172,
+          "ablation_a_gate_0_r2": -1.656364031632565,
+          "live_directions": 6.87890625,
+          "entropy_rank": 3.5426931381225586,
+          "reference_stage": "stage1",
+          "d_old": -0.32156139330542066,
+          "d_new": 0.001654224652324232,
+          "d_live": 1.0546875,
+          "d_old_vs_stage0": -0.4494088899898986,
+          "d_live_vs_stage0": 2.09765625
+        },
+        "full_adam": {
+          "old_r2": 0.7898696753409653,
+          "new_r2": 0.9979116688847678,
+          "ablation_a_gate_0_r2": -10.349595320412574,
+          "live_directions": 5.90234375,
+          "entropy_rank": 3.2543118000030518,
+          "reference_stage": "stage1",
+          "d_old": -0.08008685918943237,
+          "d_new": 0.017569596936674814,
+          "d_live": 0.078125,
+          "d_old_vs_stage0": -0.2079343558739103,
+          "d_live_vs_stage0": 1.12109375
+        },
+        "full_muon": {
+          "old_r2": 0.8306495127059768,
+          "new_r2": 0.9648005534046122,
+          "ablation_a_gate_0_r2": -9.503729919588746,
+          "live_directions": 6.30078125,
+          "entropy_rank": 3.639681339263916,
+          "reference_stage": "stage1",
+          "d_old": -0.03930702182442092,
+          "d_new": -0.015541518543480737,
+          "d_live": 0.4765625,
+          "d_old_vs_stage0": -0.16715451850889884,
+          "d_live_vs_stage0": 1.51953125
+        },
+        "direct_full_adam": {
+          "old_r2": 0.6429948279849,
+          "new_r2": 0.99822448694878,
+          "ablation_a_gate_0_r2": -0.20905831651879092,
+          "live_directions": 6.94921875,
+          "entropy_rank": 4.456578254699707,
+          "reference_stage": "stage0",
+          "d_old": -0.35480920322997556,
+          "d_new": 3.221447199460601,
+          "d_live": 2.16796875,
+          "d_old_vs_stage0": -0.35480920322997556,
+          "d_live_vs_stage0": 2.16796875
+        },
+        "direct_full_muon": {
+          "old_r2": 0.743171508411925,
+          "new_r2": 0.9982721039780876,
+          "ablation_a_gate_0_r2": -0.026851082464965925,
+          "live_directions": 7.451171875,
+          "entropy_rank": 4.499873161315918,
+          "reference_stage": "stage0",
+          "d_old": -0.25463252280295057,
+          "d_new": 3.2214948164899084,
+          "d_live": 2.669921875,
+          "d_old_vs_stage0": -0.25463252280295057,
+          "d_live_vs_stage0": 2.669921875
+        }
+      }
+    },
+    {
+      "seed": 3,
+      "stage0": {
+        "old_r2": 0.9989550139346112,
+        "new_r2": -2.0245898018226245,
+        "ablation_a_gate_0_r2": -0.29857379500668624,
+        "live_directions": 5.556640625,
+        "entropy_rank": 2.6059417724609375
+      },
+      "stage1": {
+        "old_r2": 0.7467646035740199,
+        "new_r2": 0.9786136313674937,
+        "ablation_a_gate_0_r2": -1.2709701397090316,
+        "live_directions": 5.228515625,
+        "entropy_rank": 2.433640956878662,
+        "d_live_vs_stage0": -0.328125,
+        "d_old_vs_stage0": -0.2521904103605913,
+        "d_new_vs_stage0": 3.003203433190118
+      },
+      "stage2": {
+        "lora_adam": {
+          "old_r2": 0.872263655638274,
+          "new_r2": 0.9919918176193401,
+          "ablation_a_gate_0_r2": -0.6036975261721147,
+          "live_directions": 5.607421875,
+          "entropy_rank": 2.6460020542144775,
+          "reference_stage": "stage1",
+          "d_old": 0.12549905206425416,
+          "d_new": 0.013378186251846391,
+          "d_live": 0.37890625,
+          "d_old_vs_stage0": -0.12669135829633715,
+          "d_live_vs_stage0": 0.05078125
+        },
+        "lora_muon": {
+          "old_r2": 0.7013753173998707,
+          "new_r2": 0.963880011416756,
+          "ablation_a_gate_0_r2": -0.14092612818484596,
+          "live_directions": 6.978515625,
+          "entropy_rank": 3.6188533306121826,
+          "reference_stage": "stage1",
+          "d_old": -0.04538928617414917,
+          "d_new": -0.01473361995073763,
+          "d_live": 1.75,
+          "d_old_vs_stage0": -0.2975796965347405,
+          "d_live_vs_stage0": 1.421875
+        },
+        "full_adam": {
+          "old_r2": 0.9303764627690976,
+          "new_r2": 0.9896354268563555,
+          "ablation_a_gate_0_r2": -3.9161024350722586,
+          "live_directions": 5.2890625,
+          "entropy_rank": 2.864194869995117,
+          "reference_stage": "stage1",
+          "d_old": 0.18361185919507772,
+          "d_new": 0.01102179548886184,
+          "d_live": 0.060546875,
+          "d_old_vs_stage0": -0.06857855116551359,
+          "d_live_vs_stage0": -0.267578125
+        },
+        "full_muon": {
+          "old_r2": 0.8189370351218795,
+          "new_r2": 0.9943375697418623,
+          "ablation_a_gate_0_r2": -0.6141410798764273,
+          "live_directions": 5.55859375,
+          "entropy_rank": 2.770659923553467,
+          "reference_stage": "stage1",
+          "d_old": 0.07217243154785968,
+          "d_new": 0.015723938374368585,
+          "d_live": 0.330078125,
+          "d_old_vs_stage0": -0.18001797881273163,
+          "d_live_vs_stage0": 0.001953125
+        },
+        "direct_full_adam": {
+          "old_r2": 0.8311630646385095,
+          "new_r2": 0.9928556454926492,
+          "ablation_a_gate_0_r2": -10.745194560674033,
+          "live_directions": 6.40234375,
+          "entropy_rank": 3.5634846687316895,
+          "reference_stage": "stage0",
+          "d_old": -0.16779194929610164,
+          "d_new": 3.0174454473152736,
+          "d_live": 0.845703125,
+          "d_old_vs_stage0": -0.16779194929610164,
+          "d_live_vs_stage0": 0.845703125
+        },
+        "direct_full_muon": {
+          "old_r2": 0.8127170874455854,
+          "new_r2": 0.9863953473538029,
+          "ablation_a_gate_0_r2": -0.21954302224947164,
+          "live_directions": 5.97265625,
+          "entropy_rank": 3.1870596408843994,
+          "reference_stage": "stage0",
+          "d_old": -0.18623792648902582,
+          "d_new": 3.0109851491764275,
+          "d_live": 0.416015625,
+          "d_old_vs_stage0": -0.18623792648902582,
+          "d_live_vs_stage0": 0.416015625
+        }
+      }
+    },
+    {
+      "seed": 4,
+      "stage0": {
+        "old_r2": 0.9992271020055419,
+        "new_r2": -2.259393615374748,
+        "ablation_a_gate_0_r2": -0.13207307317925565,
+        "live_directions": 6.4609375,
+        "entropy_rank": 3.8498990535736084
+      },
+      "stage1": {
+        "old_r2": 0.8576577940895003,
+        "new_r2": 0.9941041541133152,
+        "ablation_a_gate_0_r2": -1.7955552704697078,
+        "live_directions": 4.837890625,
+        "entropy_rank": 2.140875816345215,
+        "d_live_vs_stage0": -1.623046875,
+        "d_old_vs_stage0": -0.1415693079160416,
+        "d_new_vs_stage0": 3.253497769488063
+      },
+      "stage2": {
+        "lora_adam": {
+          "old_r2": 0.8824071971655488,
+          "new_r2": 0.9980262750796439,
+          "ablation_a_gate_0_r2": -0.3894970496709895,
+          "live_directions": 5.32421875,
+          "entropy_rank": 2.480456829071045,
+          "reference_stage": "stage1",
+          "d_old": 0.02474940307604856,
+          "d_new": 0.003922120966328713,
+          "d_live": 0.486328125,
+          "d_old_vs_stage0": -0.11681990483999305,
+          "d_live_vs_stage0": -1.13671875
+        },
+        "lora_muon": {
+          "old_r2": 0.8041304116846251,
+          "new_r2": 0.9627668707896909,
+          "ablation_a_gate_0_r2": -0.051905932210468464,
+          "live_directions": 6.533203125,
+          "entropy_rank": 3.7625184059143066,
+          "reference_stage": "stage1",
+          "d_old": -0.0535273824048752,
+          "d_new": -0.03133728332362429,
+          "d_live": 1.6953125,
+          "d_old_vs_stage0": -0.1950966903209168,
+          "d_live_vs_stage0": 0.072265625
+        },
+        "full_adam": {
+          "old_r2": 0.9127899504854579,
+          "new_r2": 0.9975634292471978,
+          "ablation_a_gate_0_r2": -0.015036317648811748,
+          "live_directions": 5.904296875,
+          "entropy_rank": 3.04425311088562,
+          "reference_stage": "stage1",
+          "d_old": 0.05513215639595759,
+          "d_new": 0.0034592751338825556,
+          "d_live": 1.06640625,
+          "d_old_vs_stage0": -0.08643715152008402,
+          "d_live_vs_stage0": -0.556640625
+        },
+        "full_muon": {
+          "old_r2": 0.5937941409259608,
+          "new_r2": 0.9969270758422029,
+          "ablation_a_gate_0_r2": -0.020270561566208434,
+          "live_directions": 6.26953125,
+          "entropy_rank": 3.5312678813934326,
+          "reference_stage": "stage1",
+          "d_old": -0.26386365316353944,
+          "d_new": 0.0028229217288876507,
+          "d_live": 1.431640625,
+          "d_old_vs_stage0": -0.40543296107958104,
+          "d_live_vs_stage0": -0.19140625
+        },
+        "direct_full_adam": {
+          "old_r2": 0.9545638773613672,
+          "new_r2": 0.9896701076329243,
+          "ablation_a_gate_0_r2": -0.08003784127698177,
+          "live_directions": 6.89453125,
+          "entropy_rank": 4.039949417114258,
+          "reference_stage": "stage0",
+          "d_old": -0.044663224644174715,
+          "d_new": 3.249063723007672,
+          "d_live": 0.43359375,
+          "d_old_vs_stage0": -0.044663224644174715,
+          "d_live_vs_stage0": 0.43359375
+        },
+        "direct_full_muon": {
+          "old_r2": 0.8967870410484999,
+          "new_r2": 0.9960659506792942,
+          "ablation_a_gate_0_r2": -0.03519647474245757,
+          "live_directions": 7.173828125,
+          "entropy_rank": 4.183783054351807,
+          "reference_stage": "stage0",
+          "d_old": -0.10244006095704195,
+          "d_new": 3.255459566054042,
+          "d_live": 0.712890625,
+          "d_old_vs_stage0": -0.10244006095704195,
+          "d_live_vs_stage0": 0.712890625
+        }
+      }
+    },
+    {
+      "seed": 5,
+      "stage0": {
+        "old_r2": 0.998914488115978,
+        "new_r2": -2.2699174813572776,
+        "ablation_a_gate_0_r2": -0.03390395644145805,
+        "live_directions": 5.865234375,
+        "entropy_rank": 3.2688231468200684
+      },
+      "stage1": {
+        "old_r2": 0.828235908060016,
+        "new_r2": 0.9845311385030583,
+        "ablation_a_gate_0_r2": -11.009453249486482,
+        "live_directions": 5.8359375,
+        "entropy_rank": 2.909669876098633,
+        "d_live_vs_stage0": -0.029296875,
+        "d_old_vs_stage0": -0.17067858005596204,
+        "d_new_vs_stage0": 3.254448619860336
+      },
+      "stage2": {
+        "lora_adam": {
+          "old_r2": 0.9108124008412288,
+          "new_r2": 0.9845690121242217,
+          "ablation_a_gate_0_r2": -4.18428572449648,
+          "live_directions": 6.1875,
+          "entropy_rank": 3.2951760292053223,
+          "reference_stage": "stage1",
+          "d_old": 0.08257649278121282,
+          "d_new": 3.787362116336457e-05,
+          "d_live": 0.3515625,
+          "d_old_vs_stage0": -0.08810208727474922,
+          "d_live_vs_stage0": 0.322265625
+        },
+        "lora_muon": {
+          "old_r2": 0.796669655137713,
+          "new_r2": 0.9610345973768252,
+          "ablation_a_gate_0_r2": -0.08103053440776531,
+          "live_directions": 6.337890625,
+          "entropy_rank": 3.3826406002044678,
+          "reference_stage": "stage1",
+          "d_old": -0.03156625292230297,
+          "d_new": -0.023496541126233117,
+          "d_live": 0.501953125,
+          "d_old_vs_stage0": -0.202244832978265,
+          "d_live_vs_stage0": 0.47265625
+        },
+        "full_adam": {
+          "old_r2": 0.890041556519576,
+          "new_r2": 0.9890102108439033,
+          "ablation_a_gate_0_r2": -2.1762672682104713,
+          "live_directions": 6.22265625,
+          "entropy_rank": 3.435591459274292,
+          "reference_stage": "stage1",
+          "d_old": 0.061805648459559936,
+          "d_new": 0.004479072340844992,
+          "d_live": 0.38671875,
+          "d_old_vs_stage0": -0.1088729315964021,
+          "d_live_vs_stage0": 0.357421875
+        },
+        "full_muon": {
+          "old_r2": 0.6642259255962193,
+          "new_r2": 0.9078497397678915,
+          "ablation_a_gate_0_r2": -0.8552383952676301,
+          "live_directions": 5.43359375,
+          "entropy_rank": 2.7132558822631836,
+          "reference_stage": "stage1",
+          "d_old": -0.16400998246379672,
+          "d_new": -0.07668139873516677,
+          "d_live": -0.40234375,
+          "d_old_vs_stage0": -0.33468856251975876,
+          "d_live_vs_stage0": -0.431640625
+        },
+        "direct_full_adam": {
+          "old_r2": 0.9359807535675247,
+          "new_r2": 0.9954417977867188,
+          "ablation_a_gate_0_r2": -1.3256584449320217,
+          "live_directions": 6.205078125,
+          "entropy_rank": 3.480356454849243,
+          "reference_stage": "stage0",
+          "d_old": -0.0629337345484533,
+          "d_new": 3.2653592791439965,
+          "d_live": 0.33984375,
+          "d_old_vs_stage0": -0.0629337345484533,
+          "d_live_vs_stage0": 0.33984375
+        },
+        "direct_full_muon": {
+          "old_r2": 0.6924663145454028,
+          "new_r2": 0.996569575286295,
+          "ablation_a_gate_0_r2": -0.9703931799835097,
+          "live_directions": 6.375,
+          "entropy_rank": 2.888823986053467,
+          "reference_stage": "stage0",
+          "d_old": -0.3064481735705753,
+          "d_new": 3.2664870566435726,
+          "d_live": 0.509765625,
+          "d_old_vs_stage0": -0.3064481735705753,
+          "d_live_vs_stage0": 0.509765625
+        }
+      }
+    }
+  ],
+  "summary": {
+    "stage0": {
+      "old_r2": {
+        "mean": 0.9986946223719116,
+        "std": 0.0004519813554052449
+      },
+      "new_r2": {
+        "mean": -2.2163714004407566,
+        "std": 0.09598418884635425
+      },
+      "live_directions": {
+        "mean": 5.673177083333333,
+        "std": 0.5675149290685768
+      },
+      "entropy_rank": {
+        "mean": 3.18117618560791,
+        "std": 0.3908520599427547
+      }
+    },
+    "stage1": {
+      "old_r2": {
+        "mean": 0.7946202166678077,
+        "std": 0.08400044463729683
+      },
+      "new_r2": {
+        "mean": 0.9867748937980726,
+        "std": 0.006245383321061954
+      },
+      "live_directions": {
+        "mean": 5.247721354166667,
+        "std": 0.4850903769202737
+      },
+      "entropy_rank": {
+        "mean": 2.5985058148701987,
+        "std": 0.4580879119877805
+      }
+    },
+    "stage2": {
+      "lora_adam": {
+        "old_r2": {
+          "mean": 0.8960009500105687,
+          "std": 0.04896895943673201
+        },
+        "new_r2": {
+          "mean": 0.9890370713848369,
+          "std": 0.00959928928401998
+        },
+        "live_directions": {
+          "mean": 5.615234375,
+          "std": 0.5760504815621134
+        },
+        "entropy_rank": {
+          "mean": 2.955098271369934,
+          "std": 0.5121033132868488
+        },
+        "ablation_a_gate_0_r2": {
+          "mean": -6.209410238807551,
+          "std": 6.276730658015949
+        },
+        "d_old_vs_stage0": {
+          "mean": -0.10269367236134293,
+          "std": 0.04878100713573654
+        },
+        "d_live_vs_stage0": {
+          "mean": -0.057942708333333336,
+          "std": 0.809790110663864
+        }
+      },
+      "lora_muon": {
+        "old_r2": {
+          "mean": 0.6406228113441701,
+          "std": 0.18486162061505232
+        },
+        "new_r2": {
+          "mean": 0.9716339196652425,
+          "std": 0.009434041890615096
+        },
+        "live_directions": {
+          "mean": 6.0849609375,
+          "std": 1.0426881486512292
+        },
+        "entropy_rank": {
+          "mean": 3.377941091855367,
+          "std": 0.3336332419511842
+        },
+        "ablation_a_gate_0_r2": {
+          "mean": -1.5920345022494269,
+          "std": 2.614166111262474
+        },
+        "d_old_vs_stage0": {
+          "mean": -0.3580718110277415,
+          "std": 0.1846028607467443
+        },
+        "d_live_vs_stage0": {
+          "mean": 0.4117838541666667,
+          "std": 1.112568540521494
+        }
+      },
+      "full_adam": {
+        "old_r2": {
+          "mean": 0.906237776448651,
+          "std": 0.057811073659735646
+        },
+        "new_r2": {
+          "mean": 0.9872841797806072,
+          "std": 0.010478271701097313
+        },
+        "live_directions": {
+          "mean": 5.674479166666667,
+          "std": 0.6230577596140836
+        },
+        "entropy_rank": {
+          "mean": 3.0634289979934692,
+          "std": 0.2246201637780843
+        },
+        "ablation_a_gate_0_r2": {
+          "mean": -4.077834280611991,
+          "std": 3.1828545692068984
+        },
+        "d_old_vs_stage0": {
+          "mean": -0.09245684592326064,
+          "std": 0.057522947010605084
+        },
+        "d_live_vs_stage0": {
+          "mean": 0.0013020833333333333,
+          "std": 0.6200371264208224
+        }
+      },
+      "full_muon": {
+        "old_r2": {
+          "mean": 0.7548305827289402,
+          "std": 0.10589319600868105
+        },
+        "new_r2": {
+          "mean": 0.9739527858521599,
+          "std": 0.031420667151006706
+        },
+        "live_directions": {
+          "mean": 5.608072916666667,
+          "std": 0.615845499499243
+        },
+        "entropy_rank": {
+          "mean": 2.925498882929484,
+          "std": 0.4832472822584382
+        },
+        "ablation_a_gate_0_r2": {
+          "mean": -2.4068549699536854,
+          "std": 3.3472789726269263
+        },
+        "d_old_vs_stage0": {
+          "mean": -0.24386403964297143,
+          "std": 0.10611821389953573
+        },
+        "d_live_vs_stage0": {
+          "mean": -0.06510416666666667,
+          "std": 0.7481944638818308
+        }
+      },
+      "direct_full_adam": {
+        "old_r2": {
+          "mean": 0.867262556008523,
+          "std": 0.10889860825056852
+        },
+        "new_r2": {
+          "mean": 0.9947030036220799,
+          "std": 0.002971884490810493
+        },
+        "live_directions": {
+          "mean": 6.523111979166667,
+          "std": 0.5642496847492585
+        },
+        "entropy_rank": {
+          "mean": 3.8262693881988525,
+          "std": 0.33266401935000695
+        },
+        "ablation_a_gate_0_r2": {
+          "mean": -3.277104311064169,
+          "std": 3.81797188034802
+        },
+        "d_old_vs_stage0": {
+          "mean": -0.1314320663633886,
+          "std": 0.10851279232504007
+        },
+        "d_live_vs_stage0": {
+          "mean": 0.8499348958333334,
+          "std": 0.6456640698523974
+        }
+      },
+      "direct_full_muon": {
+        "old_r2": {
+          "mean": 0.7959165311841082,
+          "std": 0.09390406203298841
+        },
+        "new_r2": {
+          "mean": 0.9924518614415785,
+          "std": 0.006646565616393831
+        },
+        "live_directions": {
+          "mean": 6.773111979166667,
+          "std": 0.4886215177238274
+        },
+        "entropy_rank": {
+          "mean": 3.685233195622762,
+          "std": 0.5474581778426336
+        },
+        "ablation_a_gate_0_r2": {
+          "mean": -0.3759097528069571,
+          "std": 0.3682334198264549
+        },
+        "d_old_vs_stage0": {
+          "mean": -0.20277809118780343,
+          "std": 0.09371548677080128
+        },
+        "d_live_vs_stage0": {
+          "mean": 1.0999348958333333,
+          "std": 0.7960786850684841
+        }
+      }
+    }
+  },
+  "verdict": "Q1 optimizer vs subspace \u2014 old-skill change from the pretrained base: lora_muon -0.3581, full_adam -0.0925, full_muon -0.2439 (collapse threshold -0.1). -> only full_muon collapses: the optimizer is implicated, specifically for full-FT after a merged adapter\nQ2 does LoRA earn its constraint \u2014 LoRA stage1 learned the new skill +3.2031 while adding -0.43 live directions and changing the old skill by -0.2041; direct full-FT (no LoRA, matched budget) reached new=+0.9947 with +0.85 live directions and old -0.1314. -> LoRA NARROWS the state while acquiring the new skill \u2014 worse than redistribution: fewer directions carry more skills; dropping LoRA retains the old skill better (-0.1314 vs -0.2041) at comparable new-skill quality, so the rank-r constraint is not paying for itself",
+  "collapse_threshold": -0.1,
+  "lora_stage_delta_live": -0.4254557291666661,
+  "config": {
+    "seeds": 6,
+    "head_size": 16,
+    "steps": 8,
+    "pretrain_opt": "muon",
+    "pretrain_steps": 4000,
+    "stage1_steps": 1500,
+    "stage2_steps": 1500,
+    "batch_size": 64,
+    "muon_lr": 0.02,
+    "adam_lr": 0.003,
+    "lora_r": 8,
+    "lora_alpha": 16.0,
+    "arms": "lora_adam,lora_muon,full_adam,full_muon,direct_full_adam,direct_full_muon",
+    "replay": 0.25,
+    "max_seed_attempts": 3,
+    "threads": 5,
+    "out": "experiments/A0_state_probe/results/lineage_toy.json"
+  }
+}

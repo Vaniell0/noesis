@@ -211,19 +211,41 @@ def main() -> int:
     print(f"Probing trained: {args.trained}")
     trained_result = probe_checkpoint(args.trained, work_layers, args.n_tokens, args.device)
 
+    # The comparison reports DIRECTION COUNTS first and the energy-concentration
+    # ratio last. `stable_rank` = ||A||_F^2 / sigma1^2 is a measure of how
+    # concentrated the update energy is, NOT a count of how many directions are
+    # live — a state with one dominant direction and thirty small live ones
+    # scores ~1.0 on it. Reading it as a rank is what produced this project's
+    # "the state is near rank-1" claim, which the per-head counts refuted
+    # (G1i base actually carries 13-16 live directions of 64). The counts were
+    # added to `_svd_stats` on 2026-09-13 but this comparison table was not
+    # updated with them, so the headline output still showed only the
+    # misleading pair.
+    def agg(node: dict, key: str) -> float:
+        heads = node.get("per_head") or []
+        vals = [h[key] for h in heads if key in h]
+        return (sum(vals) / len(vals)) if vals else float("nan")
+
     print("\n=== J-lens WKV state spectrum comparison (base vs trained) ===")
-    print(f"{'layer':>6}  {'base σ₁':>10}  {'trained σ₁':>10}  {'Δσ₁':>8}  "
-          f"{'base SR':>8}  {'trained SR':>8}")
-    print("-" * 60)
+    print(f"{'layer':>6}  {'base live':>9}  {'trn live':>8}  {'Δlive':>7}  "
+          f"{'base eR':>8}  {'trn eR':>7}  {'ΔeR':>7}  "
+          f"{'base σ₁':>9}  {'trn σ₁':>9}  {'base SR':>8}")
+    print("-" * 92)
     for L in work_layers:
         bL = base_result["layer_stats"].get(str(L), {})
         tL = trained_result["layer_stats"].get(str(L), {})
+        bn, tn = agg(bL, "numerical_rank_1pct"), agg(tL, "numerical_rank_1pct")
+        be, te = agg(bL, "effective_rank_entropy"), agg(tL, "effective_rank_entropy")
         b1 = bL.get("mean_sigma1", float("nan"))
         t1 = tL.get("mean_sigma1", float("nan"))
         bsr = bL.get("mean_stable_rank", float("nan"))
-        tsr = tL.get("mean_stable_rank", float("nan"))
-        delta = t1 - b1 if (b1 == b1 and t1 == t1) else float("nan")
-        print(f"{L:>6}  {b1:>10.4f}  {t1:>10.4f}  {delta:>+8.4f}  {bsr:>8.2f}  {tsr:>8.2f}")
+        print(f"{L:>6}  {bn:>9.2f}  {tn:>8.2f}  {tn - bn:>+7.2f}  "
+              f"{be:>8.2f}  {te:>7.2f}  {te - be:>+7.2f}  "
+              f"{b1:>9.4f}  {t1:>9.4f}  {bsr:>8.2f}")
+    print("\nlive = singular values above 1% of the largest, averaged over heads "
+          "(the direction COUNT)\neR   = exp(entropy of the normalised spectrum)"
+          "\nSR   = ||A||_F^2/sigma1^2 — energy concentration, NOT a rank; shown "
+          "last on purpose")
 
     result = {"base": base_result, "trained": trained_result}
     save_result(
