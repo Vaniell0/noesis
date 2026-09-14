@@ -5,14 +5,16 @@
       "H26"
     ],
     "date": "2026-09-13",
-    "status": "done",
+    "status": "superseded",
     "model": null,
     "script": "experiments/A0_state_probe/breadth_growth_probe.py",
     "summary": {
       "live directions, plain adam / muon": "6.59 / 7.42",
       "live directions, best breadth arm": "16.00 (muon_breadth_L0.1)",
       "held-out ood_r2, plain best / best breadth arm": "+0.7501 / +0.6085"
-    }
+    },
+    "superseded_by": "experiments/A0_state_probe/results/breadth_growth_toy.json",
+    "superseded_reason": "verdict read all-runs means while the converged-only column sat computed and unused; Adam's entry point was +0.2470 instead of +0.7400, inflating every delta about 5x (+0.6172 -> +0.1242)."
   },
   "runs": [
     {
@@ -366,7 +368,7 @@
       }
     }
   },
-  "verdict": "rank ceiling for this config = min(n_steps=16, head=16) = 16  [!] best arm is AT the ceiling \u2014 this config cannot show growth, rerun with more recurrence steps. best breadth arm: muon_breadth_L0.1 live=16.00 vs plain best 7.42; held-out quality +0.6085 vs +0.7501. -> breadth rose but the task did not survive \u2014 metric-chasing, per H26's Goodhart criterion",
+  "verdict": "rank ceiling for this config = min(n_steps=16, head=16) = 16  [!] best arm is AT the ceiling — this config cannot show growth, rerun with more recurrence steps. best breadth arm: muon_breadth_L0.1 live=16.00 vs plain best 7.42; held-out quality +0.6085 vs +0.7501. -> breadth rose but the task did not survive — metric-chasing, per H26's Goodhart criterion",
   "breadth_grew": true,
   "quality_kept": false,
   "config": {

@@ -6,14 +6,16 @@
       "H26"
     ],
     "date": "2026-09-14",
-    "status": "done",
+    "status": "superseded",
     "model": null,
     "script": "experiments/A0_state_probe/lora_muon_probe.py",
     "summary": {
       "retain_r2 (pretrained ability after narrow finetune)": "adam +0.5997; muon_factorwise +0.3516; muon_balanced +0.5996; muon_product +0.5996; muon_state +0.5721",
       "adapt_r2 (the finetune's own range)": "adam +0.6001; muon_factorwise +0.5816; muon_balanced +0.5982; muon_product +0.5999; muon_state +0.5501",
-      "adapter \u0394W entropy-rank (of r=8)": "adam 5.54; muon_factorwise 5.25; muon_balanced 5.19; muon_product 5.98; muon_state 6.49"
-    }
+      "adapter ΔW entropy-rank (of r=8)": "adam 5.54; muon_factorwise 5.25; muon_balanced 5.19; muon_product 5.98; muon_state 6.49"
+    },
+    "superseded_by": "experiments/A0_state_probe/results/lora_muon_toy.json",
+    "superseded_reason": "means were taken over seeds whose pretrained base never learned the task, so every arm's retain_r2 was an average of a live run and a dead one."
   },
   "runs": [
     {
@@ -659,7 +661,7 @@
       }
     }
   },
-  "verdict": "production Muon on LoRA factors: retain +0.3516 (drop -0.2484), adapter \u0394W entropy-rank 5.25/8 \u2014 vs Adam retain +0.5997 (drop -0.0003), \u0394W entropy-rank 5.54/8\nequalising the two factors' contribution: retain +0.2480, adapt +0.0166 vs production Muon  <- recovers what factor-wise Muon loses\northogonalising the induced \u0394W instead: retain +0.2480, adapt +0.0183 vs production Muon  <- recovers what factor-wise Muon loses\nletting the state set the per-tensor metric: retain +0.2205, adapt -0.0315 vs production Muon  <- recovers what factor-wise Muon loses",
+  "verdict": "production Muon on LoRA factors: retain +0.3516 (drop -0.2484), adapter ΔW entropy-rank 5.25/8 — vs Adam retain +0.5997 (drop -0.0003), ΔW entropy-rank 5.54/8\nequalising the two factors' contribution: retain +0.2480, adapt +0.0166 vs production Muon  <- recovers what factor-wise Muon loses\northogonalising the induced ΔW instead: retain +0.2480, adapt +0.0183 vs production Muon  <- recovers what factor-wise Muon loses\nletting the state set the per-tensor metric: retain +0.2205, adapt -0.0315 vs production Muon  <- recovers what factor-wise Muon loses",
   "config": {
     "seeds": 5,
     "head_size": 16,

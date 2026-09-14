@@ -249,7 +249,18 @@ def regenerate_index(
         # `status=X` as its "value" — only the summary branch was silent).
         status_flag = status if status not in ("done", "—") else ""
         summary = meta.get("summary") or {}
-        if summary:
+        if status == "superseded":
+            # A superseded result keeps its file (the run happened, and the
+            # reason it was discarded is part of the record) but must NOT keep
+            # printing its numbers in the index: a discredited value in the
+            # Value column reads exactly like a finding, and three of these
+            # were being cited as such. One row, pointing at the replacement.
+            repl = meta.get("superseded_by") or "—"
+            why = meta.get("superseded_reason") or ""
+            rows.append((h, model, date, status_flag, "superseded by",
+                         f"`{repl}`" + (f" — {why}" if why else ""),
+                         f"`{rel}`", code_cell))
+        elif summary:
             for metric, value in summary.items():
                 rows.append((h, model, date, status_flag, metric, value, f"`{rel}`", code_cell))
         else:

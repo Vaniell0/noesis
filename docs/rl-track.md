@@ -1044,6 +1044,18 @@ existing behavior to exploit as shortcut. This is exactly the case where skippin
 **Mandatory checkpoint after first RL epoch:**
 R-lens probe on non-task axes (e.g. narrative, arithmetic) before continuing curriculum. If R-lens returns near-chance probe accuracy on non-task axes while word-search performance is high → state is encoding shortcut geometry, not reasoning. Stop and investigate before advancing curriculum.
 
+**Why this has never been run (checked 2026-09-14): as written it is not
+runnable.** The gate asks for "probe accuracy"; `rlens_probe.py` reports
+saliency and spectral statistics and contains no classifier — the string
+`accuracy` does not appear in it. The same is true of `jlens_probe.py`. So
+this was never a check that was skipped, it was a check with no
+implementation, carried for three weeks as if it were pending execution.
+Making it real needs a probing classifier (state at the work layers ->
+axis label, base vs trained, accuracy against the label-shuffled control),
+which is a probe that does not exist yet. Until it does, this paragraph is
+a specification, not a gate, and nothing downstream should be described as
+having passed it.
+
 **L_KVB:** skip for now (SFT-only loss, no SFT phase). Revisit if full-FT SFT is added later.
 
 ---

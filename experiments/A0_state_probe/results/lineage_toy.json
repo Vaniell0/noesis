@@ -9,9 +9,10 @@
     "status": "done",
     "model": null,
     "script": "experiments/A0_state_probe/lineage_probe.py",
+    "script_sha256_12": "41c36468be10",
     "summary": {
-      "old-skill change from the pretrained base, per arm": "lora_adam -0.1027; lora_muon -0.3581; full_adam -0.0925; full_muon -0.2439; direct_full_adam -0.1314; direct_full_muon -0.2028",
-      "new skill reached, per arm": "lora_adam +0.9890; lora_muon +0.9716; full_adam +0.9873; full_muon +0.9740; direct_full_adam +0.9947; direct_full_muon +0.9925",
+      "old-skill change from the pretrained base, per arm": "direct_full_adam -0.1314; direct_full_muon -0.2028; full_adam -0.0925; full_muon -0.2439; lora_adam -0.1027; lora_muon -0.3581",
+      "new skill reached, per arm": "direct_full_adam +0.9947; direct_full_muon +0.9925; full_adam +0.9873; full_muon +0.9740; lora_adam +0.9890; lora_muon +0.9716",
       "live directions added by the LoRA stage": "-0.43"
     }
   },
@@ -655,64 +656,64 @@
       }
     },
     "stage2": {
-      "lora_adam": {
+      "direct_full_adam": {
         "old_r2": {
-          "mean": 0.8960009500105687,
-          "std": 0.04896895943673201
+          "mean": 0.867262556008523,
+          "std": 0.10889860825056852
         },
         "new_r2": {
-          "mean": 0.9890370713848369,
-          "std": 0.00959928928401998
+          "mean": 0.9947030036220799,
+          "std": 0.002971884490810493
         },
         "live_directions": {
-          "mean": 5.615234375,
-          "std": 0.5760504815621134
+          "mean": 6.523111979166667,
+          "std": 0.5642496847492585
         },
         "entropy_rank": {
-          "mean": 2.955098271369934,
-          "std": 0.5121033132868488
+          "mean": 3.8262693881988525,
+          "std": 0.33266401935000695
         },
         "ablation_a_gate_0_r2": {
-          "mean": -6.209410238807551,
-          "std": 6.276730658015949
+          "mean": -3.277104311064169,
+          "std": 3.81797188034802
         },
         "d_old_vs_stage0": {
-          "mean": -0.10269367236134293,
-          "std": 0.04878100713573654
+          "mean": -0.1314320663633886,
+          "std": 0.10851279232504007
         },
         "d_live_vs_stage0": {
-          "mean": -0.057942708333333336,
-          "std": 0.809790110663864
+          "mean": 0.8499348958333334,
+          "std": 0.6456640698523974
         }
       },
-      "lora_muon": {
+      "direct_full_muon": {
         "old_r2": {
-          "mean": 0.6406228113441701,
-          "std": 0.18486162061505232
+          "mean": 0.7959165311841082,
+          "std": 0.09390406203298841
         },
         "new_r2": {
-          "mean": 0.9716339196652425,
-          "std": 0.009434041890615096
+          "mean": 0.9924518614415785,
+          "std": 0.006646565616393831
         },
         "live_directions": {
-          "mean": 6.0849609375,
-          "std": 1.0426881486512292
+          "mean": 6.773111979166667,
+          "std": 0.4886215177238274
         },
         "entropy_rank": {
-          "mean": 3.377941091855367,
-          "std": 0.3336332419511842
+          "mean": 3.685233195622762,
+          "std": 0.5474581778426336
         },
         "ablation_a_gate_0_r2": {
-          "mean": -1.5920345022494269,
-          "std": 2.614166111262474
+          "mean": -0.3759097528069571,
+          "std": 0.3682334198264549
         },
         "d_old_vs_stage0": {
-          "mean": -0.3580718110277415,
-          "std": 0.1846028607467443
+          "mean": -0.20277809118780343,
+          "std": 0.09371548677080128
         },
         "d_live_vs_stage0": {
-          "mean": 0.4117838541666667,
-          "std": 1.112568540521494
+          "mean": 1.0999348958333333,
+          "std": 0.7960786850684841
         }
       },
       "full_adam": {
@@ -775,73 +776,73 @@
           "std": 0.7481944638818308
         }
       },
-      "direct_full_adam": {
+      "lora_adam": {
         "old_r2": {
-          "mean": 0.867262556008523,
-          "std": 0.10889860825056852
+          "mean": 0.8960009500105687,
+          "std": 0.04896895943673201
         },
         "new_r2": {
-          "mean": 0.9947030036220799,
-          "std": 0.002971884490810493
+          "mean": 0.9890370713848369,
+          "std": 0.00959928928401998
         },
         "live_directions": {
-          "mean": 6.523111979166667,
-          "std": 0.5642496847492585
+          "mean": 5.615234375,
+          "std": 0.5760504815621134
         },
         "entropy_rank": {
-          "mean": 3.8262693881988525,
-          "std": 0.33266401935000695
+          "mean": 2.955098271369934,
+          "std": 0.5121033132868488
         },
         "ablation_a_gate_0_r2": {
-          "mean": -3.277104311064169,
-          "std": 3.81797188034802
+          "mean": -6.209410238807551,
+          "std": 6.276730658015949
         },
         "d_old_vs_stage0": {
-          "mean": -0.1314320663633886,
-          "std": 0.10851279232504007
+          "mean": -0.10269367236134293,
+          "std": 0.04878100713573654
         },
         "d_live_vs_stage0": {
-          "mean": 0.8499348958333334,
-          "std": 0.6456640698523974
+          "mean": -0.057942708333333336,
+          "std": 0.809790110663864
         }
       },
-      "direct_full_muon": {
+      "lora_muon": {
         "old_r2": {
-          "mean": 0.7959165311841082,
-          "std": 0.09390406203298841
+          "mean": 0.6406228113441701,
+          "std": 0.18486162061505232
         },
         "new_r2": {
-          "mean": 0.9924518614415785,
-          "std": 0.006646565616393831
+          "mean": 0.9716339196652425,
+          "std": 0.009434041890615096
         },
         "live_directions": {
-          "mean": 6.773111979166667,
-          "std": 0.4886215177238274
+          "mean": 6.0849609375,
+          "std": 1.0426881486512292
         },
         "entropy_rank": {
-          "mean": 3.685233195622762,
-          "std": 0.5474581778426336
+          "mean": 3.377941091855367,
+          "std": 0.3336332419511842
         },
         "ablation_a_gate_0_r2": {
-          "mean": -0.3759097528069571,
-          "std": 0.3682334198264549
+          "mean": -1.5920345022494269,
+          "std": 2.614166111262474
         },
         "d_old_vs_stage0": {
-          "mean": -0.20277809118780343,
-          "std": 0.09371548677080128
+          "mean": -0.3580718110277415,
+          "std": 0.1846028607467443
         },
         "d_live_vs_stage0": {
-          "mean": 1.0999348958333333,
-          "std": 0.7960786850684841
+          "mean": 0.4117838541666667,
+          "std": 1.112568540521494
         }
       }
     }
   },
-  "verdict": "Q1 optimizer vs subspace \u2014 old-skill change from the pretrained base: lora_muon -0.3581, full_adam -0.0925, full_muon -0.2439 (collapse threshold -0.1). -> only full_muon collapses: the optimizer is implicated, specifically for full-FT after a merged adapter\nQ2 does LoRA earn its constraint \u2014 LoRA stage1 learned the new skill +3.2031 while adding -0.43 live directions and changing the old skill by -0.2041; direct full-FT (no LoRA, matched budget) reached new=+0.9947 with +0.85 live directions and old -0.1314. -> LoRA NARROWS the state while acquiring the new skill \u2014 worse than redistribution: fewer directions carry more skills; dropping LoRA retains the old skill better (-0.1314 vs -0.2041) at comparable new-skill quality, so the rank-r constraint is not paying for itself",
+  "verdict": "Q1 optimizer vs subspace \u2014 old-skill change from the pretrained base, worst-to-best: lora_muon -0.3581, full_muon -0.2439, direct_full_muon -0.2028, direct_full_adam -0.1314, lora_adam -0.1027, full_adam -0.0925 (collapse threshold -0.1). -> the OPTIMIZER separates the table: every Muon arm is worse than every Adam arm (best Muon -0.2028 < worst Adam -0.1314), across both subspace choices\nQ2 does LoRA earn its constraint \u2014 LoRA stage1 learned the new skill +3.2031 while adding -0.43 live directions and changing the old skill by -0.2041; direct full-FT (no LoRA, matched budget) reached new=+0.9947 with +0.85 live directions and old -0.1314. -> LoRA NARROWS the state while acquiring the new skill \u2014 worse than redistribution: fewer directions carry more skills; dropping LoRA retains the old skill better (-0.1314 vs -0.2041) at comparable new-skill quality, so the rank-r constraint is not paying for itself",
   "collapse_threshold": -0.1,
   "lora_stage_delta_live": -0.4254557291666661,
   "config": {
-    "seeds": 6,
+    "seeds": 5,
     "head_size": 16,
     "steps": 8,
     "pretrain_opt": "muon",
@@ -856,7 +857,8 @@
     "arms": "lora_adam,lora_muon,full_adam,full_muon,direct_full_adam,direct_full_muon",
     "replay": 0.25,
     "max_seed_attempts": 3,
-    "threads": 5,
-    "out": "experiments/A0_state_probe/results/lineage_toy.json"
+    "threads": null,
+    "out": "experiments/A0_state_probe/results/lineage_toy.json",
+    "from_result": "experiments/A0_state_probe/results/lineage_toy.json"
   }
 }

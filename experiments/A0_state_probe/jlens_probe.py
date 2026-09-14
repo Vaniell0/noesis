@@ -116,25 +116,45 @@ def _dist(vals) -> Dict[str, float]:
             "p90": q(0.90), "max": xs[-1], "mean": mean, "std": var ** 0.5}
 
 
-def _analyze(model, tokenizer, work_layers: List[int], n_tokens: int) -> Dict:
-    """Loading-free core: run the prompt, SVD the WKV state per work layer."""
-    enc = tokenizer(PROMPT, return_tensors="pt")
+def _run_prompt(model, tokenizer, text: str, n_tokens: int):
+    enc = tokenizer(text, return_tensors="pt")
     ids = enc["input_ids"][0].tolist()[:n_tokens]
-
     with torch.no_grad():
         state = None
         for tok_id in ids:
             _, state = model.forward([tok_id], state)
+    return state, ids
+
+
+def _analyze(model, tokenizer, work_layers: List[int], n_tokens: int,
+             prompt_texts: List[str] | None = None) -> Dict:
+    """Loading-free core: run the prompt(s), SVD the WKV state per work layer.
+
+    With several prompts the per-head spectra are POOLED, not averaged per
+    prompt: the quantity every consumer reads is the distribution over heads,
+    and a single prompt can only say what that prompt's content happened to
+    write. Pooling makes "this layer carries few directions" a property of the
+    layer rather than of one `<think>` paragraph about Alice and Bob.
+    """
+    texts = list(prompt_texts) if prompt_texts else [PROMPT]
+    states, all_ids = [], []
+    for text in texts:
+        st, ids = _run_prompt(model, tokenizer, text, n_tokens)
+        states.append(st)
+        all_ids.append(ids)
 
     layer_stats: Dict[int, Dict] = {}
     for L in work_layers:
         idx = 3 * L + 1
-        if state is None or idx >= len(state):
+        if any(st is None or idx >= len(st) for st in states):
             continue
         try:
-            s_L = state[idx].float().cpu()  # (n_head, H, H) WKV matrix
-            n_head, H, _ = s_L.shape
-            per_head_stats = [_svd_stats(s_L[h]) for h in range(n_head)]
+            per_head_stats, n_head, H = [], 0, 0
+            for st in states:
+                s_L = st[idx].float().cpu()  # (n_head, H, H) WKV matrix
+                n_head, H, _ = s_L.shape
+                per_head_stats += [_svd_stats(s_L[h]) for h in range(n_head)]
+            n_head = len(per_head_stats)
             # Every earlier run of this probe computed exactly these per-head
             # stats and then threw the distribution away, keeping only the
             # mean over 40 heads. "37 heads at 1.0 plus 3 heads at 5.0" and
@@ -160,18 +180,21 @@ def _analyze(model, tokenizer, work_layers: List[int], n_tokens: int) -> Dict:
             layer_stats[L] = {"error": str(e)}
 
     return {
-        "n_tokens": len(ids),
+        "n_tokens": len(all_ids[0]),
+        "n_prompt": len(texts),
+        "tokens_per_prompt": [len(i) for i in all_ids],
         "work_layers": work_layers,
         "layer_stats": {str(k): v for k, v in layer_stats.items()},
     }
 
 
 def probe_checkpoint(model_path: str, work_layers: List[int],
-                     n_tokens: int, device: str) -> Dict:
+                     n_tokens: int, device: str,
+                     prompt_texts: List[str] | None = None) -> Dict:
     """Standalone entry point: loads its own model (for base/--trained CLI usage)."""
     model, tokenizer = load_model(model_path, device=device)
     model.eval()
-    result = _analyze(model, tokenizer, work_layers, n_tokens)
+    result = _analyze(model, tokenizer, work_layers, n_tokens, prompt_texts)
     return {"model_path": str(model_path), **result}
 
 
@@ -199,17 +222,31 @@ def main() -> int:
     ap.add_argument("--n-tokens", type=int, default=32)
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--prompts", default=None,
+                    help="comma-separated names from experiments/A0_state_probe/"
+                         "prompts.py (SHORT,MEDIUM,LONG,NARRATIVE) and/or THINK "
+                         "for this module's own `<think>` prompt. Default: THINK "
+                         "alone, which is what every stored jlens result used.")
     args = ap.parse_args()
 
     work_layers = [int(x) for x in args.work_layers.split(",")]
+    prompt_texts = None
+    if args.prompts:
+        from experiments.A0_state_probe import prompts as _P
+        prompt_texts = [PROMPT if n.strip().upper() == "THINK"
+                        else getattr(_P, n.strip().upper())
+                        for n in args.prompts.split(",") if n.strip()]
+        print(f"prompts: {args.prompts} ({len(prompt_texts)})")
     out = pathlib.Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
 
     print(f"Probing base: {args.base}")
-    base_result = probe_checkpoint(args.base, work_layers, args.n_tokens, args.device)
+    base_result = probe_checkpoint(args.base, work_layers, args.n_tokens,
+                                   args.device, prompt_texts)
 
     print(f"Probing trained: {args.trained}")
-    trained_result = probe_checkpoint(args.trained, work_layers, args.n_tokens, args.device)
+    trained_result = probe_checkpoint(args.trained, work_layers, args.n_tokens,
+                                      args.device, prompt_texts)
 
     # The comparison reports DIRECTION COUNTS first and the energy-concentration
     # ratio last. `stable_rank` = ||A||_F^2 / sigma1^2 is a measure of how

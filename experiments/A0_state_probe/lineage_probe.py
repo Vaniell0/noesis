@@ -55,6 +55,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import json
 import statistics
 import sys
 from pathlib import Path
@@ -305,35 +306,40 @@ def main() -> int:
     ap_.add_argument("--max-seed-attempts", type=int, default=3)
     ap_.add_argument("--threads", type=int, default=None)
     ap_.add_argument("--out", type=Path, default=None)
+    ap_.add_argument("--from-result", type=Path, default=None,
+                     help="re-derive the tables and the verdict from a stored "
+                          "result's per-seed records instead of training. The "
+                          "first full run's verdict contradicted its own table; "
+                          "the fix was in the verdict code, so the measurements "
+                          "are still good and re-running them would only burn "
+                          "CPU to reproduce numbers that are already on disk.")
     args = ap_.parse_args()
     progress(f"[lineage_probe] torch threads = {limit_threads(args.threads)}")
 
     arms = [a for a in args.arms.split(",") if a]
-    results, seed, limit = [], 0, args.seeds * args.max_seed_attempts
-    while len(results) < args.seeds and seed < limit:
-        r = run_seed(seed, head_size=args.head_size, n_steps=args.steps,
-                     pretrain_opt=args.pretrain_opt,
-                     pretrain_steps=args.pretrain_steps,
-                     stage1_steps=args.stage1_steps,
-                     stage2_steps=args.stage2_steps, batch=args.batch_size,
-                     muon_lr=args.muon_lr, adam_lr=args.adam_lr,
-                     lora_r=args.lora_r, lora_alpha=args.lora_alpha,
-                     replay=args.replay, arms=arms)
-        if r is not None:
-            results.append(r)
-        seed += 1
+    if args.from_result is not None:
+        prior = json.loads(args.from_result.read_text())
+        results = prior["seeds"]
+        arms = sorted({a for r in results for a in r["stage2"]})
+        progress(f"re-deriving from {args.from_result} — {len(results)} stored "
+                 f"seed(s), arms {arms}")
+    else:
+        results, seed, limit = [], 0, args.seeds * args.max_seed_attempts
+        while len(results) < args.seeds and seed < limit:
+            r = run_seed(seed, head_size=args.head_size, n_steps=args.steps,
+                         pretrain_opt=args.pretrain_opt,
+                         pretrain_steps=args.pretrain_steps,
+                         stage1_steps=args.stage1_steps,
+                         stage2_steps=args.stage2_steps, batch=args.batch_size,
+                         muon_lr=args.muon_lr, adam_lr=args.adam_lr,
+                         lora_r=args.lora_r, lora_alpha=args.lora_alpha,
+                         replay=args.replay, arms=arms)
+            if r is not None:
+                results.append(r)
+            seed += 1
     if not results:
         progress("no seed produced a usable stage-0 base")
         return 1
-
-    def agg(path: list, key: str) -> tuple[float, float]:
-        vals = []
-        for r in results:
-            node = r
-            for p in path:
-                node = node[p]
-            vals.append(node[key])
-        return sum(vals) / len(vals), (statistics.pstdev(vals) if len(vals) > 1 else 0.0)
 
     progress(f"\n=== over {len(results)} seed(s) with a converged stage-0 base ===")
 
@@ -471,7 +477,8 @@ def main() -> int:
             {"seeds": results, "summary": summary, "verdict": verdict,
              "collapse_threshold": COLLAPSE,
              "lora_stage_delta_live": lora_dlive,
-             "config": vars(args) | {"out": str(args.out)}},
+             "config": {k: (str(v) if isinstance(v, Path) else v)
+                               for k, v in vars(args).items()}},
             experiment="lineage_toy", hypothesis=["H26", "H25"],
             summary={
                 "old-skill change from the pretrained base, per arm":

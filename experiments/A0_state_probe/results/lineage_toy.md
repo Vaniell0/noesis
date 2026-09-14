@@ -9,8 +9,8 @@
 
 | Metric | Value |
 |--------|-------|
-| old-skill change from the pretrained base, per arm | lora_adam -0.1027; lora_muon -0.3581; full_adam -0.0925; full_muon -0.2439; direct_full_adam -0.1314; direct_full_muon -0.2028 |
-| new skill reached, per arm | lora_adam +0.9890; lora_muon +0.9716; full_adam +0.9873; full_muon +0.9740; direct_full_adam +0.9947; direct_full_muon +0.9925 |
+| old-skill change from the pretrained base, per arm | direct_full_adam -0.1314; direct_full_muon -0.2028; full_adam -0.0925; full_muon -0.2439; lora_adam -0.1027; lora_muon -0.3581 |
+| new skill reached, per arm | direct_full_adam +0.9947; direct_full_muon +0.9925; full_adam +0.9873; full_muon +0.9740; lora_adam +0.9890; lora_muon +0.9716 |
 | live directions added by the LoRA stage | -0.43 |
 
 Full data: `lineage_toy.json` (same directory).

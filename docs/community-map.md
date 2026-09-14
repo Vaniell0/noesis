@@ -1011,6 +1011,69 @@ power-iteration synthesis nearly did.
 
 ---
 
+## 5. Ours to hand back — measured here, useful elsewhere
+
+This section is the mirror of §4. There we record claims of other people's
+that we reject; here we record measurements of ours that did not pay for
+themselves *for our purpose* but are real, reproducible, and may pay for
+someone else's. A result that fails our objective is not thereby a result
+about nothing, and deciding who else it is worth something to is not our
+call to make. Each entry states what was measured, on what, and where the
+file is, so a reader can disagree with our reading and keep the numbers.
+
+### 5.1 State-geometry-aware Muon: buys breadth, pays in fit
+
+`experiments/A0_state_probe/lora_muon_probe.py`, arm `muon_state`, 6
+converged seeds, result `results/lora_muon_toy.json`.
+
+The arm replaces Muon's fixed per-tensor scale with one measured from the
+**state**: how far a unit weight step actually moves the recurrent state,
+recalibrated during training (`recalibrate_state_metric()`, displacement
+ratio bounded at 16x). The question it was built for is whether the object
+worth normalising is the weight matrix or the state the weights write into.
+
+Against the other arms, on the retention of a pretrained ability after a
+narrow finetune:
+
+| arm | retain | adapt | adapter dW entropy-rank (of 8) |
+|---|---|---|---|
+| adam | +0.9993 | +1.0000 | 5.92 |
+| muon_factorwise (production) | +0.7441 | +0.9833 | 4.67 |
+| muon_balanced | +0.9995 | +0.9976 | 4.67 |
+| muon_product | +0.9987 | +0.9997 | 5.94 |
+| **muon_state** | **+0.8558** | **+0.9485** | **6.05** |
+
+Our reading, and why we are not adopting it: it recovers only +0.112 of
+production Muon's -0.256 retention loss, while two far simpler
+reparameterisations (equalise the two factors; orthogonalise the induced
+product instead of each factor) recover +0.255 and +0.255 — essentially all
+of it. Paying a running state measurement for half of what a shape fix gives
+for free is not a trade we can justify.
+
+What is genuinely its own, and is not reproduced by any other arm: it
+produces the **broadest** adapter update of all five, 6.05/8 against Adam's
+5.92 and the two winners' 4.67 — and the **narrowest fit** to the finetune
+data, 0.9485 against 0.9976-1.0000. Those are the same fact seen twice: the
+state metric spends the update across more directions and therefore commits
+less of it to the data in front of it. If your objective is breadth of the
+learned update rather than fit — continual learning, multi-task adapters,
+anything where over-committing to the current slice is the failure you fear
+— this arm is aimed at your problem and not at ours.
+
+It also gives an empirical fingerprint to the obvious worry about the
+approach ("would a state-derived metric pin training to the data you
+currently have?"). On this evidence the answer is the opposite of the
+worry: it commits *less* to current data than every alternative, at a
+measurable cost in how well it fits it.
+
+Caveats a reader should carry: this is a toy (a small recurrent controller
+with a WKV-shaped state, not a 2.9B model); `muon_state` has the widest
+seed spread of the five arms (+-0.1691 against muon_balanced's +-0.0005),
+so its middle number is the least trustworthy of the table; and it was
+measured on LoRA factors, not on full weights.
+
+---
+
 ## Maintenance
 
 - Update this file when a new claim about RWKV community is verified

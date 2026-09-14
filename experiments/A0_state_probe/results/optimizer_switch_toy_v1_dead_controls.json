@@ -5,16 +5,18 @@
       "H26"
     ],
     "date": "2026-09-14",
-    "status": "done",
+    "status": "superseded",
     "model": null,
     "script": "experiments/A0_state_probe/optimizer_switch_probe.py",
     "summary": {
       "a_gate ablation, adam / muon (pure arms)": "-0.579 / -0.202",
-      "a_gate ablation, adam\u2192muon switch": "-0.581",
+      "a_gate ablation, adam→muon switch": "-0.581",
       "mechanism shift toward Muon, switch": "-1%",
       "mechanism shift, best step-size-only control": "153%",
       "id_r2 adam / switch": "+0.5984 / +0.9985"
-    }
+    },
+    "superseded_by": "experiments/A0_state_probe/results/optimizer_switch_toy.json",
+    "superseded_reason": "the step-size control arms were dead, and the headline '153%' was computed from them."
   },
   "runs": [
     {
