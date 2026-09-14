@@ -8,12 +8,14 @@
     "status": "done",
     "model": null,
     "script": "experiments/A0_state_probe/optimizer_switch_probe.py",
+    "script_sha256_12": "57e0b141a83c",
     "summary": {
-      "a_gate ablation, adam / muon (pure arms)": "-0.579 / -0.202",
-      "a_gate ablation, adam\u2192muon switch": "-0.581",
-      "mechanism shift toward Muon, switch": "-1%",
-      "mechanism shift, best step-size-only control": "153%",
-      "id_r2 adam / switch": "+0.5984 / +0.9985"
+      "a_gate ablation, adam / muon (pure arms)": "-0.883 / -0.320",
+      "a_gate ablation, adam\u2192muon switch": "-0.744",
+      "mechanism shift toward Muon, switch": "25%",
+      "mechanism shift, best SURVIVING step-size-only control": "91%",
+      "step-size controls that destroyed the model": "none",
+      "id_r2 adam / switch": "+0.9989 / +0.9986"
     }
   },
   "runs": [
@@ -22,9 +24,9 @@
       "seed": 0,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.829681367874146,
+      "loss_before_switch": 8.829681434631347,
       "loss_after_switch": 9.094100327491761,
-      "loss_final": 8.954852442741394,
+      "loss_final": 8.954852499961852,
       "id_r2": -0.008061142704311575,
       "ood_r2": 0.00042646389481071356,
       "ablation_a_gate_0_r2": -0.008061034335227202
@@ -34,9 +36,9 @@
       "seed": 1,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.94274272441864,
+      "loss_before_switch": 8.942742726802827,
       "loss_after_switch": 9.080069615840912,
-      "loss_final": 8.813525967597961,
+      "loss_final": 8.813525958061218,
       "id_r2": 0.0009805278436737508,
       "ood_r2": 0.0005821143814794816,
       "ablation_a_gate_0_r2": 0.0009805278436737508
@@ -46,490 +48,686 @@
       "seed": 2,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.006030390711384825,
-      "loss_after_switch": 0.005400187129271217,
-      "loss_final": 0.012790838526852895,
-      "id_r2": 0.9996861370032014,
-      "ood_r2": 0.7400327654146124,
-      "ablation_a_gate_0_r2": -2.6923688695106356
+      "loss_before_switch": 0.017090704647125678,
+      "loss_after_switch": 0.00895888612663839,
+      "loss_final": 0.03142447983263992,
+      "id_r2": 0.9982301652906514,
+      "ood_r2": 0.7107393554962366,
+      "ablation_a_gate_0_r2": -2.5846463865763356
     },
     {
       "condition": "adam",
       "seed": 3,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.015626570948952576,
-      "loss_after_switch": 0.0028975188652111683,
-      "loss_final": 0.003903997201123275,
-      "id_r2": 0.9994581714804641,
-      "ood_r2": 0.8950631053358413,
-      "ablation_a_gate_0_r2": -0.08383638770660617
+      "loss_before_switch": 0.019730579309689345,
+      "loss_after_switch": 0.003074684801249532,
+      "loss_final": 0.007427618560468545,
+      "id_r2": 0.9981591818556024,
+      "ood_r2": 0.8818573757298267,
+      "ablation_a_gate_0_r2": -0.11180913787968616
     },
     {
       "condition": "adam",
       "seed": 4,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.0064271213917527345,
-      "loss_after_switch": 0.01816250098112505,
-      "loss_final": 0.0015319860613817581,
-      "id_r2": 0.9999290459983899,
-      "ood_r2": 0.8862716504778005,
-      "ablation_a_gate_0_r2": -0.11207608392934931
+      "loss_before_switch": 0.006422715145454276,
+      "loss_after_switch": 0.01822457656322513,
+      "loss_final": 0.0008658244329853914,
+      "id_r2": 0.999959441686912,
+      "ood_r2": 0.8796130127939358,
+      "ablation_a_gate_0_r2": -0.133018552553946
+    },
+    {
+      "condition": "adam",
+      "seed": 5,
+      "lr_mult": 1.0,
+      "switch_at": 2000,
+      "loss_before_switch": 0.0007494023322942667,
+      "loss_after_switch": 0.009027511111999047,
+      "loss_final": 0.006394572887365939,
+      "id_r2": 0.9993698248859145,
+      "ood_r2": 0.8598458244205167,
+      "ablation_a_gate_0_r2": -0.7035630365553813
     },
     {
       "condition": "muon",
       "seed": 0,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.015424221076536924,
-      "loss_after_switch": 0.015522385404910893,
-      "loss_final": 0.00787924446281977,
-      "id_r2": 0.9993002738397017,
-      "ood_r2": 0.7045124627413317,
-      "ablation_a_gate_0_r2": -0.6091948567165641
+      "loss_before_switch": 0.01624810617417097,
+      "loss_after_switch": 0.015399157032370568,
+      "loss_final": 0.008177389814518392,
+      "id_r2": 0.9992359185838376,
+      "ood_r2": 0.7008323901263476,
+      "ablation_a_gate_0_r2": -0.010325948196976853
     },
     {
       "condition": "muon",
       "seed": 1,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.0191528076143004,
-      "loss_after_switch": 0.01651447114534676,
-      "loss_final": 0.00938410674687475,
-      "id_r2": 0.9989328799412248,
-      "ood_r2": 0.7918117956150504,
-      "ablation_a_gate_0_r2": -0.012534114019174813
+      "loss_before_switch": 0.017440339849563315,
+      "loss_after_switch": 0.015664558126591146,
+      "loss_final": 0.00800669175805524,
+      "id_r2": 0.9990823525470908,
+      "ood_r2": 0.7669896642154604,
+      "ablation_a_gate_0_r2": -0.0076224196685859
     },
     {
       "condition": "muon",
       "seed": 2,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.014210648343432695,
-      "loss_after_switch": 0.012366579254157841,
-      "loss_final": 0.007416029699379578,
-      "id_r2": 0.9990546571257051,
-      "ood_r2": 0.7540954498406559,
-      "ablation_a_gate_0_r2": -0.06527366574266158
+      "loss_before_switch": 0.015077449386008085,
+      "loss_after_switch": 0.014393032516818494,
+      "loss_final": 0.00897167410235852,
+      "id_r2": 0.9988125298696198,
+      "ood_r2": 0.7896685665386466,
+      "ablation_a_gate_0_r2": -0.062401951901051245
     },
     {
       "condition": "muon",
       "seed": 3,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.01631155145354569,
-      "loss_after_switch": 0.014040579139254987,
-      "loss_final": 0.008482112671481445,
-      "id_r2": 0.9986885860821877,
-      "ood_r2": 0.7659877418612252,
-      "ablation_a_gate_0_r2": 0.0027590038820491936
+      "loss_before_switch": 0.015861057385336608,
+      "loss_after_switch": 0.0150117290019989,
+      "loss_final": 0.009725921999197452,
+      "id_r2": 0.9984147565538035,
+      "ood_r2": 0.7862937825664178,
+      "ablation_a_gate_0_r2": -0.23370611012354248
     },
     {
       "condition": "muon",
       "seed": 4,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.02265765399672091,
-      "loss_after_switch": 0.018541310834698378,
-      "loss_final": 0.009829541894141584,
-      "id_r2": 0.9987860784802006,
-      "ood_r2": 0.42100893502500447,
-      "ablation_a_gate_0_r2": -0.3272669725670667
+      "loss_before_switch": 0.019857460274361072,
+      "loss_after_switch": 0.016043158457614483,
+      "loss_final": 0.009146215582732112,
+      "id_r2": 0.9990785845250373,
+      "ood_r2": 0.7326910261749178,
+      "ablation_a_gate_0_r2": -1.5963237553869263
+    },
+    {
+      "condition": "muon",
+      "seed": 5,
+      "lr_mult": 1.0,
+      "switch_at": 2000,
+      "loss_before_switch": 0.015779160755919293,
+      "loss_after_switch": 0.013772699933033436,
+      "loss_final": 0.009085520399967208,
+      "id_r2": 0.999043299003665,
+      "ood_r2": 0.7532680140564962,
+      "ablation_a_gate_0_r2": -0.01104487054043335
     },
     {
       "condition": "adam_then_muon",
       "seed": 0,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.829681367874146,
-      "loss_after_switch": 9.095030479431152,
-      "loss_final": 0.017174955671653152,
-      "id_r2": 0.9983559497664999,
-      "ood_r2": 0.6422992244185985,
-      "ablation_a_gate_0_r2": -0.07503399538174316
+      "loss_before_switch": 8.829681434631347,
+      "loss_after_switch": 9.09503042936325,
+      "loss_final": 0.0173541667079553,
+      "id_r2": 0.9984772663106376,
+      "ood_r2": 0.7304886791254235,
+      "ablation_a_gate_0_r2": -0.21389315501850725
     },
     {
       "condition": "adam_then_muon",
       "seed": 1,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.94274272441864,
-      "loss_after_switch": 9.081973912715911,
-      "loss_final": 0.015998306372202932,
-      "id_r2": 0.9984481809975929,
-      "ood_r2": 0.7836188183032382,
-      "ablation_a_gate_0_r2": -0.09605007507181207
+      "loss_before_switch": 8.942742726802827,
+      "loss_after_switch": 9.08226989030838,
+      "loss_final": 0.02882688880432397,
+      "id_r2": 0.997515943407044,
+      "ood_r2": 0.7600076172715552,
+      "ablation_a_gate_0_r2": -0.04622206539368667
     },
     {
       "condition": "adam_then_muon",
       "seed": 2,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.006030390711384825,
-      "loss_after_switch": 0.1411130206543021,
-      "loss_final": 0.018462628002744168,
-      "id_r2": 0.9983439990013329,
-      "ood_r2": 0.7332567539654437,
-      "ablation_a_gate_0_r2": -2.167926716817139
+      "loss_before_switch": 0.017090704647125678,
+      "loss_after_switch": 0.13671935030492022,
+      "loss_final": 0.02130971511476673,
+      "id_r2": 0.9991005750227845,
+      "ood_r2": 0.7168469502174525,
+      "ablation_a_gate_0_r2": -2.1495780237344855
     },
     {
       "condition": "adam_then_muon",
       "seed": 3,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.015626570948952576,
-      "loss_after_switch": 0.08206167922995519,
-      "loss_final": 0.011867444406962023,
-      "id_r2": 0.9989730044618071,
-      "ood_r2": 0.7850212948023698,
-      "ablation_a_gate_0_r2": -0.22869852835102766
+      "loss_before_switch": 0.019730579309689345,
+      "loss_after_switch": 0.08083680944284424,
+      "loss_final": 0.011955070460680872,
+      "id_r2": 0.9992511053524248,
+      "ood_r2": 0.7652369953380735,
+      "ablation_a_gate_0_r2": -1.3159043764486853
     },
     {
       "condition": "adam_then_muon",
       "seed": 4,
       "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.0064271213917527345,
-      "loss_after_switch": 0.1071861485671252,
-      "loss_final": 0.011835913513787091,
-      "id_r2": 0.9982160073982627,
-      "ood_r2": 0.7452624692259431,
-      "ablation_a_gate_0_r2": -0.3387301010921937
+      "loss_before_switch": 0.006422715145454276,
+      "loss_after_switch": 0.11222739773336798,
+      "loss_final": 0.013099318001186475,
+      "id_r2": 0.9990508343609202,
+      "ood_r2": 0.7418598090357401,
+      "ablation_a_gate_0_r2": -0.48153729596630845
     },
     {
-      "condition": "adam_then_adam_lrx3",
-      "seed": 0,
-      "lr_mult": 3.0,
+      "condition": "adam_then_muon",
+      "seed": 5,
+      "lr_mult": 1.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.829681367874146,
-      "loss_after_switch": 9.095969727039337,
-      "loss_final": 8.954851379394531,
+      "loss_before_switch": 0.0007494023322942667,
+      "loss_after_switch": 0.09525912027253071,
+      "loss_final": 0.01792597519233823,
+      "id_r2": 0.9983881560415049,
+      "ood_r2": 0.7785635061568789,
+      "ablation_a_gate_0_r2": -0.25895355102674045
+    },
+    {
+      "condition": "adam_then_adam_lrx1.5",
+      "seed": 0,
+      "lr_mult": 1.5,
+      "switch_at": 2000,
+      "loss_before_switch": 8.829681434631347,
+      "loss_after_switch": 9.09554321527481,
+      "loss_final": 0.002990645873651374,
+      "id_r2": 0.9998129052604776,
+      "ood_r2": 0.792682876848475,
+      "ablation_a_gate_0_r2": -5.704519120857971
+    },
+    {
+      "condition": "adam_then_adam_lrx1.5",
+      "seed": 1,
+      "lr_mult": 1.5,
+      "switch_at": 2000,
+      "loss_before_switch": 8.942742726802827,
+      "loss_after_switch": 9.081631979942323,
+      "loss_final": 8.813526220321656,
+      "id_r2": 0.0009807184780362688,
+      "ood_r2": 0.0005821143814794816,
+      "ablation_a_gate_0_r2": 0.0009808137952175278
+    },
+    {
+      "condition": "adam_then_adam_lrx1.5",
+      "seed": 2,
+      "lr_mult": 1.5,
+      "switch_at": 2000,
+      "loss_before_switch": 0.017090704647125678,
+      "loss_after_switch": 0.09594265255203936,
+      "loss_final": 0.02071664946852252,
+      "id_r2": 0.9967479973956264,
+      "ood_r2": 0.6564670836397644,
+      "ablation_a_gate_0_r2": -2.21873971356035
+    },
+    {
+      "condition": "adam_then_adam_lrx1.5",
+      "seed": 3,
+      "lr_mult": 1.5,
+      "switch_at": 2000,
+      "loss_before_switch": 0.019730579309689345,
+      "loss_after_switch": 0.05405053227499593,
+      "loss_final": 0.00424090305568825,
+      "id_r2": 0.9978405504411049,
+      "ood_r2": 0.8626883088741933,
+      "ablation_a_gate_0_r2": -0.06273070551902427
+    },
+    {
+      "condition": "adam_then_adam_lrx1.5",
+      "seed": 4,
+      "lr_mult": 1.5,
+      "switch_at": 2000,
+      "loss_before_switch": 0.006422715145454276,
+      "loss_after_switch": 0.0908602425182471,
+      "loss_final": 0.004303633455274394,
+      "id_r2": 0.999355273086433,
+      "ood_r2": 0.8491251981280568,
+      "ablation_a_gate_0_r2": -0.052834073132481674
+    },
+    {
+      "condition": "adam_then_adam_lrx1.5",
+      "seed": 5,
+      "lr_mult": 1.5,
+      "switch_at": 2000,
+      "loss_before_switch": 0.0007494023322942667,
+      "loss_after_switch": 0.08691385350568454,
+      "loss_final": 0.0028082587945391425,
+      "id_r2": 0.9998195439164189,
+      "ood_r2": 0.8502544569138686,
+      "ablation_a_gate_0_r2": -0.5115213118586057
+    },
+    {
+      "condition": "adam_then_adam_lrx2",
+      "seed": 0,
+      "lr_mult": 2.0,
+      "switch_at": 2000,
+      "loss_before_switch": 8.829681434631347,
+      "loss_after_switch": 9.09488300561905,
+      "loss_final": 8.95485155582428,
       "id_r2": -0.008060925966142829,
-      "ood_r2": 0.00042646389481071356,
+      "ood_r2": 0.0004265777399508064,
       "ablation_a_gate_0_r2": -0.008060925966142829
     },
     {
-      "condition": "adam_then_adam_lrx3",
+      "condition": "adam_then_adam_lrx2",
       "seed": 1,
-      "lr_mult": 3.0,
+      "lr_mult": 2.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.94274272441864,
-      "loss_after_switch": 9.082716126441955,
-      "loss_final": 0.007444247363309842,
-      "id_r2": 0.9995349557104696,
-      "ood_r2": 0.7608578091420732,
-      "ablation_a_gate_0_r2": -1.7244961724432692
+      "loss_before_switch": 8.942742726802827,
+      "loss_after_switch": 9.082178037166596,
+      "loss_final": 8.813526289463043,
+      "id_r2": 0.0009807184780362688,
+      "ood_r2": 0.0005821143814794816,
+      "ablation_a_gate_0_r2": 0.0009808137952175278
     },
     {
-      "condition": "adam_then_adam_lrx3",
+      "condition": "adam_then_adam_lrx2",
       "seed": 2,
-      "lr_mult": 3.0,
+      "lr_mult": 2.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.006030390711384825,
-      "loss_after_switch": 0.4018994278809987,
-      "loss_final": 0.027325546747888438,
-      "id_r2": 0.9994059406363994,
-      "ood_r2": 0.6696961907226323,
-      "ablation_a_gate_0_r2": -3.2130444202692665
+      "loss_before_switch": 0.017090704647125678,
+      "loss_after_switch": 0.1594109142164234,
+      "loss_final": 0.03769263301743195,
+      "id_r2": 0.9996268297241233,
+      "ood_r2": 0.6903006655226578,
+      "ablation_a_gate_0_r2": -2.4029682112928317
     },
     {
-      "condition": "adam_then_adam_lrx3",
+      "condition": "adam_then_adam_lrx2",
       "seed": 3,
-      "lr_mult": 3.0,
+      "lr_mult": 2.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.015626570948952576,
-      "loss_after_switch": 0.2752440929354634,
-      "loss_final": 0.027088219316210596,
-      "id_r2": 0.999372816893097,
-      "ood_r2": 0.80213904195013,
-      "ablation_a_gate_0_r2": -0.17382773425579123
+      "loss_before_switch": 0.019730579309689345,
+      "loss_after_switch": 0.0867007843227475,
+      "loss_final": 0.003058881849501631,
+      "id_r2": 0.9998474935650216,
+      "ood_r2": 0.8489987146309528,
+      "ablation_a_gate_0_r2": -0.06645043493268976
+    },
+    {
+      "condition": "adam_then_adam_lrx2",
+      "seed": 4,
+      "lr_mult": 2.0,
+      "switch_at": 2000,
+      "loss_before_switch": 0.006422715145454276,
+      "loss_after_switch": 0.1547549302689731,
+      "loss_final": 0.0015754219588416164,
+      "id_r2": 0.9999061599679592,
+      "ood_r2": 0.8459142595101468,
+      "ablation_a_gate_0_r2": -0.0950566740235883
+    },
+    {
+      "condition": "adam_then_adam_lrx2",
+      "seed": 5,
+      "lr_mult": 2.0,
+      "switch_at": 2000,
+      "loss_before_switch": 0.0007494023322942667,
+      "loss_after_switch": 0.14908565099496626,
+      "loss_final": 0.01777408721129177,
+      "id_r2": 0.999681381173313,
+      "ood_r2": 0.8410104884487537,
+      "ablation_a_gate_0_r2": -0.49678615271451965
     },
     {
       "condition": "adam_then_adam_lrx3",
-      "seed": 4,
+      "seed": 0,
       "lr_mult": 3.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.0064271213917527345,
-      "loss_after_switch": 0.3247937404410914,
-      "loss_final": 0.0022553551905002676,
-      "id_r2": 0.9999388150588023,
-      "ood_r2": 0.8416698560544632,
-      "ablation_a_gate_0_r2": -0.20455442579978045
-    },
-    {
-      "condition": "adam_then_adam_lrx10",
-      "seed": 0,
-      "lr_mult": 10.0,
-      "switch_at": 2000,
-      "loss_before_switch": 8.829681367874146,
-      "loss_after_switch": 9.119735033512116,
-      "loss_final": 8.954850449562073,
-      "id_r2": -0.008060709227974305,
+      "loss_before_switch": 8.829681434631347,
+      "loss_after_switch": 9.095987045764923,
+      "loss_final": 8.954851396083832,
+      "id_r2": -0.008061034335227202,
       "ood_r2": 0.00042646389481071356,
-      "ablation_a_gate_0_r2": -0.008061359442480098
+      "ablation_a_gate_0_r2": -0.008061034335227202
     },
     {
-      "condition": "adam_then_adam_lrx10",
+      "condition": "adam_then_adam_lrx3",
       "seed": 1,
-      "lr_mult": 10.0,
+      "lr_mult": 3.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.94274272441864,
-      "loss_after_switch": 9.10535159111023,
-      "loss_final": 8.813524012565614,
-      "id_r2": 0.0009806231608550098,
-      "ood_r2": 0.0005820001966263533,
-      "ablation_a_gate_0_r2": 0.0009806231608550098
+      "loss_before_switch": 8.942742726802827,
+      "loss_after_switch": 9.082716190814972,
+      "loss_final": 0.007697869762341725,
+      "id_r2": 0.9927925399567241,
+      "ood_r2": 0.7647625600198408,
+      "ablation_a_gate_0_r2": -0.09620420295391763
     },
     {
-      "condition": "adam_then_adam_lrx10",
+      "condition": "adam_then_adam_lrx3",
       "seed": 2,
-      "lr_mult": 10.0,
+      "lr_mult": 3.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.006030390711384825,
-      "loss_after_switch": 9.400417227901052,
-      "loss_final": 9.052188861370087,
-      "id_r2": 0.0009218707928855263,
-      "ood_r2": -0.0019527596945678738,
-      "ablation_a_gate_0_r2": 0.0009813241988511079
+      "loss_before_switch": 0.017090704647125678,
+      "loss_after_switch": 0.345453605967341,
+      "loss_final": 0.003662525512627326,
+      "id_r2": 0.9999057138449577,
+      "ood_r2": 0.7201119153978155,
+      "ablation_a_gate_0_r2": -2.189053941960899
     },
     {
-      "condition": "adam_then_adam_lrx10",
+      "condition": "adam_then_adam_lrx3",
       "seed": 3,
-      "lr_mult": 10.0,
+      "lr_mult": 3.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.015626570948952576,
-      "loss_after_switch": 9.129812220455497,
-      "loss_final": 8.847079627513885,
-      "id_r2": -0.0034624617369753974,
-      "ood_r2": -0.0009895077936408203,
-      "ablation_a_gate_0_r2": -0.0034745735401653377
+      "loss_before_switch": 0.019730579309689345,
+      "loss_after_switch": 0.180884344719816,
+      "loss_final": 0.008151863728562603,
+      "id_r2": 0.9997968985659944,
+      "ood_r2": 0.8342841081174102,
+      "ablation_a_gate_0_r2": -0.015034857120734602
     },
     {
-      "condition": "adam_then_adam_lrx10",
+      "condition": "adam_then_adam_lrx3",
       "seed": 4,
-      "lr_mult": 10.0,
+      "lr_mult": 3.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.0064271213917527345,
-      "loss_after_switch": 9.705404147268274,
-      "loss_final": 9.020381317138671,
-      "id_r2": 0.0009962530378103684,
-      "ood_r2": -0.0009177181518320587,
-      "ablation_a_gate_0_r2": 0.0009907899771667283
+      "loss_before_switch": 0.006422715145454276,
+      "loss_after_switch": 0.32414949186495506,
+      "loss_final": 0.007970993706549053,
+      "id_r2": 0.9998249486380809,
+      "ood_r2": 0.814584185620306,
+      "ablation_a_gate_0_r2": -0.16537381980454802
     },
     {
-      "condition": "adam_then_adam_lrx30",
+      "condition": "adam_then_adam_lrx3",
+      "seed": 5,
+      "lr_mult": 3.0,
+      "switch_at": 2000,
+      "loss_before_switch": 0.0007494023322942667,
+      "loss_after_switch": 0.33331880726880625,
+      "loss_final": 0.00638756824308075,
+      "id_r2": 0.99854709335946,
+      "ood_r2": 0.8259052231268256,
+      "ablation_a_gate_0_r2": -0.5509564491874606
+    },
+    {
+      "condition": "adam_then_adam_lrx5",
       "seed": 0,
-      "lr_mult": 30.0,
+      "lr_mult": 5.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.829681367874146,
-      "loss_after_switch": 9.248548491001129,
-      "loss_final": 8.954840319156647,
-      "id_r2": -0.008060059013468512,
+      "loss_before_switch": 8.829681434631347,
+      "loss_after_switch": 9.095796940326691,
+      "loss_final": 8.95484936952591,
+      "id_r2": -0.008060384120721409,
       "ood_r2": 0.0004265777399508064,
-      "ablation_a_gate_0_r2": -0.008060600858889932
+      "ablation_a_gate_0_r2": -0.008229873368557516
     },
     {
-      "condition": "adam_then_adam_lrx30",
+      "condition": "adam_then_adam_lrx5",
       "seed": 1,
-      "lr_mult": 30.0,
+      "lr_mult": 5.0,
       "switch_at": 2000,
-      "loss_before_switch": 8.94274272441864,
-      "loss_after_switch": 9.263592748641967,
-      "loss_final": 8.813513417243957,
-      "id_r2": 0.0009796699890423088,
-      "ood_r2": 0.0005813150875072504,
-      "ablation_a_gate_0_r2": 0.0009794793546797909
+      "loss_before_switch": 8.942742726802827,
+      "loss_after_switch": 9.090764870643616,
+      "loss_final": 8.813524870872497,
+      "id_r2": 0.0009807184780362688,
+      "ood_r2": 0.0005821143814794816,
+      "ablation_a_gate_0_r2": 0.0009807184780362688
     },
     {
-      "condition": "adam_then_adam_lrx30",
+      "condition": "adam_then_adam_lrx5",
       "seed": 2,
-      "lr_mult": 30.0,
+      "lr_mult": 5.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.006030390711384825,
-      "loss_after_switch": 20.7529759480129,
-      "loss_final": 9.052738091945649,
-      "id_r2": 0.0003108727131161393,
-      "ood_r2": -0.0019642224824993892,
-      "ablation_a_gate_0_r2": 0.0001681845387987435
+      "loss_before_switch": 0.017090704647125678,
+      "loss_after_switch": 9.290626263965386,
+      "loss_final": 0.015075681895832532,
+      "id_r2": 0.9998784887938146,
+      "ood_r2": 0.6420984789674866,
+      "ablation_a_gate_0_r2": -0.24466471423205927
     },
     {
-      "condition": "adam_then_adam_lrx30",
+      "condition": "adam_then_adam_lrx5",
       "seed": 3,
-      "lr_mult": 30.0,
+      "lr_mult": 5.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.015626570948952576,
-      "loss_after_switch": 30.57031226050982,
-      "loss_final": 8.846752438545227,
-      "id_r2": -0.003219684967673331,
-      "ood_r2": -0.001005612917074794,
-      "ablation_a_gate_0_r2": -0.0018119041290218796
+      "loss_before_switch": 0.019730579309689345,
+      "loss_after_switch": 0.5516366299719084,
+      "loss_final": 0.046779468785971404,
+      "id_r2": 0.991597826013785,
+      "ood_r2": 0.6776189295791653,
+      "ablation_a_gate_0_r2": -0.26081675944812566
     },
     {
-      "condition": "adam_then_adam_lrx30",
+      "condition": "adam_then_adam_lrx5",
       "seed": 4,
-      "lr_mult": 30.0,
+      "lr_mult": 5.0,
       "switch_at": 2000,
-      "loss_before_switch": 0.0064271213917527345,
-      "loss_after_switch": 21.213045049072242,
-      "loss_final": 9.019615921974182,
-      "id_r2": 0.000810741446590546,
-      "ood_r2": -0.0007410310363931139,
-      "ablation_a_gate_0_r2": 0.0008996614762166733
+      "loss_before_switch": 0.006422715145454276,
+      "loss_after_switch": 9.216736533907243,
+      "loss_final": 9.043432376384736,
+      "id_r2": 0.0004427403828047849,
+      "ood_r2": -0.0008739190096531679,
+      "ablation_a_gate_0_r2": -0.0006361559766581149
+    },
+    {
+      "condition": "adam_then_adam_lrx5",
+      "seed": 5,
+      "lr_mult": 5.0,
+      "switch_at": 2000,
+      "loss_before_switch": 0.0007494023322942667,
+      "loss_after_switch": 1.8822309087406028,
+      "loss_final": 0.02850551430543419,
+      "id_r2": 0.9960833770747085,
+      "ood_r2": 0.7041328507633595,
+      "ablation_a_gate_0_r2": -0.6116300344780472
     }
   ],
   "summary": {
     "adam": {
+      "converged_frac": 0.6666666666666666,
+      "n_converged": 4,
+      "n_seeds": 6,
       "id_r2": {
-        "mean": 0.5983985479242835,
-        "std": 0.49148935670140464
+        "mean": 0.99892965342977,
+        "std": 0.0007643828995862895
       },
       "ood_r2": {
-        "mean": 0.5044752199009089,
-        "std": 0.41515977120129005
+        "mean": 0.8330138921101289,
+        "std": 0.07111290114364449
       },
       "ablation_a_gate_0_r2": {
-        "mean": -0.5790723695276289,
-        "std": 1.0575331308247795
+        "mean": -0.8832592783913373,
+        "std": 1.0105698017985372
       },
       "loss_after_switch": {
-        "mean": 3.6401260300616562,
-        "std": 4.44742857964958
+        "mean": 0.009821414650778024,
+        "std": 0.005420003045966873
       },
       "loss_final": {
-        "mean": 3.5573210464257428,
-        "std": 4.349600862373536
+        "mean": 0.011528123928364949,
+        "std": 0.011754968091847782
       }
     },
     "muon": {
+      "converged_frac": 1.0,
+      "n_converged": 6,
+      "n_seeds": 6,
       "id_r2": {
-        "mean": 0.998952495093804,
-        "std": 0.000214062769657183
+        "mean": 0.9989445735138424,
+        "std": 0.0002676167098669299
       },
       "ood_r2": {
-        "mean": 0.6874832770166536,
-        "std": 0.13622271504277936
+        "mean": 0.7549572406130478,
+        "std": 0.030983252085678387
       },
       "ablation_a_gate_0_r2": {
-        "mean": -0.20230212103268358,
-        "std": 0.23580359262219353
+        "mean": -0.32023750930291933,
+        "std": 0.5761562899926488
       },
       "loss_after_switch": {
-        "mean": 0.015397065155673772,
-        "std": 0.0021059193390401904
+        "mean": 0.015047389178071172,
+        "std": 0.0007692508858315759
       },
       "loss_final": {
-        "mean": 0.008598207094939424,
-        "std": 0.0009013048570548606
+        "mean": 0.008852235609471487,
+        "std": 0.0005900283511499204
       }
     },
     "adam_then_muon": {
+      "converged_frac": 1.0,
+      "n_converged": 6,
+      "n_seeds": 6,
       "id_r2": {
-        "mean": 0.998467428325099,
-        "std": 0.0002633827781267435
+        "mean": 0.9986306467492193,
+        "std": 0.0005926283170389909
       },
       "ood_r2": {
-        "mean": 0.7378917121431187,
-        "std": 0.052011345696990695
+        "mean": 0.748833926190854,
+        "std": 0.02115857984632389
       },
       "ablation_a_gate_0_r2": {
-        "mean": -0.5812878833427831,
-        "std": 0.7990400551316531
+        "mean": -0.7443480779314022,
+        "std": 0.7499763897891447
       },
       "loss_after_switch": {
-        "mean": 3.701473048119689,
-        "std": 4.3985327512135814
+        "mean": 3.100390499570882,
+        "std": 4.234374677009093
       },
       "loss_final": {
-        "mean": 0.015067849593469873,
-        "std": 0.002739276198957082
+        "mean": 0.018411855713541928,
+        "std": 0.0055996788903700965
+      }
+    },
+    "adam_then_adam_lrx1.5": {
+      "converged_frac": 0.8333333333333334,
+      "n_converged": 5,
+      "n_seeds": 6,
+      "id_r2": {
+        "mean": 0.9987152540200122,
+        "std": 0.0012222212404901702
+      },
+      "ood_r2": {
+        "mean": 0.8022435848808716,
+        "std": 0.07680975147054647
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -1.7100689849856867,
+        "std": 2.1499323376747657
+      },
+      "loss_after_switch": {
+        "mean": 1.8846620992251555,
+        "std": 3.605470462890312
+      },
+      "loss_final": {
+        "mean": 0.007012018129535136,
+        "std": 0.006880034502831867
+      }
+    },
+    "adam_then_adam_lrx2": {
+      "converged_frac": 0.6666666666666666,
+      "n_converged": 4,
+      "n_seeds": 6,
+      "id_r2": {
+        "mean": 0.9997654661076043,
+        "std": 0.00011490603673367738
+      },
+      "ood_r2": {
+        "mean": 0.8065560320281278,
+        "std": 0.06718048672347586
+      },
+      "ablation_a_gate_0_r2": {
+        "mean": -0.7653153682409073,
+        "std": 0.9606864324701729
+      },
+      "loss_after_switch": {
+        "mean": 0.13748806995077756,
+        "std": 0.02954914479931471
+      },
+      "loss_final": {
+        "mean": 0.015025256009266741,
+        "std": 0.014538381958827057
       }
     },
     "adam_then_adam_lrx3": {
+      "converged_frac": 0.8333333333333334,
+      "n_converged": 5,
+      "n_seeds": 6,
       "id_r2": {
-        "mean": 0.7980383204665251,
-        "std": 0.4030496735477583
+        "mean": 0.9981734388730434,
+        "std": 0.002737063144314978
       },
       "ood_r2": {
-        "mean": 0.6149578723528218,
-        "std": 0.31252745186309594
+        "mean": 0.7919295984564396,
+        "std": 0.0432603870931688
       },
       "ablation_a_gate_0_r2": {
-        "mean": -1.06479673574685,
-        "std": 1.2410241436771026
+        "mean": -0.603324654205512,
+        "std": 0.8139209757373488
       },
       "loss_after_switch": {
-        "mean": 3.8361246229477692,
-        "std": 4.289426775910055
+        "mean": 2.053304488127178,
+        "std": 3.5152146010868908
       },
       "loss_final": {
-        "mean": 1.803792949602488,
-        "std": 3.575543571610967
+        "mean": 0.006774164190632291,
+        "std": 0.001674242549889935
       }
     },
-    "adam_then_adam_lrx10": {
+    "adam_then_adam_lrx5": {
+      "converged_frac": 0.5,
+      "n_converged": 3,
+      "n_seeds": 6,
       "id_r2": {
-        "mean": -0.0017248847946797596,
-        "std": 0.003602541447953338
+        "mean": 0.995853230627436,
+        "std": 0.003384481206875086
       },
       "ood_r2": {
-        "mean": -0.0005703043097207372,
-        "std": 0.0009517314073441934
+        "mean": 0.674616753103337,
+        "std": 0.025414242971493493
       },
       "ablation_a_gate_0_r2": {
-        "mean": -0.001716639129154518,
-        "std": 0.0036119305528724745
+        "mean": -0.3723705027194107,
+        "std": 0.16931049346134644
       },
       "loss_after_switch": {
-        "mean": 9.292144044049433,
-        "std": 0.23386958057628923
+        "mean": 3.9081646008926327,
+        "std": 3.844545092249444
       },
       "loss_final": {
-        "mean": 8.937604853630067,
-        "std": 0.093669333297995
-      }
-    },
-    "adam_then_adam_lrx30": {
-      "id_r2": {
-        "mean": -0.0018356919664785699,
-        "std": 0.0034697491101547072
-      },
-      "ood_r2": {
-        "mean": -0.0005405947217018481,
-        "std": 0.0009462808071779962
-      },
-      "ablation_a_gate_0_r2": {
-        "mean": -0.001565035923643321,
-        "std": 0.003400195646863762
-      },
-      "loss_after_switch": {
-        "mean": 18.209694899447612,
-        "std": 8.106887698816319
-      },
-      "loss_final": {
-        "mean": 8.937492037773133,
-        "std": 0.09373507501668923
+        "mean": 0.03012022166241271,
+        "std": 0.01299327994722261
       }
     }
   },
-  "verdict": "accuracy: switch damage -0.4001 vs worst LR-bump +0.6002. mechanism: ablation adam -0.579 / muon -0.202 / switch -0.581 = -1% of the way to Muon's signature; best step-size-only arm reaches 153%. -> step size accounts for as much mechanism movement as the switch does, or neither moved it",
-  "switch_damage_id_r2": -0.40006888040081556,
-  "worst_lr_bump_damage_id_r2": 0.6002342398907621,
-  "mechanism_shift_fraction_switch": -0.005880278031517669,
+  "verdict": "accuracy: switch damage +0.0003 vs worst surviving LR-bump +0.0031. mechanism: ablation adam -0.883 / muon -0.320 / switch -0.744 = 25% of the way to Muon's signature; best SURVIVING step-size-only arm reaches 91%. -> step size accounts for as much mechanism movement as the switch does, or neither moved it",
+  "switch_damage_id_r2": 0.00029900668055071744,
+  "worst_lr_bump_damage_id_r2": 0.003076422802334,
+  "mechanism_shift_fraction_switch": 0.24672438631430646,
   "mechanism_shift_fraction_lr_arms": {
-    "adam_then_adam_lrx3": -1.2891791964984134,
-    "adam_then_adam_lrx10": 1.532381425297757,
-    "adam_then_adam_lrx30": 1.5327838010323507
+    "adam_then_adam_lrx1.5": -1.4685217375040884,
+    "adam_then_adam_lrx2": 0.20948374756697533,
+    "adam_then_adam_lrx3": 0.4972003562829626,
+    "adam_then_adam_lrx5": 0.9074050129519872
   },
+  "lr_controls_destroyed_model": [],
+  "lr_controls_surviving": [
+    "adam_then_adam_lrx1.5",
+    "adam_then_adam_lrx2",
+    "adam_then_adam_lrx3",
+    "adam_then_adam_lrx5"
+  ],
   "config": {
-    "seeds": 5,
+    "seeds": 6,
     "steps": 16,
     "head_size": 16,
     "train_steps": 4000,
     "batch_size": 64,
     "muon_lr": 0.02,
     "adam_lr": 0.003,
-    "lr_mults": "3,10,30",
+    "lr_mults": "1.5,2,3,5",
+    "threads": 5,
     "out": "experiments/A0_state_probe/results/optimizer_switch_toy.json"
   }
 }

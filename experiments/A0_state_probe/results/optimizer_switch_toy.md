@@ -9,11 +9,12 @@
 
 | Metric | Value |
 |--------|-------|
-| a_gate ablation, adam / muon (pure arms) | -0.579 / -0.202 |
-| a_gate ablation, adam→muon switch | -0.581 |
-| mechanism shift toward Muon, switch | -1% |
-| mechanism shift, best step-size-only control | 153% |
-| id_r2 adam / switch | +0.5984 / +0.9985 |
+| a_gate ablation, adam / muon (pure arms) | -0.883 / -0.320 |
+| a_gate ablation, adam→muon switch | -0.744 |
+| mechanism shift toward Muon, switch | 25% |
+| mechanism shift, best SURVIVING step-size-only control | 91% |
+| step-size controls that destroyed the model | none |
+| id_r2 adam / switch | +0.9989 / +0.9986 |
 
 Full data: `optimizer_switch_toy.json` (same directory).
 

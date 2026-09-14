@@ -78,6 +78,22 @@ def parse_records(text: str) -> list[dict]:
     return records
 
 
+def unrecognised_evidence(evidence: list[dict]) -> list[tuple]:
+    """(call, strength) pairs that carry no likelihood ratio and are therefore
+    IGNORED by `posterior`.
+
+    Exists because the silent skip below cost a real result: on 2026-09-14 three
+    evidence entries were written with `strength: moderate` — not a value in
+    `_LR`, whose vocabulary is weak/strong — so three refutations of H26,
+    including one of its own pre-registered criteria, contributed exactly
+    nothing and the posterior printed unchanged at 0.712. A guard that does
+    nothing on unexpected input is the failure mode this repo spent that whole
+    day fixing elsewhere; it was in the scoring code too.
+    """
+    return [(e.get("call"), e.get("strength")) for e in evidence or []
+            if (e.get("call"), e.get("strength")) not in _LR]
+
+
 def posterior(prior: float, evidence: list[dict]) -> float | None:
     if prior is None:
         return None
@@ -104,6 +120,11 @@ def lint(record: dict, known_ids: set[str]) -> list[str]:
         problems.append("no contradicts_if — hypothesis has no stated refutation condition")
 
     ev = record.get("evidence") or []
+    for pair in unrecognised_evidence(ev):
+        problems.append(
+            f"evidence entry with call/strength {pair!r} is NOT scored — valid "
+            f"combinations are {sorted(_LR)}; this entry is silently ignored by "
+            f"the posterior")
     # File existence / citation coverage is backlog.py's job, not duplicated here.
 
     status = (record.get("status") or "").upper()

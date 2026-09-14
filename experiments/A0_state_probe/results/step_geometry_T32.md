@@ -9,9 +9,9 @@
 
 | Metric | Value |
 |--------|-------|
-| strongest |corr(dS, fixed weight norm)| | 0.827 |
-| CV(dS per own-norm step), adam | 1.58 |
-| CV(dS per own-norm step), muon | 0.36 |
+| strongest |corr(dS, fixed weight norm)| | 0.523 |
+| CV(dS per own-norm step), adam | nan |
+| CV(dS per own-norm step), muon | 0.55 |
 
 Full data: `step_geometry_T32.json` (same directory).
 

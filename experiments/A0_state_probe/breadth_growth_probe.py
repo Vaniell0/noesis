@@ -216,8 +216,17 @@ def _verdict(summary: dict, *, n_steps: int, head_size: int) -> tuple[str, dict]
         if opt not in summary:
             continue
         plain = summary[opt]
-        base_live = plain["live_directions_final"]["mean"]
-        base_q = plain["ood_r2"]["mean"]
+        # Converged-only where it exists. `_aggregate` computes `converged_only`
+        # and the first version of this verdict then read the all-runs mean
+        # anyway — so plain Adam entered the comparison at ood +0.2470 (1 of 3
+        # seeds converged; the other two never learned the task) instead of its
+        # real +0.7400, and every delta against it was inflated by ~0.5. That is
+        # the same defect experiments/_common/convergence.py was written for,
+        # left live in the one code path whose output reaches RESULTS.md.
+        co = plain.get("converged_only")
+        base_live = (co or plain["live_directions_final"])["live_directions_final"] \
+            if co else plain["live_directions_final"]["mean"]
+        base_q = co["ood_r2"] if co else plain["ood_r2"]["mean"]
         base_conv = plain["converged_frac"]
         entry = {"plain_live": base_live, "plain_ood": base_q,
                  "plain_converged_frac": base_conv,
@@ -226,14 +235,17 @@ def _verdict(summary: dict, *, n_steps: int, head_size: int) -> tuple[str, dict]
             if not arm.startswith(f"{opt}_"):
                 continue
             kind = arm.split("_")[1].split("L")[0].rstrip("_") or arm.split("_")[1]
+            lco = line.get("converged_only")
+            arm_live = lco["live_directions_final"] if lco else line["live_directions_final"]["mean"]
+            arm_ood = lco["ood_r2"] if lco else line["ood_r2"]["mean"]
             entry["terms"][arm] = {
                 "kind": kind,
-                "live": line["live_directions_final"]["mean"],
-                "ood": line["ood_r2"]["mean"],
-                "d_ood": line["ood_r2"]["mean"] - base_q,
+                "live": arm_live,
+                "ood": arm_ood,
+                "d_ood": arm_ood - base_q,
                 "converged_frac": line["converged_frac"],
                 "d_converged": line["converged_frac"] - base_conv,
-                "at_ceiling": line["live_directions_final"]["mean"] >= ceiling - 0.05,
+                "at_ceiling": arm_live >= ceiling - 0.05,
             }
         per_opt[opt] = entry
 
