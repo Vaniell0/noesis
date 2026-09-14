@@ -852,6 +852,42 @@ def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
 # Main
 # --------------------------------------------------------------------------- #
 
+def _work_layers_from_profile(path, n_layer_expected: int) -> tuple:
+    """work_layers from a measured per-layer profile, not from inheritance.
+
+    Every config in `training/config/` carries `[12, 16, 20]` — the A0.5 set,
+    chosen empirically once and copied forward since. `layer_profile.py` reads
+    a checkpoint's own per-layer breadth and names the set that covers where
+    the model DISCARDS width (on G1i: peak at L20, then -47% by L24, which the
+    A0.5 set stops short of). Nothing connected the two until now, so the
+    measurement existed and the training never saw it.
+
+    The profile is refused if it was measured on a different depth: the
+    transferable quantity is the depth fraction, not the layer index
+    (docs/community-map.md:297 — L16/24 at 1.5B ~ L21/32 at 2.9B).
+    """
+    import pathlib
+    d = json.loads(pathlib.Path(path).read_text())
+    rec = d.get("recommendation") or {}
+    layers = rec.get("suggested_work_layers_covering_transition")
+    if not layers:
+        raise SystemExit("%s carries no layer recommendation — re-run "
+                         "experiments/A0_state_probe/layer_profile.py" % path)
+    n_layer = d.get("n_layer")
+    if n_layer is not None and n_layer != n_layer_expected:
+        raise SystemExit(
+            "%s was measured on a %s-layer model; this run is %s layers. Layer "
+            "indices do not carry across depths — re-measure, or convert by "
+            "depth fraction deliberately." % (path, n_layer, n_layer_expected))
+    bad = [L for L in layers if not 0 <= int(L) < n_layer_expected]
+    if bad:
+        raise SystemExit("%s names layer(s) %s outside this model's 0..%d"
+                         % (path, bad, n_layer_expected - 1))
+    print("[distill] work_layers %s <- measured profile %s (model %r)"
+          % (list(layers), path, d.get("model")))
+    return tuple(int(x) for x in layers)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
@@ -871,6 +907,14 @@ def main() -> int:
                           "distillation target instead, may tolerate more, but "
                           "don't assume it without checking).")
     ap.add_argument("--work-layers", default=",".join(str(x) for x in DEFAULT_WORK_LAYERS))
+    ap.add_argument("--work-layers-from", default=None,
+                     help="a layer_profile result JSON: take work_layers from "
+                          "what was MEASURED on this checkpoint instead of the "
+                          "inherited A0.5 set. Overrides --work-layers. The "
+                          "profile records its own n_layer; a profile measured "
+                          "on a model of a different depth is refused, because "
+                          "the portable quantity is the depth FRACTION, not the "
+                          "layer index (docs/community-map.md:297).")
     ap.add_argument("--batch", type=int, default=4,
                      help="Examples per micro-batch (all held in VRAM simultaneously, "
                           "required for the CLIPO cross-example term) — see "
@@ -1117,6 +1161,11 @@ def main() -> int:
     loaded = load_rwkv7(args.model, device=args.device, backend="peft",
                          grad_cp=1 if args.grad_cp else 0,
                          lora_r=args.lora_r, lora_alpha=args.lora_alpha)
+
+    if args.work_layers_from is not None:
+        # After the load, not before: the depth check needs the real n_layer.
+        layers = _work_layers_from_profile(args.work_layers_from, loaded.n_layer)
+        layer_weights = default_layer_weights(layers)
     examples = load_examples(Path(args.data))
     print(f"[distill] {len(examples)} usable examples from {args.data}")
     rng = random.Random(args.seed)

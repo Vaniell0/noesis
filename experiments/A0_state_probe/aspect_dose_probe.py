@@ -71,7 +71,7 @@ from experiments._common.convergence import CONVERGED_ID_R2
 from experiments._common.results import save_result
 from experiments._common.runtime import limit_threads, progress
 
-ARMS = ("adam", "factorwise", "noaspect", "lr_div")
+ARMS = ("adam", "factorwise", "noaspect", "lr_div", "lr_mul")
 TARGET = lambda x, y: x * y  # noqa: E731
 
 
@@ -143,6 +143,16 @@ def run_arm(arm, base, hidden, lora_r, lora_alpha, steps, batch, narrow,
         opt = AspectMuon(adapters, "muon_factorwise", lr=muon_lr)
     elif arm == "noaspect":
         opt = AspectMuon(adapters, "muon_noaspect", lr=muon_lr)
+    elif arm == "lr_mul":
+        # The control the first version lacked, and the one that actually
+        # discriminates. `noaspect` and `lr_div` both LOWER the B factor's
+        # step, so both remove the asymmetry AND the large step at once —
+        # which is why both "fix" the damage and neither says which mattered.
+        # This arm keeps the large step and removes the asymmetry instead: BOTH
+        # factors at lr * aspect, symmetric. If retention survives here, a big
+        # step is not what hurts and the pairing asymmetry is; if it collapses
+        # like production, the step size was the whole story.
+        opt = AspectMuon(adapters, "muon_noaspect", lr=muon_lr * aspect)
     elif arm == "lr_div":
         # Same update rule as production, smaller shared step. Isolates "the
         # step was too big" from "the two factors' steps were mismatched".

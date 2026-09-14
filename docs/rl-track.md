@@ -1044,17 +1044,27 @@ existing behavior to exploit as shortcut. This is exactly the case where skippin
 **Mandatory checkpoint after first RL epoch:**
 R-lens probe on non-task axes (e.g. narrative, arithmetic) before continuing curriculum. If R-lens returns near-chance probe accuracy on non-task axes while word-search performance is high → state is encoding shortcut geometry, not reasoning. Stop and investigate before advancing curriculum.
 
-**Why this has never been run (checked 2026-09-14): as written it is not
-runnable.** The gate asks for "probe accuracy"; `rlens_probe.py` reports
-saliency and spectral statistics and contains no classifier — the string
-`accuracy` does not appear in it. The same is true of `jlens_probe.py`. So
-this was never a check that was skipped, it was a check with no
-implementation, carried for three weeks as if it were pending execution.
-Making it real needs a probing classifier (state at the work layers ->
-axis label, base vs trained, accuracy against the label-shuffled control),
-which is a probe that does not exist yet. Until it does, this paragraph is
-a specification, not a gate, and nothing downstream should be described as
-having passed it.
+**Why this has never been run (checked 2026-09-14): it names a tool that
+does not do this, while the tool that could is somewhere else.**
+`rlens_probe.py` reports saliency and spectral statistics; it has no
+decoder, and the string `accuracy` does not occur in it or in
+`jlens_probe.py`. So "run the R-lens probe and read its probe accuracy"
+was never an instruction anything could carry out, which is why it sat
+three weeks looking pending.
+
+The methodology it actually needs already exists, one directory over:
+`experiments/rl/wkv_linear_probe.py` collects WKV state through a trained
+ThinkChain marker and fits a held-out linear decoder on it, centering on
+train statistics only. What it decodes today is the task's own answer
+(4-bit XOR), which is the opposite end of this gate — the gate asks what
+survives on axes the training did NOT cover.
+
+Converting it is bounded and needs no new machinery: a prompt set spanning
+non-task axes, a per-axis target, and a label-shuffled control to put a
+floor under "near-chance" (the probe has no control arm today, and without
+one a held-out R2 has nothing to be compared against). Until that exists
+this paragraph is a specification and not a gate, and nothing downstream
+should be described as having passed it.
 
 **L_KVB:** skip for now (SFT-only loss, no SFT phase). Revisit if full-FT SFT is added later.
 
