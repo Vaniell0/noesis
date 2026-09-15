@@ -297,6 +297,15 @@ project.
 at 1.5B ≈ L21/32 at 2.9B — both ≈ **0.67 depth fraction**, independent of
 model size. The readout zone tracks depth fraction, not absolute layer index.
 Implication for L_state work_layers: L_state should emphasise ~0.67×n_layer.
+**Checked against a measurement, 2026-09-15 — they agree.** G1i's own
+per-layer state breadth, read at stride 1 over five prompts
+(`experiments/A0_state_probe/results/layer_profile_g1i_stride1.json`), falls
+off a cliff at L21→L22: 17.79 → 11.03 live directions, −38% in one layer,
+after oscillating between 17 and 24 for the nine layers before it. That cliff
+sits at depth fraction 0.656; 0.67×32 = 21.4. A corpus-only CV and a state
+spectrum, different methods on different data, land on the same layer. The
+A0.5 set [12,16,20] sits inside the plateau and stops one layer short of it.
+Reaching training via `--work-layers-from` as of the same date.
 
 **Key finding:** *"The base carries the knowledge, the state installs the
 disposition."* Abstention = 0/17 at every raw size and model (including

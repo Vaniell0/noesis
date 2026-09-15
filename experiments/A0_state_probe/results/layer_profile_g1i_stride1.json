@@ -1,0 +1,252 @@
+{
+  "_meta": {
+    "experiment": "layer_profile",
+    "hypothesis": [
+      "H8",
+      "H26"
+    ],
+    "date": "2026-09-15",
+    "status": "done",
+    "model": "?",
+    "script": "experiments/A0_state_probe/layer_profile.py",
+    "script_sha256_12": "5fdff1d7e294",
+    "summary": {
+      "peak breadth layer": "L15 (24.12 live)",
+      "steepest drop": "L21->L22 -38%",
+      "set covering the transition": "[20, 21, 22]"
+    }
+  },
+  "model": "?",
+  "rows": [
+    {
+      "layer": 12,
+      "depth_fraction": 0.375,
+      "live_mean": 17.765,
+      "live_std": 8.991094204822904,
+      "live_min": 3,
+      "live_max": 41,
+      "entropy_rank_mean": 8.347987985014916,
+      "sigma1_mean": 17.640588731765746,
+      "n_head": 200
+    },
+    {
+      "layer": 13,
+      "depth_fraction": 0.40625,
+      "live_mean": 18.7,
+      "live_std": 8.261355820929152,
+      "live_min": 5,
+      "live_max": 40,
+      "entropy_rank_mean": 8.71716967701912,
+      "sigma1_mean": 17.232333068847655,
+      "n_head": 200
+    },
+    {
+      "layer": 14,
+      "depth_fraction": 0.4375,
+      "live_mean": 19.07,
+      "live_std": 9.252302416155667,
+      "live_min": 4,
+      "live_max": 42,
+      "entropy_rank_mean": 9.076564329862595,
+      "sigma1_mean": 18.7698236989975,
+      "n_head": 200
+    },
+    {
+      "layer": 15,
+      "depth_fraction": 0.46875,
+      "live_mean": 24.12,
+      "live_std": 9.032474743944762,
+      "live_min": 6,
+      "live_max": 44,
+      "entropy_rank_mean": 11.875656802654266,
+      "sigma1_mean": 14.06007975578308,
+      "n_head": 200
+    },
+    {
+      "layer": 16,
+      "depth_fraction": 0.5,
+      "live_mean": 17.615,
+      "live_std": 7.176125347288744,
+      "live_min": 5,
+      "live_max": 36,
+      "entropy_rank_mean": 8.09369726061821,
+      "sigma1_mean": 22.328557591438294,
+      "n_head": 200
+    },
+    {
+      "layer": 17,
+      "depth_fraction": 0.53125,
+      "live_mean": 20.555,
+      "live_std": 8.533286295443274,
+      "live_min": 6,
+      "live_max": 39,
+      "entropy_rank_mean": 9.760605463981628,
+      "sigma1_mean": 19.543199610710143,
+      "n_head": 200
+    },
+    {
+      "layer": 18,
+      "depth_fraction": 0.5625,
+      "live_mean": 22.07,
+      "live_std": 9.349604269700402,
+      "live_min": 8,
+      "live_max": 52,
+      "entropy_rank_mean": 10.585785204172135,
+      "sigma1_mean": 20.210972063541412,
+      "n_head": 200
+    },
+    {
+      "layer": 19,
+      "depth_fraction": 0.59375,
+      "live_mean": 20.35,
+      "live_std": 9.155189785034498,
+      "live_min": 6,
+      "live_max": 44,
+      "entropy_rank_mean": 9.660694570541382,
+      "sigma1_mean": 17.966400454044344,
+      "n_head": 200
+    },
+    {
+      "layer": 20,
+      "depth_fraction": 0.625,
+      "live_mean": 22.605,
+      "live_std": 7.725864029349727,
+      "live_min": 7,
+      "live_max": 41,
+      "entropy_rank_mean": 10.589107965230943,
+      "sigma1_mean": 18.44385642051697,
+      "n_head": 200
+    },
+    {
+      "layer": 21,
+      "depth_fraction": 0.65625,
+      "live_mean": 17.79,
+      "live_std": 10.13587194078536,
+      "live_min": 3,
+      "live_max": 40,
+      "entropy_rank_mean": 8.392137783169746,
+      "sigma1_mean": 21.08616539955139,
+      "n_head": 200
+    },
+    {
+      "layer": 22,
+      "depth_fraction": 0.6875,
+      "live_mean": 11.03,
+      "live_std": 4.8289854006820105,
+      "live_min": 5,
+      "live_max": 33,
+      "entropy_rank_mean": 4.769502238035202,
+      "sigma1_mean": 19.635700151920318,
+      "n_head": 200
+    },
+    {
+      "layer": 23,
+      "depth_fraction": 0.71875,
+      "live_mean": 11.135,
+      "live_std": 6.739938797941714,
+      "live_min": 3,
+      "live_max": 36,
+      "entropy_rank_mean": 4.92218946993351,
+      "sigma1_mean": 18.863568143844603,
+      "n_head": 200
+    },
+    {
+      "layer": 24,
+      "depth_fraction": 0.75,
+      "live_mean": 8.835,
+      "live_std": 5.244785505623657,
+      "live_min": 3,
+      "live_max": 30,
+      "entropy_rank_mean": 3.911876281499863,
+      "sigma1_mean": 15.517469925880432,
+      "n_head": 200
+    },
+    {
+      "layer": 25,
+      "depth_fraction": 0.78125,
+      "live_mean": 8.685,
+      "live_std": 5.069100018741,
+      "live_min": 3,
+      "live_max": 31,
+      "entropy_rank_mean": 3.909585580229759,
+      "sigma1_mean": 21.905800927877426,
+      "n_head": 200
+    },
+    {
+      "layer": 26,
+      "depth_fraction": 0.8125,
+      "live_mean": 12.965,
+      "live_std": 6.683096213582444,
+      "live_min": 4,
+      "live_max": 35,
+      "entropy_rank_mean": 5.8788220500946045,
+      "sigma1_mean": 25.456456639766692,
+      "n_head": 200
+    },
+    {
+      "layer": 27,
+      "depth_fraction": 0.84375,
+      "live_mean": 13.885,
+      "live_std": 6.24594068175483,
+      "live_min": 4,
+      "live_max": 35,
+      "entropy_rank_mean": 6.301688648462296,
+      "sigma1_mean": 14.073697081208229,
+      "n_head": 200
+    },
+    {
+      "layer": 28,
+      "depth_fraction": 0.875,
+      "live_mean": 13.39,
+      "live_std": 5.692793690271939,
+      "live_min": 4,
+      "live_max": 29,
+      "entropy_rank_mean": 5.783786587715149,
+      "sigma1_mean": 17.819189022779465,
+      "n_head": 200
+    }
+  ],
+  "recommendation": {
+    "peak_layer": 15,
+    "peak_live": 24.12,
+    "peak_depth_fraction": 0.46875,
+    "grid_stride": [
+      1
+    ],
+    "steepest_drop": {
+      "from_layer": 21,
+      "to_layer": 22,
+      "live_before": 17.79,
+      "live_after": 11.03,
+      "delta": -6.76,
+      "relative": -0.37998875772906127,
+      "depth_fraction": 0.65625
+    },
+    "largest_drop_after_peak": {
+      "from_layer": 21,
+      "to_layer": 22,
+      "live_before": 17.79,
+      "live_after": 11.03,
+      "delta": -6.76,
+      "relative": -0.37998875772906127,
+      "depth_fraction": 0.65625
+    },
+    "suggested_work_layers_covering_transition": [
+      20,
+      21,
+      22
+    ],
+    "inherited_a05_set": [
+      12,
+      16,
+      20
+    ],
+    "depth_fraction_implication_0_67": {
+      "claimed": 0.67,
+      "measured_cliff_depth_fraction": 0.65625,
+      "layer_at_0_67": 21
+    }
+  },
+  "source_jlens": "experiments/A0_state_probe/results/jlens_stride1_multiprompt/jlens.json",
+  "n_layer": 32
+}
