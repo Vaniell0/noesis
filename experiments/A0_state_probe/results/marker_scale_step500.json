@@ -8,10 +8,11 @@
     "status": "done",
     "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
     "script": "experiments/rl/marker_scale_probe.py",
-    "script_sha256_12": "0b1ef7cc12c3",
+    "script_sha256_12": "5b9aecb73653",
     "summary": {
       "marker norm vs token embeddings": "1.0138 = 2.70x median, 1.58x max; 0.000000 of vocab larger",
       "did training move it": "per-coord std 0.02003 vs init 0.0200",
+      "expected-mode feed strength tracks confidence": "p1=0.99->0.93x; p1=0.9->0.84x; p1=0.5->0.47x; p1=0.2->0.20x; p1=0.05->0.10x; p1=0.01->0.09x",
       "phase markers distinguishable": "pairwise cos +0.0042 vs 0.0198 expected for random draws"
     }
   },
@@ -55,5 +56,38 @@
       0.004174498841166496,
       1.0000001192092896
     ]
+  ],
+  "mean_embedding_norm": 0.032852329313755035,
+  "expected_mode_by_confidence": [
+    {
+      "top1_prob": 0.99,
+      "norm": 0.34837284684181213,
+      "over_median_token": 0.9272903800010681
+    },
+    {
+      "top1_prob": 0.9,
+      "norm": 0.3168955147266388,
+      "over_median_token": 0.843504786491394
+    },
+    {
+      "top1_prob": 0.5,
+      "norm": 0.17766310274600983,
+      "over_median_token": 0.47289931774139404
+    },
+    {
+      "top1_prob": 0.2,
+      "norm": 0.0765601322054863,
+      "over_median_token": 0.20378589630126953
+    },
+    {
+      "top1_prob": 0.05,
+      "norm": 0.036719851195812225,
+      "over_median_token": 0.09774000942707062
+    },
+    {
+      "top1_prob": 0.01,
+      "norm": 0.0329192690551281,
+      "over_median_token": 0.0876237079501152
+    }
   ]
 }

@@ -46,6 +46,31 @@ import torch.nn.functional as F
 from experiments._common.results import save_result
 
 
+def expected_mode_norms(emb: torch.Tensor) -> list[dict]:
+    """How loud `feed_mode="expected"` is, as a function of confidence.
+
+    `softmax(logits) @ emb.weight` is a CONVEX COMBINATION of embeddings, so it
+    can never leave their hull -- its norm is bounded above by the largest
+    token (0.642 on G1i) and collapses toward the mean embedding (0.033, 11x
+    smaller than a median token) as the distribution flattens.
+
+    That makes the feed strength a function of the model's confidence, which is
+    not obviously what a think-loop wants: the early steps are exactly when the
+    model is least sure, so the vector it feeds itself is weakest precisely
+    where the loop is supposed to do the most work. The marker has the opposite
+    failure -- a fixed 2.7x-median vector that no confidence level produces.
+    """
+    q = emb.float().norm(dim=1)
+    mean_e = emb.float().mean(0)
+    i = 0
+    rows = []
+    for p1 in (0.99, 0.9, 0.5, 0.2, 0.05, 0.01):
+        v = p1 * emb[i].float() + (1 - p1) * mean_e
+        rows.append({"top1_prob": p1, "norm": v.norm().item(),
+                     "over_median_token": (v.norm() / q.median()).item()})
+    return rows
+
+
 def analyse(chain: torch.Tensor, emb: torch.Tensor, init_std: float) -> dict:
     c = chain.float()
     n_phase, n_embd = c.shape
@@ -73,6 +98,8 @@ def analyse(chain: torch.Tensor, emb: torch.Tensor, init_std: float) -> dict:
         "token_norm": {"p1": q.quantile(0.01).item(), "median": q.median().item(),
                        "p99": q.quantile(0.99).item(), "max": q.max().item()},
         "phases": phases, "pair_cosine": pair_cos,
+        "mean_embedding_norm": emb.float().mean(0).norm().item(),
+        "expected_mode_by_confidence": expected_mode_norms(emb),
     }
 
 
@@ -104,6 +131,11 @@ def main() -> int:
               f"per-coord std {p['per_coord_std']:.5f}; "
               f"tokens larger: {p['frac_tokens_larger']:.6f}; "
               f"max cos to any token {p['max_cos_to_any_token']:.4f}")
+    print(f"expected-mode feed (softmax(logits) @ emb), mean-embedding norm "
+          f"{d['mean_embedding_norm']:.4f}:")
+    for r in d["expected_mode_by_confidence"]:
+        print(f"  top-1 prob {r['top1_prob']:5.2f} -> norm {r['norm']:.4f} "
+              f"({r['over_median_token']:.2f}x median token)")
     print("pairwise cosine between phase markers:")
     for row in d["pair_cosine"]:
         print("   " + " ".join(f"{v:+.4f}" for v in row))
@@ -120,6 +152,9 @@ def main() -> int:
                     f"{p0['frac_tokens_larger']:.6f} of vocab larger",
                 "did training move it":
                     f"per-coord std {p0['per_coord_std']:.5f} vs init {d['init_std']:.4f}",
+                "expected-mode feed strength tracks confidence":
+                    "; ".join(f"p1={r['top1_prob']}->{r['over_median_token']:.2f}x"
+                              for r in d["expected_mode_by_confidence"]),
                 "phase markers distinguishable":
                     f"pairwise cos {d['pair_cosine'][0][1]:+.4f} vs "
                     f"{d['expected_random_pair_cos']:.4f} expected for random draws",

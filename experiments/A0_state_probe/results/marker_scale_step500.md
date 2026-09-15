@@ -12,6 +12,7 @@
 |--------|-------|
 | marker norm vs token embeddings | 1.0138 = 2.70x median, 1.58x max; 0.000000 of vocab larger |
 | did training move it | per-coord std 0.02003 vs init 0.0200 |
+| expected-mode feed strength tracks confidence | p1=0.99->0.93x; p1=0.9->0.84x; p1=0.5->0.47x; p1=0.2->0.20x; p1=0.05->0.10x; p1=0.01->0.09x |
 | phase markers distinguishable | pairwise cos +0.0042 vs 0.0198 expected for random draws |
 
 Full data: `marker_scale_step500.json` (same directory).
