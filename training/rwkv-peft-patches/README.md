@@ -65,9 +65,27 @@ perfectly flat full-rank-r update injected every step by construction,
 regardless of what the loss wanted. Adam in the same slot produces a
 spiky one.
 
-**Not patched here on purpose.** Three candidate fixes exist and they are
-not equivalent; which one is right is an open question, not a cleanup.
-They are implemented and compared at toy scale in
+**PATCHED 2026-09-15.** The reason for holding off — that three candidate
+fixes existed and choosing between them was an open question — closed when
+the dose probe's `lr_mul` arm ran. Putting both factors on the large step,
+symmetrically, is catastrophic (retain_r2 -747 at coefficient 4.0, -9892 at
+5.66), far worse than the asymmetry it removes. So the damage is step SIZE,
+the pairing asymmetry matters only because it carries `lora_B` past a
+threshold near coefficient ~3, and any fix must equalise by LOWERING.
+
+`MuonWithAuxAdam` now pairs `lora_A` with `lora_B` and steps them together,
+scaling each factor's contribution to the update down to the smaller of the
+two. Standalone weights are untouched and still take the aspect coefficient,
+which is correct for them. `_balanced_pair_scale` is duplicated from
+`experiments/rl/loader.py` rather than imported: this file is vendored into
+`rwkvt/` on the training host, where `experiments/` does not exist. The two
+copies must be changed together.
+
+Both live Muon paths now carry the fix — this one, which `light_rwkv.py`
+reaches via `args.optimizer=='muon'`, and `MuonHybrid`, which
+`train_think_distill.py` uses. Until today only the second had it.
+
+The three candidates are still implemented and compared at toy scale in
 `experiments/A0_state_probe/lora_muon_probe.py` (invariants pinned in
 `test_lora_muon.py`): equalise the two factors' contribution to `ΔW`;
 orthogonalize the induced `ΔW` itself and push it back through the
