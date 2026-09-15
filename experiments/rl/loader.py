@@ -263,8 +263,8 @@ def _balanced_pair_scale(lora_A: torch.Tensor, lora_B: torch.Tensor,
     update at all — it is an asymmetry introduced into it.
 
     What the pair actually has are two contributions, `B dA` and `dB A`. This
-    scales each to their geometric mean, so neither dominates by accident of
-    orientation. Both norms are computed in r x r space via
+    scales the larger DOWN to the smaller, so neither dominates by accident of
+    orientation and no factor's step is ever raised. Both norms are computed in r x r space via
     ||B dA||_F^2 = <B^T B, dA dA^T> and ||dB A||_F^2 = <dB^T dB, A A^T>,
     which costs two small matmuls instead of forming the out x in product.
 
@@ -279,7 +279,14 @@ def _balanced_pair_scale(lora_A: torch.Tensor, lora_B: torch.Tensor,
     cB = ((dB32.T @ dB32) * (a32 @ a32.T)).sum().clamp_min(0).sqrt()
     if not (cA > 1e-12 and cB > 1e-12):
         return 1.0, 1.0
-    tgt = (cA * cB).sqrt()
+    # Equalise DOWNWARD, to the smaller contribution — never to the geometric
+    # mean, which would raise the smaller factor's step. Measured 2026-09-15
+    # (experiments/A0_state_probe/results/aspect_dose_toy.json, arm `lr_mul`):
+    # putting BOTH factors on the large step, symmetrically, is catastrophic
+    # (retain -747 at aspect 4.0, -9892 at 5.66) — far worse than the
+    # production asymmetry it removes. Raising any factor's step is the thing
+    # that does the damage, so a fix that equalises must do it by lowering.
+    tgt = torch.minimum(cA, cB)
     return (tgt / cA).item(), (tgt / cB).item()
 
 

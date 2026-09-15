@@ -115,13 +115,30 @@ is right for a standalone weight. It is blind to *pairing* — that these two
 tensors multiply into one update, so rescaling one of them is not a rescale of
 the update at all.
 
-**This does not establish that the coefficient causes the collapse** — a
-dose-response toy separating "the coefficient" from "the step was simply too
-big" is running as of this entry, and the toy's own smoke could not separate
-them. What it does establish is that the question flagged in the paragraph
-above ("was 0.02 ever recalibrated for LoRA?") has a cheap, concrete test:
-rerun LoRA+Muon with the shared lr unchanged and the aspect coefficient
-suppressed for paired factors, and see whether the clamp still pins.
+**It is the STEP SIZE, not the pairing — settled 2026-09-15**
+(`experiments/A0_state_probe/results/aspect_dose_toy.json`, 6 seeds, 5 arms
+across six coefficient levels at fixed width). Damage tracks the coefficient
+as a threshold near ~3, not as a smooth dose: retention versus Adam is
+-0.0013 at 2.83 and then -0.52, -1.69, -1.14 at 4.00, 5.66, 8.00. Suppressing
+the coefficient recovers 100% of the gap and dividing the shared lr by it
+recovers 98% — but both of those LOWER the B factor's step, so neither says
+which mattered. The arm that does keeps the large step and removes the
+asymmetry instead (both factors at `lr * aspect`, symmetric), and it is
+catastrophic: -747 at 4.00 and -9892 at 5.66, orders of magnitude worse than
+the asymmetry it removes, and already broken at 2.83 where production is
+still intact.
+
+So the asymmetry is not the mechanism. It matters because it carries `lora_B`
+across a step-size threshold the configured lr alone would not reach — which
+is exactly the confound the paragraph above flagged ("was 0.02 ever
+recalibrated for LoRA?"), and the answer is that it was not, and the effective
+value was never 0.002 to begin with.
+
+The fix in `experiments/rl/loader.py::MuonHybrid` pairs `lora_A` with `lora_B`
+and equalises their contributions to the update **downward**, to the smaller
+of the two, never to their geometric mean — that arm is the evidence that
+raising any factor's step is what does the harm. Standalone weights keep the
+coefficient, which is correct for them.
 
 **Checkpoint save/load round-trip verified correct (2026-09-10) — ruling
 out an eval-loading bug as the explanation.** Every collapsed eval above

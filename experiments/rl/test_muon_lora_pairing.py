@@ -67,6 +67,10 @@ def test_balanced_scale_equalises_contributions():
     cA = (B @ (dA * sA)).norm().item()
     cB = ((dB * sB) @ A).norm().item()
     assert abs(cA - cB) / max(cA, cB) < 1e-4, (cA, cB)
+    # and it equalised by LOWERING: `lr_mul` in the dose probe showed that
+    # raising a factor's step is what does the damage.
+    assert sA <= 1.0 + 1e-9 and sB <= 1.0 + 1e-9, (sA, sB)
+    assert abs(max(sA, sB) - 1.0) < 1e-9, (sA, sB)
 
 
 def test_zero_init_B_does_not_freeze_the_adapter():
