@@ -297,6 +297,15 @@ project.
 at 1.5B ≈ L21/32 at 2.9B — both ≈ **0.67 depth fraction**, independent of
 model size. The readout zone tracks depth fraction, not absolute layer index.
 Implication for L_state work_layers: L_state should emphasise ~0.67×n_layer.
+**Checked against a measurement, 2026-09-15 — they agree.** G1i's own
+per-layer state breadth, read at stride 1 over five prompts
+(`experiments/A0_state_probe/results/layer_profile_g1i_stride1.json`), falls
+off a cliff at L21→L22: 17.79 → 11.03 live directions, −38% in one layer,
+after oscillating between 17 and 24 for the nine layers before it. That cliff
+sits at depth fraction 0.656; 0.67×32 = 21.4. A corpus-only CV and a state
+spectrum, different methods on different data, land on the same layer. The
+A0.5 set [12,16,20] sits inside the plateau and stops one layer short of it.
+Reaching training via `--work-layers-from` as of the same date.
 
 **Key finding:** *"The base carries the knowledge, the state installs the
 disposition."* Abstention = 0/17 at every raw size and model (including
@@ -739,12 +748,47 @@ loop to have *content*, not just a budget.
   already has a per-head learned decay in (0,1), architecturally
   similar in spirit — evidently not sufficient on its own to prevent
   the attractor-collapse fleeb83 reported past N=3 on his G1h LoRA.
-  Open question, not yet investigated: is our decay's effective
-  contractivity being weakened by LoRA/full-FT training itself (i.e.
-  the constraint holds at init but training can walk it toward the
-  boundary), which this paper's exp-parameterization would prevent
-  by construction? Worth a real check before assuming RWKV-7's decay
-  is "enough."
+  **Checked 2026-09-15, and the answer is stronger than the question.**
+  Two readings off the real checkpoints, no GPU needed.
+
+  (a) *The LoRA stage cannot have moved the decay at all.* `w0`, `w1`,
+  `w2` and `x_w` are bit-identical between the G1i base and the
+  step500-merged checkpoint — `max|delta| = 0.000e+00` across all 32
+  layers — while the LoRA-targeted projections did move (`att.key`
+  3.4e-3, `att.value` 2.5e-3). PEFT targets `receptance,key,value,output`
+  only, so the decay parameters are never in the gradient. For the LoRA
+  path the "training walks it toward the boundary" worry is answered by
+  construction, not by measurement.
+
+  (b) *It starts at the boundary anyway, so contractivity was never the
+  safeguard.* The parameterisation is
+  `w = -softplus(-(w0 + tanh(x·W1)·W2)) - 0.5`, `retention = exp(-exp(w))`.
+  The data-dependent term is bounded by `sum_j |W2[j,c]|`, which gives the
+  reachable range per channel. On base G1i:
+
+  | L | fastest reachable | from `w0` alone | slowest reachable | `slow^16` |
+  |---|---|---|---|---|
+  | 0  | 0.5456 | 0.9033 | 1.00000 | 0.99997 |
+  | 16 | 0.5456 | 0.9501 | 1.00000 | 0.99998 |
+  | 21 | 0.5456 | 0.9541 | 1.00000 | 0.99994 |
+  | 24 | 0.5459 | 0.9549 | 0.99999 | 0.99988 |
+  | 31 | 0.5466 | 0.9340 | 0.99999 | 0.99982 |
+
+  99.3-100% of channels at every layer can reach retention above 0.999.
+  The `-0.5` offset guarantees only `retention >= exp(-exp(-0.5)) = 0.545`
+  — a floor on forgetting, not a ceiling on remembering. So a per-head
+  decay in (0,1) is not a contraction on the timescale of a think-loop:
+  over sixteen steps the slowest-forgetting setting still retains 0.9998.
+  That is by design — the decay exists to hold long context.
+
+  **Consequence for the loop, which is the part that matters here.**
+  "RWKV-7 already has a learned decay, so a looped forward pass is
+  self-stabilising" does not hold, and the attractor collapse past N=3 is
+  not evidence that training broke contractivity — there was none to break
+  at that horizon. Whatever stabilises a think-loop has to come from the
+  training signal or from an added constraint, not from the architecture
+  as it stands. Looped World Models' `exp(Δ·diag(-exp(a)))` is therefore
+  still a live option rather than a thing we already have.
 
 - **Recursive Latent Reinforcement Pretraining (RLRP)** (OpenReview,
   ID `DMQlGhvEUB`) — per-token latent refinement head on a base LLM,
@@ -1008,6 +1052,69 @@ depth — SANE may describe the same wall from the other, empirical side, or
 suggest a mitigation beyond just bounding depth). Not yet read in full or
 acted on — flagged here so it doesn't get lost the way the original
 power-iteration synthesis nearly did.
+
+---
+
+## 5. Ours to hand back — measured here, useful elsewhere
+
+This section is the mirror of §4. There we record claims of other people's
+that we reject; here we record measurements of ours that did not pay for
+themselves *for our purpose* but are real, reproducible, and may pay for
+someone else's. A result that fails our objective is not thereby a result
+about nothing, and deciding who else it is worth something to is not our
+call to make. Each entry states what was measured, on what, and where the
+file is, so a reader can disagree with our reading and keep the numbers.
+
+### 5.1 State-geometry-aware Muon: buys breadth, pays in fit
+
+`experiments/A0_state_probe/lora_muon_probe.py`, arm `muon_state`, 6
+converged seeds, result `results/lora_muon_toy.json`.
+
+The arm replaces Muon's fixed per-tensor scale with one measured from the
+**state**: how far a unit weight step actually moves the recurrent state,
+recalibrated during training (`recalibrate_state_metric()`, displacement
+ratio bounded at 16x). The question it was built for is whether the object
+worth normalising is the weight matrix or the state the weights write into.
+
+Against the other arms, on the retention of a pretrained ability after a
+narrow finetune:
+
+| arm | retain | adapt | adapter dW entropy-rank (of 8) |
+|---|---|---|---|
+| adam | +0.9993 | +1.0000 | 5.92 |
+| muon_factorwise (production) | +0.7441 | +0.9833 | 4.67 |
+| muon_balanced | +0.9995 | +0.9976 | 4.67 |
+| muon_product | +0.9987 | +0.9997 | 5.94 |
+| **muon_state** | **+0.8558** | **+0.9485** | **6.05** |
+
+Our reading, and why we are not adopting it: it recovers only +0.112 of
+production Muon's -0.256 retention loss, while two far simpler
+reparameterisations (equalise the two factors; orthogonalise the induced
+product instead of each factor) recover +0.255 and +0.255 — essentially all
+of it. Paying a running state measurement for half of what a shape fix gives
+for free is not a trade we can justify.
+
+What is genuinely its own, and is not reproduced by any other arm: it
+produces the **broadest** adapter update of all five, 6.05/8 against Adam's
+5.92 and the two winners' 4.67 — and the **narrowest fit** to the finetune
+data, 0.9485 against 0.9976-1.0000. Those are the same fact seen twice: the
+state metric spends the update across more directions and therefore commits
+less of it to the data in front of it. If your objective is breadth of the
+learned update rather than fit — continual learning, multi-task adapters,
+anything where over-committing to the current slice is the failure you fear
+— this arm is aimed at your problem and not at ours.
+
+It also gives an empirical fingerprint to the obvious worry about the
+approach ("would a state-derived metric pin training to the data you
+currently have?"). On this evidence the answer is the opposite of the
+worry: it commits *less* to current data than every alternative, at a
+measurable cost in how well it fits it.
+
+Caveats a reader should carry: this is a toy (a small recurrent controller
+with a WKV-shaped state, not a 2.9B model); `muon_state` has the widest
+seed spread of the five arms (+-0.1691 against muon_balanced's +-0.0005),
+so its middle number is the least trustworthy of the table; and it was
+measured on LoRA factors, not on full weights.
 
 ---
 

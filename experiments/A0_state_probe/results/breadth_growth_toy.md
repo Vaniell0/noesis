@@ -1,7 +1,7 @@
 # breadth_growth_toy
 
 - **Hypothesis:** H26
-- **Date:** 2026-09-13
+- **Date:** 2026-09-14
 - **Status:** done
 - **Code:** [`experiments/A0_state_probe/breadth_growth_probe.py`](/experiments/A0_state_probe/breadth_growth_probe.py)
 
@@ -9,9 +9,9 @@
 
 | Metric | Value |
 |--------|-------|
-| live directions, plain adam / muon | 6.59 / 7.42 |
-| live directions, best breadth arm | 16.00 (muon_breadth_L0.1) |
-| id_r2, plain best / best breadth arm | +0.9991 / +0.9987 |
+| adam | plain ood=+0.2470 conv=33%; +breadth ood=+0.8642 conv=100%; +rank-blind ood=+0.8105 conv=100% |
+| muon | plain ood=+0.7501 conv=100%; +breadth ood=+0.7363 conv=100%; +rank-blind ood=+0.7712 conv=100% |
+| rank ceiling | 16 |
 
 Full data: `breadth_growth_toy.json` (same directory).
 

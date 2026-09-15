@@ -50,14 +50,72 @@ def zeropower_via_newtonschulz5(G: torch.Tensor, steps: int) -> torch.Tensor:
 
 
 def _muon_update(grad: torch.Tensor, momentum: torch.Tensor, beta: float,
-                  ns_steps: int, nesterov: bool = True) -> torch.Tensor:
+                  ns_steps: int, nesterov: bool = True,
+                  aspect: bool = True) -> torch.Tensor:
     momentum.lerp_(grad, 1 - beta)
     update = grad.lerp_(momentum, beta) if nesterov else momentum
     if update.ndim == 4:
         update = update.view(len(update), -1)
     update = zeropower_via_newtonschulz5(update, steps=ns_steps)
-    update *= max(1, update.size(-2) / update.size(-1)) ** 0.5
+    if aspect:
+        update *= max(1, update.size(-2) / update.size(-1)) ** 0.5
     return update
+
+
+def _balanced_pair_scale(lora_A, lora_B, dA, dB):
+    """Equalise the two LoRA factors' contributions to the update, downward.
+
+    Same function as `experiments/rl/loader.py::_balanced_pair_scale`, and it
+    is duplicated rather than imported on purpose: this file is vendored into
+    `rwkvt/` on the training host, where `experiments/` does not exist.
+
+    The aspect rescale above is right for a standalone weight and meaningless
+    for one member of a factored pair -- at r=32/d=2560 it gives `lora_A`
+    1.000 and `lora_B` 8.944 (17.889 for `ffn.key`), so at `--muon-lr 0.002`
+    the B factors are stepped at 0.0179 and 0.0358, at and above the 0.02 on
+    record as collapsing this project's 2.9B model.
+
+    Equalising is done to the SMALLER contribution, never to the geometric
+    mean. Measured 2026-09-15
+    (`experiments/A0_state_probe/results/aspect_dose_toy.json`, arm `lr_mul`):
+    putting both factors on the LARGE step, symmetrically, is catastrophic --
+    retain_r2 -747 at coefficient 4.0, -9892 at 5.66, far worse than the
+    asymmetry it removes. Raising any factor's step is what does the harm.
+
+    Both norms are computed in r x r space via
+    ||B dA||_F^2 = <B^T B, dA dA^T> and ||dB A||_F^2 = <dB^T dB, A A^T>, so
+    the out x in product is never formed. PEFT zeroes `lora_B`, making
+    ||B dA|| exactly 0 on step 0; balancing to zero would freeze the adapter,
+    so a vanishing contribution falls back to no rescale.
+    """
+    a32, b32 = lora_A.float(), lora_B.float()
+    dA32, dB32 = dA.float(), dB.float()
+    cA = ((b32.T @ b32) * (dA32 @ dA32.T)).sum().clamp_min(0).sqrt()
+    cB = ((dB32.T @ dB32) * (a32 @ a32.T)).sum().clamp_min(0).sqrt()
+    if not (cA > 1e-12 and cB > 1e-12):
+        return 1.0, 1.0
+    tgt = torch.minimum(cA, cB)
+    return (tgt / cA).item(), (tgt / cB).item()
+
+
+def _find_lora_pairs(named_params):
+    """id(param) -> (partner, role) for PEFT's `lora_A`/`lora_B` factors."""
+    by_base = {}
+    for name, p in named_params:
+        if not _is_muon_param(name, p):
+            continue
+        for role in ("A", "B"):
+            tag = ".lora_%s." % role
+            if tag in name:
+                head, tail = name.split(tag, 1)
+                by_base.setdefault(head + "|" + tail, {})[role] = p
+    partner, which = {}, {}
+    for pair in by_base.values():
+        if "A" in pair and "B" in pair:
+            a, b = pair["A"], pair["B"]
+            partner[id(a)], which[id(a)] = b, "A"
+            partner[id(b)], which[id(b)] = a, "B"
+    return partner, which
 
 
 def _is_muon_param(name: str, p: torch.nn.Parameter) -> bool:
@@ -89,6 +147,8 @@ class MuonWithAuxAdam(torch.optim.Optimizer):
                  ns_steps: int = 5):
         named_params = list(named_params)
         muon_params = [p for n, p in named_params if p.requires_grad and _is_muon_param(n, p)]
+        self._lora_partner, self._lora_role = _find_lora_pairs(
+            [(n, p) for n, p in named_params if p.requires_grad])
         adam_params = [p for n, p in named_params if p.requires_grad and not _is_muon_param(n, p)]
         _adam_lr = adam_lr if adam_lr is not None else lr
         # `lr_init` is train.py's --lr_init (the schedule's base value the
@@ -136,16 +196,35 @@ class MuonWithAuxAdam(torch.optim.Optimizer):
 
         for group in self.param_groups:
             if group["use_muon"]:
+                done = set()
+
+                def raw(q, aspect):
+                    st = self.state[q]
+                    if "momentum_buffer" not in st:
+                        st["momentum_buffer"] = torch.zeros_like(q)
+                    return _muon_update(q.grad, st["momentum_buffer"],
+                                        beta=cur_momentum, ns_steps=self.ns_steps,
+                                        aspect=aspect)
+
+                def apply(q, upd, scale):
+                    q.mul_(1 - group["lr"] * group["weight_decay"])
+                    q.add_(upd.reshape(q.shape).to(q.dtype),
+                           alpha=-group["lr"] * scale)
+
                 for p in group["params"]:
-                    if p.grad is None:
+                    if id(p) in done or p.grad is None:
                         continue
-                    state = self.state[p]
-                    if "momentum_buffer" not in state:
-                        state["momentum_buffer"] = torch.zeros_like(p)
-                    update = _muon_update(p.grad, state["momentum_buffer"],
-                                           beta=cur_momentum, ns_steps=self.ns_steps)
-                    p.mul_(1 - group["lr"] * group["weight_decay"])
-                    p.add_(update.reshape(p.shape).to(p.dtype), alpha=-group["lr"])
+                    mate = self._lora_partner.get(id(p))
+                    if mate is not None and mate.grad is not None:
+                        a, b = ((p, mate) if self._lora_role[id(p)] == "A"
+                                else (mate, p))
+                        dA, dB = raw(a, False), raw(b, False)
+                        sA, sB = _balanced_pair_scale(a.data, b.data, dA, dB)
+                        apply(a, dA, sA)
+                        apply(b, dB, sB)
+                        done.add(id(a)); done.add(id(b))
+                        continue
+                    apply(p, raw(p, True), 1.0)
             else:
                 beta1, beta2 = group["betas"]
                 for p in group["params"]:

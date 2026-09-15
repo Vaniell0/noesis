@@ -99,10 +99,7 @@ def collect_states(loaded, think_marker, examples: list[dict], layers,
     return torch.stack(flat_states)
 
 
-def held_out_linear_probe(X: torch.Tensor, y: torch.Tensor, n_train: int) -> dict:
-    """Same methodology validated at toy scale in micro_wkv.py: fit on
-    the first n_train rows, evaluate held-out R² on the rest, center
-    using TRAIN statistics only (no leakage)."""
+def _fit_held_out(X: torch.Tensor, y: torch.Tensor, n_train: int) -> tuple:
     Xtr, Xte = X[:n_train], X[n_train:]
     ytr, yte = y[:n_train], y[n_train:]
     x_mean = Xtr.mean(0, keepdim=True)
@@ -115,7 +112,68 @@ def held_out_linear_probe(X: torch.Tensor, y: torch.Tensor, n_train: int) -> dic
     r2_tr = 1.0 - F.mse_loss(pred_tr, ytr_c).item() / ytr_c.var().item()
     r2_te = (1.0 - F.mse_loss(pred_te, yte_c).item() / yte_c.var().item()
               if yte_c.var().item() > 1e-8 else float("nan"))
-    return {"in_sample_r2": r2_tr, "held_out_r2": r2_te}
+    return r2_tr, r2_te
+
+
+def held_out_linear_probe(X: torch.Tensor, y: torch.Tensor, n_train: int,
+                           n_shuffles: int = 20, seed: int = 0) -> dict:
+    """Same methodology validated at toy scale in micro_wkv.py: fit on
+    the first n_train rows, evaluate held-out R² on the rest, center
+    using TRAIN statistics only (no leakage)."""
+    r2_tr, r2_te = _fit_held_out(X, y, n_train)
+
+    # Whether a null here is readable at all. This design has ~12k columns and
+    # ~160 rows, so its power comes entirely from the state being low-rank --
+    # and it is, by this project's own jlens measurement (8-24 live directions
+    # per head). Checked 2026-09-15 on synthetic data: with an isotropic design
+    # at these shapes, a signal planted BY CONSTRUCTION is unrecoverable
+    # (held-out R2 -0.06, no better than permuted labels, and no amount of
+    # ridge helps -- it is d >> n, not a solver problem); with a design of
+    # effective rank ~40 the same fit returns +0.96 against -0.17 for noise.
+    # So the effective rank of the TRAINING design is what decides whether
+    # "the state does not encode this" is a finding or an artefact, and it is
+    # reported next to the number rather than left for the reader to assume.
+    Xtr_c = X[:n_train] - X[:n_train].mean(0, keepdim=True)
+    sv = torch.linalg.svdvals(Xtr_c.float())
+    energy = (sv ** 2)
+    p_ = energy / energy.sum().clamp_min(1e-30)
+    eff_rank = float(torch.exp(-(p_ * (p_ + 1e-30).log()).sum()))
+    numerical_rank = int((sv > 0.01 * sv[0]).sum())
+
+    # The control. This probe fits ~12k features to ~160 rows, so in-sample R2
+    # is ~1.0 for ANY target and held-out R2 is the only number that means
+    # anything -- but "means anything" needs a floor, and the floor is not 0.
+    # Fitting the SAME design matrix to permuted labels says what held-out R2
+    # this geometry hands out for a target it cannot possibly encode. Without
+    # it, "near-chance" in docs/rl-track.md's mandatory gate has nothing to be
+    # near. Added 2026-09-15; every earlier run of this probe reported a
+    # held-out R2 with no floor under it.
+    g = torch.Generator().manual_seed(seed)
+    shuffled = []
+    for _ in range(max(0, n_shuffles)):
+        perm = torch.randperm(len(y), generator=g)
+        shuffled.append(_fit_held_out(X, y[perm], n_train)[1])
+    shuffled = [v for v in shuffled if v == v]
+    out = {"in_sample_r2": r2_tr, "held_out_r2": r2_te,
+           "n_shuffles": len(shuffled),
+           "design_effective_rank": eff_rank,
+           "design_numerical_rank_1pct": numerical_rank,
+           "n_train": int(n_train), "n_features": int(X.shape[1])}
+    if shuffled:
+        mean = sum(shuffled) / len(shuffled)
+        var = sum((v - mean) ** 2 for v in shuffled) / len(shuffled)
+        sd = var ** 0.5
+        out.update({
+            "shuffled_held_out_mean": mean,
+            "shuffled_held_out_sd": sd,
+            "shuffled_held_out_max": max(shuffled),
+            # How far above the permutation floor the real target sits, in
+            # units of the floor's own spread. Below ~2 the probe has found
+            # nothing the shuffled labels did not also find.
+            "margin_sd": ((r2_te - mean) / sd) if sd > 1e-9 else float("nan"),
+            "above_shuffled_max": bool(r2_te > max(shuffled)),
+        })
+    return out
 
 
 def main() -> int:

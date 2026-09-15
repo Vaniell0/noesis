@@ -424,18 +424,33 @@ class ChainedController(nn.Module):
         w = -F.softplus(-w_raw) - 0.5
         return {"r": r, "k": k, "v": v, "w": w, "a_gate": a_gate}
 
-    def forward(self, operands: list[torch.Tensor], op_codes: list[torch.Tensor]
-                ) -> torch.Tensor:
+    def forward(self, operands: list[torch.Tensor], op_codes: list[torch.Tensor],
+                return_state: bool = False, force_a_gate: float | None = None):
         """operands[0] is the initial value (op_codes[0] can be anything,
         e.g. zeros — ignored for round 0). operands[i]/op_codes[i] for
-        i>=1 are the (value, op) pair revealed at round i."""
+        i>=1 are the (value, op) pair revealed at round i.
+
+        `return_state` (added 2026-09-13) makes this return
+        `(y_hat, final_state, state_trace)` like `StagedController.forward`
+        already does, so the spectral-breadth probes can measure the chain
+        task's state without a second implementation of the loop. Default
+        stays the bare tensor — every existing caller is unaffected.
+
+        `force_a_gate` is the same counterfactual ablation StagedController
+        exposes (H25): override the learned erase/rewrite gate with a
+        constant to test whether the solution actually depends on it."""
         B = operands[0].shape[0]
         state = torch.zeros(B, self.head_size, self.head_size, device=operands[0].device)
+        trace = [state]
         out = None
         for r in range(self.n_rounds):
             c = self.step_controls(operands[r], op_codes[r], r)
-            out, state = micro_wkv_step(state, c["r"], c["k"], c["v"], c["w"], c["a_gate"])
-        return self.readout(out).squeeze(-1)
+            a_gate = (c["a_gate"] if force_a_gate is None
+                      else torch.full_like(c["a_gate"], force_a_gate))
+            out, state = micro_wkv_step(state, c["r"], c["k"], c["v"], c["w"], a_gate)
+            trace.append(state)
+        y_hat = self.readout(out).squeeze(-1)
+        return (y_hat, state, trace) if return_state else y_hat
 
 
 class ModularChainController(nn.Module):

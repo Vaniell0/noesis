@@ -57,6 +57,8 @@ from experiments.A0_state_probe.muon_vs_adam_toy import (
     _split_muon_adam_params,
 )
 from experiments._common.results import save_result
+from experiments._common.convergence import is_converged
+from experiments._common.runtime import limit_threads, progress
 
 
 def _eval(model, target_fn, n: int = 1000) -> dict:
@@ -146,8 +148,16 @@ def main() -> int:
     ap.add_argument("--adam-lr", type=float, default=3e-3)
     ap.add_argument("--lr-mults", default="3,10,30",
                      help="Adam-LR multipliers for the step-size control arm.")
+    ap.add_argument("--threads", type=int, default=None,
+                    help="cap torch intra-op threads (default 4, or "
+                         "$NOESIS_PROBE_THREADS). Set this when running "
+                         "several probes at once: torch otherwise sizes "
+                         "its pool from the core count and concurrent "
+                         "probes oversubscribe the machine.")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
+    n_threads = limit_threads(args.threads)
+    progress(f"[{Path(__file__).stem}] torch threads = {n_threads}")
 
     conditions = [("adam", 1.0), ("muon", 1.0), ("adam_then_muon", 1.0)]
     for m in (float(x) for x in args.lr_mults.split(",")):
@@ -160,66 +170,108 @@ def main() -> int:
                               n_train_steps=args.train_steps, batch_size=args.batch_size,
                               muon_lr=args.muon_lr, adam_lr=args.adam_lr, lr_mult=mult)
             runs.append(r)
-            print(f"[{cond:24s} seed={seed}] id_r2={r['id_r2']:+.4f} "
+            progress(f"[{cond:24s} seed={seed}] id_r2={r['id_r2']:+.4f} "
                   f"ood={r['ood_r2']:+.4f} abl={r['ablation_a_gate_0_r2']:+.4f} "
                   f"loss {r['loss_before_switch']:.4f}->{r['loss_after_switch']:.4f} "
                   f"(final {r['loss_final']:.4f})")
 
-    print("\n=== summary over seeds ===")
+    print("\n=== summary over seeds (CONVERGED runs only) ===")
     summary = {}
     for cond, _ in conditions:
         rs = [r for r in runs if r["condition"] == cond]
-        line = {}
+        ok = [r for r in rs if is_converged(r)]
+        line = {"converged_frac": len(ok) / len(rs), "n_converged": len(ok),
+                "n_seeds": len(rs)}
         for k in ("id_r2", "ood_r2", "ablation_a_gate_0_r2",
                   "loss_after_switch", "loss_final"):
-            vals = [r[k] for r in rs if r[k] == r[k]]
-            line[k] = {"mean": sum(vals) / len(vals),
+            vals = [r[k] for r in ok if r[k] == r[k]]
+            line[k] = {"mean": (sum(vals) / len(vals)) if vals else float("nan"),
                        "std": statistics.pstdev(vals) if len(vals) > 1 else 0.0}
         summary[cond] = line
-        print(f"  {cond:24s} id_r2={line['id_r2']['mean']:+.4f}±{line['id_r2']['std']:.4f}  "
-              f"abl={line['ablation_a_gate_0_r2']['mean']:+.4f}±{line['ablation_a_gate_0_r2']['std']:.4f}  "
-              f"final_loss={line['loss_final']['mean']:.4f}")
+        if not ok:
+            progress(f"  {cond:24s} 0/{len(rs)} converged — arm DESTROYED the model "
+                     f"(final loss {sum(r['loss_final'] for r in rs) / len(rs):.3f}); "
+                     f"it cannot serve as a control")
+            continue
+        progress(f"  {cond:24s} id_r2={line['id_r2']['mean']:+.4f}±{line['id_r2']['std']:.4f}  "
+                 f"abl={line['ablation_a_gate_0_r2']['mean']:+.4f}±{line['ablation_a_gate_0_r2']['std']:.4f}  "
+                 f"final_loss={line['loss_final']['mean']:.4f}  "
+                 f"conv={len(ok)}/{len(rs)}")
 
-    # Pre-registered read, computed not eyeballed: did the switch damage the
-    # solution, and did any pure-Adam LR bump reproduce that damage?
+    # Pre-registered read, computed not eyeballed — and REFUSED wherever the
+    # arm it would be computed from did not converge.
+    #
+    # The first full run of this file made exactly that mistake: the lrx10 and
+    # lrx30 control arms destroyed the model on all 5 seeds (final loss ~8.94,
+    # i.e. predicting the mean), which left their a_gate ablation at ~-0.002 —
+    # a number that LOOKS like "barely depends on the erase-rewrite channel"
+    # but only means there is no solution left to ablate. Fed into the
+    # mechanism-shift formula those arms produced a confident "best
+    # step-size-only arm reaches 153%". H26 pre-registered this degeneracy in
+    # its confound criterion; the probe now enforces it instead of restating
+    # it. A control that destroyed the model is a FAILED control — it bounds
+    # nothing — and is reported as such rather than scored.
+    def conv(cond: str) -> bool:
+        return summary.get(cond, {}).get("n_converged", 0) > 0
+
+    refs_ok = conv("adam") and conv("muon") and conv("adam_then_muon")
+    lr_conds = [c for c, _ in conditions if c.startswith("adam_then_adam_lrx")]
+    lr_live = [c for c in lr_conds if conv(c)]
+    lr_dead = [c for c in lr_conds if not conv(c)]
+
     base = summary["adam"]["id_r2"]["mean"]
     switch = summary["adam_then_muon"]["id_r2"]["mean"]
-    lr_arms = {c: s["id_r2"]["mean"] for c, s in summary.items()
-               if c.startswith("adam_then_adam_lrx")}
+    lr_arms = {c: summary[c]["id_r2"]["mean"] for c in lr_live}
     worst_lr_arm = min(lr_arms.values()) if lr_arms else float("nan")
     switch_damage = base - switch
     lr_damage = base - worst_lr_arm
 
-    # H26's P1 is about the MECHANISM SIGNATURE moving, not about accuracy
-    # damage — the first smoke run of this file showed exactly that shape
-    # (accuracy essentially intact, ablation sitting between the two pure
-    # arms), which an accuracy-only verdict would have reported as "nothing
-    # happened". Both axes are computed and reported; neither is dropped.
     abl_adam = summary["adam"]["ablation_a_gate_0_r2"]["mean"]
     abl_muon = summary["muon"]["ablation_a_gate_0_r2"]["mean"]
     abl_switch = summary["adam_then_muon"]["ablation_a_gate_0_r2"]["mean"]
     span = abl_muon - abl_adam
-    # 0.0 = kept Adam's mechanism, 1.0 = fully adopted Muon's.
-    shift_frac = ((abl_switch - abl_adam) / span) if abs(span) > 1e-9 else float("nan")
+    shift_frac = (((abl_switch - abl_adam) / span)
+                  if (refs_ok and abs(span) > 1e-9) else float("nan"))
     lr_shift_fracs = {
-        c: ((s["ablation_a_gate_0_r2"]["mean"] - abl_adam) / span) if abs(span) > 1e-9 else float("nan")
-        for c, s in summary.items() if c.startswith("adam_then_adam_lrx")
+        c: (((summary[c]["ablation_a_gate_0_r2"]["mean"] - abl_adam) / span)
+            if (refs_ok and abs(span) > 1e-9) else float("nan"))
+        for c in lr_live
     }
-    worst_lr_shift = max((v for v in lr_shift_fracs.values() if v == v), default=float("nan"))
+    # The control has to reproduce the switch's movement TOWARD Muon. An arm
+    # that moves the mechanism the other way has not "partly reproduced" it.
+    best_lr_shift = max((v for v in lr_shift_fracs.values() if v == v),
+                        default=float("nan"))
 
-    verdict = (
-        f"accuracy: switch damage {switch_damage:+.4f} vs worst LR-bump {lr_damage:+.4f}. "
-        f"mechanism: ablation adam {abl_adam:+.3f} / muon {abl_muon:+.3f} / "
-        f"switch {abl_switch:+.3f} = {shift_frac:.0%} of the way to Muon's signature; "
-        f"best step-size-only arm reaches {worst_lr_shift:.0%}. -> "
-        + ("switch moves the mechanism further than any pure-Adam LR change does "
-           "(P1 supported, step size does not explain it)"
-           if (shift_frac == shift_frac and worst_lr_shift == worst_lr_shift
-               and shift_frac > worst_lr_shift + 0.15)
-           else "step size accounts for as much mechanism movement as the switch "
-                "does, or neither moved it")
-    )
-    print(f"\n{verdict}")
+    if not refs_ok:
+        verdict = ("NO VERDICT — one of the reference arms (adam / muon / "
+                   "adam_then_muon) has no converged seed, so the mechanism "
+                   "span it would be measured against does not exist")
+    elif not lr_live:
+        verdict = (f"switch moves the mechanism {shift_frac:.0%} toward Muon's "
+                   f"signature, but EVERY step-size control destroyed the model "
+                   f"({', '.join(lr_dead)}) — the confound is UNTESTED, not "
+                   f"excluded. Rerun with smaller multipliers.")
+    else:
+        verdict = (
+            f"accuracy: switch damage {switch_damage:+.4f} vs worst surviving "
+            f"LR-bump {lr_damage:+.4f}. mechanism: ablation adam {abl_adam:+.3f} / "
+            f"muon {abl_muon:+.3f} / switch {abl_switch:+.3f} = {shift_frac:.0%} "
+            f"of the way to Muon's signature; best SURVIVING step-size-only arm "
+            f"reaches {best_lr_shift:.0%}"
+            + (f" (controls that destroyed the model and were excluded: "
+               f"{', '.join(lr_dead)})" if lr_dead else "")
+            + ". -> "
+            + ("switch moves the mechanism further than any surviving pure-Adam "
+               "LR change does (P1 supported, step size does not explain it)"
+               if shift_frac > best_lr_shift + 0.15 else
+               "step size accounts for as much mechanism movement as the switch "
+               "does, or neither moved it")
+            + (f"  [!] only {len(lr_live)} of {len(lr_conds)} step-size controls "
+               f"survived, so this bound rests on a thin sweep"
+               if len(lr_live) < 2 else "")
+        )
+    progress(f"\n{verdict}")
+
 
     if args.out is not None:
         save_result(
@@ -228,13 +280,16 @@ def main() -> int:
              "switch_damage_id_r2": switch_damage, "worst_lr_bump_damage_id_r2": lr_damage,
              "mechanism_shift_fraction_switch": shift_frac,
              "mechanism_shift_fraction_lr_arms": lr_shift_fracs,
+             "lr_controls_destroyed_model": lr_dead,
+             "lr_controls_surviving": lr_live,
              "config": vars(args) | {"out": str(args.out)}},
             experiment="optimizer_switch_toy", hypothesis=["H26"],
             summary={
                 "a_gate ablation, adam / muon (pure arms)": f"{abl_adam:+.3f} / {abl_muon:+.3f}",
                 "a_gate ablation, adam→muon switch": f"{abl_switch:+.3f}",
                 "mechanism shift toward Muon, switch": f"{shift_frac:.0%}",
-                "mechanism shift, best step-size-only control": f"{worst_lr_shift:.0%}",
+                "mechanism shift, best SURVIVING step-size-only control": f"{best_lr_shift:.0%}",
+                "step-size controls that destroyed the model": ", ".join(lr_dead) or "none",
                 "id_r2 adam / switch": f"{base:+.4f} / {switch:+.4f}",
             },
             script=str(Path(__file__).relative_to(_REPO_ROOT)),

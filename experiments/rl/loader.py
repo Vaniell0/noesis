@@ -239,14 +239,55 @@ def zeropower_via_newtonschulz5(G: torch.Tensor, steps: int) -> torch.Tensor:
 
 
 def _muon_update(grad: torch.Tensor, momentum: torch.Tensor, beta: float,
-                  ns_steps: int, nesterov: bool = True) -> torch.Tensor:
+                  ns_steps: int, nesterov: bool = True,
+                  aspect: bool = True) -> torch.Tensor:
     momentum.lerp_(grad, 1 - beta)
     update = grad.lerp_(momentum, beta) if nesterov else momentum
     if update.ndim == 4:
         update = update.view(len(update), -1)
     update = zeropower_via_newtonschulz5(update, steps=ns_steps)
-    update *= max(1, update.size(-2) / update.size(-1)) ** 0.5
+    if aspect:
+        update *= max(1, update.size(-2) / update.size(-1)) ** 0.5
     return update
+
+
+def _balanced_pair_scale(lora_A: torch.Tensor, lora_B: torch.Tensor,
+                          dA: torch.Tensor, dB: torch.Tensor) -> tuple:
+    """Scales that equalise what each LoRA factor CONTRIBUTES to the update.
+
+    Muon's aspect rescale `max(1, rows/cols) ** 0.5` is computed per tensor and
+    is correct for a standalone weight. A LoRA pair is two tensors of
+    transposed shape whose product is the update, so the coefficient lands
+    entirely on one of them: at r=32 and n_embd=2560 the A factor gets 1.000
+    and the B factor 8.944 (17.889 for `ffn.key`). That is not a rescale of the
+    update at all — it is an asymmetry introduced into it.
+
+    What the pair actually has are two contributions, `B dA` and `dB A`. This
+    scales the larger DOWN to the smaller, so neither dominates by accident of
+    orientation and no factor's step is ever raised. Both norms are computed in r x r space via
+    ||B dA||_F^2 = <B^T B, dA dA^T> and ||dB A||_F^2 = <dB^T dB, A A^T>,
+    which costs two small matmuls instead of forming the out x in product.
+
+    Guard: PEFT initialises `lora_B` to zeros, so `B dA` is exactly 0 on the
+    first step. Balancing to a geometric mean of zero would zero BOTH factors
+    and the adapter would never leave the origin, so a vanishing contribution
+    falls back to no rescale.
+    """
+    a32, b32 = lora_A.float(), lora_B.float()
+    dA32, dB32 = dA.float(), dB.float()
+    cA = ((b32.T @ b32) * (dA32 @ dA32.T)).sum().clamp_min(0).sqrt()
+    cB = ((dB32.T @ dB32) * (a32 @ a32.T)).sum().clamp_min(0).sqrt()
+    if not (cA > 1e-12 and cB > 1e-12):
+        return 1.0, 1.0
+    # Equalise DOWNWARD, to the smaller contribution — never to the geometric
+    # mean, which would raise the smaller factor's step. Measured 2026-09-15
+    # (experiments/A0_state_probe/results/aspect_dose_toy.json, arm `lr_mul`):
+    # putting BOTH factors on the large step, symmetrically, is catastrophic
+    # (retain -747 at aspect 4.0, -9892 at 5.66) — far worse than the
+    # production asymmetry it removes. Raising any factor's step is the thing
+    # that does the damage, so a fix that equalises must do it by lowering.
+    tgt = torch.minimum(cA, cB)
+    return (tgt / cA).item(), (tgt / cB).item()
 
 
 class MuonHybrid:
@@ -335,10 +376,30 @@ class MuonHybrid:
         named_params = list(named_params)
         self.muon_params: list = []
         self.other_params: list = []
+        by_base: dict = {}
         for name, p in named_params:
             is_hidden_2d = (p.ndim == 2 and name.endswith(".weight")
                              and (".att." in name or ".ffn." in name))
             (self.muon_params if is_hidden_2d else self.other_params).append(p)
+            if not is_hidden_2d:
+                continue
+            # PEFT names its factors `<module>.lora_A.<adapter>.weight`, and
+            # <module> sits under .att./.ffn., so both land in muon_params and
+            # both take the per-tensor aspect rescale. They are one update, not
+            # two weights -- pair them so the step can treat them as one.
+            for role in ("A", "B"):
+                tag = ".lora_%s." % role
+                if tag in name:
+                    base = name.split(tag)[0] + "|" + name.split(tag)[1]
+                    by_base.setdefault(base, {})[role] = p
+        self._lora_partner: dict = {}
+        self._lora_role: dict = {}
+        for base, pair in by_base.items():
+            if "A" in pair and "B" in pair:
+                a, b = pair["A"], pair["B"]
+                self._lora_partner[id(a)], self._lora_role[id(a)] = b, "A"
+                self._lora_partner[id(b)], self._lora_role[id(b)] = a, "B"
+        self.n_lora_pairs = len(self._lora_partner) // 2
         self.lr = lr
         self.momentum_final = momentum
         self.momentum_start = momentum_start
@@ -362,17 +423,37 @@ class MuonHybrid:
         frac = min(self._step_count / self.momentum_warmup_steps, 1.0) \
             if self.momentum_warmup_steps > 0 else 1.0
         momentum = (1 - frac) * self.momentum_start + frac * self.momentum_final
+        done: set = set()
         for p in self.muon_params:
-            if p.grad is None:
+            if id(p) in done or p.grad is None:
                 continue
-            buf = self._momentum_buf[id(p)]
-            if self.offload_state:
-                buf = buf.to(p.device)
-            update = _muon_update(p.grad, buf, beta=momentum, ns_steps=self.ns_steps)
-            p.mul_(1 - self.lr * self.weight_decay)
-            p.add_(update.reshape(p.shape).to(p.dtype), alpha=-self.lr)
-            if self.offload_state:
-                self._momentum_buf[id(p)] = buf.to("cpu")
+            partner = self._lora_partner.get(id(p))
+            if partner is not None and partner.grad is not None:
+                a, b = ((p, partner) if self._lora_role[id(p)] == "A"
+                        else (partner, p))
+                dA, bufA = self._raw_update(a, momentum, aspect=False)
+                dB, bufB = self._raw_update(b, momentum, aspect=False)
+                sA, sB = _balanced_pair_scale(a.data, b.data, dA, dB)
+                self._apply(a, dA, sA, bufA)
+                self._apply(b, dB, sB, bufB)
+                done.add(id(a)); done.add(id(b))
+                continue
+            update, buf = self._raw_update(p, momentum, aspect=True)
+            self._apply(p, update, 1.0, buf)
+
+    def _raw_update(self, p, momentum: float, aspect: bool):
+        buf = self._momentum_buf[id(p)]
+        if self.offload_state:
+            buf = buf.to(p.device)
+        update = _muon_update(p.grad, buf, beta=momentum,
+                              ns_steps=self.ns_steps, aspect=aspect)
+        return update, buf
+
+    def _apply(self, p, update, scale: float, buf) -> None:
+        p.mul_(1 - self.lr * self.weight_decay)
+        p.add_(update.reshape(p.shape).to(p.dtype), alpha=-self.lr * scale)
+        if self.offload_state:
+            self._momentum_buf[id(p)] = buf.to("cpu")
 
 
 def _stub_deepspeed_if_missing() -> None:

@@ -78,6 +78,22 @@ def parse_records(text: str) -> list[dict]:
     return records
 
 
+def unrecognised_evidence(evidence: list[dict]) -> list[tuple]:
+    """(call, strength) pairs that carry no likelihood ratio and are therefore
+    IGNORED by `posterior`.
+
+    Exists because the silent skip below cost a real result: on 2026-09-14 three
+    evidence entries were written with `strength: moderate` — not a value in
+    `_LR`, whose vocabulary is weak/strong — so three refutations of H26,
+    including one of its own pre-registered criteria, contributed exactly
+    nothing and the posterior printed unchanged at 0.712. A guard that does
+    nothing on unexpected input is the failure mode this repo spent that whole
+    day fixing elsewhere; it was in the scoring code too.
+    """
+    return [(e.get("call"), e.get("strength")) for e in evidence or []
+            if (e.get("call"), e.get("strength")) not in _LR]
+
+
 def posterior(prior: float, evidence: list[dict]) -> float | None:
     if prior is None:
         return None
@@ -104,6 +120,11 @@ def lint(record: dict, known_ids: set[str]) -> list[str]:
         problems.append("no contradicts_if — hypothesis has no stated refutation condition")
 
     ev = record.get("evidence") or []
+    for pair in unrecognised_evidence(ev):
+        problems.append(
+            f"evidence entry with call/strength {pair!r} is NOT scored — valid "
+            f"combinations are {sorted(_LR)}; this entry is silently ignored by "
+            f"the posterior")
     # File existence / citation coverage is backlog.py's job, not duplicated here.
 
     status = (record.get("status") or "").upper()
@@ -129,9 +150,14 @@ if __name__ == "__main__":
     known_ids = set(_HEADER_ID_RE.findall(all_text)) | set(_ANY_ID_RE.findall(all_text))
 
     any_records = False
+    untracked = []
     for f in files:
         text = f.read_text()
-        for record in parse_records(text):
+        records = parse_records(text)
+        if not records:
+            untracked.append(f.name)
+            continue
+        for record in records:
             any_records = True
             hid = record["id"]
             prior = record.get("prior")
@@ -147,6 +173,21 @@ if __name__ == "__main__":
             for p in problems:
                 print(f"  LINT: {p}")
             print()
+
+    import re as _re
+    untracked = [n for n in untracked if _re.match(r"^H\d+[a-z]?\.md$", n)]
+    if untracked:
+        # Printing nothing for a file that carries no frontmatter reads as
+        # "nothing to report", which is the same silent-skip failure this
+        # file's own evidence scorer was fixed for on 2026-09-14. A hypothesis
+        # outside the record is the one most worth naming, not the least.
+        n_hyp = sum(1 for f in files if _re.match(r"^H\d+[a-z]?\.md$", f.name))
+        print(f"=== NOT TRACKED: {len(untracked)} of {n_hyp} hypothesis file(s) carry no "
+              f"structured record ===")
+        print("  " + ", ".join(sorted(untracked)))
+        print("  No status, no prior, no evidence log — these are invisible to every "
+              "posterior above and to any sweep that reads this output.")
+        print()
 
     if not any_records:
         print(f"[bayes_lite] no structured records found in {', '.join(str(f) for f in files)}")
