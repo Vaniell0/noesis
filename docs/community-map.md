@@ -748,12 +748,47 @@ loop to have *content*, not just a budget.
   already has a per-head learned decay in (0,1), architecturally
   similar in spirit — evidently not sufficient on its own to prevent
   the attractor-collapse fleeb83 reported past N=3 on his G1h LoRA.
-  Open question, not yet investigated: is our decay's effective
-  contractivity being weakened by LoRA/full-FT training itself (i.e.
-  the constraint holds at init but training can walk it toward the
-  boundary), which this paper's exp-parameterization would prevent
-  by construction? Worth a real check before assuming RWKV-7's decay
-  is "enough."
+  **Checked 2026-09-15, and the answer is stronger than the question.**
+  Two readings off the real checkpoints, no GPU needed.
+
+  (a) *The LoRA stage cannot have moved the decay at all.* `w0`, `w1`,
+  `w2` and `x_w` are bit-identical between the G1i base and the
+  step500-merged checkpoint — `max|delta| = 0.000e+00` across all 32
+  layers — while the LoRA-targeted projections did move (`att.key`
+  3.4e-3, `att.value` 2.5e-3). PEFT targets `receptance,key,value,output`
+  only, so the decay parameters are never in the gradient. For the LoRA
+  path the "training walks it toward the boundary" worry is answered by
+  construction, not by measurement.
+
+  (b) *It starts at the boundary anyway, so contractivity was never the
+  safeguard.* The parameterisation is
+  `w = -softplus(-(w0 + tanh(x·W1)·W2)) - 0.5`, `retention = exp(-exp(w))`.
+  The data-dependent term is bounded by `sum_j |W2[j,c]|`, which gives the
+  reachable range per channel. On base G1i:
+
+  | L | fastest reachable | from `w0` alone | slowest reachable | `slow^16` |
+  |---|---|---|---|---|
+  | 0  | 0.5456 | 0.9033 | 1.00000 | 0.99997 |
+  | 16 | 0.5456 | 0.9501 | 1.00000 | 0.99998 |
+  | 21 | 0.5456 | 0.9541 | 1.00000 | 0.99994 |
+  | 24 | 0.5459 | 0.9549 | 0.99999 | 0.99988 |
+  | 31 | 0.5466 | 0.9340 | 0.99999 | 0.99982 |
+
+  99.3-100% of channels at every layer can reach retention above 0.999.
+  The `-0.5` offset guarantees only `retention >= exp(-exp(-0.5)) = 0.545`
+  — a floor on forgetting, not a ceiling on remembering. So a per-head
+  decay in (0,1) is not a contraction on the timescale of a think-loop:
+  over sixteen steps the slowest-forgetting setting still retains 0.9998.
+  That is by design — the decay exists to hold long context.
+
+  **Consequence for the loop, which is the part that matters here.**
+  "RWKV-7 already has a learned decay, so a looped forward pass is
+  self-stabilising" does not hold, and the attractor collapse past N=3 is
+  not evidence that training broke contractivity — there was none to break
+  at that horizon. Whatever stabilises a think-loop has to come from the
+  training signal or from an added constraint, not from the architecture
+  as it stands. Looped World Models' `exp(Δ·diag(-exp(a)))` is therefore
+  still a live option rather than a thing we already have.
 
 - **Recursive Latent Reinforcement Pretraining (RLRP)** (OpenReview,
   ID `DMQlGhvEUB`) — per-token latent refinement head on a base LLM,
