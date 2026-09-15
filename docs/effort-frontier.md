@@ -255,7 +255,39 @@ consequence, and the prediction is sharp enough to be wrong:
   chain length.**
 
 If the two feed modes give the same M-curve, this mechanistic story is wrong
-and M's benefit (where it exists) comes from something else. Worth stating
+and M's benefit (where it exists) comes from something else.
+
+**Second floor on the same prediction, pre-registered 2026-09-15 BEFORE any
+run — the magnitude, not just the mode.** Measured on G1i's own embedding
+table (`experiments/rl/marker_scale_probe.py`,
+`results/marker_scale_step500.json`): a real token has median norm 0.3757 and
+max 0.6421 across the whole 65536-token vocabulary. The trained phase marker
+sits at **1.0138** — 2.70x the median, 1.58x the largest, no token in the
+vocabulary as large. `expected` cannot leave the embedding hull (it is a
+convex combination) but collapses toward the mean embedding, 0.0329, as the
+distribution flattens: its norm is **0.93x a median token at top-1 prob 0.99,
+0.47x at 0.5, 0.09x at 0.01**.
+
+So both latent channels are outside the distribution the model processes at
+that position, in opposite directions, and `expected`'s strength is coupled to
+confidence the wrong way round — weakest at the early steps, where the loop is
+supposed to do the most work.
+
+The prediction, and what would kill it:
+
+- Renormalising the fed vector into the embedding norm distribution (marker
+  DOWN to ~median token, `expected` UP to a confidence-independent target)
+  changes what the loop's state decodes to. The baseline to beat is the 2026-08-19
+  content decode: chat-template scaffolding on every prompt, task content never.
+- If renormalisation moves neither the decoded content nor the M-curve, **the
+  magnitude story is wrong** and the cause is the one originally recorded —
+  no ground truth for what a loop step should contain. This file must then say
+  so, and the marker measurement drops to an observation about init constants
+  with no consequence.
+- A weaker form that must NOT be allowed to rescue it: "it helped a bit."
+  The decode is categorical (task content present or absent on a prompt), so
+  the test is a rate against a baseline of approximately zero, not a shift in
+  a continuous score. Worth stating
 plainly because the first real M-sweep data (2026-08-18, G1i base, discrete,
 M_max=16: 12.5% vs. 33.3% for the retired `state_readout` baseline) was run
 in `discrete` mode only — i.e. in exactly the mode this section predicts is
