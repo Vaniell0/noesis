@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "experiment": "marker_scale",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-15",
+    "status": "done",
+    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/rl/marker_scale_probe.py",
+    "script_sha256_12": "0b1ef7cc12c3",
+    "summary": {
+      "marker norm vs token embeddings": "1.0138 = 2.70x median, 1.58x max; 0.000000 of vocab larger",
+      "did training move it": "per-coord std 0.02003 vs init 0.0200",
+      "phase markers distinguishable": "pairwise cos +0.0042 vs 0.0198 expected for random draws"
+    }
+  },
+  "n_phase": 2,
+  "n_embd": 2560,
+  "init_std": 0.02,
+  "expected_init_norm": 1.0119288512538815,
+  "expected_random_pair_cos": 0.01976423537605237,
+  "token_norm": {
+    "p1": 0.2797355353832245,
+    "median": 0.3756890594959259,
+    "p99": 0.4658087491989136,
+    "max": 0.6421140432357788
+  },
+  "phases": [
+    {
+      "phase": 0,
+      "norm": 1.0137985944747925,
+      "per_coord_std": 0.020034104585647583,
+      "norm_over_median_token": 2.6985044479370117,
+      "norm_over_max_token": 1.5788450241088867,
+      "frac_tokens_larger": 0.0,
+      "max_cos_to_any_token": 0.0811530277132988
+    },
+    {
+      "phase": 1,
+      "norm": 1.024910569190979,
+      "per_coord_std": 0.020257622003555298,
+      "norm_over_median_token": 2.7280819416046143,
+      "norm_over_max_token": 1.5961503982543945,
+      "frac_tokens_larger": 0.0,
+      "max_cos_to_any_token": 0.08713235706090927
+    }
+  ],
+  "pair_cosine": [
+    [
+      0.9999998807907104,
+      0.004174498841166496
+    ],
+    [
+      0.004174498841166496,
+      1.0000001192092896
+    ]
+  ]
+}
