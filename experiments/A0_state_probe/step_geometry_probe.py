@@ -150,7 +150,8 @@ def _update_norms(before: list[torch.Tensor], after: list[torch.Tensor]) -> dict
 
 def run_one(optimizer: str, seed: int, n_steps: int, head_size: int,
             n_train_steps: int, batch_size: int, measure_every: int,
-            muon_lr: float, adam_lr: float, probe_batch: int) -> dict:
+            muon_lr: float, adam_lr: float, probe_batch: int,
+            grad_clip: float = 0.0) -> dict:
     """One training run, instrumented. Protocol (task, model, batch sampling,
     lr defaults) matches muon_vs_adam_toy.py exactly so these numbers sit
     alongside that script's 10-seed accuracy/ablation results rather than
@@ -188,6 +189,18 @@ def run_one(optimizer: str, seed: int, n_steps: int, head_size: int,
         opt_main.zero_grad()
         opt_aux.zero_grad()
         loss.backward()
+        if grad_clip and grad_clip > 0:
+            # Off by default, so every earlier result stays reproducible.
+            # It exists because at T=32 Adam reaches id_r2 ~0.001 on every seed
+            # and at every lr tried (3e-3 / 1e-3 / 3e-4, 2026-09-15), i.e. it
+            # learns nothing, while Muon converges on the same task -- and Muon
+            # is structurally immune to an exploding gradient through a 32-step
+            # recurrence because it orthogonalises the update. Comparing an
+            # optimizer that survives that to one that does not is a comparison
+            # about clipping, not about geometry.
+            torch.nn.utils.clip_grad_norm_(
+                [q for q in list(muon_params) + list(adam_params)
+                 if q.grad is not None], grad_clip)
 
         measuring = (step % measure_every == 0)
         if measuring:
@@ -271,6 +284,11 @@ def main() -> int:
     ap.add_argument("--measure-every", type=int, default=20)
     ap.add_argument("--muon-lr", type=float, default=0.02)
     ap.add_argument("--adam-lr", type=float, default=3e-3)
+    ap.add_argument("--grad-clip", type=float, default=0.0,
+                     help="global grad-norm clip, 0 = off (the default, so "
+                          "earlier results reproduce). Needed to make the "
+                          "long-T comparison fair: see the note at the clip "
+                          "site.")
     ap.add_argument("--threads", type=int, default=None,
                     help="cap torch intra-op threads (default 4, or "
                          "$NOESIS_PROBE_THREADS). Set this when running "
@@ -287,7 +305,8 @@ def main() -> int:
         for seed in range(args.seeds):
             r = run_one(opt_name, seed, args.steps, args.head_size,
                         args.train_steps, args.batch_size, args.measure_every,
-                        args.muon_lr, args.adam_lr, args.probe_batch)
+                        args.muon_lr, args.adam_lr, args.probe_batch,
+                        grad_clip=args.grad_clip)
             all_runs.append(r)
             progress(f"[{opt_name} seed={seed}] id_r2={r['id_r2']:.4f}  "
                   f"CV(own {r['own_norm_key']})={r['cv_own_norm']:.3f}  "
