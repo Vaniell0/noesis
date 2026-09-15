@@ -2073,6 +2073,19 @@ same gating role without a separate loss term.
 400 eval tasks, cell-query format. Running on step9b-e1 (PID 491788).
 Result will bound what spatial RL can realistically achieve on novel grids.
 
+**LOST — marked 2026-09-15.** That PID is the only trace this run ever left.
+No result file, no pass/fail line, no `results/` path anywhere in the repo, and
+the step9b-e1 checkpoint lineage it ran against is gone. ARC-AGI appears after
+this paragraph only as an unbuilt curriculum row (`:471`), never as a number.
+The ceiling it was launched to establish — what spatial RL can reach on novel
+grids — is still unknown, and the cost of that is carried by every plan below
+that assumes one.
+
+Recorded rather than quietly deleted because the failure is procedural and
+repeatable: a run was started from a paragraph, and nothing in the paragraph
+obliged anyone to write down that it finished. A launched run needs a result
+path named before it starts.
+
 ---
 
 ## Open questions
