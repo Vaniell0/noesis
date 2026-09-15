@@ -150,9 +150,14 @@ if __name__ == "__main__":
     known_ids = set(_HEADER_ID_RE.findall(all_text)) | set(_ANY_ID_RE.findall(all_text))
 
     any_records = False
+    untracked = []
     for f in files:
         text = f.read_text()
-        for record in parse_records(text):
+        records = parse_records(text)
+        if not records:
+            untracked.append(f.name)
+            continue
+        for record in records:
             any_records = True
             hid = record["id"]
             prior = record.get("prior")
@@ -168,6 +173,21 @@ if __name__ == "__main__":
             for p in problems:
                 print(f"  LINT: {p}")
             print()
+
+    import re as _re
+    untracked = [n for n in untracked if _re.match(r"^H\d+[a-z]?\.md$", n)]
+    if untracked:
+        # Printing nothing for a file that carries no frontmatter reads as
+        # "nothing to report", which is the same silent-skip failure this
+        # file's own evidence scorer was fixed for on 2026-09-14. A hypothesis
+        # outside the record is the one most worth naming, not the least.
+        n_hyp = sum(1 for f in files if _re.match(r"^H\d+[a-z]?\.md$", f.name))
+        print(f"=== NOT TRACKED: {len(untracked)} of {n_hyp} hypothesis file(s) carry no "
+              f"structured record ===")
+        print("  " + ", ".join(sorted(untracked)))
+        print("  No status, no prior, no evidence log — these are invisible to every "
+              "posterior above and to any sweep that reads this output.")
+        print()
 
     if not any_records:
         print(f"[bayes_lite] no structured records found in {', '.join(str(f) for f in files)}")
