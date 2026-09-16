@@ -552,6 +552,37 @@ WKV-loop design (`−β·M` replaces it, see §RL design).
 real model/GPU — synthesis started from a conversation whose session state
 was lost before it reached a commit).** The
 "Muon doesn't work well on LoRA factors" objection no longer applies now that
+**STALE — corrected 2026-09-16, read this first.** Three claims below have been
+overtaken by measurement, and the write-up that supersedes them is
+`docs/muon-rwkv7-finetuning.md`.
+
+1. *"Muon's actual draw for this project" is the VRAM win.* It was, and it failed:
+   the first real GPU run OOMed on backward every time, because `MuonHybrid`'s
+   eager per-parameter momentum buffer has no offload written. The reason that
+   chose Muon is the reason that did not survive. What put Muon on the roadmap
+   ten days earlier was the mechanism result (`a_gate=0` destroying Adam's
+   solution, −1.376±1.326, while barely touching Muon's, −0.029±0.032, at matched
+   accuracy) — see `hypotheses/H26.md`.
+2. *"Muon needs LoRA, not full-FT."* Wrong on both halves. G1i is Muon-pretrained,
+   so the ICML paper's "Adam-pretrained" premise never described our base; and
+   LoRA is where Muon hurts **most** (`lineage_probe`: `lora_muon` −0.3581, the
+   worst of six arms, below both full-FT Muon arms).
+3. *The optimizer-switch explanation for the collapse.* Retired. The mechanism is
+   **step size**: the aspect rescale is per tensor and a LoRA pair is two tensors
+   of transposed shape, so `lora_B` steps at 8.944x the shared lr (17.889x for
+   `ffn.key`) — at `--muon-lr 0.002` that is 0.0179 and 0.0358, at and above the
+   0.02 on record as collapsing this model. Damage is a threshold near coefficient
+   2.83, and symmetrising at the large step is catastrophic, which is what rules
+   out the pairing asymmetry as the mechanism. Fixed in both live paths
+   (`experiments/rl/loader.py::MuonHybrid`,
+   `training/rwkv-peft-patches/muon_opt.py`), equalising **downward**.
+
+**Still open and not covered by any of the above:** the full-FT Muon collapse.
+With no adapter the only coefficient above 1.0 is `ffn.key` at 2.000, below the
+measured threshold, so that is a second and independent problem.
+
+---
+
 Phase 1.5 merged the LoRA delta into base weights and moved to full FT (see
 above). Muon's actual draw for this project: it carries only a momentum buffer,
 no second-moment (`v`) state — a direct answer to the fixed-cost VRAM wall in
