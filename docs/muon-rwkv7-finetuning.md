@@ -154,6 +154,19 @@ configured rate.
 
 ### 1.3 The reference already avoids this — by a naming convention that does not travel
 
+**How we got here, because it changes what this section is.** Our own optimizer
+selected Muon parameters by `name.endswith(".weight")` plus an `.att.`/`.ffn.`
+test. On RWKV-7's own factors that agrees with the reference's exclusion, so when
+we checked the two against each other on 2026-09-02 they matched and the check was
+recorded as passing. Then PEFT attached a LoRA adapter, whose factors are named
+`...lora_A.default.weight` — which **passes** a `.weight` filter. Factor pairs went
+under Muon and no one decided that.
+
+So this is not a section about someone else's oversight. It is a section about our
+own, which then turned out to have a more general shape: a verification is only
+valid over the set of parameters it was run against, and `get_peft_model` changed
+that set two weeks after the check was filed as done.
+
 We wrote an earlier draft of this section as a question: are RWKV-7's own low-rank
 pairs excluded from Muon on purpose? Reading `modded-nanogpt-rwkv/train_rwkv7.py`
 answers it. **On purpose, and completely:**
