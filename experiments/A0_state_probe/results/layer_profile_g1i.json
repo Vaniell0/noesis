@@ -5,132 +5,248 @@
       "H8",
       "H26"
     ],
-    "date": "2026-09-14",
+    "date": "2026-09-16",
     "status": "done",
-    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "model": "?",
     "script": "experiments/A0_state_probe/layer_profile.py",
-    "script_sha256_12": "2e6669ff0ec8",
+    "script_sha256_12": "88175778abe3",
     "summary": {
-      "peak breadth layer": "L20 (15.82 live)",
-      "drop after peak": "-47%",
-      "set covering the transition": "[16, 20, 24]"
+      "peak breadth layer": "L15 (20.48 live)",
+      "steepest drop": "L21->L22 -32%",
+      "set covering the transition": "[20, 21, 22]"
     }
   },
-  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "model": "?",
   "rows": [
-    {
-      "layer": 0,
-      "depth_fraction": 0.0,
-      "live_mean": 13.15,
-      "live_std": 7.498499849969993,
-      "live_min": 3,
-      "live_max": 26,
-      "entropy_rank_mean": 6.4975909918546675,
-      "sigma1_mean": 0.2770122300367802,
-      "n_head": 40
-    },
-    {
-      "layer": 4,
-      "depth_fraction": 0.125,
-      "live_mean": 15.2,
-      "live_std": 5.4644304369257,
-      "live_min": 5,
-      "live_max": 28,
-      "entropy_rank_mean": 6.439710426330566,
-      "sigma1_mean": 9.346363526582717,
-      "n_head": 40
-    },
-    {
-      "layer": 8,
-      "depth_fraction": 0.25,
-      "live_mean": 13.65,
-      "live_std": 5.096812729539903,
-      "live_min": 6,
-      "live_max": 26,
-      "entropy_rank_mean": 5.862820732593536,
-      "sigma1_mean": 9.490203273296355,
-      "n_head": 40
-    },
     {
       "layer": 12,
       "depth_fraction": 0.375,
-      "live_mean": 13.65,
-      "live_std": 4.5964660338133685,
+      "live_mean": 15.3625,
+      "live_std": 6.611058444001233,
+      "live_min": 3,
+      "live_max": 28,
+      "entropy_rank_mean": 7.090765319764614,
+      "sigma1_mean": 17.57090917825699,
+      "n_head": 80
+    },
+    {
+      "layer": 13,
+      "depth_fraction": 0.40625,
+      "live_mean": 15.95,
+      "live_std": 5.449541265097458,
+      "live_min": 6,
+      "live_max": 29,
+      "entropy_rank_mean": 7.310447144508362,
+      "sigma1_mean": 17.26394258737564,
+      "n_head": 80
+    },
+    {
+      "layer": 14,
+      "depth_fraction": 0.4375,
+      "live_mean": 16.75,
+      "live_std": 7.725768570181222,
       "live_min": 5,
-      "live_max": 22,
-      "entropy_rank_mean": 5.880367785692215,
-      "sigma1_mean": 16.95889256000519,
-      "n_head": 40
+      "live_max": 32,
+      "entropy_rank_mean": 7.902809810638428,
+      "sigma1_mean": 18.725467950105667,
+      "n_head": 80
+    },
+    {
+      "layer": 15,
+      "depth_fraction": 0.46875,
+      "live_mean": 20.475,
+      "live_std": 6.5954055978385435,
+      "live_min": 7,
+      "live_max": 32,
+      "entropy_rank_mean": 9.832736632227897,
+      "sigma1_mean": 14.029574537277222,
+      "n_head": 80
     },
     {
       "layer": 16,
       "depth_fraction": 0.5,
-      "live_mean": 14.725,
-      "live_std": 4.347341141433462,
+      "live_mean": 16.9125,
+      "live_std": 6.136354271878377,
+      "live_min": 6,
+      "live_max": 29,
+      "entropy_rank_mean": 7.760495686531067,
+      "sigma1_mean": 22.230100452899933,
+      "n_head": 80
+    },
+    {
+      "layer": 17,
+      "depth_fraction": 0.53125,
+      "live_mean": 18.1,
+      "live_std": 7.15122367151245,
       "live_min": 7,
-      "live_max": 22,
-      "entropy_rank_mean": 6.362293934822082,
-      "sigma1_mean": 22.8495361328125,
-      "n_head": 40
+      "live_max": 32,
+      "entropy_rank_mean": 8.61972316801548,
+      "sigma1_mean": 19.275863432884215,
+      "n_head": 80
+    },
+    {
+      "layer": 18,
+      "depth_fraction": 0.5625,
+      "live_mean": 18.5875,
+      "live_std": 7.258949218034247,
+      "live_min": 8,
+      "live_max": 43,
+      "entropy_rank_mean": 8.750847825407982,
+      "sigma1_mean": 20.148684865236284,
+      "n_head": 80
+    },
+    {
+      "layer": 19,
+      "depth_fraction": 0.59375,
+      "live_mean": 18.6,
+      "live_std": 7.293147468685931,
+      "live_min": 6,
+      "live_max": 32,
+      "entropy_rank_mean": 8.780090600252151,
+      "sigma1_mean": 17.810320526361465,
+      "n_head": 80
     },
     {
       "layer": 20,
       "depth_fraction": 0.625,
-      "live_mean": 15.825,
-      "live_std": 4.554599323760543,
-      "live_min": 8,
-      "live_max": 26,
-      "entropy_rank_mean": 6.98194128870964,
-      "sigma1_mean": 18.361436009407043,
-      "n_head": 40
+      "live_mean": 20.225,
+      "live_std": 6.451695513584006,
+      "live_min": 7,
+      "live_max": 33,
+      "entropy_rank_mean": 9.457559487223625,
+      "sigma1_mean": 18.386495339870454,
+      "n_head": 80
+    },
+    {
+      "layer": 21,
+      "depth_fraction": 0.65625,
+      "live_mean": 16.0125,
+      "live_std": 8.607400522225046,
+      "live_min": 3,
+      "live_max": 31,
+      "entropy_rank_mean": 7.583592262864113,
+      "sigma1_mean": 20.85952686071396,
+      "n_head": 80
+    },
+    {
+      "layer": 22,
+      "depth_fraction": 0.6875,
+      "live_mean": 10.9,
+      "live_std": 4.314510400960925,
+      "live_min": 5,
+      "live_max": 25,
+      "entropy_rank_mean": 4.840108570456505,
+      "sigma1_mean": 19.484564477205275,
+      "n_head": 80
+    },
+    {
+      "layer": 23,
+      "depth_fraction": 0.71875,
+      "live_mean": 10.7875,
+      "live_std": 5.476526613648472,
+      "live_min": 3,
+      "live_max": 28,
+      "entropy_rank_mean": 4.900717815756797,
+      "sigma1_mean": 18.396836864948273,
+      "n_head": 80
     },
     {
       "layer": 24,
       "depth_fraction": 0.75,
-      "live_mean": 8.375,
-      "live_std": 3.57552443705815,
+      "live_mean": 8.8125,
+      "live_std": 4.806489753447936,
       "live_min": 4,
-      "live_max": 20,
-      "entropy_rank_mean": 3.596800130605698,
-      "sigma1_mean": 14.9456658244133,
-      "n_head": 40
+      "live_max": 29,
+      "entropy_rank_mean": 4.026738929748535,
+      "sigma1_mean": 15.201103591918946,
+      "n_head": 80
+    },
+    {
+      "layer": 25,
+      "depth_fraction": 0.78125,
+      "live_mean": 8.9125,
+      "live_std": 4.685599614777174,
+      "live_min": 4,
+      "live_max": 25,
+      "entropy_rank_mean": 4.148172909021378,
+      "sigma1_mean": 21.209060606360435,
+      "n_head": 80
+    },
+    {
+      "layer": 26,
+      "depth_fraction": 0.8125,
+      "live_mean": 11.65,
+      "live_std": 5.433921236087251,
+      "live_min": 4,
+      "live_max": 27,
+      "entropy_rank_mean": 5.429160462319851,
+      "sigma1_mean": 25.225149583816528,
+      "n_head": 80
+    },
+    {
+      "layer": 27,
+      "depth_fraction": 0.84375,
+      "live_mean": 11.875,
+      "live_std": 4.672726720021191,
+      "live_min": 4,
+      "live_max": 24,
+      "entropy_rank_mean": 5.484599173069,
+      "sigma1_mean": 14.26844626814127,
+      "n_head": 80
     },
     {
       "layer": 28,
       "depth_fraction": 0.875,
-      "live_mean": 11,
-      "live_std": 2.7386127875258306,
-      "live_min": 5,
-      "live_max": 16,
-      "entropy_rank_mean": 4.49748991727829,
-      "sigma1_mean": 17.441462856531142,
-      "n_head": 40
+      "live_mean": 11.5125,
+      "live_std": 4.046584207699131,
+      "live_min": 4,
+      "live_max": 23,
+      "entropy_rank_mean": 5.098040179908276,
+      "sigma1_mean": 17.8382724955678,
+      "n_head": 80
     }
   ],
   "recommendation": {
-    "peak_layer": 20,
-    "peak_live": 15.825,
-    "peak_depth_fraction": 0.625,
+    "peak_layer": 15,
+    "peak_live": 20.475,
+    "peak_depth_fraction": 0.46875,
+    "grid_stride": [
+      1
+    ],
+    "steepest_drop": {
+      "from_layer": 21,
+      "to_layer": 22,
+      "live_before": 16.0125,
+      "live_after": 10.9,
+      "delta": -5.112499999999999,
+      "relative": -0.31928181108508974,
+      "depth_fraction": 0.65625
+    },
     "largest_drop_after_peak": {
-      "from_layer": 20,
-      "to_layer": 24,
-      "live_before": 15.825,
-      "live_after": 8.375,
-      "delta": -7.449999999999999,
-      "relative": -0.47077409162717215
+      "from_layer": 21,
+      "to_layer": 22,
+      "live_before": 16.0125,
+      "live_after": 10.9,
+      "delta": -5.112499999999999,
+      "relative": -0.31928181108508974,
+      "depth_fraction": 0.65625
     },
     "suggested_work_layers_covering_transition": [
-      16,
       20,
-      24
+      21,
+      22
     ],
     "inherited_a05_set": [
       12,
       16,
       20
     ],
-    "depth_fraction_implication_0_67": null
+    "depth_fraction_implication_0_67": {
+      "claimed": 0.67,
+      "measured_cliff_depth_fraction": 0.65625,
+      "layer_at_0_67": 21
+    }
   },
-  "source_jlens": "experiments/A0_state_probe/results/rank_recheck/jlens.json",
+  "source_jlens": "experiments/A0_state_probe/results/jlens_g1i_vs_g1k3b/jlens.json",
   "n_layer": 32
 }
