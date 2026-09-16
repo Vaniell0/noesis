@@ -372,7 +372,7 @@ class MuonHybrid:
     def __init__(self, named_params, lr: float = 0.02, momentum: float = 0.95,
                  momentum_start: float = 0.85, momentum_warmup_steps: int = 500,
                  weight_decay: float = 0.0, ns_steps: int = 5,
-                 offload_state: bool = False):
+                 offload_state: bool = False, pair_fix: bool = True):
         named_params = list(named_params)
         self.muon_params: list = []
         self.other_params: list = []
@@ -399,6 +399,14 @@ class MuonHybrid:
                 a, b = pair["A"], pair["B"]
                 self._lora_partner[id(a)], self._lora_role[id(a)] = b, "A"
                 self._lora_partner[id(b)], self._lora_role[id(b)] = a, "B"
+        # `pair_fix=False` restores the pre-2026-09-15 behaviour: each factor
+        # orthogonalized and rescaled on its own, so `lora_B` steps at
+        # sqrt(d_out/r) times `lora_A`. It exists so the control arm and the
+        # fixed arm come out of the same session rather than from a log taken
+        # in a different week — see docs/muon-rwkv7-finetuning.md section 2.1.
+        self.pair_fix = pair_fix
+        if not pair_fix:
+            self._lora_partner, self._lora_role = {}, {}
         self.n_lora_pairs = len(self._lora_partner) // 2
         self.lr = lr
         self.momentum_final = momentum

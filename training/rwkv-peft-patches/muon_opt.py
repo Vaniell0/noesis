@@ -140,6 +140,7 @@ class MuonWithAuxAdam(torch.optim.Optimizer):
     """
 
     def __init__(self, named_params, lr: float = 0.02, adam_lr: float | None = None,
+                 pair_fix: bool = True,
                  lr_init: float | None = None,
                  momentum: float = 0.95, momentum_start: float = 0.85,
                  momentum_warmup_steps: int = 500, weight_decay: float = 0.0,
@@ -147,8 +148,12 @@ class MuonWithAuxAdam(torch.optim.Optimizer):
                  ns_steps: int = 5):
         named_params = list(named_params)
         muon_params = [p for n, p in named_params if p.requires_grad and _is_muon_param(n, p)]
-        self._lora_partner, self._lora_role = _find_lora_pairs(
-            [(n, p) for n, p in named_params if p.requires_grad])
+        # See experiments/rl/loader.py's twin: pair_fix=False restores the
+        # per-factor rescale so a control arm is reproducible in-session.
+        self.pair_fix = pair_fix
+        self._lora_partner, self._lora_role = (
+            _find_lora_pairs([(n, p) for n, p in named_params if p.requires_grad])
+            if pair_fix else ({}, {}))
         adam_params = [p for n, p in named_params if p.requires_grad and not _is_muon_param(n, p)]
         _adam_lr = adam_lr if adam_lr is not None else lr
         # `lr_init` is train.py's --lr_init (the schedule's base value the

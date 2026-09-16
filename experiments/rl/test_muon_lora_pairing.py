@@ -100,6 +100,27 @@ def test_step_moves_B_at_the_same_scale_as_A():
     assert abs(cA - cB) / max(cA, cB) < 1e-3, (cA, cB)
 
 
+def test_pair_fix_off_restores_the_asymmetry():
+    """The control arm for the real-model run: with the flag off, the two
+    factors' contributions differ by exactly the aspect ratio again."""
+    named, ps = _named(r=8, n_embd=64)
+    a = ps["blocks.0.att.key.lora_A.default.weight"]
+    b = ps["blocks.0.att.key.lora_B.default.weight"]
+    b.data = torch.randn_like(b)
+    opt = MuonHybrid(named, lr=0.01, momentum=0.0, momentum_start=0.0,
+                     pair_fix=False)
+    assert opt.n_lora_pairs == 0, "pair_fix=False must leave no pairs"
+    a0, b0 = a.data.clone(), b.data.clone()
+    for p in opt.muon_params:
+        p.grad = torch.randn_like(p)
+    opt.step()
+    cA = (b0 @ (a.data - a0)).norm().item()
+    cB = ((b.data - b0) @ a0).norm().item()
+    # B carries the coefficient sqrt(n_out/r) = sqrt(64/8) = 2.83, so its
+    # contribution is larger; with the fix on the same test asserts they match.
+    assert cB > 1.5 * cA, (cA, cB)
+
+
 if __name__ == "__main__":
     fails = 0
     for name, fn in sorted(globals().items()):

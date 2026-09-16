@@ -958,6 +958,14 @@ def main() -> int:
                           "reference: linear ramp 0.85->--muon-momentum over "
                           "--muon-momentum-warmup-steps, not flat from step 1).")
     ap.add_argument("--muon-momentum-warmup-steps", type=int, default=500)
+    ap.add_argument("--muon-pair-fix", default="on", choices=("on", "off"),
+                     help="'on' (default) treats a LoRA A/B pair as one update "
+                          "and equalises their contributions downward; 'off' "
+                          "restores the per-factor rescale, where lora_B steps "
+                          "at sqrt(d_out/r) times lora_A under one shared lr. "
+                          "'off' exists to produce the control arm in the same "
+                          "session as the fixed one — see "
+                          "docs/muon-rwkv7-finetuning.md.")
     ap.add_argument("--muon-weight-decay", type=float, default=0.0)
     ap.add_argument("--muon-offload-state", action="store_true",
                      help="Keep MuonHybrid's momentum buffer in CPU RAM, "
@@ -1223,7 +1231,8 @@ def main() -> int:
                                      momentum_start=args.muon_momentum_start,
                                      momentum_warmup_steps=args.muon_momentum_warmup_steps,
                                      weight_decay=args.muon_weight_decay,
-                                     offload_state=args.muon_offload_state)
+                                     offload_state=args.muon_offload_state,
+                                     pair_fix=(args.muon_pair_fix == "on"))
         params = muon_optimizer.other_params
         print(f"[distill] Muon enabled: {len(muon_optimizer.muon_params)} hidden matrices "
               f"on Muon (lr={args.muon_lr}), {len(params)} params on AdamW")
