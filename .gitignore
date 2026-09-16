@@ -103,3 +103,7 @@ __pycache__/
 .vscode/
 .DS_Store
 training/corpus_open/relax_v1.jsonl
+
+# Not ready to publish — external write-up, kept local until it is finished.
+# See ~/.claude/plans/ for what it still needs.
+docs/muon-rwkv7-finetuning.md
