@@ -307,6 +307,31 @@ spectrum, different methods on different data, land on the same layer. The
 A0.5 set [12,16,20] sits inside the plateau and stops one layer short of it.
 Reaching training via `--work-layers-from` as of the same date.
 
+**Corpus control, 2026-09-16 — it reproduces exactly on a different lineage.**
+G1k-3b (BlinkDL's next release generation, architecturally identical to G1i:
+2.95B, n_embd 2560, 40 heads × 64, 32 layers) measured against G1i in one
+`jlens_probe --base/--trained` pass, same settings:
+
+| | G1i | G1k-3b |
+|---|---|---|
+| peak breadth | L15, 20.48 | L15, 20.14 |
+| steepest fall | L21→L22, 16.01→10.90 | L21→L22, 15.75→10.70 |
+| relative | −31.9% | −32.1% |
+| depth fraction | 0.656 | 0.656 |
+
+Different corpus, different training run, different release generation — the same
+layer, the same depth fraction, the same drop to a tenth of a percent. **The cliff
+is a property of the architecture, not of how G1i was trained.**
+(`results/layer_profile_g1i.json`, `layer_profile_g1k3b.json`.)
+
+That closes corpus dependence and leaves depth. Both models above are 32 layers,
+so the index and the fraction cannot be told apart by them. The prediction to
+beat, written before the run: on a 24-layer model the cliff falls at **L15→L16**,
+since 0.656 × 24 = 15.7 — and that is where the corpus-only CV above
+independently put a 1.5B's decision zone ("L16/24"). If it lands elsewhere in
+fraction terms, the fraction is not portable, every checkpoint must be measured
+fresh, and the 0.67 rule is retired rather than applied.
+
 **Key finding:** *"The base carries the knowledge, the state installs the
 disposition."* Abstention = 0/17 at every raw size and model (including
 Qwen3.5-4B: 4/17). One epoch sufficient — epochs 2–3 bought nothing.
