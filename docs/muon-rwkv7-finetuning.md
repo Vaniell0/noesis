@@ -20,6 +20,62 @@ rather than about us.
 
 ---
 
+## 0. Why we are running Muon at all
+
+Worth stating, because it changes how the rest should be read, and because our own
+history here is less tidy than the sections below might suggest.
+
+**The decision that actually chose Muon had one reason: memory.** Muon carries a
+momentum buffer and no second-moment state, which directly answers a fixed-cost
+VRAM wall — weights 5.90GB + gradients 5.90GB + Adam's own ~5.8GB of int8
+second-moment buffers on a 16GB card. A secondary argument was about where to
+spend debugging effort: our Phase 1.5/2 is supervised distillation rather than RL,
+and an unfamiliar optimizer's quirks are far cheaper to diagnose there than inside
+policy-gradient noise.
+
+**The memory reason did not survive contact.** The first real GPU run OOMed on
+backward every time; `MuonHybrid`'s eager per-parameter momentum buffer, with no
+offload written, exceeded that card on its own. So the one reason that chose Muon
+is the one reason that has already failed, and everything we now find interesting
+about it was discovered afterwards, from toy runs. We would rather say that
+plainly than present a tidy motivation assembled backwards.
+
+**What we are actually trying to build**, since it explains which properties we
+care about. The training track is meant to give the model more internal steps
+before it answers — time and room to write instructions to itself in its own
+recurrent state and read them back — so that answering draws on what the model
+already knows rather than on a longer visible chain of text. In that picture the
+quantity that matters is how many independent directions the state can hold and
+traverse. Our measurements put that at **8.8 to 22.6 live directions per head out
+of 64**, depending on depth, on a 2.9B checkpoint.
+
+One correction to our own vocabulary, because we have used it loosely and it
+matters for §2.3: the "hold several answer directions at once" property belongs to
+the **state** and to the number of internal steps that traverse it, not to the
+optimizer and not to an adapter's rank. Those are different axes that happen to
+share the word "rank".
+
+**Which brings us to pretraining, where we genuinely do not know.** The claim we
+have been carrying is a build/bake split: a geometry-shaping update rule
+(orthogonalised, spectral-norm step) **builds** the state's spectral structure
+during pretraining, while a coordinate-wise adaptive rule **bakes** it —
+specialising inside a structure it leaves intact. G1i's pretraining used Muon, so
+on that reading the breadth we measure is Muon-built and Adam-preserved.
+
+We flag two problems with using that as an argument for Muon in pretraining.
+First, it has never been tested against a non-Muon-pretrained lineage of the same
+architecture, so the attribution is assumed rather than measured. Second, and
+worse for the story, our own controlled probe found that **breadth is buildable
+and buys nothing**: arms with an explicit breadth term reached the structural
+ceiling on live directions and scored worse held-out than plain training, and the
+one thing breadth was credited with rescuing turned out to be reproduced by a
+rank-blind term on state energy. So if Muon is right for pretraining RWKV-7 — and
+BlinkDL's experience says it is — we cannot currently claim it is right *because*
+it builds breadth. That reason is the one we would have given a month ago, and it
+is the one our own data declines to support.
+
+---
+
 ## 1. Measurements anyone can reproduce in minutes
 
 Everything in this section is read off a public checkpoint
@@ -147,33 +203,41 @@ So the damage is the **size** of the step. The pairing asymmetry matters only
 because it carries one factor across the threshold that the configured learning
 rate alone would not reach.
 
-### 2.3 What `r` means under this optimizer — it stops being a budget
+### 2.3 What `r` means here — and a claim of ours that does not survive
 
-Worth stating separately, because it is not a step-size effect and it does not go
-away when the step is fixed.
+A correction first, because we made it ourselves and it is the kind that
+propagates. We have written elsewhere that factor-wise Newton–Schulz "injects a
+near-flat rank-`r` update by construction", citing an entropy-rank of 31.88 out
+of 32. **That measurement was taken at initialisation on i.i.d. Gaussian
+gradients, where it is a tautology** — orthogonalise Gaussian noise and of course
+the spectrum is flat. On real gradients it does not hold.
 
-Newton–Schulz drives every singular value of each factor to 1, and the product
-inherits it. Measured on the induced `ΔW` at init: **rank 32 with σ₃₂/σ₁ = 0.733
-and entropy-rank 31.88 of 32** — an almost perfectly flat, full-rank-`r` update,
-injected every step by construction, regardless of what the loss wanted. Adam in
-the same slot produces a spiky one.
+Two things are true instead, and they are less dramatic.
 
-So under factor-wise Muon the adapter's rank is not a ceiling the update may use
-if it needs to. It is a **mandate to use all of it, flat, every step**. That is a
-different object from what `r` usually denotes.
+**The update spans up to 2r, not r.** `ΔW = s·(B·δA + δB·A)` is a sum of two
+rank-`r` terms, so an `r=32` adapter can write into as many as 64 directions, not
+32. That is a property of the factorisation, not of the optimizer.
 
-Set against what the state can hold, on this checkpoint: the rank ceiling of a
+**Flatness is not what does the damage.** Our own probe's spectrum column settles
+this: the arm that fixes retention (`muon_balanced`) has an adapter spectrum
+indistinguishable from the broken one — entropy-rank 4.667 vs 4.674, σ_r/σ_1
+0.0555 vs 0.0538 — while retention differs by **0.255**. Whatever separates them,
+it is not the shape of the update's spectrum.
+
+What remains worth putting next to `r` is the receiving end. The rank ceiling of a
 WKV write is `min(n_recurrence_steps, head_size)` — one rank-1 write per step,
-head_size 64 — and the measured live-direction count per head, at stride 1 over
-five prompts, runs **8.8 at L24 to 22.6 at L20, out of 64**. An `r=32` adapter
-under this optimizer therefore writes a flat 32-direction update, every step, into
-a state that is carrying 9–23.
+head_size 64 on this checkpoint — and the measured live-direction count per head,
+at stride 1 over five prompts, runs **8.8 at L24 to 22.6 at L20, out of 64**. So
+an `r=32` adapter can address up to 64 weight-space directions into a state that
+is currently carrying 9–23.
 
-We have a separate measurement suggesting the extra breadth is not the good part:
-in a controlled toy, training arms that deliberately raised the live-direction
-count did reach a higher count and scored **worse** held-out than the plain arm
-(+0.6085 vs +0.7501). Breadth was buildable and bought nothing. Factor-wise Muon
-does that by construction, for free, on every step.
+Whether raising that count is desirable is a separate question we have partly
+answered against ourselves: in a controlled toy, arms that deliberately raised the
+live-direction count did reach a higher count — up to the structural ceiling — and
+scored **worse** held-out than the plain arm (+0.6085 vs +0.7501). Breadth was
+buildable and bought nothing. Anyone reaching for rank as a way to hold more
+answer directions at once should know that we tried the direct version of that and
+it did not pay.
 
 ### 2.4 The fix, and the direction it must go in
 
@@ -269,7 +333,14 @@ threshold at real scale.
    §2.3's: under factor-wise Muon, `r` stops being a capacity ceiling and becomes
    a forced flat-rank-`r` update every step. Is that the intended reading of rank
    when Muon is used with a low-rank adapter, or an unexamined side effect?
-3. **For pretraining, does the coefficient's behaviour on `ffn.key` vs
+3. **For pretraining: is there a reason to prefer Muon beyond the ones we can no
+   longer defend?** §0 explains why we cannot currently argue "because it builds
+   the state's breadth" — our own probe found breadth buildable and worthless, and
+   the attribution to Muon-pretraining was never tested against another lineage.
+   Your experience says Muon works for pretraining RWKV-7; we would like to know
+   what it is actually buying there, because we would otherwise be repeating a
+   reason we have retired.
+4. **For pretraining, does the coefficient's behaviour on `ffn.key` vs
    `ffn.value` (§1.4) match what you would expect?** A 2x asymmetry between the
    two halves of one FFN block under one learning rate is below our measured
    damage threshold, but we would rather hear it is intended than assume it.

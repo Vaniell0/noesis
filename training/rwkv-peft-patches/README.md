@@ -57,13 +57,30 @@ factors by `‖B‖` and `‖A‖`, not by their shapes. PEFT initialises
 flows through `δB·A` — i.e. entirely through the factor that is also
 being stepped ~9× too fast.
 
-Second half of the same finding: **factor-wise Muon is itself a breadth
-term.** Newton-Schulz drives every singular value of each factor to 1 and
-the product inherits it — measured at init, the induced `ΔW` came out
-rank 32 with σ₃₂/σ₁ = 0.733 and entropy-rank 31.88 of 32, i.e. an almost
-perfectly flat full-rank-r update injected every step by construction,
-regardless of what the loss wanted. Adam in the same slot produces a
-spiky one.
+~~Second half of the same finding: **factor-wise Muon is itself a breadth
+term.**~~ **RETRACTED 2026-09-16 — this paragraph was wrong twice and was
+propagated into an external draft before it was caught.**
+
+It read: "Newton-Schulz drives every singular value of each factor to 1 and the
+product inherits it — measured at init, the induced `ΔW` came out rank 32 with
+σ₃₂/σ₁ = 0.733 and entropy-rank 31.88 of 32, i.e. an almost perfectly flat
+full-rank-r update injected every step by construction."
+
+**(1) The measurement is a tautology at the point it was taken.** It was made at
+initialisation on i.i.d. Gaussian gradients — orthogonalise Gaussian noise and the
+spectrum is flat by construction. It says nothing about real gradients, where the
+induced `ΔW` is a sum of two rank-r terms (`B·δA + δB·A`) and reaches rank up to
+**2r**, not r.
+
+**(2) Flatness is not what causes the damage, and this probe's own column says
+so.** `muon_balanced` fixes retention while having an adapter spectrum
+indistinguishable from the broken arm's — entropy-rank 4.667 vs 4.674, σ_r/σ_1
+0.0555 vs 0.0538 — with retention differing by 0.255. Both facts were already
+recorded in `hypotheses/H26.md`'s APPLICATION-vs-ALGORITHM entry; this file was
+never updated to match.
+
+The surviving statement is §2.2's: the damage is step SIZE. See
+`docs/muon-rwkv7-finetuning.md` §2.3.
 
 **PATCHED 2026-09-15.** The reason for holding off — that three candidate
 fixes existed and choosing between them was an open question — closed when
