@@ -284,11 +284,28 @@ is currently carrying 9–23.
 
 Whether raising that count is desirable is a separate question we have partly
 answered against ourselves: in a controlled toy, arms that deliberately raised the
-live-direction count did reach a higher count — up to the structural ceiling — and
-scored **worse** held-out than the plain arm (+0.6085 vs +0.7501). Breadth was
-buildable and bought nothing. Anyone reaching for rank as a way to hold more
-answer directions at once should know that we tried the direct version of that and
-it did not pay.
+live-direction count did reach a higher count — up to the structural ceiling,
+15.7-16.0 against 6.6-7.4 for plain training — and scored **worse** held-out than
+the plain arm (+0.6085 vs +0.7501). Breadth was buildable and bought nothing.
+
+**But note exactly which claim that kills, because it is the weaker one.** Those
+arms raised breadth with an explicit breadth term — they optimised the metric
+directly, which is the Goodhart case our own pre-registered criteria name. So what
+is refuted is *"force the direction count up and quality follows"*. What is
+untouched is *"a model that genuinely needs several directions at once will use
+them"*. Coercion and need are different claims and we only tested the first.
+
+The experiment that separates them, which we have not run: a task with real
+deferred ambiguity — several answer candidates that must coexist until a later
+token disambiguates — and then ask whether the live-direction count rises **on its
+own**, with no breadth term anywhere, and whether it correlates with getting the
+answer right. If it does, breadth is a genuine capacity and rank is worth spending
+on. If the count stays flat even where holding candidates is objectively required,
+the model is solving such tasks some other way and the whole line closes.
+
+We state this because the negative result above is easy to over-read, including by
+us. "We raised it artificially and it did not help" is not "the state does not
+benefit from carrying more at once".
 
 ### 2.4 The fix, and the direction it must go in
 
