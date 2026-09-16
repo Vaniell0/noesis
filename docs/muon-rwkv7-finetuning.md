@@ -44,10 +44,19 @@ Adam's own ~5.8GB of int8 second-moment buffers on a 16GB card. And our Phase
 quirks are far cheaper to diagnose there than inside policy-gradient noise. Those
 were chosen as backstops precisely because they do not depend on a toy's R².
 
-**One of the two backstops has since failed.** The first real GPU run OOMed on
-backward every time; `MuonHybrid`'s eager per-parameter momentum buffer, with no
-offload written, exceeded that card on its own. The VRAM argument is not currently
-true for our implementation.
+**The memory argument holds against plain Adam and is a wash against what we were
+actually replacing.** On a 2.9B model the arithmetic is: naive fp32 Adam carries
+23.2GB of optimizer state (two moments); Muon carries one momentum buffer, 5.8GB
+at bf16. That difference is real and it is the difference between fitting and not
+fitting on a small card.
+
+But our baseline was not naive Adam — it was `Int8AdamW` with CPU offload, whose
+two int8 states come to the same 5.8GB and sit in host RAM rather than VRAM. Muon's
+first real GPU run OOMed on backward every time, because its momentum buffer was
+resident while Adam's was not; offload was written for it the same day, after
+which the two are roughly even on host RAM and Muon is ahead only by carrying one
+state instead of two. So: a strong argument in general, a narrow one against the
+specific thing we swapped out.
 
 **And a third reason was formalised afterwards** — the build/bake split in §0's
 last part — with pre-registered falsification criteria, one of which has since
