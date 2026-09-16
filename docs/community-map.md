@@ -834,6 +834,38 @@ loop to have *content*, not just a budget.
   before *building* a dedicated rewind mechanism from scratch. Tracked
   as TaskCreate #12.
 
+- **LSRL — "Process-Supervised GRPO on Latent Recurrent States Improves
+  Mathematical Reasoning"** (Ren, *Findings of EMNLP 2025*,
+  `aclanthology.org/2025.findings-emnlp.669/`, found 2026-09-15). **This is the
+  closest prior art to Phase 3 that exists, and it closes the gap Steps 2/3 have
+  been stuck behind**: an opaque latent span has no per-step target, and GRPO's
+  policy ratio is undefined where no token is emitted. LSRL sidesteps the ratio
+  rather than defining it — **decode every recurrent depth and grade the partial
+  solution**, giving a dense reward at each latent step. Run on **Huginn** (the
+  same 3.5B model as the entry above), LoRA adapters, one L40S, **500 GSM-8K
+  problems**: +4.27pp on GSM-8K and +2.06pp on MathQA over the depth-8 supervised
+  baseline.
+
+  Three reasons it is portable here rather than merely interesting. The decode
+  it rewards is the method already ported as
+  `experiments/rl/state_trajectory_probe.py::_detect_backtrack`. RWKV-7 is
+  decodable at any depth for free — `forward_stateful_embeds` returns logits on
+  every call, where Huginn has to train a coda for it. And the budget shape is
+  ours: adapters, one GPU, a few hundred problems.
+
+  **What does not transfer, and must not be waved through:** LSRL grades partial
+  solutions with a GPT-4.1-nano judge. `experiments/rl/rewards.py::_score_correct`
+  scores a *final* answer against a rubric, and a rubric does not apply to a
+  half-finished reasoning state. Substituting for that judge is an open design
+  question, and it comes after measuring whether our phases decode to
+  distinguishable partial answers at all — if every phase decodes to the same
+  token, the dense signal does not exist on this architecture regardless of
+  LSRL's results on Huginn.
+
+  **Relation to Switch-GRPO (§3.8):** both target the same gap. Switch-GRPO needs
+  a well-defined policy ratio over opaque positions; LSRL removes the need for
+  one. LSRL is the first candidate; Switch-GRPO is shelved, not deleted.
+
 **Implementation:** `experiments/rl/train_think_distill.py` (new,
 2026-08-19) — teacher/student L2 state-distillation using the existing
 step9 SFT corpus (`training/tokenised/step9_combined_train.pt`, real
@@ -1014,6 +1046,15 @@ misattributed. Do not re-fold them without new evidence.
   not just loading a new inference-time module.
 
 ### 3.8 Read 2606.13106 before RL launch
+
+**Partially discharged 2026-09-15 — and the recipe changed.** LSRL (Findings of
+EMNLP 2025, see §"Latent imagination" above) closes the same GRPO gap without
+needing a policy ratio over opaque positions, which is the part of Switch-GRPO
+that was never built. The track takes LSRL first: its decode-every-depth method
+is already ported here, and RWKV-7 is decodable at any depth without training a
+coda. Switch-GRPO stays on the shelf for its visible→latent curriculum, which
+LSRL does not provide. 2602.21204 (TTT = delta-rule linear attention = WKV
+update) is still unread.
 
 arXiv 2606.13106 "Switchable Latent Reasoning" provides Switch-GRPO: a training
 recipe for boundary tokens that enter/exit latent recurrent computation with policy
