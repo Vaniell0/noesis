@@ -147,7 +147,35 @@ So the damage is the **size** of the step. The pairing asymmetry matters only
 because it carries one factor across the threshold that the configured learning
 rate alone would not reach.
 
-### 2.3 The fix, and the direction it must go in
+### 2.3 What `r` means under this optimizer — it stops being a budget
+
+Worth stating separately, because it is not a step-size effect and it does not go
+away when the step is fixed.
+
+Newton–Schulz drives every singular value of each factor to 1, and the product
+inherits it. Measured on the induced `ΔW` at init: **rank 32 with σ₃₂/σ₁ = 0.733
+and entropy-rank 31.88 of 32** — an almost perfectly flat, full-rank-`r` update,
+injected every step by construction, regardless of what the loss wanted. Adam in
+the same slot produces a spiky one.
+
+So under factor-wise Muon the adapter's rank is not a ceiling the update may use
+if it needs to. It is a **mandate to use all of it, flat, every step**. That is a
+different object from what `r` usually denotes.
+
+Set against what the state can hold, on this checkpoint: the rank ceiling of a
+WKV write is `min(n_recurrence_steps, head_size)` — one rank-1 write per step,
+head_size 64 — and the measured live-direction count per head, at stride 1 over
+five prompts, runs **8.8 at L24 to 22.6 at L20, out of 64**. An `r=32` adapter
+under this optimizer therefore writes a flat 32-direction update, every step, into
+a state that is carrying 9–23.
+
+We have a separate measurement suggesting the extra breadth is not the good part:
+in a controlled toy, training arms that deliberately raised the live-direction
+count did reach a higher count and scored **worse** held-out than the plain arm
+(+0.6085 vs +0.7501). Breadth was buildable and bought nothing. Factor-wise Muon
+does that by construction, for free, on every step.
+
+### 2.4 The fix, and the direction it must go in
 
 Equalise the two factors' contributions to the update — `‖B·δA‖` and `‖δB·A‖` —
 **downward, to the smaller of the two**, never to their geometric mean. §2.2 is the
@@ -163,6 +191,46 @@ Two small matmuls per adapter per step. One edge case: PEFT zeroes `lora_B`, so
 `‖B·δA‖` is exactly 0 on step 0 and equalising to a geometric mean of zero would
 scale *both* factors to zero — the adapter would never leave the origin. A
 vanishing contribution must fall back to no rescale.
+
+---
+
+### 2.5 A state-derived metric: measured, not adopted, offered anyway
+
+One arm replaced Muon's fixed per-tensor scale with one measured from the
+**state** — how far a unit weight step actually moves the recurrent state,
+recalibrated during training, displacement ratio bounded at 16x. The question it
+was built for is whether the object worth normalising is the weight matrix or the
+state the weights write into.
+
+Six converged seeds, LoRA factors, same protocol as §2:
+
+| arm | retain | adapt | adapter ΔW entropy-rank (of r=8) |
+|---|---|---|---|
+| adam | +0.9993 | +1.0000 | 5.92 |
+| muon, factor-wise (production) | +0.7441 | +0.9833 | 4.67 |
+| muon, contributions equalised | +0.9995 | +0.9976 | 4.67 |
+| muon, induced ΔW orthogonalised | +0.9987 | +0.9997 | 5.94 |
+| **muon, state-derived metric** | **+0.8558** | **+0.9485** | **6.05** |
+
+We are not adopting it: it recovers +0.112 of factor-wise Muon's −0.256 retention
+loss, where two far simpler shape fixes recover +0.255 each. Paying for a running
+state measurement to get half of what a reparameterisation gives for free is not a
+trade we can justify.
+
+It is reported because one thing in that row is its own and is reproduced by no
+other arm: it produces the **broadest** update of the five (6.05 against Adam's
+5.92 and the two winners' 4.67) and the **narrowest fit** to the finetune data
+(0.9485 against 0.9976–1.0000). Those are the same fact twice — a state-derived
+metric spends the update across more directions and therefore commits less of it
+to the data in front of it. If the objective is breadth of the learned update
+rather than fit — continual learning, multi-task adapters, anything where
+over-committing to the current slice is the failure you fear — that arm is aimed
+at a different problem than ours, and the numbers are here rather than in a
+drawer.
+
+Caveats a reader should carry: toy scale; this arm has the widest seed spread of
+the five (±0.169 against ±0.0005 for the best), so its middle number is the least
+trustworthy in the table; and it was measured on LoRA factors, not full weights.
 
 ---
 
@@ -197,7 +265,10 @@ threshold at real scale.
 2. **Has anyone run Muon with LoRA on a pretrained RWKV-7, at what rank and what
    learning rate?** §1.2 predicts that lower rank is worse under the current
    implementation, which is the opposite of the usual expectation, and that is a
-   cheap thing to falsify with two runs.
+   cheap thing to falsify with two runs. A second, separable question is
+   §2.3's: under factor-wise Muon, `r` stops being a capacity ceiling and becomes
+   a forced flat-rank-`r` update every step. Is that the intended reading of rank
+   when Muon is used with a low-rank adapter, or an unexamined side effect?
 3. **For pretraining, does the coefficient's behaviour on `ffn.key` vs
    `ffn.value` (§1.4) match what you would expect?** A 2x asymmetry between the
    two halves of one FFN block under one learning rate is below our measured
