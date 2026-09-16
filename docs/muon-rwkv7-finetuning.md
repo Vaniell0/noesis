@@ -362,8 +362,64 @@ threshold at real scale.
 
 ---
 
+## 3.5 Where this sits relative to current Muon work
+
+Checked 2026-09-16, because "improved Muon with various tricks" was mentioned to
+us and we had not followed it up.
+
+**The shape rescale is current, not legacy.** `KellerJordan/Muon`'s reference
+implementation still applies
+
+```python
+update *= max(1, update.size(-2) / update.size(-1)) ** 0.5
+```
+
+after Newton–Schulz, with Nesterov on by default and AdamW-style weight decay. So
+§1 is about the rule as it stands, not about an old version someone has since
+fixed.
+
+**Upstream guidance has a hole exactly where factorised weights would go.** The
+reference's own instruction is: *"Muon should only be used for hidden weight
+layers. The input embedding, final output layer, and any internal gains or biases
+should be optimized using a standard method such as AdamW."* Embeddings, output,
+gains, biases — and nothing about a weight that is **one factor of a product**.
+That omission is what BlinkDL patched locally by name (§1.3), and it is why the
+patch is a convention rather than a rule.
+
+**The speedrun has independently found that the tensor is not always the right
+unit to orthogonalise over.** Record 80 of `modded-nanogpt`: *"In Muon
+orthogonalize Q and K matrices in pairs of heads, instead of across the full 6
+head matrix."* That is the same class of move as §2.4 — the parameter tensor as
+stored is not necessarily the object whose spectrum you want to control. We think
+the factor-pair case is the same discovery on a different axis, and we would
+rather say that than present it as unprecedented.
+
+**A smaller observation, offered as a reading rather than a claim.** Record 27 is
+*"Transpose one of the MLP matrices + add Triton kernel for symmetric matmul"*,
+and the stated reason is the kernel. But transposing one MLP matrix also changes
+which shape coefficient it receives: stored the usual way, `W_in` (d_ff, d_model)
+takes `sqrt(d_ff/d_model)` and `W_out` (d_model, d_ff) takes 1.0 — the same 2x
+asymmetry inside one block that §1.4 reports for `ffn.key` vs `ffn.value`.
+Transposed, both take the same coefficient. Whether any of the speedup came from
+that rather than from the kernel is checkable and, as far as we can see, unchecked.
+
+**NorMuon is adjacent but does not cover this.** arXiv 2510.05491 adds row-wise
+(per-neuron) normalisation after orthogonalisation plus per-neuron second-moment
+statistics, because Muon "produces highly non-uniform neuron norms, causing
+certain neurons to dominate". That is a within-tensor non-uniformity. The
+factor-pair problem is a **between-tensor** one: no amount of normalising rows of
+`lora_B` tells the optimizer that `lora_A` is the other half of the same update.
+The two are orthogonal, and a system using both would still want §2.4.
+
+---
+
 ## 4. What we would like to know
 
+0. **Which "improved Muon" did you mean?** We followed the pointer as far as
+   `KellerJordan/Muon` (shape rescale still current), the `modded-nanogpt` record
+   list, and NorMuon — §3.5. If the tricks you had in mind are elsewhere, several
+   of the questions below may already be answered there and we would rather read
+   than ask.
 1. **Would you consider making the factor-pair exclusion structural rather than
    by-name?** §1.3 shows it is deliberate and complete in `train_rwkv7.py`, and
    that it is carried entirely by the `_w1`/`_w2` convention — which catches
