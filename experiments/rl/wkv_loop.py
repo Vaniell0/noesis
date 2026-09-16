@@ -111,6 +111,7 @@ def generate_rollout(
     answer_temperature: float = 0.7,
     mlp_delta: Optional[nn.Module] = None,   # required for "residual"
     alpha: float = 0.0,                       # residual weight
+    feed_norm: Optional[float] = None,        # rescale the fed vector; None = off
     eos_id: int = 0,
 ) -> WKVLoopRollout:
     """One rollout: prefill → WKV loop → decode answer.
@@ -193,6 +194,24 @@ def generate_rollout(
                 emb_w = loaded.embedding_weight       # [V, D]
                 probs = F.softmax(v.float(), dim=-1)  # [V]
                 expected = (probs.unsqueeze(0) @ emb_w.float()).to(loaded.dtype)  # [1, D]
+                if feed_norm is not None:
+                    # `expected` is a CONVEX COMBINATION of embeddings, so it can
+                    # never leave their hull — but it collapses toward the mean
+                    # embedding as the distribution flattens. Measured on G1i
+                    # (experiments/rl/marker_scale_probe.py): 0.93x a median
+                    # token at top-1 prob 0.99, 0.47x at 0.50, 0.09x at 0.01,
+                    # where the mean embedding itself is 0.0329 against a median
+                    # token's 0.3757. So feed strength tracks how sure the model
+                    # already is, which is backwards for a think loop: the early
+                    # steps are where it is least certain and where the loop is
+                    # meant to do the most work.
+                    #
+                    # Rescaled here, BEFORE `residual` adds its delta, so the
+                    # delta keeps its own scale rather than being renormalised
+                    # along with the mixture.
+                    expected = expected * (
+                        feed_norm / expected.float().norm().clamp_min(1e-8)
+                    ).to(loaded.dtype)
                 if feed_mode == "residual":
                     delta = mlp_delta(expected)                # [1, D]
                     feed = expected + alpha * delta

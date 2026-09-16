@@ -81,6 +81,17 @@ from experiments.rl.kalman_convergence import load_kalman_watch_config
 from training.state_reg import DEFAULT_WORK_LAYERS, default_layer_weights
 
 
+def median_token_norm(emb_weight: torch.Tensor) -> float:
+    """Median L2 norm over an embedding table's rows.
+
+    The target for `ThinkChain(feed_norm=...)` and for `wkv_loop`'s expected-mode
+    rescale. Computed from the loaded checkpoint, never hardcoded — the whole
+    point is that the fed vector should look like something the model processes
+    at that position, and what that means is a property of the checkpoint.
+    """
+    return emb_weight.float().norm(dim=1).median().item()
+
+
 class ThinkChain(nn.Module):
     """N+1 distinct trainable embedding-space vectors: step(0) is the
     shared "entering think-mode" cue (fed once to both teacher and
@@ -116,12 +127,33 @@ class ThinkChain(nn.Module):
     with genuine occurrences of that text in a real prompt — a
     dedicated embedding has no such collision.
     """
-    def __init__(self, n_embd: int, n_phases: int):
+    def __init__(self, n_embd: int, n_phases: int, feed_norm: float | None = None):
         super().__init__()
         self.chain = nn.Parameter(torch.randn(n_phases + 1, n_embd) * 0.02)
+        # `feed_norm=None` is the stored behaviour and reproduces every result
+        # on disk. Set it to a real number and every marker is rescaled to that
+        # norm at the point it is fed.
+        #
+        # Why it exists (measured 2026-09-15, experiments/rl/marker_scale_probe.py):
+        # `randn(n_phases+1, n_embd) * 0.02` has norm `0.02 * sqrt(n_embd)` by
+        # construction — 1.012 at n_embd 2560. G1i's token embeddings have
+        # median norm 0.3757 and max 0.6421 across all 65536 rows, so the marker
+        # is 2.70x a median token and larger than every token in the vocabulary,
+        # in a direction whose maximum cosine to any token is 0.087. After 500
+        # training steps its per-coordinate std was still 0.0200, the init
+        # constant, so training does not pull it back. A state written by an
+        # out-of-distribution input decodes to whatever the model falls back on.
+        #
+        # The target must come from the loaded model's own embedding table (see
+        # `median_token_norm`), never a constant: two checkpoints of identical
+        # shape already differ by 3% (G1i 0.3757, G1k-3b 0.3642).
+        self.feed_norm = feed_norm
 
     def step(self, i: int) -> torch.Tensor:
-        return self.chain[i]
+        v = self.chain[i]
+        if self.feed_norm is None:
+            return v
+        return v * (self.feed_norm / v.norm().clamp_min(1e-8))
 
 
 # --------------------------------------------------------------------------- #
@@ -958,6 +990,13 @@ def main() -> int:
                           "reference: linear ramp 0.85->--muon-momentum over "
                           "--muon-momentum-warmup-steps, not flat from step 1).")
     ap.add_argument("--muon-momentum-warmup-steps", type=int, default=500)
+    ap.add_argument("--feed-renorm", default="off", choices=("on", "off"),
+                     help="'on' rescales every fed marker to the loaded model's "
+                          "median token norm. Default 'off' reproduces every "
+                          "stored result. The measurement behind it: the marker "
+                          "is fed at 2.70x a median token and larger than every "
+                          "token in the vocabulary — "
+                          "experiments/rl/marker_scale_probe.py.")
     ap.add_argument("--muon-pair-fix", default="on", choices=("on", "off"),
                      help="'on' (default) treats a LoRA A/B pair as one update "
                           "and equalises their contributions downward; 'off' "
@@ -1183,7 +1222,13 @@ def main() -> int:
     print(f"[distill] category split (best-effort, see _infer_category): {cat_counts}")
     batcher = _CategoryBatcher(examples, categories, rng)
 
-    think_marker = ThinkChain(loaded.n_embd, args.M).to(args.device) if args.think_marker else None
+    feed_norm = None
+    if args.feed_renorm == "on":
+        feed_norm = median_token_norm(loaded.embedding_weight)
+        print(f"[distill] feed renorm ON — markers rescaled to the median token "
+              f"norm of this checkpoint: {feed_norm:.4f}")
+    think_marker = (ThinkChain(loaded.n_embd, args.M, feed_norm=feed_norm).to(args.device)
+                    if args.think_marker else None)
     if think_marker is not None:
         print(f"[distill] think-chain enabled ({loaded.n_embd}-dim, {args.M + 1} distinct markers: 1 entry + {args.M} phase)")
 
