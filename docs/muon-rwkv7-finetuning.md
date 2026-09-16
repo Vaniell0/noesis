@@ -14,9 +14,10 @@ transposed shape whose product is the update. Attaching a LoRA adapter to a
 Muon-trained RWKV-7 therefore steps one factor 9-18x faster than the other under
 one shared learning rate. We show this is a step-size effect and not a geometry
 effect, give the threshold where it starts to hurt, and give a cheap fix. We also
-show that RWKV-7's **own** low-rank pairs escape the same treatment only by an
-accident of naming — which is the part of this that is about the architecture
-rather than about us.
+also show that the reference implementation deliberately keeps every low-rank
+factor away from Muon — and that it does so through a naming convention which
+catches nothing once the names change to RWKV-LM's or the factors come from a PEFT
+adapter. That last part is the finding we would most want a maintainer to see.
 
 ---
 
@@ -25,20 +26,32 @@ rather than about us.
 Worth stating, because it changes how the rest should be read, and because our own
 history here is less tidy than the sections below might suggest.
 
-**The decision that actually chose Muon had one reason: memory.** Muon carries a
-momentum buffer and no second-moment state, which directly answers a fixed-cost
-VRAM wall — weights 5.90GB + gradients 5.90GB + Adam's own ~5.8GB of int8
-second-moment buffers on a 16GB card. A secondary argument was about where to
-spend debugging effort: our Phase 1.5/2 is supervised distillation rather than RL,
-and an unfamiliar optimizer's quirks are far cheaper to diagnose there than inside
-policy-gradient noise.
+**What made Muon interesting was a mechanism result, not memory.** On 2026-08-23,
+testing something else, we found that a delta-rule erase-rewrite channel which
+Adam's solutions relied on heavily stops mattering under Muon at matched accuracy:
+forcing `a_gate = 0` destroys Adam's solution on every seed (−1.376 ± 1.326, worst
+−3.30) and barely touches Muon's (−0.029 ± 0.032). A 10-seed rerun held the shape
+(−2.619 ± 2.223 vs −0.295 ± 0.563, distributions not overlapping) at matched R².
+Same task, same architecture, same accuracy, reliably different internal solution.
+That is what "the optimizer selects the mechanism" means here, and it is the
+observation that put Muon on our roadmap.
 
-**The memory reason did not survive contact.** The first real GPU run OOMed on
+**The adoption decision, ten days later, added two reasons that hold regardless of
+that result.** Muon carries a momentum buffer and no second-moment state, which
+directly answers a fixed-cost VRAM wall — weights 5.90GB + gradients 5.90GB +
+Adam's own ~5.8GB of int8 second-moment buffers on a 16GB card. And our Phase
+1.5/2 is supervised distillation rather than RL, so an unfamiliar optimizer's
+quirks are far cheaper to diagnose there than inside policy-gradient noise. Those
+were chosen as backstops precisely because they do not depend on a toy's R².
+
+**One of the two backstops has since failed.** The first real GPU run OOMed on
 backward every time; `MuonHybrid`'s eager per-parameter momentum buffer, with no
-offload written, exceeded that card on its own. So the one reason that chose Muon
-is the one reason that has already failed, and everything we now find interesting
-about it was discovered afterwards, from toy runs. We would rather say that
-plainly than present a tidy motivation assembled backwards.
+offload written, exceeded that card on its own. The VRAM argument is not currently
+true for our implementation.
+
+**And a third reason was formalised afterwards** — the build/bake split in §0's
+last part — with pre-registered falsification criteria, one of which has since
+fired against it. That one we present as a claim under test, not as a motivation.
 
 **What we are actually trying to build**, since it explains which properties we
 care about. The training track is meant to give the model more internal steps
@@ -130,32 +143,61 @@ Under this implementation a smaller adapter is a *larger* step, without touching
 the learning rate. At r=4 the `ffn.key` B factor moves at fifty times the
 configured rate.
 
-### 1.3 RWKV-7's own factor pairs escape only by a naming accident
+### 1.3 The reference already avoids this — by a naming convention that does not travel
 
-RWKV-7 is full of low-rank pairs already. On this checkpoint:
+We wrote an earlier draft of this section as a question: are RWKV-7's own low-rank
+pairs excluded from Muon on purpose? Reading `modded-nanogpt-rwkv/train_rwkv7.py`
+answers it. **On purpose, and completely:**
 
-| parameter | shape | coefficient it would receive |
+```python
+optimizer3 = Muon([p for n, p in params if p.ndim == 2
+                   and '_w1' not in n and '_w2' not in n], lr=args.muon_lr, momentum=0.95)
+optimizer4 = torch.optim.Adam([p for n, p in params if
+                               (p.ndim != 2 or '_w1' in n or '_w2' in n) and ...], ...)
+```
+
+and every low-rank factor in that model is named to match — `time_decay_w1/w2`,
+`time_aaa_w1/w2`, `mv_w1/w2`, `gate_w1/w2`. All eight go to Adam. Muon never sees a
+factor pair. The aspect rescale is in that file too —
+
+```python
+g = zeropower_backend(g, steps=group['backend_steps'])
+g *= max(1, g.size(0) / g.size(1)) ** 0.5
+```
+
+— and it is correct there precisely *because* of the line above it. The
+coefficient never meets a pair whose partner it would have to know about.
+
+**The problem is that the exclusion is carried entirely by a string.** Two
+renamings break it silently, and both are things people actually do:
+
+| parameter name | caught by `'_w1' not in n and '_w2' not in n`? |
+|---|---|
+| `time_decay_w1` (this reference) | excluded — goes to Adam |
+| `blocks.0.att.w1` (RWKV-LM naming) | **not caught — goes to Muon** |
+| `blocks.0.att.a1` / `.v1` / `.g1` (RWKV-LM) | **not caught — goes to Muon** |
+| `...lora_A.default.weight` (PEFT) | **not caught — goes to Muon** |
+
+In the RWKV-LM naming the underscore is simply not there, so porting the
+optimizer setup verbatim excludes **nothing** — all four factor pairs land under
+Muon with coefficients up to 6.325 on the decay path (§1.3 table below). And PEFT's
+adapters were never in scope for that filter at all, which is how an ordinary
+`get_peft_model` call puts factor pairs under Muon without anyone deciding to.
+
+On the G1i checkpoint, what those factors would receive:
+
+| parameter | shape | coefficient |
 |---|---|---|
-| `att.w1` | (2560, 96) | **5.164** |
-| `att.a1` | (2560, 96) | **5.164** |
-| `att.v1` | (2560, 64) | **6.325** |
-| `att.g1` | (2560, 320) | **2.828** |
+| `att.w1` (decay) | (2560, 96) | **5.164** |
+| `att.a1` (in-context LR) | (2560, 96) | **5.164** |
+| `att.v1` (value residual) | (2560, 64) | **6.325** |
+| `att.g1` (gate) | (2560, 320) | **2.828** |
 | `att.w2`, `a2`, `v2`, `g2` | (rank, 2560) | 1.000 |
 
-These are the decay, in-context-learning-rate, value-residual and gate
-projections — `w = w0 + tanh(x·W1)·W2` and friends. They are structurally LoRA:
-two rectangular factors whose product is the operator.
-
-They are excluded from Muon in every implementation we have seen **only** because
-the selection predicate requires the name to end in `.weight`, and these are bare
-`nn.Parameter`s. The exclusion is therefore load-bearing and invisible. Anyone who
-tidies that predicate — say, to `p.ndim == 2 and ".att." in name` — drops the same
-pathology onto the architecture's own factorisation, with coefficients up to 6.3
-on the decay path.
-
-**This is the part we would most like checked by someone who knows the reference
-implementation's intent.** If the exclusion is deliberate, it deserves a comment
-saying so. If it is incidental, it is one refactor away from breaking.
+So this is not a bug report against the reference. The reference is right and knew
+it. It is a report that **its correctness lives in a naming convention rather than
+in the code's structure**, and that the convention does not survive the two most
+common ways someone would reuse it.
 
 ### 1.4 Full fine-tuning is a milder case of the same thing
 
@@ -322,10 +364,12 @@ threshold at real scale.
 
 ## 4. What we would like to know
 
-1. **Is the exclusion of `w1/w2`, `a1/a2`, `v1/v2`, `g1/g2` from Muon deliberate?**
-   It currently rests on those parameters not being named `.weight`. If it is
-   intentional, a comment would protect it; if it is incidental, §1.3 says what a
-   refactor would cost.
+1. **Would you consider making the factor-pair exclusion structural rather than
+   by-name?** §1.3 shows it is deliberate and complete in `train_rwkv7.py`, and
+   that it is carried entirely by the `_w1`/`_w2` convention — which catches
+   nothing under RWKV-LM's `att.w1`/`att.a1` naming and nothing under PEFT's
+   adapters. A predicate over shape and pairing, or simply a comment marking the
+   filter as load-bearing, would make the intent survive a rename.
 2. **Has anyone run Muon with LoRA on a pretrained RWKV-7, at what rank and what
    learning rate?** §1.2 predicts that lower rank is worse under the current
    implementation, which is the opposite of the usual expectation, and that is a
