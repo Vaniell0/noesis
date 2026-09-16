@@ -3,98 +3,47 @@
 *Assembled 2026-09-15 for external review. Audience: RWKV maintainers and anyone
 running Muon on a pretrained RWKV-7.*
 
-BlinkDL's standing question is "Muon works for RWKV-7 pretraining; for fine-tuning
-a trained RWKV-7 model, no idea — please let us know." This is our answer so far,
-written so the parts that depend on our own code are separable from the parts that
-do not.
+**Attach a LoRA adapter to a Muon-trained RWKV-7 and one factor steps 9-18x
+faster than the other under one shared learning rate.** At r=32 and n_embd 2560,
+`lora_A` receives a shape coefficient of 1.000 and `lora_B` receives 8.944;
+`ffn.key`'s `lora_B` receives 17.889. At `--muon-lr 0.002` — the value we had on
+record as stable — those factors are stepping at 0.0179 and 0.0358, at and above
+the 0.02 we had on record as collapsing the model. The configured step was never
+the step.
 
-**Summary.** Muon's per-tensor aspect rescale is correct for a standalone weight
-and silently wrong for a *factor pair*, because a pair is two tensors of
-transposed shape whose product is the update. Attaching a LoRA adapter to a
-Muon-trained RWKV-7 therefore steps one factor 9-18x faster than the other under
-one shared learning rate. We show this is a step-size effect and not a geometry
-effect, give the threshold where it starts to hurt, and give a cheap fix. We also
-also show that the reference implementation deliberately keeps every low-rank
-factor away from Muon — and that it does so through a naming convention which
-catches nothing once the names change to RWKV-LM's or the factors come from a PEFT
-adapter. That last part is the finding we would most want a maintainer to see.
+The cause is that Muon's per-tensor aspect rescale is correct for a standalone
+weight and blind to a *factor pair*, which is two tensors of transposed shape
+whose product is the update. Below: the arithmetic off a public checkpoint (§1),
+what the damage actually is — a step-size threshold near coefficient 2.83, not a
+geometry effect (§2), a fix costing two small matmuls (§2.4), and where this sits
+relative to current Muon work (§3).
+
+The part we would most want a maintainer to see is §1.3. The reference
+implementation already keeps every low-rank factor away from Muon, deliberately
+and completely — but it does so through a naming convention that catches nothing
+once the names change to RWKV-LM's, and nothing at all when the factors come from
+a PEFT adapter.
+
+Written in answer to BlinkDL's standing question: *"muon works for rwkv7
+pretraining, but for finetuning a trained rwkv7 model, no idea. please let us
+know."* Why we were running Muon, what has since failed, and what we can no
+longer defend are in **Limitations** at the end, where they belong.
 
 ---
 
-## 0. Why we are running Muon at all
+## 0. Why Muon
 
-Worth stating, because it changes how the rest should be read, and because our own
-history here is less tidy than the sections below might suggest.
+**A mechanism result, not memory.** On 2026-08-23, testing something else, we
+found that a delta-rule erase-rewrite channel which Adam's solutions relied on
+heavily stops mattering under Muon at matched accuracy: forcing `a_gate = 0`
+destroys Adam's solution on every seed (−1.376 ± 1.326, worst −3.30) and barely
+touches Muon's (−0.029 ± 0.032). A 10-seed rerun held the shape (−2.619 ± 2.223
+against −0.295 ± 0.563, distributions not overlapping) at matched R². Same task,
+same architecture, same accuracy, reliably different internal solution.
 
-**What made Muon interesting was a mechanism result, not memory.** On 2026-08-23,
-testing something else, we found that a delta-rule erase-rewrite channel which
-Adam's solutions relied on heavily stops mattering under Muon at matched accuracy:
-forcing `a_gate = 0` destroys Adam's solution on every seed (−1.376 ± 1.326, worst
-−3.30) and barely touches Muon's (−0.029 ± 0.032). A 10-seed rerun held the shape
-(−2.619 ± 2.223 vs −0.295 ± 0.563, distributions not overlapping) at matched R².
-Same task, same architecture, same accuracy, reliably different internal solution.
-That is what "the optimizer selects the mechanism" means here, and it is the
-observation that put Muon on our roadmap.
-
-**The adoption decision, ten days later, added two reasons that hold regardless of
-that result.** Muon carries a momentum buffer and no second-moment state, which
-directly answers a fixed-cost VRAM wall — weights 5.90GB + gradients 5.90GB +
-Adam's own ~5.8GB of int8 second-moment buffers on a 16GB card. And our Phase
-1.5/2 is supervised distillation rather than RL, so an unfamiliar optimizer's
-quirks are far cheaper to diagnose there than inside policy-gradient noise. Those
-were chosen as backstops precisely because they do not depend on a toy's R².
-
-**The memory argument holds against plain Adam and is a wash against what we were
-actually replacing.** On a 2.9B model the arithmetic is: naive fp32 Adam carries
-23.2GB of optimizer state (two moments); Muon carries one momentum buffer, 5.8GB
-at bf16. That difference is real and it is the difference between fitting and not
-fitting on a small card.
-
-But our baseline was not naive Adam — it was `Int8AdamW` with CPU offload, whose
-two int8 states come to the same 5.8GB and sit in host RAM rather than VRAM. Muon's
-first real GPU run OOMed on backward every time, because its momentum buffer was
-resident while Adam's was not; offload was written for it the same day, after
-which the two are roughly even on host RAM and Muon is ahead only by carrying one
-state instead of two. So: a strong argument in general, a narrow one against the
-specific thing we swapped out.
-
-**And a third reason was formalised afterwards** — the build/bake split in §0's
-last part — with pre-registered falsification criteria, one of which has since
-fired against it. That one we present as a claim under test, not as a motivation.
-
-**What we are actually trying to build**, since it explains which properties we
-care about. The training track is meant to give the model more internal steps
-before it answers — time and room to write instructions to itself in its own
-recurrent state and read them back — so that answering draws on what the model
-already knows rather than on a longer visible chain of text. In that picture the
-quantity that matters is how many independent directions the state can hold and
-traverse. Our measurements put that at **8.8 to 22.6 live directions per head out
-of 64**, depending on depth, on a 2.9B checkpoint.
-
-One correction to our own vocabulary, because we have used it loosely and it
-matters for §2.3: the "hold several answer directions at once" property belongs to
-the **state** and to the number of internal steps that traverse it, not to the
-optimizer and not to an adapter's rank. Those are different axes that happen to
-share the word "rank".
-
-**Which brings us to pretraining, where we genuinely do not know.** The claim we
-have been carrying is a build/bake split: a geometry-shaping update rule
-(orthogonalised, spectral-norm step) **builds** the state's spectral structure
-during pretraining, while a coordinate-wise adaptive rule **bakes** it —
-specialising inside a structure it leaves intact. G1i's pretraining used Muon, so
-on that reading the breadth we measure is Muon-built and Adam-preserved.
-
-We flag two problems with using that as an argument for Muon in pretraining.
-First, it has never been tested against a non-Muon-pretrained lineage of the same
-architecture, so the attribution is assumed rather than measured. Second, and
-worse for the story, our own controlled probe found that **breadth is buildable
-and buys nothing**: arms with an explicit breadth term reached the structural
-ceiling on live directions and scored worse held-out than plain training, and the
-one thing breadth was credited with rescuing turned out to be reproduced by a
-rank-blind term on state energy. So if Muon is right for pretraining RWKV-7 — and
-BlinkDL's experience says it is — we cannot currently claim it is right *because*
-it builds breadth. That reason is the one we would have given a month ago, and it
-is the one our own data declines to support.
+**And it fits.** Muon carries one momentum buffer where Adam carries two moments.
+On this hardware Muon fits in RAM and Adam does not, even on an A30. That is the
+whole of the practical case.
 
 ---
 
@@ -379,29 +328,7 @@ trustworthy in the table; and it was measured on LoRA factors, not full weights.
 
 ---
 
-## 3. What this does not say
-
-**It is not an upstream bug report.** The optimizer class our runs used is our own
-file; `light_rwkv.py` references `args.optimizer=='muon'` but no such class was
-ever vendored, so that branch references an undefined name and crashes. That, and
-only that, is the upstream report. The aspect rescale itself is correct for what
-it was written for — a standalone layer weight — and we are not proposing it be
-changed for that case.
-
-**It does not explain the full fine-tuning collapse.** Our full-FT Muon runs on
-this checkpoint pass every training-stability check and then fail real generation
-eval. §1.4's only coefficient above 1.0 is 2.000, which §2.1 measures as
-harmless. So that collapse is a second, independent problem and nothing here
-should be read as having accounted for it.
-
-**The toy is a toy.** A small recurrent controller with a WKV-shaped state is not
-a 2.9B model. §1 is checkpoint arithmetic and holds regardless; §2 is a mechanism
-claim at toy scale and should be treated as one until someone reproduces the
-threshold at real scale.
-
----
-
-## 3.5 Where this sits relative to current Muon work
+## 3. Where this sits relative to current Muon work
 
 Checked 2026-09-16, because "improved Muon with various tricks" was mentioned to
 us and we had not followed it up.
@@ -456,7 +383,7 @@ The two are orthogonal, and a system using both would still want §2.4.
 
 0. **Which "improved Muon" did you mean?** We followed the pointer as far as
    `KellerJordan/Muon` (shape rescale still current), the `modded-nanogpt` record
-   list, and NorMuon — §3.5. If the tricks you had in mind are elsewhere, several
+   list, and NorMuon — §3. If the tricks you had in mind are elsewhere, several
    of the questions below may already be answered there and we would rather read
    than ask.
 1. **Would you consider making the factor-pair exclusion structural rather than
@@ -473,7 +400,7 @@ The two are orthogonal, and a system using both would still want §2.4.
    a forced flat-rank-`r` update every step. Is that the intended reading of rank
    when Muon is used with a low-rank adapter, or an unexamined side effect?
 3. **For pretraining: is there a reason to prefer Muon beyond the ones we can no
-   longer defend?** §0 explains why we cannot currently argue "because it builds
+   longer defend?** Limitations explains why we cannot currently argue "because it builds
    the state's breadth" — our own probe found breadth buildable and worthless, and
    the attribution to Muon-pretraining was never tested against another lineage.
    Your experience says Muon works for pretraining RWKV-7; we would like to know
@@ -483,6 +410,54 @@ The two are orthogonal, and a system using both would still want §2.4.
    `ffn.value` (§1.4) match what you would expect?** A 2x asymmetry between the
    two halves of one FFN block under one learning rate is below our measured
    damage threshold, but we would rather hear it is intended than assume it.
+
+---
+
+---
+
+## Limitations
+
+**The toy is a toy.** §1 is checkpoint arithmetic and holds regardless. §2 is a
+mechanism claim measured on a small recurrent controller with a WKV-shaped state,
+not on a 2.9B model, and should be treated as one until someone reproduces the
+threshold at real scale.
+
+**The full fine-tuning collapse is not explained by any of this.** Our full-FT
+Muon runs pass every training-stability check and then fail real generation eval.
+With no adapter the only coefficient above 1.000 is `ffn.key` at 2.000, which §2.1
+measures as harmless. That collapse is a second, independent problem and nothing
+here accounts for it.
+
+**This is not an upstream bug report.** The optimizer class our runs used is our
+own file. The genuine upstream issue is narrower and unrelated: `light_rwkv.py`
+references `args.optimizer=='muon'` but no such class was ever vendored, so that
+branch references an undefined name and crashes.
+
+**The VRAM argument had a narrower scope than we first wrote.** Against naive fp32
+Adam, 23.2GB of optimizer state against one 5.8GB momentum buffer is decisive.
+Against the `Int8AdamW`-with-offload baseline we were actually replacing, two int8
+states come to the same 5.8GB in host RAM; Muon's first real GPU run OOMed on
+backward because its buffer was resident and Adam's was not, and offload was
+written for it the same day.
+
+**We cannot argue for Muon in pretraining on the grounds we used to.** The claim
+we carried was a build/bake split — a geometry-shaping update rule *builds* the
+state's spectral structure during pretraining while a coordinate-wise adaptive one
+*bakes* it. Two problems. It has never been tested against a non-Muon-pretrained
+lineage of the same architecture, so the attribution is assumed. And our own
+controlled probe found breadth buildable and worthless: arms with an explicit
+breadth term reached the structural ceiling on live directions and scored worse
+held-out than plain training, while the one thing breadth was credited with
+rescuing turned out to be reproduced by a rank-blind term on state energy. If Muon
+is right for pretraining RWKV-7, and BlinkDL's experience says it is, we cannot
+currently say it is right *because* it builds breadth.
+
+**Three different things are called "rank" here, and we have used the word
+loosely.** An adapter's `r`; the rank of the induced `ΔW`, which is up to 2r; and
+the number of live directions the state carries, 8.8 to 22.6 per head out of 64
+depending on depth. "Holding several answer directions at once" is a property of
+the third — the state and the internal steps that traverse it — not of the
+optimizer and not of an adapter's rank.
 
 ---
 
