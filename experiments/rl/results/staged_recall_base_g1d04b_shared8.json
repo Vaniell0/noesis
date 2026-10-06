@@ -1,0 +1,84 @@
+{
+  "_meta": {
+    "experiment": "staged_recall_p1",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-10-02",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/train_staged_recall.py",
+    "script_sha256_12": "c082117fe658",
+    "summary": {
+      "final blank": "0.000",
+      "final inwindow": "0.700",
+      "final recall": "0.550"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "args": {
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "train": "training/corpus_open/sr_shared8_train.jsonl",
+    "eval": "training/corpus_open/sr_shared8_eval.jsonl",
+    "out": "experiments/rl/results/staged_recall_base_g1d04b_shared8.json",
+    "steps": 0,
+    "accum": 8,
+    "muon_lr": 0.0001,
+    "aux_lr": 1e-05,
+    "warmup": 30,
+    "eval_every": 100,
+    "eval_per_cell": 10,
+    "final_eval_per_cell": 10,
+    "dtype": "float32",
+    "device": "cpu",
+    "seed": 0,
+    "no_save": true
+  },
+  "history": [
+    {
+      "step": 0,
+      "by_arm": {
+        "blank": 0.0,
+        "inwindow": 0.775,
+        "recall": 0.55
+      },
+      "by_cell": {
+        "blank|n16|g200": 0.0,
+        "blank|n16|g50": 0.0,
+        "blank|n32|g200": 0.0,
+        "blank|n32|g50": 0.0,
+        "inwindow|n16|g200": 0.8,
+        "inwindow|n16|g50": 0.7,
+        "inwindow|n32|g200": 0.7,
+        "inwindow|n32|g50": 0.9,
+        "recall|n16|g200": 0.8,
+        "recall|n16|g50": 0.5,
+        "recall|n32|g200": 0.4,
+        "recall|n32|g50": 0.5
+      },
+      "n": 120
+    }
+  ],
+  "final": {
+    "by_arm": {
+      "blank": 0.0,
+      "inwindow": 0.7,
+      "recall": 0.55
+    },
+    "by_cell": {
+      "blank|n16|g200": 0.0,
+      "blank|n16|g50": 0.0,
+      "blank|n32|g200": 0.0,
+      "blank|n32|g50": 0.0,
+      "inwindow|n16|g200": 0.7,
+      "inwindow|n16|g50": 0.6,
+      "inwindow|n32|g200": 0.7,
+      "inwindow|n32|g50": 0.8,
+      "recall|n16|g200": 0.7,
+      "recall|n16|g50": 0.5,
+      "recall|n32|g200": 0.3,
+      "recall|n32|g50": 0.7
+    },
+    "n": 120
+  }
+}

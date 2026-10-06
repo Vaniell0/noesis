@@ -225,7 +225,12 @@ def zeropower_via_newtonschulz5(G: torch.Tensor, steps: int) -> torch.Tensor:
     """
     assert G.ndim >= 2
     a, b, c = (3.4445, -4.7750, 2.0315)
-    X = G.bfloat16()
+    # bf16 is a GPU speed-up. On this CPU (i5-1235U, no AMX/BF16 matmul) a
+    # single bf16 iteration on a 1024x3584 matrix did not finish in 90 s,
+    # while five fp32 iterations take ~0.3 s at a measured 313 GFLOPS —
+    # measured 2026-10-02 after a P1 training run sat on its first optimizer
+    # step for 17 minutes. fp32 is also the more accurate choice, so CPU uses it.
+    X = G.bfloat16() if G.is_cuda else G.float()
     if G.size(-2) > G.size(-1):
         X = X.mT
     X = X / (X.norm(dim=(-2, -1), keepdim=True) + 1e-7)
@@ -706,6 +711,76 @@ class _BlinkState:
 # PEFT loader (GPU, differentiable)
 # --------------------------------------------------------------------- #
 
+def _enable_peft_on_cpu() -> None:
+    """Make the differentiable (peft) backend runnable without a GPU.
+
+    Until 2026-09-22 the peft backend was treated as GPU-only, which put
+    every `feed_mode="expected"`/`"residual"` measurement and every
+    gradient-flow check behind a paid VM sitting. The block turned out to
+    be two small things, neither of them the WKV maths:
+
+    1. `rwkvfla` imports `triton` at package level, so `import rwkvfla`
+       failed outright on a machine with no GPU. `triton` installs fine on
+       CPU-only Linux — it just cannot launch kernels — and rwkvfla then
+       prints its own "Triton is not supported on current platform, roll
+       back to CPU" and carries on.
+    2. That rollback is itself broken: `rwkvfla.utils.custom_device_ctx`
+       calls `torch.cpu.device(index)`, and `torch.cpu` has no `device`
+       attribute. Replaced here with a null context.
+    3. `rwkvop.py`'s `WKV=fla` branch still routes through
+       `chunk_rwkv7`, which is a triton kernel and raises "0 active
+       drivers" when actually called. Swapped for
+       `naive_recurrent_rwkv7` — the pure-torch reference in the same
+       package, and the one `docs/rwkv7-mechanics.md` §3 already cites as
+       ground truth for the state recurrence.
+
+    Layout note: `chunk_rwkv7` is called with `head_first=False` and
+    (B,T,H,C) tensors; the naive op wants (B,H,L,C) and returns a
+    3-tuple. Both are adapted here, not at the call site, so
+    `att.py:272` stays byte-identical to the vendored reference.
+
+    Numerically this is the reference implementation, not an
+    approximation — but it is a per-timestep Python loop, so it is for
+    probes and smoke tests, not for training throughput. Verified against
+    the blink backend by
+    `experiments/rl/test_peft_cpu_equivalence.py`.
+    """
+    import contextlib
+
+    import rwkvfla.utils as _fla_utils
+    if not getattr(_fla_utils, "_noesis_cpu_ctx_patched", False):
+        _fla_utils.custom_device_ctx = lambda index=None: contextlib.nullcontext()
+        _fla_utils._noesis_cpu_ctx_patched = True
+
+    from rwkvfla.ops.rwkv7.recurrent_naive import naive_recurrent_rwkv7
+
+    def _run_rwkv7_infctx_cpu(r, k, v, w, a, b, s, HEAD_SIZE: int = 64):
+        B, T, HC = w.shape
+        C = HEAD_SIZE
+        H = HC // C
+        # (B,T,HC) -> (B,H,T,C), the layout naive_recurrent_rwkv7 expects
+        r, w, k, v, a, b = [x.view(B, T, H, C).transpose(1, 2)
+                            for x in (r, w, k, v, a, b)]
+        o, state, _ = naive_recurrent_rwkv7(
+            q=r, k=k, v=v, w=w, a=a, b=b, scale=1.0,
+            initial_state=s, output_final_state=True)
+        return o.transpose(1, 2).reshape(B, T, HC), state
+
+    # Rebind everywhere, not just at the definition site. `att.py` does
+    # `from rwkvt.operator.rwkvop import RUN_RWKV7_INFCTX` at import time, so
+    # it holds its own reference; `state_trajectory_probe.py`'s capture
+    # monkeypatch re-imports the name at call time and so follows the source
+    # module. Patching only one of those silently leaves the triton path live
+    # for the other — which is exactly how this was first missed: a direct
+    # forward worked while the probe still raised "0 active drivers".
+    import rwkvt.operator.rwkvop as _rwkvop
+    _rwkvop.RUN_RWKV7_INFCTX = _run_rwkv7_infctx_cpu
+    for _mod in list(sys.modules.values()):
+        if getattr(_mod, "__name__", "").startswith(("rwkvt.", "experiments.")) \
+                and getattr(_mod, "RUN_RWKV7_INFCTX", None) is not None:
+            _mod.RUN_RWKV7_INFCTX = _run_rwkv7_infctx_cpu
+
+
 def _load_peft(model_path: str, device: str, dtype: torch.dtype,
                ctx_len: int, grad_cp: int, lora_r: int = 0,
                lora_alpha: int = 0) -> LoadedModel:
@@ -716,6 +791,9 @@ def _load_peft(model_path: str, device: str, dtype: torch.dtype,
     from rwkvt.args_type import TrainingArgs
     from rwkvt.rwkv7.model import RWKV7
     from rwkvt.infctx_module import BlockStateList
+
+    if device == "cpu":
+        _enable_peft_on_cpu()
 
     weight_path = os.path.expanduser(model_path)
     state_dict = torch.load(weight_path, map_location="cpu",
@@ -937,6 +1015,23 @@ def load_rwkv7(
     if backend == "blink":
         return _load_blink(model_path, device)
     raise ValueError(f"backend must be 'peft' | 'blink' | None, got {backend!r}")
+
+
+def load_weights_into(loaded: LoadedModel, path) -> None:
+    """Overwrite a peft-loaded model's weights with a saved state_dict.
+
+    For probes that compare a fine-tuned checkpoint against its base: load the
+    base .pth with `load_rwkv7` (which fixes the architecture), then call this
+    with the `model.state_dict()` a trainer saved (e.g.
+    `train_staged_recall.py`'s `.pth`). Strict, so a key mismatch — a LoRA
+    checkpoint applied to a full-FT model, say — fails loudly instead of
+    silently probing the base.
+    """
+    if loaded.backend != "peft":
+        raise RuntimeError("load_weights_into needs the peft backend")
+    sd = torch.load(path, map_location="cpu", weights_only=True)
+    loaded.model.load_state_dict(sd, strict=True)
+    print(f"[loader] weights <- {path} ({len(sd)} tensors)", flush=True)
 
 
 # --------------------------------------------------------------------- #

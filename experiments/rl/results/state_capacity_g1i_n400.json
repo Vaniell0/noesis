@@ -1,0 +1,189 @@
+{
+  "_meta": {
+    "experiment": "state_capacity",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-10-02",
+    "status": "done",
+    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/rl/state_capacity_probe.py",
+    "script_sha256_12": "8941003cb885",
+    "summary": {
+      "N=1": "1/1 readable",
+      "N=2": "1/2 readable",
+      "N=4": "0/4 readable",
+      "N=8": "0/8 readable"
+    }
+  },
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "layers": [
+    20,
+    21,
+    22
+  ],
+  "samples": 400,
+  "vmax": 99,
+  "by_n": {
+    "1": {
+      "n": 1,
+      "readable": 1,
+      "fraction": 1.0,
+      "mean_r2": 0.3078613036969827,
+      "eff_rank": 13.547323226928711,
+      "slots": [
+        {
+          "slot": 0,
+          "key": "alpha",
+          "r2": 0.3078613036969827,
+          "floor": -0.07318059003379311,
+          "margin_sd": 6.381363086150648,
+          "above_max": true
+        }
+      ],
+      "seconds": 350.2
+    },
+    "2": {
+      "n": 2,
+      "readable": 1,
+      "fraction": 0.5,
+      "mean_r2": 0.108482502058246,
+      "eff_rank": 5.664678573608398,
+      "slots": [
+        {
+          "slot": 0,
+          "key": "alpha",
+          "r2": -0.1336594054078024,
+          "floor": -0.04039252609606725,
+          "margin_sd": -2.552665215057281,
+          "above_max": false
+        },
+        {
+          "slot": 1,
+          "key": "bravo",
+          "r2": 0.3506244095242944,
+          "floor": -0.05956795401383571,
+          "margin_sd": 10.954836028957484,
+          "above_max": true
+        }
+      ],
+      "seconds": 399.0
+    },
+    "4": {
+      "n": 4,
+      "readable": 0,
+      "fraction": 0.0,
+      "mean_r2": -0.2496022394783263,
+      "eff_rank": 16.927703857421875,
+      "slots": [
+        {
+          "slot": 0,
+          "key": "alpha",
+          "r2": 0.00651344544400112,
+          "floor": -0.06329881766908671,
+          "margin_sd": 1.1000379421430677,
+          "above_max": false
+        },
+        {
+          "slot": 1,
+          "key": "bravo",
+          "r2": -0.04500317072871529,
+          "floor": -0.07441616805703574,
+          "margin_sd": 0.5567443613287377,
+          "above_max": false
+        },
+        {
+          "slot": 2,
+          "key": "charlie",
+          "r2": -0.6676068492176643,
+          "floor": -0.08655958950321138,
+          "margin_sd": -7.6558047954251585,
+          "above_max": false
+        },
+        {
+          "slot": 3,
+          "key": "delta",
+          "r2": -0.2923123834109267,
+          "floor": -0.06989327893435218,
+          "margin_sd": -4.121103862213123,
+          "above_max": false
+        }
+      ],
+      "seconds": 532.9
+    },
+    "8": {
+      "n": 8,
+      "readable": 0,
+      "fraction": 0.0,
+      "mean_r2": -0.08942486408977413,
+      "eff_rank": 21.324357986450195,
+      "slots": [
+        {
+          "slot": 0,
+          "key": "alpha",
+          "r2": -0.012764138123176227,
+          "floor": -0.059387269429368804,
+          "margin_sd": 0.7783119118544043,
+          "above_max": false
+        },
+        {
+          "slot": 1,
+          "key": "bravo",
+          "r2": -0.08153980331020971,
+          "floor": -0.07770650572899782,
+          "margin_sd": -0.07225330499752282,
+          "above_max": false
+        },
+        {
+          "slot": 2,
+          "key": "charlie",
+          "r2": -0.08566925076290777,
+          "floor": -0.09030551813645406,
+          "margin_sd": 0.06755050491359652,
+          "above_max": false
+        },
+        {
+          "slot": 3,
+          "key": "delta",
+          "r2": -0.08682395617721883,
+          "floor": -0.08659020954640688,
+          "margin_sd": -0.004733913427982301,
+          "above_max": false
+        },
+        {
+          "slot": 4,
+          "key": "echo",
+          "r2": -0.08706512878118655,
+          "floor": -0.10161790836596199,
+          "margin_sd": 0.20161578681742565,
+          "above_max": false
+        },
+        {
+          "slot": 5,
+          "key": "foxtrot",
+          "r2": -0.08445700905022857,
+          "floor": -0.08482859284862783,
+          "margin_sd": 0.0054503384446641595,
+          "above_max": false
+        },
+        {
+          "slot": 6,
+          "key": "golf",
+          "r2": -0.15761091591746745,
+          "floor": -0.11177300305138052,
+          "margin_sd": -0.5273907264047306,
+          "above_max": false
+        },
+        {
+          "slot": 7,
+          "key": "hotel",
+          "r2": -0.11946871059579789,
+          "floor": -0.07008685350892463,
+          "margin_sd": -0.9300561656179828,
+          "above_max": false
+        }
+      ],
+      "seconds": 804.5
+    }
+  }
+}

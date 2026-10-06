@@ -174,6 +174,113 @@ def _arith_gen(rng: random.Random, idx: int) -> Optional[dict]:
     }
 
 
+# ── carry_ambiguity ───────────────────────────────────────────────────────────
+#
+# A matched pair for the deferred-ambiguity question, built on the column
+# addition `_arith_gen` already renders. The point is NOT difficulty — it is
+# that the two arms differ in one thing only: how long a digit stays
+# undetermined while the model reads.
+#
+# Column addition presented most-significant-first is read left to right by a
+# recurrence. The leading digit of the result cannot be fixed until every
+# column to its right has been resolved, because a carry may arrive. So the
+# state must hold "X or X+1" (two addends) or "X, X+1 or X+2" (three) across
+# the whole read. Ask instead for the LAST digit and no carry can arrive at
+# all — same grid, same prompt shape, same one-digit answer, same rubric form,
+# nothing to hold.
+#
+# That gives two independent knobs, which is what makes this more than a
+# yes/no test:
+#   hold_distance   = how many columns lie to the right of the asked digit
+#   n_candidates    = max carry + 1, set by the number of addends
+# Separability demand should scale with the second and persistence with the
+# first, and both can be read against the 13-16 live directions the state
+# actually carries (docs/effort-frontier.md:203).
+#
+# Known shortcut, stated so the result is interpretable: a model can also
+# resolve this by buffering the input digits verbatim and computing during the
+# answer decode. That is a real alternative strategy, not a flaw in the task —
+# it is what the three diagnostics (direction count, its correlation with
+# correctness, whether a decoder reads more than one candidate mid-read) exist
+# to tell apart from genuine candidate-holding.
+
+_CARRY_SPEC = {
+    # level: (n_digits, n_addends, asked_from_right)
+    #   asked_from_right = 0        → units digit, the control arm
+    #   asked_from_right = n_digits-1 → the addends' most significant column,
+    #                                   which still has every addend present
+    1: (3, 2, 0),
+    2: (3, 2, 2),
+    3: (4, 3, 0),
+    4: (4, 3, 3),
+    5: (5, 3, 0),
+    6: (5, 3, 4),
+}
+
+
+def _carry_gen(rng: random.Random, idx: int) -> Optional[dict]:
+    """Matched control/ambiguous pair — see the section comment above.
+
+    Target entropy is matched BY CONSTRUCTION, which the first version got
+    wrong: it drew addends of varying length, so the leading column had
+    leading spaces, fewer contributing digits, and a narrower `base_digit`
+    distribution (sd 1.69) than the units column (sd 2.66). That made the
+    control a strictly harder regression than the ambiguous arm and muddied
+    the contrast in the 2026-09-22 diagnostic.
+
+    Fixed by giving every addend exactly `n_digits` digits and asking only
+    about columns where all of them are present. Both arms then have
+    `base_digit = (sum of n_addends uniform digits) mod 10` — the same
+    distribution — and differ only in how many columns lie to the right.
+    """
+    level = rng.randint(1, 6)
+    n_digits, n_addends, from_right = _CARRY_SPEC[level]
+    lo, hi = 10 ** (n_digits - 1), 10 ** n_digits - 1
+
+    # Full width, so every asked column below n_digits has all addends.
+    addends = [rng.randint(lo, hi) for _ in range(n_addends)]
+    result = sum(addends)
+    if from_right >= n_digits:
+        return None            # would ask about the pure carry-out digit
+    width = max(len(str(result)), n_digits)
+
+    res_digits = _digits(result, width)          # MSB-first, space-padded
+    col = width - 1 - from_right
+    if col < 0 or res_digits[col] == " ":
+        return None                               # asked position not a real digit
+    answer = res_digits[col]
+
+    grid = _render_col_arith(addends, "add", result, width)
+    lines = grid.split("\n")
+    lines[-1] = "  " + " ".join(["?"] * width)   # hide the whole result row
+
+    _ORD = {1: "1st", 2: "2nd", 3: "3rd"}
+    where = ("last" if from_right == 0 else
+             "first" if col == 0 or all(d == " " for d in res_digits[:col])
+             else f"{_ORD.get(col + 1, f'{col + 1}th')} from the left")
+    prompt = (
+        "The matrix shows column addition. Each column is a digit position "
+        "(leading spaces = leading zeros). The result row is '?'.\n\n"
+        + "\n".join(lines)
+        + f"\n\nWhat is the {where} digit of the result? Output only that digit."
+    )
+
+    arm = "control" if from_right == 0 else "ambiguous"
+    return {
+        "id": f"carry_L{level}_{arm}_{idx:06d}",
+        "category": "carry_ambiguity",
+        "level": level,
+        "prompt": prompt,
+        "answer": answer,
+        "rubric": {"type": "regex", "value": r"(?<!\d)" + re.escape(answer) + r"(?!\d)"},
+        "arm": arm,
+        "hold_distance": from_right,
+        "n_candidates": n_addends,
+        "notes": (f"L{level} {arm}: {n_addends} addends, digit {from_right} from "
+                  f"the right, addends={addends}, result={result}"),
+    }
+
+
 # ── pattern_matrix ────────────────────────────────────────────────────────────
 
 def _pattern_gen(rng: random.Random, idx: int) -> Optional[dict]:
@@ -553,6 +660,7 @@ def main() -> int:
         ("arithmetic",      _arith_gen,           2.0),
         ("pattern",         _pattern_gen,         2.0),
         ("bits",            _bits_gen,            2.0),
+        ("carry",           _carry_gen,           2.0),
     ]
     if args.sudoku_csv and Path(args.sudoku_csv).exists():
         generators.append(("sudoku", _sudoku_gen_factory(args.sudoku_csv), 4.0))

@@ -1,0 +1,127 @@
+{
+  "_meta": {
+    "experiment": "staged_recall_p1",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-10-02",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/train_staged_recall.py",
+    "script_sha256_12": "976fb074c744",
+    "summary": {
+      "final blank": "0.025",
+      "final inwindow": "0.988",
+      "final recall": "0.963"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "args": {
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "train": "training/corpus_open/p1_shared_train.jsonl",
+    "eval": "training/corpus_open/p1_shared_eval.jsonl",
+    "out": "experiments/rl/results/staged_recall_p1_step100_final.json",
+    "steps": 0,
+    "accum": 8,
+    "muon_lr": 0.0001,
+    "aux_lr": 1e-05,
+    "warmup": 30,
+    "eval_every": 100,
+    "eval_per_cell": 2,
+    "final_eval_per_cell": 10,
+    "dtype": "float32",
+    "device": "cpu",
+    "seed": 0,
+    "no_save": false,
+    "weights": "experiments/rl/results/staged_recall_p1_g1d04b_step100.pth"
+  },
+  "history": [
+    {
+      "step": 0,
+      "by_arm": {
+        "blank": 0.0,
+        "inwindow": 1.0,
+        "recall": 0.9375
+      },
+      "by_cell": {
+        "blank|shared4|n16|g50": 0.0,
+        "blank|shared4|n4|g200": 0.0,
+        "blank|shared4|n4|g50": 0.0,
+        "blank|shared4|n8|g200": 0.0,
+        "blank|shared4|n8|g50": 0.0,
+        "blank|shared8|n16|g200": 0.0,
+        "blank|shared8|n16|g50": 0.0,
+        "blank|shared8|n32|g200": 0.0,
+        "blank|shared8|n32|g50": 0.0,
+        "blank|shared8|n8|g200": 0.0,
+        "inwindow|shared4|n16|g50": 1.0,
+        "inwindow|shared4|n4|g200": 1.0,
+        "inwindow|shared4|n4|g50": 1.0,
+        "inwindow|shared4|n8|g200": 1.0,
+        "inwindow|shared4|n8|g50": 1.0,
+        "inwindow|shared8|n16|g200": 1.0,
+        "inwindow|shared8|n16|g50": 1.0,
+        "inwindow|shared8|n32|g200": 1.0,
+        "inwindow|shared8|n32|g50": 1.0,
+        "inwindow|shared8|n8|g50": 1.0,
+        "recall|shared4|n16|g200": 1.0,
+        "recall|shared4|n4|g200": 1.0,
+        "recall|shared4|n4|g50": 1.0,
+        "recall|shared4|n8|g200": 1.0,
+        "recall|shared4|n8|g50": 1.0,
+        "recall|shared8|n16|g200": 1.0,
+        "recall|shared8|n16|g50": 1.0,
+        "recall|shared8|n32|g200": 1.0,
+        "recall|shared8|n32|g50": 0.5,
+        "recall|shared8|n8|g200": 1.0
+      },
+      "n": 48
+    }
+  ],
+  "final": {
+    "by_arm": {
+      "blank": 0.025,
+      "inwindow": 0.9875,
+      "recall": 0.9625
+    },
+    "by_cell": {
+      "blank|shared4|n16|g200": 0.0,
+      "blank|shared4|n16|g50": 0.2,
+      "blank|shared4|n4|g200": 0.1,
+      "blank|shared4|n4|g50": 0.0,
+      "blank|shared4|n8|g200": 0.0,
+      "blank|shared4|n8|g50": 0.0,
+      "blank|shared8|n16|g200": 0.0,
+      "blank|shared8|n16|g50": 0.0,
+      "blank|shared8|n32|g200": 0.0,
+      "blank|shared8|n32|g50": 0.0,
+      "blank|shared8|n8|g200": 0.0,
+      "blank|shared8|n8|g50": 0.0,
+      "inwindow|shared4|n16|g200": 1.0,
+      "inwindow|shared4|n16|g50": 1.0,
+      "inwindow|shared4|n4|g200": 1.0,
+      "inwindow|shared4|n4|g50": 1.0,
+      "inwindow|shared4|n8|g200": 1.0,
+      "inwindow|shared4|n8|g50": 1.0,
+      "inwindow|shared8|n16|g200": 1.0,
+      "inwindow|shared8|n16|g50": 1.0,
+      "inwindow|shared8|n32|g200": 0.9,
+      "inwindow|shared8|n32|g50": 1.0,
+      "inwindow|shared8|n8|g200": 1.0,
+      "inwindow|shared8|n8|g50": 1.0,
+      "recall|shared4|n16|g200": 1.0,
+      "recall|shared4|n16|g50": 1.0,
+      "recall|shared4|n4|g200": 1.0,
+      "recall|shared4|n4|g50": 1.0,
+      "recall|shared4|n8|g200": 1.0,
+      "recall|shared4|n8|g50": 1.0,
+      "recall|shared8|n16|g200": 1.0,
+      "recall|shared8|n16|g50": 1.0,
+      "recall|shared8|n32|g200": 0.9,
+      "recall|shared8|n32|g50": 0.9,
+      "recall|shared8|n8|g200": 0.8,
+      "recall|shared8|n8|g50": 1.0
+    },
+    "n": 240
+  }
+}

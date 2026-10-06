@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "experiment": "staged_recall_p1",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-10-02",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/train_staged_recall.py",
+    "script_sha256_12": "c082117fe658",
+    "summary": {
+      "final blank": "0.017",
+      "final inwindow": "0.800",
+      "final recall": "0.667"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "args": {
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "train": "training/corpus_open/sr_shared4_train.jsonl",
+    "eval": "training/corpus_open/sr_shared4_eval.jsonl",
+    "out": "experiments/rl/results/staged_recall_base_g1d04b_shared4.json",
+    "steps": 0,
+    "accum": 8,
+    "muon_lr": 0.0001,
+    "aux_lr": 1e-05,
+    "warmup": 30,
+    "eval_every": 100,
+    "eval_per_cell": 10,
+    "final_eval_per_cell": 10,
+    "dtype": "float32",
+    "device": "cpu",
+    "seed": 0,
+    "no_save": true
+  },
+  "history": [
+    {
+      "step": 0,
+      "by_arm": {
+        "blank": 0.0,
+        "inwindow": 0.75,
+        "recall": 0.7167
+      },
+      "by_cell": {
+        "blank|n16|g200": 0.0,
+        "blank|n16|g50": 0.0,
+        "blank|n4|g200": 0.0,
+        "blank|n4|g50": 0.0,
+        "blank|n8|g200": 0.0,
+        "blank|n8|g50": 0.0,
+        "inwindow|n16|g200": 0.5,
+        "inwindow|n16|g50": 0.6,
+        "inwindow|n4|g200": 0.9,
+        "inwindow|n4|g50": 0.8,
+        "inwindow|n8|g200": 0.8,
+        "inwindow|n8|g50": 0.9,
+        "recall|n16|g200": 0.6,
+        "recall|n16|g50": 0.5,
+        "recall|n4|g200": 0.9,
+        "recall|n4|g50": 0.7,
+        "recall|n8|g200": 0.8,
+        "recall|n8|g50": 0.8
+      },
+      "n": 180
+    }
+  ],
+  "final": {
+    "by_arm": {
+      "blank": 0.0167,
+      "inwindow": 0.8,
+      "recall": 0.6667
+    },
+    "by_cell": {
+      "blank|n16|g200": 0.0,
+      "blank|n16|g50": 0.0,
+      "blank|n4|g200": 0.0,
+      "blank|n4|g50": 0.1,
+      "blank|n8|g200": 0.0,
+      "blank|n8|g50": 0.0,
+      "inwindow|n16|g200": 0.5,
+      "inwindow|n16|g50": 0.6,
+      "inwindow|n4|g200": 1.0,
+      "inwindow|n4|g50": 0.9,
+      "inwindow|n8|g200": 0.9,
+      "inwindow|n8|g50": 0.9,
+      "recall|n16|g200": 0.4,
+      "recall|n16|g50": 0.4,
+      "recall|n4|g200": 1.0,
+      "recall|n4|g50": 0.7,
+      "recall|n8|g200": 0.6,
+      "recall|n8|g50": 0.9
+    },
+    "n": 180
+  }
+}
