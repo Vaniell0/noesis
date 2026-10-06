@@ -6,12 +6,14 @@
 # way, so it cannot decide anything). Compare optimizers by interpolating dCE on the MEDIAN step.
 # Data: training/corpus_open/step9b_combined_flat.jsonl (same as the single run, for comparability; the
 # mix contains a share derived from personal sessions — local throwaway fine-tune, not saved).
-# One process at a time, 4 threads, resumable (skips finished outputs).
-# NOT for the laptop: measured 2026-10-06 at over a minute per step on CPU under load (~9 h for the grid);
-# on the GPU VM the single-seed run took 82 s per arm, so the whole grid is ~30 min. Run it in the next VM
-# sitting and change --device cpu to --device cuda below.
+# Runs ALONE: it waits for the rank sweep and the step-window run to finish (one heavy run at a time),
+# then uses 10 threads. Measured 2026-10-06: >1 min per step on CPU under load; alone it should be far
+# faster — the user accepts ~9 h overnight. On the GPU VM one arm took 82 s, so the same grid is ~30 min
+# there (change --device cpu to --device cuda). Resumable: skips finished outputs. Seed is the outer loop,
+# so after the first third every lr has one data order.
 cd /home/vaniello/Desktop/projects/noesis
-export OMP_NUM_THREADS=4 MKL_NUM_THREADS=4
+while pgrep -f "attractor_depth_probe.py" > /dev/null || pgrep -f "run_window.sh" > /dev/null; do sleep 60; done
+export OMP_NUM_THREADS=10 MKL_NUM_THREADS=10
 OUT=experiments/rl/results/geomgrid
 mkdir -p $OUT
 for seed in 0 1 2; do
