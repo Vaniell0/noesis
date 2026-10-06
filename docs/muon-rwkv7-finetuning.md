@@ -637,17 +637,23 @@ is a choice, not an inevitability.
 **What is not done yet (state of 2026-10-06).** Listed first because it is what a reader
 should weigh the rest against.
 
-1. **Nothing is measured on LoRA at real scale.** §2 is a toy; §2.6's real-model table is full
-   fine-tuning on a 0.4B. The 2.9B run that would test the pair fix (on against off, 150
-   steps, where the collapse signature appears at step 34) has not been run.
+1. **LoRA at real scale is measured for one step only.** On `rwkv7-g1i-2.9b`, one Muon step at
+   lr 0.002, r=32, 192 pairs, induces a median relative step of 2.5e-3 without the pair fix and
+   2.6e-4 with it (§1.2, §2.4); there is no multi-step LoRA fine-tune at real scale, and none with
+   Adam. §2 is a toy, and §2.6's real-model table is full fine-tuning on a 0.4B. The 2.9B run that
+   would test the pair fix over 150 steps (the collapse signature appeared at step 34) has not
+   been run.
 2. **The 0.4B table is one run.** Muon appears at one learning rate (1e-4) against three AdamW
    rates, held-out ΔCE has no spread estimate, and the three "seeds" are bit-identical. Muon at
    1e-5 and 3e-5, with shuffled data order, is written and waiting for a GPU session (~30 min).
 3. **AdamW was tried at three learning rates and nothing else** — no warmup, decay or tuned
    weight decay. "AdamW harms at that step" means at those rates and that schedule.
 4. **Loss is not generation.** The earlier full fine-tuning collapse passed every stability
-   check and failed real generation evaluation; at 1e-4 we report training loss and held-out
-   cross-entropy only, not a generation eval of the fine-tuned model.
+   check and failed real generation evaluation. At 1e-4 we have training loss, held-out
+   cross-entropy and one task fine-tune — full FT of the same 0.4B, Muon 1e-4, 100 steps on a
+   key-value recall task: recall accuracy 0.72 to 0.9625, scored by ranking candidates
+   (`experiments/rl/results/staged_recall_p1_step100_final.json`) — but no free-generation
+   evaluation of a fine-tuned model.
 5. **Whether the toy's concentration gap is LoRA capacity or Adam's use of its step** is being
    settled by a rank sweep with the step controlled (running); until it finishes §2.6 says only
    that the gap exists, not why.
