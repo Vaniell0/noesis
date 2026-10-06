@@ -181,7 +181,7 @@ def _pt_stats(path: Path) -> dict:
     return out
 
 
-_PROFILE_KEYS = ("arm", "category", "level", "n_pairs", "gap_words", "vocab", "key_style",
+_PROFILE_KEYS = ("arm", "category", "level", "n_pairs", "gap_words", "vocab", "key_style", "mode", "view",
                  "task_type", "source", "protocol")
 _PROFILE_MAX_BYTES = 400_000_000
 

@@ -311,6 +311,22 @@ A0_portability/tasks:
   provenance: generated
   origin: A0.6 portability prompt pairs
 
+# ---- ciphers: character-level decoding tasks over catalogued text (2026-10-06) -------------------------
+re:ciphers_v1_(train|eval):
+  stage: generate
+  provenance: generated
+  origin: "25 character-level ciphers (training/_common/ciphers.py) over hh_rlhf answer sentences; rows sharing content_id are views of one text"
+  script: training/scripts/gen_ciphers.py
+  parents: [hh_rlhf]
+  verifier: "exact match of rubric.value (the decoded plaintext); every row's own answer is re-decoded at generation time"
+  notes: "Train and eval contents are split by md5(content_id) % 10, so no text appears in both. No evidence yet: not trained or evaluated on."
+ciphers_v1_train:
+  role: train
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--payload", "hh_rlhf", "--n", "7500", "--views", "3", "--seed", "7", "--split", "train", "--out", "training/corpus_open/ciphers_v1_train.jsonl"], seed: 7, deterministic: true}
+ciphers_v1_eval:
+  role: eval
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--payload", "hh_rlhf", "--n", "750", "--views", "3", "--seed", "8", "--split", "eval", "--out", "training/corpus_open/ciphers_v1_eval.jsonl"], seed: 8, deterministic: true}
+
 # ---- applied last: a held-out split is an eval split whatever its generator was ----------------
 re:.*_(val|eval|val_dry100):
   role: eval

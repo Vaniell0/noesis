@@ -38,6 +38,7 @@ from typing import Callable, Dict, List, Literal, Optional, Sequence
 KNOWN_MODULES: List[str] = [
     "training.scripts.normalize_hh_rlhf",
     "training.scripts.gen_g1i_warmup",
+    "training.scripts.gen_ciphers",
 ]
 
 Kind = Literal["normalize", "tokenize", "generate"]  # generate: procedural, no input corpus
