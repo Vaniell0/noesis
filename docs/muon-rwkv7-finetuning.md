@@ -667,13 +667,15 @@ threshold at real scale. §2.6's real-model table is a single 30-step run on one
 measured on LoRA at real scale.
 
 **The full fine-tuning collapse turned out to be a learning rate, and it was
-ours.** This paragraph previously said the collapse was a second, unexplained
+ours.** The 0.02 is the default of `--muon_lr` in `modded-nanogpt-rwkv/train_rwkv7.py`, as are the
+momentum (0.95, warmed up from 0.85 over 500 steps), Nesterov and five Newton–Schulz iterations: a
+pretraining recipe that we carried over unchanged to a trained checkpoint. This paragraph previously said the collapse was a second, unexplained
 problem. It is explained, and the explanation is embarrassing rather than deep:
 at `lr = 0.02` a Muon step moves the worst tensor by **349% of its own norm**,
 and a typical tensor by 4% (§1.5). Every "Muon breaks fine-tuning" run this
 project produced was Muon at a pretraining learning rate on a converged
 checkpoint. At `lr = 1e-4` the same setup trains normally and reaches a *lower*
-training loss than AdamW at its own tuned rate over the same budget, while
+training loss than AdamW at the best of the three rates we tried (1e-5) over the same budget, while
 improving held-out cross-entropy. So we cannot offer "Muon is wrong for
 fine-tuning RWKV-7" as a finding, and this document no longer claims it. What
 survives is §1 — which is checkpoint arithmetic and never depended on any of our
