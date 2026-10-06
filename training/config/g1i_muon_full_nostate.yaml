@@ -1,0 +1,41 @@
+# G1i + old (Lightning/RWKV-PEFT) pipeline + full-FT Muon, state_reg OFF.
+# 2026-09-22.
+#
+# Why state_reg is off rather than tuned down.
+#
+# The 2026-09-10 full-FT Muon run on this same box used
+# `pilot_g1i_muon_lora.yaml` (alpha 1e-3, delta+curvature, layers 12/16/20)
+# and its log shows `state_loss` pinned at -10.0 "from step 0 through step 9"
+# (docs/phase15-gap-matrix.md). That was read at the time as the motion
+# reward saturating instantly under full-rank Muon updates. It is not what
+# happened: -10.0 is `compute_state_reg`'s own per-layer
+# `clamp(min=-10.0)`, and clamp has ZERO gradient below its floor. The term
+# was silently switched off for that entire run.
+#
+# Measured 2026-09-22 (experiments/rl/l_state_ablation.py): the real value on
+# a comparable checkpoint is about -95 for delta+curvature, so the clamp
+# fires immediately on any real pretrained model, and three ablation arms
+# that differed only in this term came out bit-identical. The same run also
+# found that optimising the WORKING (unclamped) variant does not raise state
+# separability and costs held-out CE.
+#
+# So keeping it would add a confound that is either inert (clamped) or
+# harmful (unclamped), to a run whose whole question is "does the substrate
+# train at all once the step size is right". Off is the honest setting, and
+# this file exists so that choice is explicit and dated rather than a
+# forgotten default.
+#
+# Note also that `work_layers: [12, 16, 20]` in the LoRA config is an
+# inherited 32-layer set, not a measured one: G1i's own profile peaks at L15
+# and its steepest fall is L21->L22, giving [20, 21, 22]
+# (experiments/A0_state_probe/results/layer_profile_g1i.json). Irrelevant
+# while the term is off, but it must not be copied forward unexamined.
+
+state_reg:
+  # Quoted deliberately: YAML 1.1 parses a bare `off` as the boolean False,
+  # and StateRegConfig then rejects 'False' as an unknown mode.
+  mode: "off"
+  alpha: 0.0
+  lambda_delta: 0.0
+  lambda_curvature: 0.0
+  work_layers: [20, 21, 22]

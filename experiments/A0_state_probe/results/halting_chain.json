@@ -1,0 +1,47 @@
+{
+ "args": {
+  "rounds": 8,
+  "head_size": 8,
+  "steps": 6000,
+  "batch": 64,
+  "lr": 0.003,
+  "seed": 0,
+  "out": "experiments/A0_state_probe/results/halting_chain.json"
+ },
+ "counter_floor_stop_acc": 0.33405,
+ "state": {
+  "in_dist": {
+   "stop_acc": 0.953000009059906,
+   "within1": 0.9984999895095825,
+   "y_r2_at_pred_stop": 0.7546239651447948
+  },
+  "ood_scale_0.5_1.5": {
+   "stop_acc": 0.6317499876022339,
+   "within1": 0.9567499756813049,
+   "y_r2_at_pred_stop": -13.657683589697662
+  },
+  "causal": {
+   "zero_state": {
+    "stop_acc_vs_true": 0.2004999965429306,
+    "unchanged_vs_unablated": 0.19824999570846558
+   },
+   "swap_state": {
+    "n_disagreeing": 2376,
+    "follows_donor_state": 0.9478114247322083,
+    "follows_own_prefix": 0.020622896030545235
+   }
+  }
+ },
+ "memoryless": {
+  "in_dist": {
+   "stop_acc": 0.4657500088214874,
+   "within1": 0.7975000143051147,
+   "y_r2_at_pred_stop": -0.1495009549216053
+  },
+  "ood_scale_0.5_1.5": {
+   "stop_acc": 0.2955000102519989,
+   "within1": 0.7622500061988831,
+   "y_r2_at_pred_stop": -0.23092991303810662
+  }
+ }
+}

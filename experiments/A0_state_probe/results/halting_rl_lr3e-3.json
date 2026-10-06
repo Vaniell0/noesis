@@ -1,0 +1,46 @@
+{
+ "args": {
+  "rounds": 10,
+  "head_size": 8,
+  "steps": 12000,
+  "batch": 256,
+  "lr": 0.003,
+  "seed": 0,
+  "out": "experiments/A0_state_probe/results/halting_rl.json"
+ },
+ "lambda": 0.01,
+ "references": {
+  "fixed": {
+   "stop_round": 9,
+   "reward": 0.7584999203681946,
+   "accuracy": 0.8585000038146973,
+   "mean_stop_round": 9.0
+  },
+  "sprt": {
+   "threshold": 2.75,
+   "reward": 0.7823548913002014,
+   "accuracy": 0.8475000262260437,
+   "mean_stop_round": 5.514500141143799
+  }
+ },
+ "state": {
+  "eval": {
+   "reward": 0.5210800170898438,
+   "accuracy": 0.5482500195503235,
+   "mean_stop_round": 1.7170000076293945
+  },
+  "swap": {
+   "n_where_oracles_differ": 2938,
+   "swapped_stop_equals_donor_oracle": 0.13036079704761505,
+   "swapped_stop_equals_own_oracle": 0.07454050332307816,
+   "mean_abs_stop_shift_vs_unswapped": 0.005499999970197678
+  }
+ },
+ "memoryless": {
+  "eval": {
+   "reward": 0.48398494720458984,
+   "accuracy": 0.49799999594688416,
+   "mean_stop_round": 0.40149998664855957
+  }
+ }
+}

@@ -1,0 +1,269 @@
+{
+  "_meta": {
+    "experiment": "reward_sweep",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-22",
+    "status": "done",
+    "model": "synthetic",
+    "script": "experiments/rl/reward_sweep.py",
+    "script_sha256_12": "af249a03abc2",
+    "summary": {
+      "max_advantage_delta_vs_zeta0": "5.960e-08",
+      "max_within_group_density_spread": "8.949e-02",
+      "max_within_group_M_spread": "0"
+    }
+  },
+  "model": "synthetic",
+  "gate_on_correct": true,
+  "beta": 0.005,
+  "gamma": 0.02,
+  "zetas": [
+    0.0,
+    0.01,
+    0.05,
+    0.1,
+    0.5,
+    1.0
+  ],
+  "groups": {
+    "synthetic-0": {
+      "n_rollouts": 4,
+      "n_correct": 2,
+      "M_values": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        3.2,
+        3.2,
+        3.2,
+        3.2
+      ],
+      "entropy_drop_values": [
+        1.15,
+        1.15,
+        1.15,
+        1.15
+      ],
+      "exit_reasons": [
+        "plateau",
+        "plateau",
+        "plateau",
+        "plateau"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": -0.009999990463256836,
+          "reward_std": 1.1431535482406616,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": -0.00955250859260559,
+          "reward_std": 1.1436702013015747,
+          "r_density_mean": 0.00044747081119567156,
+          "r_density_within_group_spread": 0.0008949416223913431,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": -0.007762640714645386,
+          "reward_std": 1.1457370519638062,
+          "r_density_mean": 0.0022373541723936796,
+          "r_density_within_group_spread": 0.004474708344787359,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": -0.0055252909660339355,
+          "reward_std": 1.1483204364776611,
+          "r_density_mean": 0.004474708344787359,
+          "r_density_within_group_spread": 0.008949416689574718,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.012373566627502441,
+          "reward_std": 1.1689883470535278,
+          "r_density_mean": 0.022373540326952934,
+          "r_density_within_group_spread": 0.04474708065390587,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.03474706411361694,
+          "reward_std": 1.1948230266571045,
+          "r_density_mean": 0.04474708065390587,
+          "r_density_within_group_spread": 0.08949416130781174,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        }
+      ]
+    },
+    "synthetic-1": {
+      "n_rollouts": 4,
+      "n_correct": 2,
+      "M_values": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        3.2,
+        3.2,
+        3.2,
+        3.2
+      ],
+      "entropy_drop_values": [
+        1.15,
+        1.15,
+        1.15,
+        1.15
+      ],
+      "exit_reasons": [
+        "plateau",
+        "plateau",
+        "plateau",
+        "plateau"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": -0.009999990463256836,
+          "reward_std": 1.1431535482406616,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": -0.00955250859260559,
+          "reward_std": 1.1436702013015747,
+          "r_density_mean": 0.00044747081119567156,
+          "r_density_within_group_spread": 0.0008949416223913431,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": -0.007762640714645386,
+          "reward_std": 1.1457370519638062,
+          "r_density_mean": 0.0022373541723936796,
+          "r_density_within_group_spread": 0.004474708344787359,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": -0.0055252909660339355,
+          "reward_std": 1.1483204364776611,
+          "r_density_mean": 0.004474708344787359,
+          "r_density_within_group_spread": 0.008949416689574718,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.012373566627502441,
+          "reward_std": 1.1689883470535278,
+          "r_density_mean": 0.022373540326952934,
+          "r_density_within_group_spread": 0.04474708065390587,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.03474706411361694,
+          "reward_std": 1.1948230266571045,
+          "r_density_mean": 0.04474708065390587,
+          "r_density_within_group_spread": 0.08949416130781174,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        }
+      ]
+    },
+    "synthetic-2": {
+      "n_rollouts": 4,
+      "n_correct": 2,
+      "M_values": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        3.2,
+        3.2,
+        3.2,
+        3.2
+      ],
+      "entropy_drop_values": [
+        1.15,
+        1.15,
+        1.15,
+        1.15
+      ],
+      "exit_reasons": [
+        "plateau",
+        "plateau",
+        "plateau",
+        "plateau"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": -0.009999990463256836,
+          "reward_std": 1.1431535482406616,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": -0.00955250859260559,
+          "reward_std": 1.1436702013015747,
+          "r_density_mean": 0.00044747081119567156,
+          "r_density_within_group_spread": 0.0008949416223913431,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": -0.007762640714645386,
+          "reward_std": 1.1457370519638062,
+          "r_density_mean": 0.0022373541723936796,
+          "r_density_within_group_spread": 0.004474708344787359,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": -0.0055252909660339355,
+          "reward_std": 1.1483204364776611,
+          "r_density_mean": 0.004474708344787359,
+          "r_density_within_group_spread": 0.008949416689574718,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.012373566627502441,
+          "reward_std": 1.1689883470535278,
+          "r_density_mean": 0.022373540326952934,
+          "r_density_within_group_spread": 0.04474708065390587,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.03474706411361694,
+          "reward_std": 1.1948230266571045,
+          "r_density_mean": 0.04474708065390587,
+          "r_density_within_group_spread": 0.08949416130781174,
+          "advantage_max_abs_delta_vs_zeta0": 5.960464477539063e-08
+        }
+      ]
+    }
+  }
+}

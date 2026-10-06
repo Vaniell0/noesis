@@ -1,0 +1,57 @@
+{
+ "args": {
+  "rounds": 10,
+  "head_size": 8,
+  "steps": 6000,
+  "batch": 256,
+  "lr": 0.0005,
+  "seed": 0,
+  "pretrain_steps": 1000,
+  "out": "experiments/A0_state_probe/results/halting_rl_curriculum.json"
+ },
+ "lambda": 0.01,
+ "references": {
+  "fixed": {
+   "stop_round": 9,
+   "reward": 0.7584999203681946,
+   "accuracy": 0.8585000038146973,
+   "mean_stop_round": 9.0
+  },
+  "sprt": {
+   "threshold": 2.75,
+   "reward": 0.7823548913002014,
+   "accuracy": 0.8475000262260437,
+   "mean_stop_round": 5.514500141143799
+  }
+ },
+ "state": {
+  "after_supervised": {
+   "reward": 0.778702437877655,
+   "accuracy": 0.8452500104904175,
+   "mean_stop_round": 5.654749870300293
+  },
+  "eval": {
+   "reward": 0.7726274132728577,
+   "accuracy": 0.8492500185966492,
+   "mean_stop_round": 6.66225004196167
+  },
+  "swap": {
+   "n_where_oracles_differ": 2938,
+   "swapped_stop_equals_donor_oracle": 0.3451327383518219,
+   "swapped_stop_equals_own_oracle": 0.1572498232126236,
+   "mean_abs_stop_shift_vs_unswapped": 1.715250015258789
+  }
+ },
+ "memoryless": {
+  "after_supervised": {
+   "reward": 0.5991274118423462,
+   "accuracy": 0.6867499947547913,
+   "mean_stop_round": 7.762249946594238
+  },
+  "eval": {
+   "reward": 0.7091224789619446,
+   "accuracy": 0.7544999718666077,
+   "mean_stop_round": 3.537750005722046
+  }
+ }
+}

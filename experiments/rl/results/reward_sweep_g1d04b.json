@@ -1,0 +1,506 @@
+{
+  "_meta": {
+    "experiment": "reward_sweep",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-22",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/reward_sweep.py",
+    "script_sha256_12": "af249a03abc2",
+    "summary": {
+      "max_advantage_delta_vs_zeta0": "0.000e+00",
+      "max_within_group_density_spread": "0.000e+00",
+      "max_within_group_M_spread": "0"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "gate_on_correct": true,
+  "beta": 0.005,
+  "gamma": 0.02,
+  "zetas": [
+    0.0,
+    0.01,
+    0.05,
+    0.1,
+    0.5,
+    1.0
+  ],
+  "groups": {
+    "bit_bin_01": {
+      "n_rollouts": 4,
+      "n_correct": 0,
+      "M_values": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        5.3124,
+        5.3124,
+        5.3124,
+        5.3124
+      ],
+      "entropy_drop_values": [
+        7.2596,
+        7.2596,
+        7.2596,
+        7.2596
+      ],
+      "exit_reasons": [
+        "commit",
+        "commit",
+        "commit",
+        "commit"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": -1.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": -1.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": -1.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": -1.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": -1.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": -1.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        }
+      ]
+    },
+    "bit_bin_02": {
+      "n_rollouts": 4,
+      "n_correct": 0,
+      "M_values": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        2.8055,
+        2.8055,
+        2.8055,
+        2.8055
+      ],
+      "entropy_drop_values": [
+        0.7296,
+        0.7296,
+        0.7296,
+        0.7296
+      ],
+      "exit_reasons": [
+        "plateau",
+        "plateau",
+        "plateau",
+        "plateau"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        }
+      ]
+    },
+    "bit_hex_01": {
+      "n_rollouts": 4,
+      "n_correct": 0,
+      "M_values": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        5.5051,
+        5.5051,
+        5.5051,
+        5.5051
+      ],
+      "entropy_drop_values": [
+        8.3777,
+        8.3777,
+        8.3777,
+        8.3777
+      ],
+      "exit_reasons": [
+        "commit",
+        "commit",
+        "commit",
+        "commit"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        }
+      ]
+    },
+    "bit_hex_02": {
+      "n_rollouts": 4,
+      "n_correct": 0,
+      "M_values": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        4.5102,
+        4.5102,
+        4.5102,
+        4.5102
+      ],
+      "entropy_drop_values": [
+        6.4739,
+        6.4739,
+        6.4739,
+        6.4739
+      ],
+      "exit_reasons": [
+        "commit",
+        "commit",
+        "commit",
+        "commit"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        }
+      ]
+    },
+    "bit_b64_01": {
+      "n_rollouts": 4,
+      "n_correct": 0,
+      "M_values": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        2.5342,
+        2.5342,
+        2.5342,
+        2.5342
+      ],
+      "entropy_drop_values": [
+        4.5321,
+        4.5321,
+        4.5321,
+        4.5321
+      ],
+      "exit_reasons": [
+        "commit",
+        "commit",
+        "commit",
+        "commit"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        }
+      ]
+    },
+    "bit_rot_01": {
+      "n_rollouts": 4,
+      "n_correct": 0,
+      "M_values": [
+        5,
+        5,
+        5,
+        5
+      ],
+      "M_within_group_spread": 0,
+      "motion_values": [
+        6.4364,
+        6.4364,
+        6.4364,
+        6.4364
+      ],
+      "entropy_drop_values": [
+        6.1855,
+        6.1855,
+        6.1855,
+        6.1855
+      ],
+      "exit_reasons": [
+        "commit",
+        "commit",
+        "commit",
+        "commit"
+      ],
+      "sweep": [
+        {
+          "zeta": 0.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.01,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.05,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.1,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 0.5,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        },
+        {
+          "zeta": 1.0,
+          "reward_mean": 0.0,
+          "reward_std": 0.0,
+          "r_density_mean": 0.0,
+          "r_density_within_group_spread": 0.0,
+          "advantage_max_abs_delta_vs_zeta0": 0.0
+        }
+      ]
+    }
+  }
+}
