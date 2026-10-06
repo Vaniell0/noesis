@@ -2,6 +2,10 @@
 
 How a corpus becomes a checkpoint — and why each step exists.
 
+Every artifact named below is recorded in the dataset catalog (origin, generator command,
+parents, hash, what was measured on it): see [`docs/datasets.md`](datasets.md) and
+`python training/datasets.py usage`.
+
 ---
 
 ## The loop
@@ -188,4 +192,9 @@ lost, the config already uses G1i).
 
 | Name | Sources (fraction) | Date | Tokens | Consumed by | Out |
 |------|---------------------|------|--------|-------------|-----|
-| — | *(none yet — nothing combined through `training.build_corpus` so far)* | — | — | — | — |
+| p1_shared_eval | p1s4_eval, p1s8_eval | 2026-10-02 | — | — | `training/corpus_open/p1_shared_eval.jsonl` |
+| p1_shared_train | p1s4_train, p1s8_train | 2026-10-02 | — | — | `training/corpus_open/p1_shared_train.jsonl` |
+| step10_combined_train | step9_rfc_train, bitsub_train.pt, selfcot_train, hh_rlhf_train, aporia_train.pt, premise_refusal_train.pt | 2026-08-11 | 145413 | — | `training/tokenised/step10_combined_train.pt` |
+| step6_mixed_train | action_chains, toolbench_train | 2026-08-06 | 253019450 | — | `training/tokenised/step6_mixed_train.pt` |
+| step9_combined_train | step9_rfc_train, action_chains_dsl_step8_train | 2026-08-08 | 71752 | — | `training/tokenised/step9_combined_train.pt` |
+| step9b_combined_train | step9_rfc_train, selfcot_train, hh_rlhf_train, react_train, action_chains_dsl_step8_train, step6_mixed_train | 2026-08-08 | 226477 | — | `training/tokenised/step9b_combined_train.pt` |

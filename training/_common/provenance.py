@@ -46,6 +46,24 @@ class ProvenanceRecord:
     n_supervised_tokens: Optional[int] = None
     sources: dict = field(default_factory=dict)  # combine stage: per-source breakdown
     extra: dict = field(default_factory=dict)
+    # Catalog fields (2026-10-06). All optional so older sidecars still load.
+    role: str = ""        # train | eval | tasks | probe-items | teacher | raw
+    format: str = ""      # see training/_common/catalog.py FORMATS
+    status: str = "live"  # live | superseded | reclassified | empty | scratch
+    parents: list = field(default_factory=list)  # catalog names this was derived from
+    recipe: dict = field(default_factory=dict)   # how to regenerate: {"cmd": [...], "seed": n, "deterministic": bool}
+    verifier: str = ""    # dotted path of the checker that decides "correct" for this data
+    notes: str = ""
+    # What was actually measured on this data. Each entry:
+    #   {"run": str, "result": str, "verdict": helped|hurt|no-effect|failed|unsound|confirmed|untested,
+    #    "ref": "doc#anchor or result path", "date": "YYYY-MM-DD"}
+    # A dataset with consumers but no evidence is "used, unmeasured"; with neither, "unused".
+    evidence: list = field(default_factory=list)
+    profile: dict = field(default_factory=dict)  # measured content breakdown (arms, categories, levels, ...)
+    license: str = ""      # SPDX-like id or "check on download"; share-alike terms carry to derived sets
+    url: str = ""          # where the source lives (external sets, including not yet downloaded)
+    languages: list = field(default_factory=list)
+    sensitivity: str = ""  # "personal": text derived from the owner's own sessions; inherited by every descendant
 
 
 def make_record(name: str, stage: str, provenance: str, origin: str, script: str,
@@ -74,7 +92,8 @@ def save_provenance(record: ProvenanceRecord, sidecar_path: Optional[Path | str]
 
 def load_provenance(sidecar_path: Path | str) -> ProvenanceRecord:
     data = json.loads(Path(sidecar_path).read_text())
-    return ProvenanceRecord(**data)
+    known = ProvenanceRecord.__dataclass_fields__
+    return ProvenanceRecord(**{k: v for k, v in data.items() if k in known})
 
 
 def iter_provenance(root: Path | str) -> list[tuple[Path, ProvenanceRecord]]:

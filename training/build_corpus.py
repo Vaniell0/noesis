@@ -75,8 +75,8 @@ def _resolve_jsonl(source: dict, seed: int) -> Path:
             f"normalize_stage given to generate one"
         )
     spec = registry.get(stage_name)
-    if spec.kind != "normalize":
-        raise ValueError(f"stage {stage_name!r} is kind={spec.kind!r}, expected 'normalize'")
+    if spec.kind not in ("normalize", "generate"):
+        raise ValueError(f"stage {stage_name!r} is kind={spec.kind!r}, expected 'normalize' or 'generate'")
 
     out_path = jsonl or spec.out_default
     if out_path is None:

@@ -40,7 +40,7 @@ KNOWN_MODULES: List[str] = [
     "training.scripts.gen_g1i_warmup",
 ]
 
-Kind = Literal["normalize", "tokenize"]
+Kind = Literal["normalize", "tokenize", "generate"]  # generate: procedural, no input corpus
 Provenance = Literal["generated", "external-hf", "external-other"]
 
 StageFn = Callable[[argparse.Namespace], dict]

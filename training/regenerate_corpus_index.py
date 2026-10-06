@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Rebuild the auto-generated sections of `training/corpus_open/PROVENANCE.md`
-and `docs/training-pipeline.md`, from `.provenance.json` sidecars.
+and `docs/training-pipeline.md`, from the dataset catalog (`training/catalog/*.json`)
+plus any `.provenance.json` sidecars written by migrated stages.
 
     training/.venv/bin/python training/regenerate_corpus_index.py
 
@@ -67,21 +68,22 @@ def _rel(path_str: str) -> str:
 
 
 def build_dataset_table(records: list[ProvenanceRecord]) -> str:
-    rows = [r for r in records if r.stage in ("normalize", "tokenize")]
+    """One row per catalogued dataset; `state` is computed (training/_common/catalog.py usage)."""
+    from training._common import catalog
+    rows = [r for r in records if r.stage != "combine"]
     lines = [
-        "| Name | Stage | Provenance | Origin | Date | SHA-256 | Rows | Out | Script |",
-        "|------|-------|------------|--------|------|---------|------|-----|--------|",
+        "| Name | Role | Format | Rows | Provenance | Origin | State | Evidence | SHA-256 |",
+        "|------|------|--------|------|------------|--------|-------|----------|---------|",
     ]
     if not rows:
-        lines.append("| — | — | — | — | — | — | — | *(none yet — nothing run through `training._common` so far)* | — |")
+        lines.append("| — | — | — | — | — | *(catalog empty — run `training/datasets.py backfill`)* | — | — | — |")
         return "\n".join(lines)
-    for r in sorted(rows, key=lambda r: (r.name, r.date)):
+    for r in sorted(rows, key=lambda r: (r.role, r.name)):
         sha = f"`{r.out_sha256[:12]}…`" if r.out_sha256 else "—"
-        rows_n = r.n_rows if r.n_rows is not None else "—"
-        lines.append(
-            f"| {r.name} | {r.stage} | {r.provenance} | {r.origin} | {r.date} | {sha} | "
-            f"{rows_n} | `{_rel(r.out_path)}` | `{r.script}` |"
-        )
+        n = r.n_rows if r.n_rows is not None else "—"
+        ev = ", ".join(sorted({e.get("verdict", "?") for e in r.evidence})) or "—"
+        lines.append(f"| {r.name} | {r.role or '—'} | {r.format or '—'} | {n} | {r.provenance} | "
+                     f"{r.origin or '—'} | {catalog.usage(r.name)['state']}{' (personal)' if catalog.is_personal(r.name) else ''} | {ev} | {sha} |")
     return "\n".join(lines)
 
 
@@ -97,15 +99,21 @@ def build_combine_table(records: list[ProvenanceRecord]) -> str:
     for r in sorted(rows, key=lambda r: (r.name, r.date)):
         src_str = ", ".join(
             f"{name}({meta.get('fraction_target', '—')})" for name, meta in (r.sources or {}).items()
-        ) or "—"
+        ) or (", ".join(r.parents) if r.parents else "—")
         consumed = r.extra.get("consumed_by", "—") if r.extra else "—"
         lines.append(f"| {r.name} | {src_str} | {r.date} | {r.n_tokens or '—'} | {consumed} | `{_rel(r.out_path)}` |")
     return "\n".join(lines)
 
 
 def main() -> None:
-    dataset_records = [rec for _, rec in iter_provenance(_CORPUS_OPEN)]
-    tokenised_records = [rec for _, rec in iter_provenance(_TOKENISED)]
+    from training._common import catalog
+    records = catalog.all_records()
+    # sidecars written by the migrated stages (build_corpus) still count
+    seen = {r.name for r in records}
+    for root in (_CORPUS_OPEN, _TOKENISED):
+        records += [rec for _, rec in iter_provenance(root) if rec.name not in seen]
+    dataset_records = records
+    tokenised_records = records
 
     _splice(_PROVENANCE_MD, build_dataset_table(dataset_records))
     print(f"[regenerate_corpus_index] wrote auto section -> {_PROVENANCE_MD.relative_to(_REPO_ROOT)}")

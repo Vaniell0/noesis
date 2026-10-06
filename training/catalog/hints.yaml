@@ -1,0 +1,377 @@
+# Facts a file scan cannot see. Consumed by `training/datasets.py backfill`;
+# the records in this directory are the source of truth afterwards (hand edits
+# to them survive a re-run). Only write here what is documented — a field left
+# out is an honest gap. Evidence entries cite the document that holds the number.
+#
+# verdict vocabulary: helped | hurt | no-effect | failed | unsound | confirmed | untested
+
+# ---- SFT / A1 pilot corpora (steps 1-10) --------------------------------------------------
+glaive_function_calling_v2:
+  role: raw
+  provenance: external-hf
+  origin: glaiveai/glaive-function-calling-v2 (Apache-2.0)
+  notes: Snapshot SHA-256 and download method in training/corpus_open/PROVENANCE.md.
+glaive_v2:
+  role: train
+  stage: normalize
+  provenance: external-hf
+  origin: glaiveai/glaive-function-calling-v2
+  script: training/scripts/normalize_glaive.py
+  parents: [glaive_function_calling_v2]
+  status: superseded
+  evidence:
+    - {run: A1 pilot steps 1-5, result: "model learned tool dispatch, could not answer without an executor; step4@3500 genuine 4/48 = 8.3%", verdict: failed, ref: "docs/training-pipeline.md#steps-15-glaive-v2-failed", date: "2026-08-06"}
+re:glaive_v2_(train|val)(_dry100)?:
+  role: train
+  stage: tokenize
+  provenance: external-hf
+  origin: glaiveai/glaive-function-calling-v2
+  parents: [glaive_v2]
+  status: superseded
+  notes: _dry100 variants are the 100-rollout smoke subset.
+toolbench_train:
+  role: train
+  stage: normalize
+  provenance: external-hf
+  origin: Yhyu13/ToolBench_toolllama_G123_dfs (MIT)
+  script: training/normalize_toolbench.py
+  notes: Not committed (765 MB).
+re:toolbench_sample_(train|val):
+  role: train
+  stage: tokenize
+  provenance: external-hf
+  origin: Yhyu13/ToolBench_toolllama_G123_dfs
+  parents: [toolbench_train]
+action_chains:
+  sensitivity: personal
+  role: train
+  stage: normalize
+  provenance: generated
+  origin: Claude CLI session traces, sanitised (training/corpus/sanitised)
+  script: training/normalize_traces.py
+  recipe: {cmd: ["python", "training/normalize_traces.py", "--in", "training/corpus/sanitised", "--out", "training/corpus_open/action_chains.jsonl", "--name", "action_chains"]}
+  notes: >
+    Derived from personal CLI traces. training/corpus/RECLASSIFIED.md and
+    docs/policies.md (Variant C, 2026-07-30) say personal data stays out of weights;
+    steps 6-8 trained on this after that date. Flagged for the owner, not resolved here.
+action_chains_dsl:
+  role: train
+  stage: normalize
+  provenance: generated
+  origin: action_chains converted to the runtime DSL
+  script: training/corpus/convert_anthropic_to_dsl.py
+  parents: [action_chains]
+  evidence:
+    - {run: A1 step8 (DSL, all-layer L_state), result: "10.4% (5/48); 100% DSL corpus makes the model emit DSL on plain-text tasks, extraction ~0%", verdict: failed, ref: "docs/verdicts/2026-08-08-step8-step9.md#key-finding", date: "2026-08-08"}
+re:action_chains(_dsl_step8)?_(train|val):
+  role: train
+  stage: tokenize
+  provenance: generated
+  origin: action_chains
+  parents: [action_chains]
+re:action_chains_dsl_step8_(train|val):
+  parents: [action_chains_dsl]
+step9_combined_train:
+  role: train
+  stage: combine
+  provenance: generated
+  origin: RFC QA + 10% action-chain anti-forgetting mix
+  script: training/scripts/combine_step9_corpus.py
+  parents: [step9_rfc_train, action_chains_dsl_step8_train]
+action_chains_train:
+  evidence:
+    - {run: A1 step7 (action chains only), result: "genuine 4/48 = 8.3% after false-positive audit (raw 8/48); model spontaneously produced <think>", verdict: no-effect, ref: "docs/verdicts/2026-08-07-a1-pilot-step7-probes.md", date: "2026-08-07"}
+re:step6_mixed_(train|val):
+  parents: [action_chains, toolbench_train]
+step6_mixed_train:
+  role: train
+  stage: combine
+  provenance: generated
+  origin: action_chains + toolbench sample
+  script: training/scripts/combine_step9b_corpus.py
+  parents: [action_chains, toolbench_train]
+  evidence:
+    - {run: A1 step6, result: "VM died before eval; ToolBench/Anthropic format mismatch, 13% supervised ratio", verdict: untested, ref: "docs/training-pipeline.md#step-6", date: "2026-08-07"}
+rfc_qa:
+  role: train
+  stage: normalize
+  provenance: generated
+  origin: IETF RFC text restructured into reasoning tasks
+  script: training/scripts/restructure_rfc.py
+  recipe: {cmd: ["python", "training/scripts/restructure_rfc.py", "--out", "training/corpus_open/rfc_qa.jsonl", "--min-tasks", "300"]}
+re:step9_rfc_(train|val):
+  role: train
+  stage: tokenize
+  provenance: generated
+  origin: rfc_qa
+  script: training/tokenize_plain_cot.py
+  parents: [rfc_qa]
+step9_rfc_train:
+  evidence:
+    - {run: A1 step9 epoch0 (RFC QA + eps-mask), result: "43.75% (21/48): first checkpoint above Qwen2.5-1.5B and Gemma3-4B (38.1%); bit_decoding 0/16", verdict: helped, ref: "docs/verdicts/2026-08-08-step8-step9.md#step-9", date: "2026-08-08"}
+    - {run: A1 step9 eval set, result: "tasks.jsonl is Claude-authored, possible overlap with training formats; treat score as an upper bound", verdict: unsound, ref: "docs/verdicts/2026-08-08-step8-step9.md#baseline-comparison", date: "2026-08-08"}
+selfcot:
+  role: train
+  stage: generate
+  provenance: generated
+  origin: model's own CoT on A0 tasks, filtered (same-model generator rule)
+  script: experiments/A0.8_refine/generate_cot_corpus.py
+re:selfcot_(train|val):
+  role: train
+  stage: tokenize
+  provenance: generated
+  origin: selfcot
+  parents: [selfcot]
+hh_rlhf:
+  role: train
+  stage: normalize
+  provenance: external-hf
+  origin: Anthropic/hh-rlhf (chosen side, CAI-style filter)
+  script: training/scripts/normalize_hh_rlhf.py
+  recipe: {cmd: ["python", "training/scripts/normalize_hh_rlhf.py", "--out", "training/corpus_open/hh_rlhf.jsonl", "--max-items", "30000", "--min-answer-len", "20", "--max-answer-len", "512"]}
+re:hh_rlhf_(train|val):
+  role: train
+  stage: tokenize
+  provenance: external-hf
+  origin: Anthropic/hh-rlhf
+  parents: [hh_rlhf]
+react:
+  role: train
+  stage: normalize
+  provenance: external-hf
+  origin: glaive + ToolBench re-rendered as ReAct <think> turns
+  script: training/scripts/normalize_react.py
+  parents: [glaive_v2, toolbench_train]
+re:react_(train|val):
+  role: train
+  stage: tokenize
+  provenance: external-hf
+  origin: react
+  parents: [react]
+step9b_combined_train:
+  role: train
+  stage: combine
+  provenance: generated
+  origin: six-source mix (rfc, selfcot, action, hh_rlhf, react, base)
+  script: training/scripts/combine_step9b_corpus.py
+  parents: [step9_rfc_train, selfcot_train, hh_rlhf_train, react_train, action_chains_dsl_step8_train, step6_mixed_train]
+  evidence:
+    - {run: A1 step9b (ctx_len=512), result: "39.58% (19/48), regression from 43.75%; extraction 62.5% -> 12.5%", verdict: hurt, ref: "docs/verdicts/2026-08-08-step8-step9.md#a0-eval-epoch-1-np512-48-tasks", date: "2026-08-08"}
+    - {run: A1 step9b, result: "cause is two things at once: ctx_len=512 zeroed L_state (T<3 short-circuit) AND 35% of the mix in other formats; this run does not separate them", verdict: unsound, ref: "docs/verdicts/2026-08-08-step8-step9.md#why-extraction-collapsed-in-step9b", date: "2026-08-08"}
+step9b_combined_flat:
+  role: train
+  stage: normalize
+  provenance: generated
+  origin: step9b_combined rendered flat for probes
+  parents: [step9b_combined_train]
+aporia_train.jsonl:
+  role: train
+  stage: generate
+  provenance: generated
+  origin: hand-written ambiguity cases
+  script: training/scripts/gen_aporia_corpus.py
+  recipe: {cmd: ["python", "training/scripts/gen_aporia_corpus.py", "--out", "training/corpus_open/aporia_train.jsonl", "--n", "80"]}
+  notes: "Built with n=80 (pilot_step10.yaml header); row count 80 matches. The script docstring example says 60."
+bitsub_train.jsonl:
+  role: train
+  stage: generate
+  provenance: generated
+  origin: procedural bit-substitution tasks
+  script: training/scripts/gen_bitsub_tasks.py
+  recipe: {cmd: ["python", "training/scripts/gen_bitsub_tasks.py", "--out", "training/corpus_open/bitsub_train.jsonl", "--n", "120", "--min-table", "4", "--max-table", "16", "--min-seq", "2", "--max-seq", "6"]}
+  notes: "Built with n=120 (pilot_step10.yaml header); row count 120 matches. Seed not recorded in the header."
+premise_refusal_train.jsonl:
+  role: train
+  stage: generate
+  provenance: generated
+  origin: false-premise questions with refusals
+  script: training/scripts/gen_premise_refusal_corpus.py
+  recipe: {cmd: ["python", "training/scripts/gen_premise_refusal_corpus.py", "--out", "training/corpus_open/premise_refusal_train.jsonl", "--n", "80"]}
+  notes: "Built with n=80 (pilot_step10.yaml header); row count 80 matches. The script docstring example says 60."
+re:(aporia|bitsub|premise_refusal)_train\.pt:
+  role: train
+  stage: tokenize
+  provenance: generated
+  script: training/tokenize_plain_cot.py
+  recipe: {cmd: ["python", "training/tokenize_plain_cot.py", "--input", "<parent>.jsonl", "--out-train", "<this>.pt", "--out-val", "<name>_val.pt", "--val-pct", "10"]}
+re:(aporia|bitsub|premise_refusal)_val:
+  role: eval
+  stage: tokenize
+  provenance: generated
+  script: training/tokenize_plain_cot.py
+  parents: []
+step10_combined_train:
+  role: train
+  stage: combine
+  provenance: generated
+  origin: six-source step10 mix
+  script: training/scripts/combine_step10_corpus.py
+  parents: [step9_rfc_train, bitsub_train.pt, selfcot_train, hh_rlhf_train, aporia_train.pt, premise_refusal_train.pt]
+  notes: Rebuild recipe in training/config/recipes/step10.yaml (writes step10_combined_train_rebuild.pt).
+relax_v1:
+  role: train
+  stage: generate
+  provenance: generated
+  origin: relaxed-format task variants
+  script: training/scripts/gen_relax_corpus.py
+  recipe: {cmd: ["python", "training/scripts/gen_relax_corpus.py", "--out", "training/corpus_open/relax_v1.jsonl", "--n", "2000", "--error-rate", "0.0", "--seed", "7"], seed: 7, deterministic: true}
+
+# ---- matrices: the platform for the latent-reasoning track ---------------------------------
+matrix_tasks:
+  role: tasks
+  stage: generate
+  provenance: generated
+  origin: procedural matrix tasks (wordsearch, arithmetic, bits, pattern, crossword)
+  script: experiments/A0_eval/gen_tasks.py
+  recipe: {cmd: ["python3", "experiments/A0_eval/gen_tasks.py", "--n-tokens", "20000000", "--seed", "42", "--out", "training/corpus_open/matrix_tasks.jsonl"], seed: 42, deterministic: true}
+  verifier: rubric field per row (regex | exact)
+  notes: SHA-256 and category table in training/corpus_open/PROVENANCE.md.
+re:g1i_warmup_v3(_flat)?:
+  role: train
+  stage: generate
+  provenance: generated
+  origin: matrix_tasks with procedural <think> that restates the answer
+  script: training/scripts/gen_g1i_warmup.py
+  parents: [matrix_tasks]
+  recipe: {cmd: ["python", "training/scripts/gen_g1i_warmup.py", "--tasks", "training/corpus_open/matrix_tasks.jsonl", "--out", "training/corpus_open/g1i_warmup_v3.jsonl", "--per-bucket", "300"], seed: 7, deterministic: true}
+  evidence:
+    - {run: Phase-1 warm-up data audit 2026-10-02, result: "10529/10529 think spans contain the answer verbatim (median 18 tokens): the data teaches the tag structure, not reasoning", verdict: confirmed, ref: "docs/rl-track.md", date: "2026-10-02"}
+re:g1i_warmup_v3_eos_(train|val):
+  stage: tokenize
+  parents: [g1i_warmup_v3]
+re:(staged_recall|p1_shared|p1s4|p1s8|sr_shared4|sr_shared8|p2_hard)_(train|eval):
+  role: train
+  stage: generate
+  provenance: generated
+  origin: key->value pairs, filler gap, one query (answer only recoverable from state)
+  script: experiments/A0_eval/gen_staged_recall.py
+  verifier: exact match of the value (answer field)
+p1s4_train:
+  recipe: {cmd: ["python", "experiments/A0_eval/gen_staged_recall.py", "--name", "p1s4", "--key-style", "shared", "--vocab", "4", "--n-pairs", "4,8,16", "--gap-words", "50,200", "--train-per-cell", "400", "--eval-per-cell", "30", "--seed", "1"], seed: 1}
+  notes: Command recovered from the 2026-10-02 session transcript; p1s4_eval comes from the same call.
+p1s8_train:
+  recipe: {cmd: ["python", "experiments/A0_eval/gen_staged_recall.py", "--name", "p1s8", "--key-style", "shared", "--vocab", "8", "--n-pairs", "8,16,32", "--gap-words", "50,200", "--train-per-cell", "400", "--eval-per-cell", "30"], seed: 1}
+  notes: "Command recovered from the 2026-10-02 transcript; eval-per-cell 30 was cut off there and is inferred from p1s8_eval (540 rows = 3 n_pairs x 2 gaps x 3 arms x 30)."
+sr_shared4_train:
+  recipe: {cmd: ["python", "experiments/A0_eval/gen_staged_recall.py", "--name", "sr_shared4", "--key-style", "shared", "--vocab", "4", "--n-pairs", "4,8,16", "--gap-words", "50,200", "--train-per-cell", "0", "--eval-per-cell", "20"]}
+  notes: "Empty by design (train-per-cell 0): this call made an eval-only set. Use sr_shared4_eval."
+sr_shared8_train:
+  recipe: {cmd: ["python", "experiments/A0_eval/gen_staged_recall.py", "--name", "sr_shared8", "--key-style", "shared", "--vocab", "8", "--n-pairs", "16,32", "--gap-words", "50,200", "--train-per-cell", "0", "--eval-per-cell", "20"]}
+  notes: Empty by design (train-per-cell 0). Use sr_shared8_eval.
+staged_recall_train:
+  recipe: {cmd: ["python", "experiments/A0_eval/gen_staged_recall.py", "--train-per-cell", "400", "--eval-per-cell", "40"], deterministic: true}
+  notes: "Defaults of gen_staged_recall.py (n-pairs 2,4,8; gap-words 0,50,200; key-style distinct); row counts match 3x3x400 train and 3x3x3x40 eval."
+p2_hard_train:
+  recipe: {cmd: ["python", "experiments/A0_eval/gen_staged_recall.py", "--out-dir", "training/corpus_open", "--name", "p2_hard", "--n-pairs", "32,64", "--gap-words", "50,200", "--arms", "recall", "--train-per-cell", "1", "--eval-per-cell", "12", "--key-style", "shared", "--vocab", "8", "--seed", "77"], seed: 77}
+p1_shared_train:
+  stage: combine
+  parents: [p1s4_train, p1s8_train]
+  recipe: {cmd: ["union of p1s4_train and p1s8_train, shuffled"], deterministic: false}
+  notes: "Same rows as p1s4_train + p1s8_train (sorted-line SHA-256 equal, 2026-10-06), different order. The shuffle seed was not recorded."
+  evidence:
+    - {run: "P1 staged-recall CE (G1d-0.4B, 100 steps, train+eval = p1_shared)", result: "recall 0.9625, inwindow 0.9875, blank 0.025 on 240 items: binding skill learned, no gap effect", verdict: helped, ref: "docs/rl-track.md", date: "2026-10-02"}
+re:(p1_shared|p1s4|p1s8|sr_shared4|sr_shared8)_eval:
+  role: eval
+p1_shared_eval:
+  stage: combine
+  parents: [p1s4_eval, p1s8_eval]
+  recipe: {cmd: ["cat p1s4_eval.jsonl p1s8_eval.jsonl"], deterministic: true}
+  notes: "Byte-identical to the concatenation of p1s4_eval and p1s8_eval (SHA-256 equal, 2026-10-06)."
+
+# ---- evaluation task sets -----------------------------------------------------------------
+A0_eval/tasks:
+  role: eval
+  provenance: generated
+  origin: Claude-authored 48-task A0.2 rubric set
+  script: experiments/A0_eval/gen_tasks.py
+  verifier: rubric field per row (exact | regex)
+  evidence:
+    - {run: A1 step9 eval, result: "tasks authored by Claude; possible overlap with training formats", verdict: unsound, ref: "docs/verdicts/2026-08-08-step8-step9.md#baseline-comparison", date: "2026-08-08"}
+A0_eval/tasks_v2:
+  role: eval
+  provenance: generated
+  origin: algorithmic eval generator, built because tasks.jsonl is not clean
+  script: experiments/A0_eval/gen_tasks_v2.py
+re:A0_eval/tasks_(matrix_wordsearch(_name|_nsp)?|crossword|bit_book(_ext)?|action):
+  role: eval
+  provenance: generated
+  origin: eval slice of the matrix generators
+  script: experiments/A0_eval/gen_matrix_wordsearch.py
+re:(aporia_probe|premise_validator|attribution_probe)/items.*:
+  role: probe-items
+  provenance: generated
+  origin: probe item sets (TruthfulQA / C4 mining where noted in the probe's mine_*.py)
+re:A0_H12a_working_memory/tasks-.*:
+  role: probe-items
+  provenance: generated
+  origin: H12a working-memory triples
+  script: experiments/A0_H12a_working_memory/gen_triples.py
+A0_portability/tasks:
+  role: probe-items
+  provenance: generated
+  origin: A0.6 portability prompt pairs
+
+# ---- applied last: a held-out split is an eval split whatever its generator was ----------------
+re:.*_(val|eval|val_dry100):
+  role: eval
+
+# ---- external sources we intend to use, not downloaded (facts from the 2026-10-06 web search) --------
+# Everything here was read from search results / abstracts; licences marked "check" were not confirmed.
+_planned:
+  - name: flores200
+    role: payload
+    origin: "Meta NLLB: 3001 sentences from 842 Wikimedia articles, professionally translated into ~200 languages (fully parallel)"
+    url: https://huggingface.co/datasets/facebook/flores
+    license: CC-BY-SA-4.0
+    notes: "Share-alike carries to anything derived from it (cipher payloads included). It is also an MT benchmark: check which splits are held out before using any as training payload."
+  - name: tatoeba
+    role: payload
+    origin: "Tatoeba: volunteer-translated example sentences; the multilingual benchmark covers 112 languages with up to 1000 English-aligned pairs each"
+    url: https://www.manythings.org/corpus/about.html
+    license: CC-BY-2.0-FR
+    notes: "Full database sizes per language not measured yet; measure on download. Quality is volunteer-grade."
+  - name: udhr_unicode
+    role: payload
+    origin: "Universal Declaration of Human Rights in Unicode: 419 translations (project count from search); one identical text in every language"
+    url: https://www.unicode.org/udhr/
+    license: "check on download"
+    notes: "Small (one document) but exactly parallel: the cheapest multilingual payload and a clean cross-language 'same content' view."
+  - name: mtob_kalamang
+    role: eval
+    origin: "MTOB (Tanzer et al., ICLR 2024): learn Kalamang <-> English from one grammar book; <250K tokens English, <25K tokens Kalamang; word list; 375 paired sentences. Kalamang (<200 speakers) is held out of the web."
+    url: https://arxiv.org/abs/2309.16575
+    license: "check on download"
+    languages: [kalamang, english]
+    notes: "A real 'language nobody knows'. Reported: Gemini 1.5 Pro (1M context) 59.1 chrF vs 57.0 for the first author; other LLM baselines ~45. Needs a long context: the natural test for a state that reads a book."
+  - name: lingoly
+    role: eval
+    origin: "LINGOLY: 1,133 Linguistics-Olympiad puzzles, 90+ mostly low-resource languages, 6 formats, 5 difficulty levels, with a no-context baseline that penalises memorisation (best model 38.7% on hard)"
+    url: https://arxiv.org/abs/2406.06196
+    license: "check on download"
+    notes: "Rule induction from a few examples with a built-in memorisation control: the closest published relative of our matrix tasks."
+  - name: swissdial
+    role: eval
+    origin: "SwissDial: parallel spoken Swiss German in 8 dialects (AG, BE, BS, GR, LU, SG, VS, ZH) with High German transcripts, ~3 h audio per dialect, 26 h total; Grisons ~3x over-represented"
+    url: https://www.researchgate.net/publication/350311158_SwissDial_Parallel_Multidialectal_Corpus_of_Spoken_Swiss_German
+    license: "check on download"
+    languages: [swiss-german, german]
+    notes: "Text side only is needed here. Swiss German has no standard spelling, so the checkable ground truth is the Standard German side. One content, eight dialect 'formats' = natural view pairs."
+  - name: sds200
+    role: eval
+    origin: "SDS-200: 189 h Swiss German speech with Standard German text translations"
+    url: https://aclanthology.org/2022.lrec-1.347.pdf
+    license: "check on download"
+    languages: [swiss-german, german]
+  - name: archimob
+    role: eval
+    origin: "ArchiMob: spoken Swiss German oral-history interviews, dialectal and normalised transcription"
+    url: http://www.lrec-conf.org/proceedings/lrec2016/pdf/801_Paper.pdf
+    license: "check on download"
+    languages: [swiss-german]
+  - name: scots_wikipedia
+    role: negative-control
+    origin: "Scots Wikipedia: ~49% of the entries (20,000+) were written by one US editor who did not speak Scots, by grafting words from an online dictionary onto English sentences"
+    url: https://en.wikipedia.org/wiki/Scots_Wikipedia
+    license: CC-BY-SA-4.0
+    languages: [scots]
+    notes: "Not ground truth for Scots. Its worth is as a NEGATIVE control: does a model prefer fake Scots (English grammar + Scots words) over real Scots? Real-Scots sources still to be found and checked."

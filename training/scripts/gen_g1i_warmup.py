@@ -125,7 +125,7 @@ def run(args: argparse.Namespace) -> dict:
 try:
     from training._common import registry as _registry
     _registry.stage(
-        "g1i_warmup", kind="normalize", provenance="generated",
+        "g1i_warmup", kind="generate", provenance="generated",
         origin="training/corpus_open/matrix_tasks.jsonl (procedural, no foreign model)",
         out_default="training/corpus_open/g1i_warmup_v3.jsonl",
         description="Procedural G1i-native <think> warm-up corpus, drawn from matrix_tasks.jsonl.",
