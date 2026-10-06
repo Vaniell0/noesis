@@ -75,7 +75,9 @@ The mark is inherited down `parents`, so a new combination of a personal set is 
 anyone remembering to say so. `rows()` refuses such sets unless called with `allow_personal=True`
 (`datasets.py rows NAME --allow-personal`); `ls` and the generated index show them as `personal`.
 The catalog scan never walks `training/corpus/` or `training/sanitised/` (the raw traces). Records
-themselves hold metadata only — hashes, counts, paths — never row text.
+themselves hold metadata only — hashes, counts, paths — never row text. A pre-commit hook
+(`training/check_no_personal.py`) refuses to stage anything from `training/corpus/`,
+`training/sanitised/`, a catalogued personal artifact, or any corpus data file at all.
 
 ## Checks that come with it
 
