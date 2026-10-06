@@ -106,3 +106,8 @@ training/corpus_open/relax_v1.jsonl
 
 # Frozen pre-2.6 copy of the external write-up, kept local.
 docs/muon-rwkv7-finetuning.prepared-*.md
+
+# Resume checkpoints of finished probe runs and two 17 MB trajectory dumps: regenerable, not for the remote.
+experiments/rl/results/*.partial.json
+experiments/rl/results/state_traj_g1d04b_expected_*.json
+experiments/rl/results/cot_vs_routes_*.partial.jsonl
