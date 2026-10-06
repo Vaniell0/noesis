@@ -7,6 +7,9 @@
 # Data: training/corpus_open/step9b_combined_flat.jsonl (same as the single run, for comparability; the
 # mix contains a share derived from personal sessions — local throwaway fine-tune, not saved).
 # One process at a time, 4 threads, resumable (skips finished outputs).
+# NOT for the laptop: measured 2026-10-06 at over a minute per step on CPU under load (~9 h for the grid);
+# on the GPU VM the single-seed run took 82 s per arm, so the whole grid is ~30 min. Run it in the next VM
+# sitting and change --device cpu to --device cuda below.
 cd /home/vaniello/Desktop/projects/noesis
 export OMP_NUM_THREADS=4 MKL_NUM_THREADS=4
 OUT=experiments/rl/results/geomgrid
