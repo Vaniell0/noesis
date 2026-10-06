@@ -466,9 +466,11 @@ the spread of held-out CE, so we leave that comparison open. What this table doe
 contain is Muon at 1e-5 and 3e-5: whether Muon is at least as good as AdamW at every
 step inside the shared window, or only better at the upper end, is not known.
 
-**The toy, 30 seeds** (`attractor_depth_probe.py`, LoRA r=8, matched induced step
-≈ 8e-4, old skill and a new skill, both measured by R²): factor-wise Muon reached a higher
-new-skill R² than Adam in 30 of 30 seeds (0.9974 against 0.9930), kept more of the old
+**The toy, 30 independently pretrained bases** (`attractor_depth_probe.py`: each seed
+initialises and pretrains its own base, and Adam and Muon fine-tune copies of that same base,
+so every comparison is paired; LoRA r=8, matched induced step ≈ 8e-4, an old skill and a new
+skill, both measured by R²): factor-wise Muon reached a higher
+new-skill R² than Adam on 30 of 30 bases (0.9974 against 0.9930), kept more of the old
 skill in 24 of 30 (+0.051 on average, sign test p = 0.0014), left the state less
 concentrated on one direction in 27 of 30 (top-1 energy 0.81 against 0.90), and depended
 less on the delta-rule erase channel — zeroing `a_gate` costs R² −0.87 under Muon and
