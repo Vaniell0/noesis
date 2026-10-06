@@ -438,6 +438,12 @@ def distill_step(
     dynamic_phase_stop: bool = False,
     eps_plateau: float = 0.05,
     rewind_last_phase: bool = False,
+    student_feed: str = "marker",
+    phase_budget: int = 0,
+    feed_norm: Optional[float] = None,
+    phase_split: str = "equal",
+    newline_ids: Optional[set] = None,
+    close_ids: Optional[List[int]] = None,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int, int, torch.Tensor]:
     """One teacher+student forward pair. Returns (answer_ce, state_loss,
     norm_penalty, cos_sim, student_repr, teacher_repr, n_answer_tokens,
@@ -578,6 +584,22 @@ def distill_step(
     M=3 is safe for THIS mechanism either, and a wrong default should
     fail toward less compute, not more — not because instability was
     reconfirmed twice.
+
+    2026-10-05 additions (all default to the stored behaviour):
+    - student_feed="expected": no marker. Each tick feeds the model's OWN expected
+      embedding softmax(logits) @ E, rescaled to `feed_norm` (median token norm) —
+      the content-dependent feed measured not to collapse; the flag/marker is gone
+      (user: a phase needs no flag — what the model generates latently cannot be an
+      output, so it is self-addressed). `close_ids` ("\n</think>\n") are then fed
+      as real tokens before the answer, so the answer is read in the native format.
+    - phase_budget>0: fixed ticks per phase instead of the teacher chunk length.
+      The only stable M=1 run (`overnight2`) used a fixed 8; it was never tried at
+      M=2. Note it was measured against ~18-token templated thinks.
+    - phase_split="newline": teacher chunk bounds snap to the nearest line break, so
+      a phase target is the state after a whole reasoning step, not mid-sentence.
+    - NOT here, deliberately: reading or rewarding the answer after each phase.
+      Reward for an early correct answer = early convergence = M>1 disappears
+      (user, 2026-10-05) — it was tried for one day and removed.
     """
     device = loaded.device
     prompt = torch.tensor([ex["prompt_ids"]], dtype=torch.long, device=device)
@@ -589,6 +611,14 @@ def distill_step(
     # capture the state after each of M_eff roughly-equal chunks. No
     # grad — these are fixed targets, not a trainable path.
     bounds = [round(i * n / M_eff) for i in range(M_eff + 1)]
+    if phase_split == "newline" and newline_ids and M_eff > 1:
+        cuts = [j + 1 for j, t in enumerate(think_ids) if t in newline_ids and 0 < j + 1 < n]
+        prev = 0
+        for k in range(1, M_eff):
+            later = [c for c in cuts if c > prev and c < n - (M_eff - k - 1)]
+            if later:
+                bounds[k] = min(later, key=lambda c: abs(c - bounds[k]))
+            prev = bounds[k]
     teacher_states = []
     chunk_lens: List[int] = []  # real per-chunk token count — reused below
     # so the student's phase gets the SAME step budget as the teacher chunk
@@ -695,7 +725,7 @@ def distill_step(
             # difference — `tau_commit` had no analogous meaning to
             # preserve and was removed.
             prev_phase_wkv: Optional[Dict[int, torch.Tensor]] = None
-            for _ in range(chunk_lens[i]):
+            for _ in range(phase_budget if phase_budget > 0 else chunk_lens[i]):
                 logits, state_s = loaded.forward_stateful_embeds(phase_marker, state_s)
                 n_phase_tokens_used += 1
                 if dynamic_phase_stop:
@@ -710,6 +740,15 @@ def distill_step(
                         if delta_norm < eps_plateau * max(ref_norm, 1e-6):
                             break
                     prev_phase_wkv = cur_phase_wkv
+        elif student_feed == "expected":
+            E = loaded.embedding_weight
+            for _ in range(phase_budget if phase_budget > 0 else chunk_lens[i]):
+                feed = F.softmax(logits[0, -1].float(), dim=-1) @ E.float()
+                if feed_norm is not None:
+                    feed = feed * (feed_norm / feed.norm().clamp_min(1e-8))
+                logits, state_s = loaded.forward_stateful_embeds(
+                    feed.to(dtype=E.dtype).view(1, 1, -1), state_s)
+                n_phase_tokens_used += 1
         student_wkv = state_s.wkv
         is_rewind_phase = rewind_last_phase and M_eff == 2 and i == M_eff - 1
         teacher_wkv = state_after_phase1 if is_rewind_phase else teacher_states[i]
@@ -772,6 +811,9 @@ def distill_step(
     teacher_repr = torch.cat(last_teacher_parts)
 
     answer_ids = ex["answer_ids"]
+    if close_ids:
+        logits, state_s = loaded.forward_stateful(
+            torch.tensor([close_ids], dtype=torch.long, device=device), state_s)
     logits_last = logits
     if len(answer_ids) == 1:
         all_logits = logits_last
@@ -787,6 +829,8 @@ def distill_step(
 
     return (answer_ce, state_loss, norm_penalty, cos_sim_mean, student_repr, teacher_repr,
             len(answer_ids), n_phase_tokens_used, rewind_loss)
+
+
 
 
 def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
@@ -834,6 +878,12 @@ def _run_micro_batch(loaded, args, batcher, relax_batcher, think_marker, layers,
                     dynamic_phase_stop=args.dynamic_phase_stop,
                     eps_plateau=args.eps_plateau,
                     rewind_last_phase=args.rewind_last_phase,
+                    student_feed=args.student_feed,
+                    phase_budget=args.phase_budget,
+                    feed_norm=args.expected_feed_norm,
+                    phase_split=args.phase_split,
+                    newline_ids=args.newline_ids,
+                    close_ids=args.close_ids,
                 )
         except Exception as e:
             # Same pattern as train_wkv_loop.py's per-rollout OOM
@@ -1152,6 +1202,13 @@ def main() -> int:
     ap.add_argument("--clipo-tau", type=float, default=0.05,
                      help="--clipo-weight only: InfoNCE temperature. Same "
                           "default as rewards.py's _infonce_reward.")
+    ap.add_argument("--student-feed", default="marker", choices=("marker", "expected"),
+                    help="'expected': no marker; each tick feeds the model's own "
+                         "softmax(logits)@E at the median token norm (see distill_step).")
+    ap.add_argument("--phase-budget", type=int, default=0,
+                    help="Fixed ticks per phase; 0 = the teacher chunk length (stored behaviour).")
+    ap.add_argument("--phase-split", default="equal", choices=("equal", "newline"),
+                    help="How the teacher think is cut into M chunks.")
     ap.add_argument("--resume", type=Path, default=None)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--lora-r", type=int, default=0,
@@ -1229,6 +1286,26 @@ def main() -> int:
               f"norm of this checkpoint: {feed_norm:.4f}")
     think_marker = (ThinkChain(loaded.n_embd, args.M, feed_norm=feed_norm).to(args.device)
                     if args.think_marker else None)
+    args.expected_feed_norm = None
+    args.close_ids = None
+    args.newline_ids = None
+    if args.student_feed == "expected":
+        assert not args.think_marker, "--student-feed expected replaces the marker; drop --think-marker"
+        # always rescaled: an unscaled expected embedding shrinks toward the mean
+        # embedding exactly when the model is unsure (0.09x a median token at top-1 0.01)
+        args.expected_feed_norm = median_token_norm(loaded.embedding_weight)
+        args.close_ids = loaded.tokenizer.encode("\n</think>\n")
+        print(f"[distill] student feed = expected (norm {args.expected_feed_norm:.4f}), "
+              f"phase budget {args.phase_budget or 'teacher chunk'}, split {args.phase_split}")
+    if args.phase_split == "newline":
+        nl = set()
+        for t in range(loaded.embedding_weight.shape[0]):
+            try:
+                if "\n" in loaded.tokenizer.decode([t]):
+                    nl.add(t)
+            except Exception:
+                pass
+        args.newline_ids = nl
     if think_marker is not None:
         print(f"[distill] think-chain enabled ({loaded.n_embd}-dim, {args.M + 1} distinct markers: 1 entry + {args.M} phase)")
 

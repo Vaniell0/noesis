@@ -1,0 +1,275 @@
+{
+  "_meta": {
+    "experiment": "chain_write_budget",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-22",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/chain_write_budget.py",
+    "script_sha256_12": "1cbcb4c879d4",
+    "summary": {
+      "write_ratio_deep": "{}",
+      "write_ratio_shallow": "{\"loop\": 0.9125, \"chain\": 0.7405, \"expected\": 0.956}"
+    }
+  },
+  "source": "experiments/rl/results/state_traj_g1d04b_expected_on.json",
+  "n_layer": 24,
+  "branches": [
+    "read",
+    "loop",
+    "chain",
+    "expected"
+  ],
+  "by_band": {
+    "L0-7": {
+      "read": {
+        "v": 3.1894,
+        "a": 0.4062,
+        "k": 3.0243,
+        "retention": 0.8235
+      },
+      "loop": {
+        "v": 2.9103,
+        "a": 0.3859,
+        "k": 2.8969,
+        "retention": 0.8241
+      },
+      "chain": {
+        "v": 2.3616,
+        "a": 0.3282,
+        "k": 2.7311,
+        "retention": 0.8554
+      },
+      "expected": {
+        "v": 3.049,
+        "a": 0.4601,
+        "k": 3.1953,
+        "retention": 0.8166
+      },
+      "ratios": {
+        "loop": {
+          "write": 0.9125,
+          "erase": 0.95
+        },
+        "chain": {
+          "write": 0.7405,
+          "erase": 0.808
+        },
+        "expected": {
+          "write": 0.956,
+          "erase": 1.1327
+        }
+      }
+    },
+    "L8-15": {
+      "read": {
+        "v": 3.9525,
+        "a": 0.3886,
+        "k": 8.2451,
+        "retention": 0.8758
+      },
+      "loop": {
+        "v": 3.1955,
+        "a": 0.3398,
+        "k": 7.554,
+        "retention": 0.8834
+      },
+      "chain": {
+        "v": 2.8784,
+        "a": 0.3351,
+        "k": 6.8261,
+        "retention": 0.9267
+      },
+      "expected": {
+        "v": 3.197,
+        "a": 0.3644,
+        "k": 7.6615,
+        "retention": 0.8837
+      },
+      "ratios": {
+        "loop": {
+          "write": 0.8085,
+          "erase": 0.8744
+        },
+        "chain": {
+          "write": 0.7282,
+          "erase": 0.8623
+        },
+        "expected": {
+          "write": 0.8089,
+          "erase": 0.9377
+        }
+      }
+    },
+    "L16-23": {
+      "read": {
+        "v": 5.8297,
+        "a": 0.3748,
+        "k": 11.3686,
+        "retention": 0.7707
+      },
+      "loop": {
+        "v": 5.5389,
+        "a": 0.3182,
+        "k": 10.4269,
+        "retention": 0.7748
+      },
+      "chain": {
+        "v": 4.4052,
+        "a": 0.3182,
+        "k": 9.8564,
+        "retention": 0.7994
+      },
+      "expected": {
+        "v": 5.3822,
+        "a": 0.3924,
+        "k": 10.1433,
+        "retention": 0.7775
+      },
+      "ratios": {
+        "loop": {
+          "write": 0.9501,
+          "erase": 0.849
+        },
+        "chain": {
+          "write": 0.7556,
+          "erase": 0.849
+        },
+        "expected": {
+          "write": 0.9232,
+          "erase": 1.047
+        }
+      }
+    }
+  },
+  "v_spread_across_prompts": {
+    "L0-7": {
+      "read": {
+        "per_prompt": [
+          3.187,
+          3.002,
+          3.333,
+          3.534
+        ],
+        "spread": 0.5325,
+        "relative": 0.1631
+      },
+      "loop": {
+        "per_prompt": [
+          2.946,
+          2.881,
+          2.891,
+          2.923
+        ],
+        "spread": 0.0656,
+        "relative": 0.0225
+      },
+      "chain": {
+        "per_prompt": [
+          2.381,
+          2.343,
+          2.366,
+          2.357
+        ],
+        "spread": 0.0374,
+        "relative": 0.0158
+      },
+      "expected": {
+        "per_prompt": [
+          3.042,
+          2.975,
+          3.178,
+          3.001
+        ],
+        "spread": 0.2025,
+        "relative": 0.0664
+      }
+    },
+    "L8-15": {
+      "read": {
+        "per_prompt": [
+          3.847,
+          3.752,
+          4.197,
+          4.391
+        ],
+        "spread": 0.6387,
+        "relative": 0.1578
+      },
+      "loop": {
+        "per_prompt": [
+          3.187,
+          3.155,
+          3.187,
+          3.253
+        ],
+        "spread": 0.098,
+        "relative": 0.0307
+      },
+      "chain": {
+        "per_prompt": [
+          2.84,
+          2.908,
+          2.888,
+          2.877
+        ],
+        "spread": 0.0684,
+        "relative": 0.0238
+      },
+      "expected": {
+        "per_prompt": [
+          3.212,
+          3.125,
+          3.267,
+          3.184
+        ],
+        "spread": 0.1418,
+        "relative": 0.0444
+      }
+    },
+    "L16-23": {
+      "read": {
+        "per_prompt": [
+          5.703,
+          5.661,
+          6.057,
+          6.238
+        ],
+        "spread": 0.5767,
+        "relative": 0.0975
+      },
+      "loop": {
+        "per_prompt": [
+          5.608,
+          5.516,
+          5.495,
+          5.537
+        ],
+        "spread": 0.1125,
+        "relative": 0.0203
+      },
+      "chain": {
+        "per_prompt": [
+          4.381,
+          4.426,
+          4.376,
+          4.438
+        ],
+        "spread": 0.0616,
+        "relative": 0.014
+      },
+      "expected": {
+        "per_prompt": [
+          5.361,
+          5.333,
+          5.515,
+          5.32
+        ],
+        "spread": 0.1948,
+        "relative": 0.0362
+      }
+    }
+  }
+}

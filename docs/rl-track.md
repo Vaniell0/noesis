@@ -1,5 +1,57 @@
 # RL Track — Matrix Task Curriculum (A1.5)
 
+## Measured 2026-10-02 .. 10-06 (redefined track: capability + its measurement)
+
+- **The Phase-1 teacher had no reasoning in it.** In `g1i_warmup_v3_eos_train.pt`
+  (10 529 examples, `train_think_distill.py`'s default `--data`) every think
+  span is a one-sentence template that contains the answer verbatim ("Computing
+  the arithmetic step gives 4736.", "Checking each direction finds row=7
+  col=3."): 10 529/10 529, median 18 tokens. ThinkChain's state targets were
+  states after *reading the answer*; M>1 on this data would split one sentence
+  in two. M>1 needs a generated teacher: `experiments/rl/gen_teacher_cot.py`
+  (the model's own CoT on matrices, kept only when verified).
+- **Staged-recall CE (`train_staged_recall.py`, G1d-0.4B, full FT, Muon 1e-4,
+  100 steps):** recall 0.72 → 0.9625, the never-trained in-window arm 0.81 →
+  0.9875, blank 0.025 (`experiments/rl/results/staged_recall_p1_step100_final.json`).
+  What was learned is binding compositional keys in general, not holding them
+  across a gap — the two arms rose together.
+- **Stopping read from the state is learnable (toy).** Supervised stop labels:
+  0.953 exact stop, a state swap moves the stop to the donor's sum in 94.8%
+  (`experiments/A0_state_probe/results/halting_chain.json`). From outcome reward
+  only, with a time price: lr 3e-3 collapses into "stop early and guess"
+  (0.52), lr 5e-4 holds but reaches only the counter-only level (0.764 vs 0.758;
+  SPRT 0.782); labels first then reward keeps the labelled policy (0.779 →
+  0.773) (`halting_rl_*.json`). One seed each.
+- **Removed the same day it was added:** an answer readout after every phase in
+  `train_think_distill.py`. Reward for an early correct answer = early
+  convergence = M>1 disappears.
+- `train_think_distill.py` gained `--student-feed expected` (no marker; the
+  model's own softmax(logits)@E at the median token norm), `--phase-budget`
+  and `--phase-split newline`. Smoke-tested only.
+- **How much of the teacher's CoT is spent after the answer is already there
+  (G1i-2.9B, untrained, JSON format, `cot_vs_routes_probe.py`).** Pattern
+  matrices, 32 items (`experiments/rl/results/cot_vs_routes_g1i_pattern.json`):
+  answering at once without thinking 0.531 (one forward pass over the question);
+  CoT 0.688 at a mean 470 tokens; the same CoT forced closed at 16/64/128/256/512
+  tokens 0.219/0.312/0.531/0.594/0.656. Of the 32 items, 15 had a correct answer
+  at some checkpoint of the CoT (median 64 tokens), and 47% of all CoT tokens
+  were generated after that point; 3 of those 15 ended wrong (the CoT lost an
+  answer it had). The other 17 (10 of them with a correct final answer) are
+  censored: their CoT closed before the first checkpoint or never hit, so the
+  median is biased downward. An offline rule "answer without thinking when at least 4 of
+  5 silent routes agree, otherwise run the CoT" scores 0.719 at 256 tokens
+  (silent in 44% of items) — a measure of the room a model that decides for
+  itself could use, not a mechanism; the 5 routes are answer-at-once, two and
+  eight ticks of the model's own `expected` feed, eight ticks of a constant
+  vector and the question read twice. The same silent routes on arithmetic
+  (16 items, `cot_vs_routes_g1i_arith.json`) score 0.00-0.06, CoT 0.312 at 546
+  tokens: there the agreement rule saves nothing (agreement ≥ 3 of 5 gives
+  0.25 at 339 tokens). The saving is therefore a property of the task family,
+  and a fixed rule would not transfer — the reason the stop decision is meant
+  to be learned. Small samples, one model, no seeds.
+
+---
+
 ## Track status (read first — the 4-stage plan, current as of 2026-08-23)
 
 This file covers two related sub-tracks that share one document because Phase 3
@@ -966,6 +1018,26 @@ constraints the RL curriculum must accommodate. The H_LR→H_RL progression
 in levels 1→3 is partly a token-type-reversal training, not only a
 directional-attention training.
 
+**A cell alphabet without the asymmetry (measured 2026-10-06).** The
+tokenizer is fixed, but the grid's alphabet is ours. Some alphabets give one
+token per cell, the same token in every position:
+
+| grid | tokens |
+|---|---|
+| `甲乙丙丁` / `戊己庚辛` | `甲` `乙` `丙` `丁` `\n` `戊` … — one per cell, position-independent |
+| `A B C D` / `E F G H` | `A`, ` B`, ` C` … — column 0 differs |
+| `ABCD` / `EFGH` | `ABC`, `D`, `EF`, `GH` — cells merge |
+
+Single-token per character: katakana, Greek, fullwidth Latin, most common CJK
+(some CJK take 2). Rare scripts are NOT in the vocabulary and fall back to
+3-4 byte tokens per character: Runic, Ogham, Braille, Cherokee, Glagolitic,
+Vai, Canadian syllabics, Ol Chiki, I Ching hexagrams (3); Shavian, Deseret,
+Ugaritic, Linear A/B, Phaistos (4). For grid cells use a single-token
+alphabet; the multi-token scripts still serve as cipher alphabets for text,
+where a fixed byte sequence per symbol is uniform enough. The open test is
+whether word-search leaves 0% on G1i once the grid is written in a
+single-token alphabet — if so, the 0% was the tokenizer, not the task.
+
 ---
 
 ## Switch-GRPO (arXiv 2606.13106) — reopened by ThinkChain, was "role unclear"
@@ -1567,7 +1639,9 @@ manufacture distinctness from a homogeneous loop.
 day, before trusting a real run:**
 - *Budget-matching silently dropped.* The first ThinkChain cut fed each
   phase's marker for exactly one step regardless of the teacher
-  chunk's real length (up to 141 tokens in `g1i_warmup_v3`, median 65)
+  chunk's real length (up to 141 tokens in `g1i_warmup_v3`, median 65 —
+  but see the 2026-10-06 note below: the `_eos` file that became the
+  default has one-sentence templated thinks, median 18 tokens)
   — this repo's own history already needed this fix once before for
   the self-feed loop (see the M=2/1-token-budget divergence above).
   Fixed: each phase repeats its marker up to `chunk_lens[i]` times (a

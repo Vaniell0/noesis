@@ -1,0 +1,199 @@
+{
+  "_meta": {
+    "experiment": "chain_write_budget",
+    "hypothesis": [
+      "H25"
+    ],
+    "date": "2026-09-22",
+    "status": "done",
+    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/rl/chain_write_budget.py",
+    "script_sha256_12": "05b67c0341aa",
+    "summary": {
+      "write_ratio_deep": "0.8822",
+      "write_ratio_shallow": "0.2257"
+    }
+  },
+  "source": "experiments/rl/results/state_trajectory_backtrack_v3_step500_m1.json",
+  "n_layer": 32,
+  "by_band": {
+    "L0-7": {
+      "read": {
+        "v": 10.902,
+        "a": 0.4451,
+        "k": 9.7733,
+        "retention": 0.8082
+      },
+      "loop": {
+        "v": 10.3251,
+        "a": 0.4684,
+        "k": 9.7533,
+        "retention": 0.7912
+      },
+      "chain": {
+        "v": 2.4607,
+        "a": 0.3819,
+        "k": 3.3999,
+        "retention": 0.8646
+      },
+      "write_ratio_chain_over_read": 0.2257,
+      "erase_ratio_chain_over_read": 0.858
+    },
+    "L8-15": {
+      "read": {
+        "v": 15.4619,
+        "a": 0.4575,
+        "k": 15.7489,
+        "retention": 0.814
+      },
+      "loop": {
+        "v": 14.1221,
+        "a": 0.4672,
+        "k": 15.6276,
+        "retention": 0.7987
+      },
+      "chain": {
+        "v": 7.6095,
+        "a": 0.4575,
+        "k": 9.1882,
+        "retention": 0.8405
+      },
+      "write_ratio_chain_over_read": 0.4921,
+      "erase_ratio_chain_over_read": 1.0
+    },
+    "L16-23": {
+      "read": {
+        "v": 15.5663,
+        "a": 0.4705,
+        "k": 22.9049,
+        "retention": 0.8256
+      },
+      "loop": {
+        "v": 14.3275,
+        "a": 0.4797,
+        "k": 23.9583,
+        "retention": 0.805
+      },
+      "chain": {
+        "v": 11.7543,
+        "a": 0.4832,
+        "k": 18.8191,
+        "retention": 0.8572
+      },
+      "write_ratio_chain_over_read": 0.7551,
+      "erase_ratio_chain_over_read": 1.027
+    },
+    "L24-31": {
+      "read": {
+        "v": 19.8021,
+        "a": 0.3991,
+        "k": 31.4296,
+        "retention": 0.7626
+      },
+      "loop": {
+        "v": 18.9528,
+        "a": 0.3803,
+        "k": 30.9892,
+        "retention": 0.7506
+      },
+      "chain": {
+        "v": 17.4695,
+        "a": 0.5227,
+        "k": 51.6115,
+        "retention": 0.8112
+      },
+      "write_ratio_chain_over_read": 0.8822,
+      "erase_ratio_chain_over_read": 1.3097
+    }
+  },
+  "v_spread_across_prompts": {
+    "L0-7": {
+      "read": {
+        "per_prompt": [
+          10.813,
+          10.359,
+          11.383,
+          11.964
+        ],
+        "spread": 1.6057,
+        "relative": 0.1443
+      },
+      "chain": {
+        "per_prompt": [
+          2.469,
+          2.454,
+          2.463,
+          2.457
+        ],
+        "spread": 0.0152,
+        "relative": 0.0062
+      }
+    },
+    "L8-15": {
+      "read": {
+        "per_prompt": [
+          15.183,
+          14.786,
+          16.313,
+          16.772
+        ],
+        "spread": 1.9859,
+        "relative": 0.126
+      },
+      "chain": {
+        "per_prompt": [
+          7.554,
+          7.553,
+          7.694,
+          7.637
+        ],
+        "spread": 0.1414,
+        "relative": 0.0186
+      }
+    },
+    "L16-23": {
+      "read": {
+        "per_prompt": [
+          15.202,
+          14.884,
+          16.445,
+          17.008
+        ],
+        "spread": 2.1243,
+        "relative": 0.1337
+      },
+      "chain": {
+        "per_prompt": [
+          11.675,
+          11.676,
+          11.824,
+          11.843
+        ],
+        "spread": 0.1681,
+        "relative": 0.0143
+      }
+    },
+    "L24-31": {
+      "read": {
+        "per_prompt": [
+          19.45,
+          19.409,
+          20.314,
+          20.871
+        ],
+        "spread": 1.4619,
+        "relative": 0.0731
+      },
+      "chain": {
+        "per_prompt": [
+          17.456,
+          17.582,
+          17.172,
+          17.668
+        ],
+        "spread": 0.4958,
+        "relative": 0.0284
+      }
+    }
+  }
+}

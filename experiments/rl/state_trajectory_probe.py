@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 """state_trajectory_probe.py — per-token mechanism trace: WKV state motion
 AND the raw R/K/V/decay/in-context-LR/gate values the CUDA kernel actually
-consumes, for three input regimes on the same fixed prompts:
+consumes, for four input regimes on the same fixed prompts:
 
-  read  — real prompt tokens, prefill, token-by-token (unchanged from the
-          2026-08-21 version).
-  loop  — the OLD self-feed mechanism (argmax next-token, feed back,
-          repeat) — kept as the empirical baseline to compare against.
-  chain — the NEW ThinkChain mechanism (train_think_distill.py's
-          ThinkChain): M explicitly-distinct learned phase markers plus
-          a shared entry cue, fed straight into WKV via
-          forward_stateful_embeds, no self-feed loop.
+  read     — real prompt tokens, prefill, token-by-token (unchanged from
+             the 2026-08-21 version).
+  loop     — the OLD self-feed mechanism (argmax next-token, feed back,
+             repeat) — kept as the empirical baseline to compare against.
+  chain    — the NEW ThinkChain mechanism (train_think_distill.py's
+             ThinkChain): M explicitly-distinct learned phase markers plus
+             a shared entry cue, fed straight into WKV via
+             forward_stateful_embeds, no self-feed loop.
+  expected — (2026-09-22) softmax(logits) @ emb, optionally rescaled to
+             the checkpoint's median token norm. Latent like `chain`
+             (never discretised, differentiable) but content-DEPENDENT
+             like `loop`. It exists to separate two explanations the other
+             three cannot: whether a latent feed writes nothing
+             task-specific, or whether a FIXED VECTOR does. Read it with
+             `chain_write_budget.py`.
 
 2026-08-21 rewrite (redefinition, not an extension): the previous version
 only recorded WKV state norm/delta per token — a downstream *symptom* of
@@ -78,6 +85,7 @@ import argparse
 import sys
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Optional
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
@@ -297,7 +305,8 @@ def _step(loaded, x_or_ids, state, layers, capture_layers, save_raw, use_embeds:
 
 
 def trace_prompt(loaded, prompt_text: str, layers, capture_layers, save_raw: bool,
-                  think_marker, n_chain_phases: int, tok, phase_repeat_ticks: int) -> dict:
+                  think_marker, n_chain_phases: int, tok, phase_repeat_ticks: int,
+                  n_expected_ticks: int = 0, feed_norm: Optional[float] = None) -> dict:
     ids = tok.encode(prompt_text)
     device = loaded.device
 
@@ -391,12 +400,66 @@ def trace_prompt(loaded, prompt_text: str, layers, capture_layers, save_raw: boo
             prev_wkv = state.wkv
             readout_stream.append(int(_last_vec(logits).argmax().item()))
 
+    # --- expected: content-DEPENDENT latent feed, the marker's control -----
+    # Third independent branch off read_end_state, same reasoning as the two
+    # above. Added 2026-09-22 to separate two things the chain branch alone
+    # cannot: "a latent feed writes nothing content-specific" versus "a FIXED
+    # VECTOR writes nothing content-specific". `expected` is
+    # softmax(logits) @ emb — a convex combination of real token embeddings,
+    # so it is latent (never discretised, differentiable) but its value is a
+    # function of what the model currently believes. If its `v` write varies
+    # across prompts the way a real token's does, the constancy measured on
+    # the marker is the marker's property, not latency's.
+    #
+    # feed_norm: `expected` cannot leave the embedding hull but collapses
+    # toward the mean embedding as confidence drops (0.93x a median token at
+    # top-1 prob 0.99, 0.09x at 0.01 — marker_scale_probe.py), so without the
+    # rescale this branch measures confidence as much as content. None = off,
+    # to keep the unrescaled arm available.
+    expected_trace = []
+    expected_readout: list[int] = []
+    expected_feed_stats: list[dict] = []
+    if n_expected_ticks > 0:
+        state = read_end_state
+        logits = read_end_logits
+        prev_wkv = read_end_state.wkv
+        prev_delta = None
+        emb_w = loaded.embedding_weight
+        for tick in range(n_expected_ticks):
+            probs = F.softmax(_last_vec(logits).float(), dim=-1)
+            feed = (probs.unsqueeze(0) @ emb_w.float()).to(loaded.embedding_weight.dtype)
+            # Recorded because feed_norm can only matter where the mixture is
+            # diffuse: at top-1 ~0.99 the raw `expected` is already ~0.93x a
+            # median token and the rescale is a rounding correction, at 0.01
+            # it is a 10x one. Without these two numbers a null result on the
+            # renorm arm cannot be told apart from "the model was confident
+            # at every tick, so there was nothing to rescale".
+            expected_feed_stats.append({
+                "tick": tick,
+                "top1_prob": float(probs.max()),
+                "raw_norm": float(feed.float().norm()),
+            })
+            if feed_norm is not None:
+                feed = feed * (feed_norm / feed.float().norm().clamp_min(1e-8)
+                               ).to(feed.dtype)
+            logits, state, cap = _step(loaded, feed.view(1, 1, -1), state, layers,
+                                        capture_layers, save_raw, use_embeds=True)
+            e, prev_delta = entry(tick, f"<expected:{tick}>", state, prev_wkv,
+                                   prev_delta, cap)
+            expected_trace.append(e)
+            prev_wkv = state.wkv
+            expected_readout.append(int(_last_vec(logits).argmax().item()))
+
     chain_backtrack = _detect_backtrack(readout_stream)
     # loop branch's own tokens already ARE argmax-decoded, real self-fed
     # generation — no new capture needed, same detector, direct comparison.
     loop_backtrack = _detect_backtrack([e["token_id"] for e in loop_trace])
 
     return {"read": read_trace, "loop": loop_trace, "chain": chain_trace,
+            "expected": expected_trace,
+            "expected_readout_stream": expected_readout,
+            "expected_feed_stats": expected_feed_stats,
+            "expected_backtrack": _detect_backtrack(expected_readout),
             "chain_readout_stream": readout_stream, "chain_backtrack": chain_backtrack,
             "loop_backtrack": loop_backtrack, "prompt_n_tokens": len(ids)}
 
@@ -455,6 +518,15 @@ def main() -> int:
                           "default) — needed for the Huginn-style backtrack "
                           "check to have enough per-phase readout samples.")
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--expected-ticks", type=int, default=0,
+                     help="Ticks for the content-dependent `expected` branch "
+                          "(softmax(logits) @ emb). 0 = skip. Set it equal to "
+                          "the chain's total ticks (chain-phases x "
+                          "phase-repeat-ticks) for a like-for-like comparison.")
+    ap.add_argument("--feed-renorm", default="on", choices=("on", "off"),
+                     help="Rescale the expected-branch feed to the loaded "
+                          "model's own median token norm. 'off' measures the "
+                          "raw mixture, whose magnitude tracks confidence.")
     args = ap.parse_args()
 
     layers = tuple(int(x) for x in args.work_layers.split(","))
@@ -494,16 +566,24 @@ def main() -> int:
                        else set(int(x) for x in args.capture_layers.split(",")))
 
     tok = loaded.tokenizer
+    feed_norm = None
+    if args.expected_ticks > 0 and args.feed_renorm == "on":
+        from experiments.rl.train_think_distill import median_token_norm
+        feed_norm = median_token_norm(loaded.embedding_weight)
+        print(f"[state_trajectory_probe] expected-branch feed_norm = "
+              f"{feed_norm:.4f} (this checkpoint's median token norm)")
     results = {}
     raw_out = {} if args.save_raw else None
     with torch.no_grad():
         for name, prompt_text in PROMPTS.items():
             print(f"[state_trajectory_probe] tracing {name} ...")
             r = trace_prompt(loaded, prompt_text, layers, capture_layers, args.save_raw,
-                              think_marker, args.chain_phases, tok, args.phase_repeat_ticks)
+                              think_marker, args.chain_phases, tok, args.phase_repeat_ticks,
+                              n_expected_ticks=args.expected_ticks,
+                              feed_norm=feed_norm)
             if args.save_raw:
                 raw_out[name] = {}
-                for branch in ("read", "loop", "chain"):
+                for branch in ("read", "loop", "chain", "expected"):
                     branch_raw = []
                     for e in r[branch]:
                         for layer_rec in e["rkvwag"]:
@@ -512,7 +592,7 @@ def main() -> int:
                                 branch_raw.append({"pos": e["pos"], "layer": layer_rec["layer"], **raw})
                     raw_out[name][branch] = branch_raw
             else:
-                for branch in ("read", "loop", "chain"):
+                for branch in ("read", "loop", "chain", "expected"):
                     for e in r[branch]:
                         for layer_rec in e["rkvwag"]:
                             layer_rec.pop("raw", None)
@@ -521,7 +601,7 @@ def main() -> int:
             loop_hit_eos = r["loop"][-1]["token_id"] == 0 if n_loop else False
             print(f"  read={n_read} tok, loop={n_loop} tok (eos={loop_hit_eos}), chain={n_chain} steps")
             L0 = layers[0]
-            for branch in ("read", "loop", "chain"):
+            for branch in ("read", "loop", "chain", "expected"):
                 deltas = [e["delta_norms"][L0] for e in r[branch] if e["delta_norms"] is not None]
                 if deltas:
                     mean_d = sum(deltas) / len(deltas)
@@ -540,7 +620,7 @@ def main() -> int:
                           f"second_half={second_half:.3f} (drift toward 1 = loop-collapse signature)")
             if capture_layers:
                 Lc = sorted(capture_layers)[0]
-                for branch in ("read", "loop", "chain"):
+                for branch in ("read", "loop", "chain", "expected"):
                     ret = [next((lr["retention"]["max"] for lr in e["rkvwag"] if lr["layer"] == Lc), None)
                            for e in r[branch]]
                     ret = [x for x in ret if x is not None]
@@ -560,7 +640,7 @@ def main() -> int:
     # Real min/max retention actually observed this run (not a hardcoded
     # guess) — every captured layer/token/branch/prompt, so the summary
     # can't silently go stale if a future run behaves differently.
-    all_ret = [lr["retention"][stat] for name in results for branch in ("read", "loop", "chain")
+    all_ret = [lr["retention"][stat] for name in results for branch in ("read", "loop", "chain", "expected")
                for e in results[name][branch] for lr in e["rkvwag"] for stat in ("min", "max")]
     ret_summary = f"{min(all_ret):.4f}-{max(all_ret):.4f} across all layers/tokens/branches/prompts"
 
