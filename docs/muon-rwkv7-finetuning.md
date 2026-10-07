@@ -262,10 +262,13 @@ a *shape*-derived guess at a quantity that can simply be measured. A per-tensor
 budget on `‖Δw‖/‖w‖` is the version of §2.4's fix that needs no knowledge of
 pairing at all.
 
-And the practical outcome, same model and budget, 30 steps: Muon at 1e-4 reaches
-a **lower** training loss than AdamW at 1e-5 (0.380 against 0.538) while both
-improve held-out cross-entropy. Muon fine-tunes this architecture perfectly well.
-Our own earlier reports that it does not were reports about `lr = 0.02`.
+And the practical outcome, same model and budget, 30 steps, three shuffled data
+orders (§2.6): Muon at 1e-4 trains normally — its training loss is lower on average than
+AdamW's at its best of three rates (0.34 against 0.48, within the spread over orders) —
+but held-out cross-entropy is flat there (+0.08 ± 0.08), not improved; it improves at 3e-5
+(−0.17 ± 0.02), exactly as much as AdamW does at its best rate, 1e-5 (−0.17 ± 0.04).
+Muon fine-tunes this architecture well, at a learning rate two orders below the one we
+were using. Our own earlier reports that it does not were reports about `lr = 0.02`.
 
 ---
 
@@ -435,36 +438,37 @@ trustworthy in the table; and it was measured on LoRA factors, not full weights.
 
 Everything above asks what goes wrong when Muon's step is too big. Compared at a
 matched step instead of a matched learning rate, the measurements say something we
-did not set out to find: at a step where AdamW does damage, Muon does not.
+did not set out to find: at a step where AdamW does clear damage, Muon is roughly neutral.
 
-**A real model, one run.** `rwkv7-g1d-0.4b`, full fine-tune, 30 steps, no adapter
-(`optimizer_geometry_probe.py`). Steps are the first step's per-tensor `‖Δw‖/‖w‖`, both
-the median over tensors and the largest; ΔCE is held-out cross-entropy after minus
-before, so negative is better:
+**A real model, three data orders.** `rwkv7-g1d-0.4b`, full fine-tune, 30 steps, no adapter,
+Muon and AdamW each at 1e-5 / 3e-5 / 1e-4, data order shuffled per seed
+(`optimizer_geometry_probe.py --shuffle-data on`, `experiments/rl/results/geomgrid/`). Steps are
+the first step's median per-tensor `‖Δw‖/‖w‖`; ΔCE is held-out cross-entropy after minus before
+(negative is better); ± is the standard deviation over the three orders:
 
-| optimizer | lr | median step | largest step | final train loss | ΔCE held-out |
-|---|---|---|---|---|---|
-| Muon | 1e-4 | 2.0e-4 | 1.75e-2 | 0.380 | −0.131 |
-| AdamW | 1e-4 | 5.1e-4 | 1.75e-2 | 1.038 | **+0.991** |
-| AdamW | 3e-5 | 1.5e-4 | 5.25e-3 | 0.851 | +0.256 |
-| AdamW | 1e-5 | 5.1e-5 | 1.75e-3 | 0.539 | −0.219 |
+| optimizer | lr | median step | final train loss | ΔCE held-out |
+|---|---|---|---|---|
+| Muon | 1e-5 | 2.0e-5 | 1.05 ± 0.35 | −0.127 ± 0.004 |
+| Muon | 3e-5 | 6.1e-5 | 0.47 ± 0.24 | **−0.172 ± 0.017** |
+| Muon | 1e-4 | 2.0e-4 | 0.34 ± 0.17 | +0.077 ± 0.077 |
+| AdamW | 1e-5 | 5.1e-5 | 0.48 ± 0.23 | **−0.168 ± 0.040** |
+| AdamW | 3e-5 | 1.5e-4 | 0.55 ± 0.25 | +0.317 ± 0.091 |
+| AdamW | 1e-4 | 5.1e-4 | 0.93 ± 0.33 | **+1.94 ± 0.39** |
 
-*n = 1: the three "seeds" of each arm returned bit-identical numbers (the run had no
-stochastic element), and Muon appears at one learning rate only.*
+Read on the **median** step, the bulk of the tensors: the best held-out result is the same for
+both optimizers (−0.17), so Muon is not a better optimum here. What differs is where the
+benefit runs out. Interpolating on log(median step), held-out ΔCE crosses zero near
+7.5e-5 for AdamW and near 1.4e-4 for Muon — a usable window about 1.9 times wider — and
+beyond it AdamW degrades much faster (+0.69 against +0.08 at a median step of 2.0e-4;
++1.94 at 5.1e-4). Muon is not free to go further: at 0.02 it moves the worst tensor by 349%
+(§1.5). The largest step is the wrong thing to match on: it falls on `blocks.22.ffn.x_k`, a
+1024-vector that both optimizers update the same way (it sits in the AdamW group of the
+Muon hybrid), so it is equal at equal learning rate by construction.
 
-Read on the **median** step, which is the bulk of the tensors: AdamW already makes
-held-out loss worse at a median step of 1.5e-4, which is *smaller* than the 2.0e-4
-at which Muon improves it. The largest step is the wrong thing to match on: it
-falls on `blocks.22.ffn.x_k`, a 1024-vector that both optimizers update the same
-way (it sits in the AdamW group of the Muon hybrid), so it is equal at equal learning
-rate by construction. Muon is not free to go further — at 0.02 it moves the worst
-tensor by 349% (§1.5) — so what it has is a **wider usable window**, not an
-unlimited one. It is not shown to be a better optimum: on this run AdamW at its safe
-rate has the larger held-out gain (−0.219 against −0.131) while Muon reaches the
-lower training loss (0.380 against 0.539); a single 30-step run gives no estimate of
-the spread of held-out CE, so we leave that comparison open. What this table does not
-contain is Muon at 1e-5 and 3e-5: whether Muon is at least as good as AdamW at every
-step inside the shared window, or only better at the upper end, is not known.
+An earlier single run of this probe (unshuffled data) had shown Muon at 1e-4 improving
+held-out loss by 0.13; across shuffled orders it does not, and we withdraw that reading.
+One model, 30 steps, three orders: the spread is real but small samples make the
+window ratio approximate.
 
 **The toy, 30 independently pretrained bases** (`attractor_depth_probe.py`: each seed
 initialises and pretrains its own base, and Adam and Muon fine-tune copies of that same base,
@@ -643,9 +647,9 @@ should weigh the rest against.
    Adam. §2 is a toy, and §2.6's real-model table is full fine-tuning on a 0.4B. The 2.9B run that
    would test the pair fix over 150 steps (the collapse signature appeared at step 34) has not
    been run.
-2. **The 0.4B table is one run.** Muon appears at one learning rate (1e-4) against three AdamW
-   rates, held-out ΔCE has no spread estimate, and the three "seeds" are bit-identical. Muon at
-   1e-5 and 3e-5, with shuffled data order, is written and waiting for a GPU session (~30 min).
+2. **The 0.4B table is one model, 30 steps, three data orders.** The window ratio (about 1.9) comes from
+   interpolating three learning rates per optimizer and is approximate; nothing is tested at 2.9B for full
+   fine-tuning, and the single-run improvement we first reported at 1e-4 did not survive shuffling.
 3. **AdamW was tried at three learning rates and nothing else** — no warmup, decay or tuned
    weight decay. "AdamW harms at that step" means at those rates and that schedule.
 4. **Loss is not generation.** The earlier full fine-tuning collapse passed every stability
@@ -662,9 +666,8 @@ should weigh the rest against.
 **The toy is a toy.** §1 is checkpoint arithmetic and holds regardless. §2 is a
 mechanism claim measured on a small recurrent controller with a WKV-shaped state,
 not on a 2.9B model, and should be treated as one until someone reproduces the
-threshold at real scale. §2.6's real-model table is a single 30-step run on one
-0.4B model (its three seeds are bit-identical), and nothing in the document is
-measured on LoRA at real scale.
+threshold at real scale. §2.6's real-model table is one 0.4B model over 30 steps and
+three data orders, and nothing in the document is measured on LoRA at real scale.
 
 **The full fine-tuning collapse turned out to be a learning rate, and it was
 ours.** The 0.02 is the default of `--muon_lr` in `modded-nanogpt-rwkv/train_rwkv7.py`, as are the
@@ -674,9 +677,9 @@ problem. It is explained, and the explanation is embarrassing rather than deep:
 at `lr = 0.02` a Muon step moves the worst tensor by **349% of its own norm**,
 and a typical tensor by 4% (§1.5). Every "Muon breaks fine-tuning" run this
 project produced was Muon at a pretraining learning rate on a converged
-checkpoint. At `lr = 1e-4` the same setup trains normally and reaches a *lower*
-training loss than AdamW at the best of the three rates we tried (1e-5) over the same budget, while
-improving held-out cross-entropy. So we cannot offer "Muon is wrong for
+checkpoint. At `lr = 1e-4` the same setup trains normally and reaches a lower
+training loss than AdamW at the best of the three rates we tried, and at 3e-5 it improves held-out
+cross-entropy as much as AdamW's best does (§2.6; at 1e-4 held-out loss is flat). So we cannot offer "Muon is wrong for
 fine-tuning RWKV-7" as a finding, and this document no longer claims it. What
 survives is §1 — which is checkpoint arithmetic and never depended on any of our
 training runs — and §2's threshold, which §1.5 now reaches from the other side.
