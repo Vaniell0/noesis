@@ -140,6 +140,7 @@ touch pieces implicitly).*
 
 | H | Status | Prior | Posterior | File |
 |---|--------|-------|-----------|------|
+| HZLK | PROPOSED | - | - | `HZLK.md` |
 | H0 | CONTESTED | 0.6 | 0.333 | `H0.md` |
 | H1 | RETRACTED | - | - | `H1.md` |
 | H2 | WITHDRAWN | - | - | `H2.md` |
@@ -168,4 +169,4 @@ touch pieces implicitly).*
 | H23 | no structured record | - | - | `H23.md` |
 | H24 | no structured record | - | - | `H24.md` |
 | H25 | PARTIAL | - | - | `H25.md` |
-| H26 | PARTIAL | 0.4 | 0.328 | `H26.md` |
+| H26 | PARTIAL | 0.4 | 0.051 | `H26.md` |

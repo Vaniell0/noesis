@@ -32,7 +32,7 @@ _ID_ORDER_RE = re.compile(r"^H(\d+)([a-z]?)$")
 def _sort_key(hid: str):
     m = _ID_ORDER_RE.match(hid)
     if not m:
-        return (999, hid)
+        return (-1, hid)  # unnumbered programme hypotheses (ZLK) sit above H0
     return (int(m.group(1)), m.group(2))
 
 
