@@ -93,6 +93,7 @@ evidence above is a room estimate plus instruments, not a result for the claim; 
 | ZLK.5 | The model can learn to choose its own time (continue / stop) under a verifier and a price on time | toy only |
 | ZLK.6 | With search over phases the loop can exceed the CoT teacher it started from; distillation alone cannot | not run |
 | ZLK.7 | Two views of one content (format / paraphrase) land close in latent space without collapse | not run |
+| ZLK.9 | System level: a persistent state that absorbs the configuration once replaces re-injecting the history, and the re-read ratio falls | H17 (contested); no ZLK-specific run |
 | ZLK.8 | The output side: format from the question, honest self-decisions, then the constitution | silent-mode format obedience measured |
 
 ### 1. Claim
@@ -110,6 +111,16 @@ evidence above is a room estimate plus instruments, not a result for the claim; 
 5. Training attaches only to verifiable, content-bearing paths: the final answer through the phases, and the model's own
    decisions as sampled tokens. Never to the geometry of the state, and never to the correctness of an individual phase.
 
+6. **Second level of КПД - the session, not the answer.** The work is done by the configuration of the space (the context, for
+   RWKV the state), not by knowledge stored in the weights: the weights hold skills and the means of extraction; what a task
+   needs is set up in context. Cost shows it. In the owner's own sessions (local logs, 2026-08-29..10-08: 18 499 model calls) 98.8% of all
+   input tokens were cache reads, 1.2% new context, and the model's output was 0.23% of its input: on average every token entering the
+   context was re-read about 79 times, and a call carried ~380 000 tokens to write under 1 000. A transformer pays that re-read on every
+   call; a persistent fixed-size state absorbs the configuration once (H17, CONTESTED). So ZLK trains the skill of configuring,
+   reading and reconfiguring context (procedures, search, format from the question - hence ciphers, an invented language, matrices),
+   not facts into weights. *This is a cost statistic from API usage that motivates the claim; it does not by itself show what the
+   model can do.*
+
 ### 2. Definitions
 
 - **tick**: one forward step on a fed embedding, no token emitted. Feed = softmax(logits) @ E, rescaled to the median token norm of
@@ -124,6 +135,8 @@ evidence above is a room estimate plus instruments, not a result for the claim; 
   (readout lens machinery); **КПД** = useful motion per generated token or per tick. Magnitude of motion is not usefulness.
 - **basin width**: output side = entropy of the answer distribution at small temperature T and the T* at which the answer leaves;
   state side = the noise norm at which it leaves. Temperature is an instrument here; the model works at T = 0.
+- **re-read ratio** (system level): cache-read input tokens / output tokens over a session (7.0e9 / 1.6e7 = 429 in the logs above;
+  98.8% of input is cache reads). A state-absorbing model should drive it toward the cost of reading each item once.
 - **view**: the same content under another format, paraphrase, cipher or seed (`content_id` + `view` in the dataset catalog).
 
 ### 3. How the model should work (inference)
@@ -197,6 +210,12 @@ no loss term. Stopping must not rely on the `expected` feed collapsing: it does 
 - **ZLK.8 output side.** Prediction: format is read from the question (JSON and sentence formats obeyed 100%, bare number 0% in
   silent mode on G1i - the gap to close); self-decisions are trained with a proper scoring rule (nanodiff: same accuracy, ECE 0.333
   -> 0.036). The constitution is a short training later, mandatory, not now.
+
+- **ZLK.9 absorption (system level).** Prediction: after the configuration (history, instructions, memory) has been fed once, answers that
+  depend on it are as accurate as with the full history re-injected, at a fraction of the tokens read; the re-read ratio of a session drops
+  by an order of magnitude. *Control:* history shuffled between sessions (must break the answer); history removed. *Kill:* H17's own
+  (absorption does not reproduce answers that need the history). *Caveat:* the state is a narrow neck (1-2 separable facts), so
+  absorption is expected to work for configuration and procedures, not for many independent facts.
 
 ### 6. Training protocol (capabilities, each with its gate)
 
