@@ -1,0 +1,34 @@
+{
+  "name": "action_chains_dsl_step8_val",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "action_chains",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/action_chains_dsl_step8_val.pt",
+  "out_sha256": "9498f309b4b3d831f7c6d6d4ae33d250119a9d5117480358fe7e25dbe89656a1",
+  "out_size_bytes": 22691237,
+  "n_rows": 19,
+  "n_tokens": 945350,
+  "n_supervised_tokens": 884497,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 884497
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "action_chains_dsl"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

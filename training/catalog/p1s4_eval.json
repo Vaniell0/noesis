@@ -1,0 +1,50 @@
+{
+  "name": "p1s4_eval",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/p1s4_eval.jsonl",
+  "out_sha256": "bada9721307999eb6ca5eb3fbac60b9476c7ed04568244cca263dfb883554417",
+  "out_size_bytes": 1061597,
+  "n_rows": 540,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "recall",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "exact match of the value (answer field)",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "blank": 180,
+      "inwindow": 180,
+      "recall": 180
+    },
+    "n_pairs": {
+      "16": 180,
+      "4": 180,
+      "8": 180
+    },
+    "gap_words": {
+      "200": 270,
+      "50": 270
+    },
+    "vocab": {
+      "4": 540
+    },
+    "key_style": {
+      "shared": 540
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

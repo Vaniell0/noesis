@@ -1,0 +1,35 @@
+{
+  "name": "aporia_probe/items",
+  "stage": "raw",
+  "provenance": "generated",
+  "origin": "probe item sets (TruthfulQA / C4 mining where noted in the probe's mine_*.py)",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "experiments/aporia_probe/items.jsonl",
+  "out_sha256": "c2ead9850f5251fc16a114513e8da259229a95826c7f6f353563af6bc3056287",
+  "out_size_bytes": 10466,
+  "n_rows": 30,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "probe-items",
+  "format": "items",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "bounded_ambiguity": 10,
+      "contested_facts": 10,
+      "underdetermined_inference": 10
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

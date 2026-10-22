@@ -1,0 +1,42 @@
+{
+  "name": "A0_eval/tasks_matrix_wordsearch_name",
+  "stage": "raw",
+  "provenance": "generated",
+  "origin": "eval slice of the matrix generators",
+  "date": "2026-10-13",
+  "script": "experiments/A0_eval/gen_matrix_wordsearch.py",
+  "out_path": "experiments/A0_eval/tasks_matrix_wordsearch_name.jsonl",
+  "out_sha256": "761c0501ba5ca0eeb443790a7edcc1b96b45cff63aeb1beb0f51ea3dd98e3400",
+  "out_size_bytes": 42996,
+  "n_rows": 56,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "matrix_wordsearch_name": 56
+    },
+    "level": {
+      "1": 8,
+      "2": 8,
+      "3": 8,
+      "4": 8,
+      "5": 8,
+      "6": 8,
+      "7": 8
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

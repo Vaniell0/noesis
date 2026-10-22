@@ -1,0 +1,31 @@
+{
+  "name": "step9b_combined_flat",
+  "stage": "normalize",
+  "provenance": "generated",
+  "origin": "step9b_combined rendered flat for probes",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/corpus_open/step9b_combined_flat.jsonl",
+  "out_sha256": "3bcc73ae0590af5245f9578d89058ab6185110b0b299fb6ccc45cde880ace490",
+  "out_size_bytes": 942831,
+  "n_rows": 837,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "text",
+  "status": "live",
+  "parents": [
+    "step9b_combined_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

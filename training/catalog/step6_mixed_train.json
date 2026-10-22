@@ -1,0 +1,42 @@
+{
+  "name": "step6_mixed_train",
+  "stage": "combine",
+  "provenance": "generated",
+  "origin": "action_chains + toolbench sample",
+  "date": "2026-10-12",
+  "script": "training/scripts/combine_step9b_corpus.py",
+  "out_path": "training/tokenised/step6_mixed_train.pt",
+  "out_sha256": "bfa9e581d024517525fdaa9e2a1992626c0c67288feaea03c3fce8c7ebbc7e86",
+  "out_size_bytes": 4049792443,
+  "n_rows": 184885,
+  "n_tokens": 253019450,
+  "n_supervised_tokens": 86159307,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424"
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "action_chains",
+    "toolbench_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "A1 step6",
+      "result": "VM died before eval; ToolBench/Anthropic format mismatch, 13% supervised ratio",
+      "verdict": "untested",
+      "ref": "docs/training-pipeline.md#step-6",
+      "date": "2026-08-07"
+    }
+  ],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

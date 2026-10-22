@@ -1,0 +1,47 @@
+{
+  "name": "premise_refusal_train.pt",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/premise_refusal_train.pt",
+  "out_sha256": "b9d240f98473d90eb95464ed7dcdabb522368e504e190d6b5b2272f4d11dcd4c",
+  "out_size_bytes": 367273,
+  "n_rows": 69,
+  "n_tokens": 15178,
+  "n_supervised_tokens": 11150,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 7608
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "premise_refusal_train.jsonl"
+  ],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/tokenize_plain_cot.py",
+      "--input",
+      "<parent>.jsonl",
+      "--out-train",
+      "<this>.pt",
+      "--out-val",
+      "<name>_val.pt",
+      "--val-pct",
+      "10"
+    ]
+  },
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

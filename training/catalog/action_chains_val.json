@@ -1,0 +1,33 @@
+{
+  "name": "action_chains_val",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "action_chains",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/action_chains_val.pt",
+  "out_sha256": "b9001f8fb1e0227341f76b72b598facbf8bcd6f8375cfc63bc40e2efbdd0e0f3",
+  "out_size_bytes": 23705915,
+  "n_rows": 19,
+  "n_tokens": 1481473,
+  "n_supervised_tokens": 1174084,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424"
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "action_chains"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

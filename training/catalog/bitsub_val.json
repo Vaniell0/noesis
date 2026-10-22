@@ -1,0 +1,32 @@
+{
+  "name": "bitsub_val",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/bitsub_val.pt",
+  "out_sha256": "e19a95ad0b3c2bbb1c4bda7ea00a7203faa0cb58ab7c57704abb9fad23389b58",
+  "out_size_bytes": 41915,
+  "n_rows": 17,
+  "n_tokens": 1644,
+  "n_supervised_tokens": 189,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 153
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

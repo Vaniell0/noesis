@@ -1,0 +1,54 @@
+{
+  "name": "step9b_combined_train",
+  "stage": "combine",
+  "provenance": "generated",
+  "origin": "six-source mix (rfc, selfcot, action, hh_rlhf, react, base)",
+  "date": "2026-10-12",
+  "script": "training/scripts/combine_step9b_corpus.py",
+  "out_path": "training/tokenised/step9b_combined_train.pt",
+  "out_sha256": "2a7a235a257c03e883e99627e1c5ca5fc23d4a7a54f93a24326d06f342efdff7",
+  "out_size_bytes": 5444096,
+  "n_rows": 836,
+  "n_tokens": 226477,
+  "n_supervised_tokens": 116880,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 77030
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "step9_rfc_train",
+    "selfcot_train",
+    "hh_rlhf_train",
+    "react_train",
+    "action_chains_dsl_step8_train",
+    "step6_mixed_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "A1 step9b (ctx_len=512)",
+      "result": "39.58% (19/48), regression from 43.75%; extraction 62.5% -> 12.5%",
+      "verdict": "hurt",
+      "ref": "docs/verdicts/2026-08-08-step8-step9.md#a0-eval-epoch-1-np512-48-tasks",
+      "date": "2026-08-08"
+    },
+    {
+      "run": "A1 step9b",
+      "result": "cause is two things at once: ctx_len=512 zeroed L_state (T<3 short-circuit) AND 35% of the mix in other formats; this run does not separate them",
+      "verdict": "unsound",
+      "ref": "docs/verdicts/2026-08-08-step8-step9.md#why-extraction-collapsed-in-step9b",
+      "date": "2026-08-08"
+    }
+  ],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

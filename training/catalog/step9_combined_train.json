@@ -1,0 +1,35 @@
+{
+  "name": "step9_combined_train",
+  "stage": "combine",
+  "provenance": "generated",
+  "origin": "RFC QA + 10% action-chain anti-forgetting mix",
+  "date": "2026-10-12",
+  "script": "training/scripts/combine_step9_corpus.py",
+  "out_path": "training/tokenised/step9_combined_train.pt",
+  "out_sha256": "05d5776b2ef041d72b992f2133e2250b3d32edae051c27bc676385733fcd093c",
+  "out_size_bytes": 1726264,
+  "n_rows": 269,
+  "n_tokens": 71752,
+  "n_supervised_tokens": 29794,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 23768
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "step9_rfc_train",
+    "action_chains_dsl_step8_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

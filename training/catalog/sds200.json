@@ -1,0 +1,32 @@
+{
+  "name": "sds200",
+  "stage": "raw",
+  "provenance": "external-other",
+  "origin": "SDS-200: 189 h Swiss German speech with Standard German text translations",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "",
+  "out_sha256": null,
+  "out_size_bytes": null,
+  "n_rows": null,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "",
+  "status": "planned",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "check on download",
+  "url": "https://aclanthology.org/2022.lrec-1.347.pdf",
+  "languages": [
+    "swiss-german",
+    "german"
+  ],
+  "sensitivity": ""
+}

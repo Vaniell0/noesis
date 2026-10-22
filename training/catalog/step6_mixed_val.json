@@ -1,0 +1,34 @@
+{
+  "name": "step6_mixed_val",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/step6_mixed_val.pt",
+  "out_sha256": "227fc26db65e859944cd1fc349397d1592fa9344c1c8516547cbfbfb29fc5fbb",
+  "out_size_bytes": 80930153,
+  "n_rows": 3803,
+  "n_tokens": 5056098,
+  "n_supervised_tokens": 1650589,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424"
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "action_chains",
+    "toolbench_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

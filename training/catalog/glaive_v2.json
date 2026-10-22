@@ -1,0 +1,39 @@
+{
+  "name": "glaive_v2",
+  "stage": "normalize",
+  "provenance": "external-hf",
+  "origin": "glaiveai/glaive-function-calling-v2",
+  "date": "2026-10-12",
+  "script": "training/scripts/normalize_glaive.py",
+  "out_path": "training/corpus_open/glaive_v2.jsonl",
+  "out_sha256": "5d413fb97f2bb249e56c1219cb33de6e65f3243099593be08a385cebf372dd9c",
+  "out_size_bytes": 59932037,
+  "n_rows": 63218,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "rollouts",
+  "status": "superseded",
+  "parents": [
+    "glaive_function_calling_v2"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "A1 pilot steps 1-5",
+      "result": "model learned tool dispatch, could not answer without an executor; step4@3500 genuine 4/48 = 8.3%",
+      "verdict": "failed",
+      "ref": "docs/training-pipeline.md#steps-15-glaive-v2-failed",
+      "date": "2026-08-06"
+    }
+  ],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

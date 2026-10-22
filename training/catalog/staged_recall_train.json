@@ -1,0 +1,53 @@
+{
+  "name": "staged_recall_train",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/staged_recall_train.jsonl",
+  "out_sha256": "d30fe9e7fe971c38fc9e49ed4eedf25db40d92c194d48f68fda49f9eb211f99f",
+  "out_size_bytes": 4521568,
+  "n_rows": 3600,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "recall",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "experiments/A0_eval/gen_staged_recall.py",
+      "--train-per-cell",
+      "400",
+      "--eval-per-cell",
+      "40"
+    ],
+    "deterministic": true
+  },
+  "verifier": "exact match of the value (answer field)",
+  "notes": "Defaults of gen_staged_recall.py (n-pairs 2,4,8; gap-words 0,50,200; key-style distinct); row counts match 3x3x400 train and 3x3x3x40 eval.",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "recall": 3600
+    },
+    "n_pairs": {
+      "2": 1200,
+      "4": 1200,
+      "8": 1200
+    },
+    "gap_words": {
+      "0": 1200,
+      "200": 1200,
+      "50": 1200
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

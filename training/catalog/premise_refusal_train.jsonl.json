@@ -1,0 +1,38 @@
+{
+  "name": "premise_refusal_train.jsonl",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "false-premise questions with refusals",
+  "date": "2026-10-12",
+  "script": "training/scripts/gen_premise_refusal_corpus.py",
+  "out_path": "training/corpus_open/premise_refusal_train.jsonl",
+  "out_sha256": "f29220332ecaefc06c8954e5194886c4e12322c82c0735b1d43fa61dc75ed2d9",
+  "out_size_bytes": 83155,
+  "n_rows": 80,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "think",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_premise_refusal_corpus.py",
+      "--out",
+      "training/corpus_open/premise_refusal_train.jsonl",
+      "--n",
+      "80"
+    ]
+  },
+  "verifier": "",
+  "notes": "Built with n=80 (pilot_step10.yaml header); row count 80 matches. The script docstring example says 60.",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

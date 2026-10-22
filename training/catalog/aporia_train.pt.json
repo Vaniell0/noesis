@@ -1,0 +1,47 @@
+{
+  "name": "aporia_train.pt",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/aporia_train.pt",
+  "out_sha256": "b7d127d0461984b833652708b926e108294141a639feb8a10b7c0529c73e6bea",
+  "out_size_bytes": 396239,
+  "n_rows": 71,
+  "n_tokens": 16384,
+  "n_supervised_tokens": 13133,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 8978
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "aporia_train.jsonl"
+  ],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/tokenize_plain_cot.py",
+      "--input",
+      "<parent>.jsonl",
+      "--out-train",
+      "<this>.pt",
+      "--out-val",
+      "<name>_val.pt",
+      "--val-pct",
+      "10"
+    ]
+  },
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

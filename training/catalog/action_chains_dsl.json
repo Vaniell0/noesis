@@ -1,0 +1,40 @@
+{
+  "name": "action_chains_dsl",
+  "stage": "normalize",
+  "provenance": "generated",
+  "origin": "action_chains converted to the runtime DSL",
+  "date": "2026-10-12",
+  "script": "training/corpus/convert_anthropic_to_dsl.py",
+  "out_path": "training/corpus_open/action_chains_dsl.jsonl",
+  "out_sha256": "953d972cf6ab4430b0d9d1613ad92748f0c41ca54e1639a33ceadfde5b08a564",
+  "out_size_bytes": 185558523,
+  "n_rows": 1154,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "rollouts",
+  "status": "live",
+  "parents": [
+    "action_chains"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "A1 step8 (DSL",
+      "all-layer L_state)": null,
+      "result": "10.4% (5/48); 100% DSL corpus makes the model emit DSL on plain-text tasks, extraction ~0%",
+      "verdict": "failed",
+      "ref": "docs/verdicts/2026-08-08-step8-step9.md#key-finding",
+      "date": "2026-08-08"
+    }
+  ],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

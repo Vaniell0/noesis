@@ -1,0 +1,32 @@
+{
+  "name": "swissdial",
+  "stage": "raw",
+  "provenance": "external-other",
+  "origin": "SwissDial: parallel spoken Swiss German in 8 dialects (AG, BE, BS, GR, LU, SG, VS, ZH) with High German transcripts, ~3 h audio per dialect, 26 h total; Grisons ~3x over-represented",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "",
+  "out_sha256": null,
+  "out_size_bytes": null,
+  "n_rows": null,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "",
+  "status": "planned",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "Text side only is needed here. Swiss German has no standard spelling, so the checkable ground truth is the Standard German side. One content, eight dialect 'formats' = natural view pairs.",
+  "evidence": [],
+  "profile": {},
+  "license": "check on download",
+  "url": "https://www.researchgate.net/publication/350311158_SwissDial_Parallel_Multidialectal_Corpus_of_Spoken_Swiss_German",
+  "languages": [
+    "swiss-german",
+    "german"
+  ],
+  "sensitivity": ""
+}

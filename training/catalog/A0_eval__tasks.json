@@ -1,0 +1,46 @@
+{
+  "name": "A0_eval/tasks",
+  "stage": "raw",
+  "provenance": "generated",
+  "origin": "Claude-authored 48-task A0.2 rubric set",
+  "date": "2026-10-13",
+  "script": "experiments/A0_eval/gen_tasks.py",
+  "out_path": "experiments/A0_eval/tasks.jsonl",
+  "out_sha256": "9e7f9a93ba29d5c598d5236ab799a7eaf4c4784d36ac844b7805fb21429600f8",
+  "out_size_bytes": 16753,
+  "n_rows": 48,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "items",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "rubric field per row (exact | regex)",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "A1 step9 eval",
+      "result": "tasks authored by Claude; possible overlap with training formats",
+      "verdict": "unsound",
+      "ref": "docs/verdicts/2026-08-08-step8-step9.md#baseline-comparison",
+      "date": "2026-08-08"
+    }
+  ],
+  "profile": {
+    "category": {
+      "arithmetic_chain": 4,
+      "bit_decoding": 16,
+      "extraction": 8,
+      "scheduling": 6,
+      "string_ops": 6,
+      "symbolic": 8
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

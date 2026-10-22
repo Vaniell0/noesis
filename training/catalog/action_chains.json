@@ -1,0 +1,40 @@
+{
+  "name": "action_chains",
+  "stage": "normalize",
+  "provenance": "generated",
+  "origin": "Claude CLI session traces, sanitised (training/corpus/sanitised)",
+  "date": "2026-10-12",
+  "script": "training/normalize_traces.py",
+  "out_path": "training/corpus_open/action_chains.jsonl",
+  "out_sha256": "22e0d9f3e56e2823286b1bd4e447da4e01590efebb94aa7ca35e833d2c01a97e",
+  "out_size_bytes": 182238502,
+  "n_rows": 1154,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "rollouts",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/normalize_traces.py",
+      "--in",
+      "training/corpus/sanitised",
+      "--out",
+      "training/corpus_open/action_chains.jsonl",
+      "--name",
+      "action_chains"
+    ]
+  },
+  "verifier": "",
+  "notes": "Derived from personal CLI traces. training/corpus/RECLASSIFIED.md and docs/policies.md (Variant C, 2026-07-30) say personal data stays out of weights; steps 6-8 trained on this after that date. Flagged for the owner, not resolved here.\n",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": "personal"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "react",
+  "stage": "normalize",
+  "provenance": "external-hf",
+  "origin": "glaive + ToolBench re-rendered as ReAct <think> turns",
+  "date": "2026-10-12",
+  "script": "training/scripts/normalize_react.py",
+  "out_path": "training/corpus_open/react.jsonl",
+  "out_sha256": "040e95fc2a4e7946adc38013456877248efc3f04361f40b790a6f13ae8063183",
+  "out_size_bytes": 18989613,
+  "n_rows": 30000,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "think",
+  "status": "live",
+  "parents": [
+    "glaive_v2",
+    "toolbench_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "source": {
+      "react_tool": 30000
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

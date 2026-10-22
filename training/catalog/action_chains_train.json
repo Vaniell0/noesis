@@ -1,0 +1,41 @@
+{
+  "name": "action_chains_train",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "action_chains",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/action_chains_train.pt",
+  "out_sha256": "d4a3c155d17926e0356d0c30c5de0da89b617a2eacecb4988d5caa4b2fa09f90",
+  "out_size_bytes": 1294731661,
+  "n_rows": 1133,
+  "n_tokens": 80920023,
+  "n_supervised_tokens": 63079444,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424"
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "action_chains"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "A1 step7 (action chains only)",
+      "result": "genuine 4/48 = 8.3% after false-positive audit (raw 8/48); model spontaneously produced <think>",
+      "verdict": "no-effect",
+      "ref": "docs/verdicts/2026-08-07-a1-pilot-step7-probes.md",
+      "date": "2026-08-07"
+    }
+  ],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

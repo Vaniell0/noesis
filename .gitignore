@@ -111,3 +111,11 @@ docs/muon-rwkv7-finetuning.prepared-*.md
 experiments/rl/results/*.partial.json
 experiments/rl/results/state_traj_g1d04b_expected_*.json
 experiments/rl/results/cot_vs_routes_*.partial.jsonl
+
+# Dataset catalog records (docs/datasets.md: "tracked in git"); they were missing from the
+# allowlist, so a disk loss zeroed all of them with no copy (rebuilt 2026-10-22 by backfill).
+!training/catalog/*.json
+
+# Local environments and caches that the allowlist above would otherwise pick up.
+**/.venv*/
+.pytest_cache/

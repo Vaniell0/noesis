@@ -1,0 +1,49 @@
+{
+  "name": "step9_rfc_train",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "rfc_qa",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/step9_rfc_train.pt",
+  "out_sha256": "fe2ee8bce6649cf9bd233d9223a4e9c9977e9478e769615f724ff43417ca3c98",
+  "out_size_bytes": 1554000,
+  "n_rows": 268,
+  "n_tokens": 64577,
+  "n_supervised_tokens": 22631,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 16605
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "rfc_qa"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "A1 step9 epoch0 (RFC QA + eps-mask)",
+      "result": "43.75% (21/48): first checkpoint above Qwen2.5-1.5B and Gemma3-4B (38.1%); bit_decoding 0/16",
+      "verdict": "helped",
+      "ref": "docs/verdicts/2026-08-08-step8-step9.md#step-9",
+      "date": "2026-08-08"
+    },
+    {
+      "run": "A1 step9 eval set",
+      "result": "tasks.jsonl is Claude-authored, possible overlap with training formats; treat score as an upper bound",
+      "verdict": "unsound",
+      "ref": "docs/verdicts/2026-08-08-step8-step9.md#baseline-comparison",
+      "date": "2026-08-08"
+    }
+  ],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

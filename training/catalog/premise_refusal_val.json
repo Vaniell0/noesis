@@ -1,0 +1,32 @@
+{
+  "name": "premise_refusal_val",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/premise_refusal_val.pt",
+  "out_sha256": "a2527c79306f5633226c003b4bac9757709d270d2fc12ddcc6be624270cc9051",
+  "out_size_bytes": 58261,
+  "n_rows": 11,
+  "n_tokens": 2323,
+  "n_supervised_tokens": 1701,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 1139
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

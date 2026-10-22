@@ -1,0 +1,46 @@
+{
+  "name": "hh_rlhf",
+  "stage": "normalize",
+  "provenance": "external-hf",
+  "origin": "Anthropic/hh-rlhf (chosen side, CAI-style filter)",
+  "date": "2026-10-12",
+  "script": "training/scripts/normalize_hh_rlhf.py",
+  "out_path": "training/corpus_open/hh_rlhf.jsonl",
+  "out_sha256": "304e6c26edef77c61d5631b9b90667f28de79ac68e3569ef31c5d34754a752ec",
+  "out_size_bytes": 29738303,
+  "n_rows": 30000,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "think",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/normalize_hh_rlhf.py",
+      "--out",
+      "training/corpus_open/hh_rlhf.jsonl",
+      "--max-items",
+      "30000",
+      "--min-answer-len",
+      "20",
+      "--max-answer-len",
+      "512"
+    ]
+  },
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "source": {
+      "hh_rlhf_chosen": 30000
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

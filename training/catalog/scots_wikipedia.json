@@ -1,0 +1,31 @@
+{
+  "name": "scots_wikipedia",
+  "stage": "raw",
+  "provenance": "external-other",
+  "origin": "Scots Wikipedia: ~49% of the entries (20,000+) were written by one US editor who did not speak Scots, by grafting words from an online dictionary onto English sentences",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "",
+  "out_sha256": null,
+  "out_size_bytes": null,
+  "n_rows": null,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "negative-control",
+  "format": "",
+  "status": "planned",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "Not ground truth for Scots. Its worth is as a NEGATIVE control: does a model prefer fake Scots (English grammar + Scots words) over real Scots? Real-Scots sources still to be found and checked.",
+  "evidence": [],
+  "profile": {},
+  "license": "CC-BY-SA-4.0",
+  "url": "https://en.wikipedia.org/wiki/Scots_Wikipedia",
+  "languages": [
+    "scots"
+  ],
+  "sensitivity": ""
+}

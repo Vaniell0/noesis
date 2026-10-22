@@ -1,0 +1,34 @@
+{
+  "name": "premise_validator/items_ctx",
+  "stage": "raw",
+  "provenance": "generated",
+  "origin": "probe item sets (TruthfulQA / C4 mining where noted in the probe's mine_*.py)",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "experiments/premise_validator/items_ctx.jsonl",
+  "out_sha256": "64e23734484b96e5ea0ce2a474639d4aadb0a8b3eeb1f61537bd4e2cce9e7adb",
+  "out_size_bytes": 29950,
+  "n_rows": 80,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "probe-items",
+  "format": "items",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "invalid": 40,
+      "valid": 40
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

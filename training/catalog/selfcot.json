@@ -1,0 +1,33 @@
+{
+  "name": "selfcot",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "model's own CoT on A0 tasks, filtered (same-model generator rule)",
+  "date": "2026-10-12",
+  "script": "experiments/A0.8_refine/generate_cot_corpus.py",
+  "out_path": "training/corpus_open/selfcot.jsonl",
+  "out_sha256": "7aa560427a05093509e529b61809a0ca73544305632951cda1a1f22e59153ba0",
+  "out_size_bytes": 30840,
+  "n_rows": 29,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "think",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "source": {
+      "self_cot": 29
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

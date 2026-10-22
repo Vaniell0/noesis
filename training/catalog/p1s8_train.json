@@ -1,0 +1,68 @@
+{
+  "name": "p1s8_train",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/p1s8_train.jsonl",
+  "out_sha256": "2823232a4240036b9a775cd3d7deee0a3bf87b7e86faf5242cdf7ee45b789c6b",
+  "out_size_bytes": 5148179,
+  "n_rows": 2400,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "recall",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "experiments/A0_eval/gen_staged_recall.py",
+      "--name",
+      "p1s8",
+      "--key-style",
+      "shared",
+      "--vocab",
+      "8",
+      "--n-pairs",
+      "8,16,32",
+      "--gap-words",
+      "50,200",
+      "--train-per-cell",
+      "400",
+      "--eval-per-cell",
+      "30"
+    ],
+    "seed": 1
+  },
+  "verifier": "exact match of the value (answer field)",
+  "notes": "Command recovered from the 2026-10-02 transcript; eval-per-cell 30 was cut off there and is inferred from p1s8_eval (540 rows = 3 n_pairs x 2 gaps x 3 arms x 30).",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "recall": 2400
+    },
+    "n_pairs": {
+      "16": 800,
+      "32": 800,
+      "8": 800
+    },
+    "gap_words": {
+      "200": 1200,
+      "50": 1200
+    },
+    "vocab": {
+      "8": 2400
+    },
+    "key_style": {
+      "shared": 2400
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

@@ -1,0 +1,50 @@
+{
+  "name": "relax_v1",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "relaxed-format task variants",
+  "date": "2026-10-12",
+  "script": "training/scripts/gen_relax_corpus.py",
+  "out_path": "training/corpus_open/relax_v1.jsonl",
+  "out_sha256": "3dec2c1402601d181eb2c408c329f923bcedafbd9c0ff473443d373631187b99",
+  "out_size_bytes": 691610,
+  "n_rows": 1776,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "items",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_relax_corpus.py",
+      "--out",
+      "training/corpus_open/relax_v1.jsonl",
+      "--n",
+      "2000",
+      "--error-rate",
+      "0.0",
+      "--seed",
+      "7"
+    ],
+    "seed": 7,
+    "deterministic": true
+  },
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "source": {
+      "relax_docs_prose": 399,
+      "relax_extra_docs": 1302,
+      "relax_git_log": 75
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

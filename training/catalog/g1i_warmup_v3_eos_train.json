@@ -1,0 +1,34 @@
+{
+  "name": "g1i_warmup_v3_eos_train",
+  "stage": "tokenize",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/g1i_warmup_v3_eos_train.pt",
+  "out_sha256": "3c7bb85f3756dc5419095fd56ae48df3802808334e2b391bfa18a35adbc372c6",
+  "out_size_bytes": 36047101,
+  "n_rows": 10529,
+  "n_tokens": 1498343,
+  "n_supervised_tokens": 234124,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 196453
+  },
+  "role": "",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "g1i_warmup_v3"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

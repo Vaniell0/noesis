@@ -1,0 +1,33 @@
+{
+  "name": "glaive_v2_val_dry100",
+  "stage": "tokenize",
+  "provenance": "external-hf",
+  "origin": "glaiveai/glaive-function-calling-v2",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/glaive_v2_val_dry100.pt",
+  "out_sha256": "fd2e3539c592fe23c974d737f1cadc80b2d24ff83b5c73b79d54a7c9275c8930",
+  "out_size_bytes": 146006,
+  "n_rows": 49,
+  "n_tokens": 8965,
+  "n_supervised_tokens": 1860,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424"
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "superseded",
+  "parents": [
+    "glaive_v2"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "_dry100 variants are the 100-rollout smoke subset.",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

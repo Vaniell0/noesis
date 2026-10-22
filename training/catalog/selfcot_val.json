@@ -1,0 +1,34 @@
+{
+  "name": "selfcot_val",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "selfcot",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/selfcot_val.pt",
+  "out_sha256": "f66a650e89db079193fa3b6fb6385e89654c93b389559655488d0030348393a5",
+  "out_size_bytes": 46000,
+  "n_rows": 5,
+  "n_tokens": 1838,
+  "n_supervised_tokens": 1621,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 895
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "selfcot"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

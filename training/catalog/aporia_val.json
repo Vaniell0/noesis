@@ -1,0 +1,32 @@
+{
+  "name": "aporia_val",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/aporia_val.pt",
+  "out_sha256": "01d3054db817f3b4c059719070bcbea532dbb005d2743fc8af2c2a86d1ae0bec",
+  "out_size_bytes": 50299,
+  "n_rows": 9,
+  "n_tokens": 1996,
+  "n_supervised_tokens": 1595,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 1082
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

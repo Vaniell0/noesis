@@ -1,0 +1,73 @@
+{
+  "name": "p2_hard_train",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/p2_hard_train.jsonl",
+  "out_sha256": "f6c5975ff7c0754241ee7213e8cba8792911106053ef81633796d6d760cd3c15",
+  "out_size_bytes": 11385,
+  "n_rows": 4,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "recall",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "experiments/A0_eval/gen_staged_recall.py",
+      "--out-dir",
+      "training/corpus_open",
+      "--name",
+      "p2_hard",
+      "--n-pairs",
+      "32,64",
+      "--gap-words",
+      "50,200",
+      "--arms",
+      "recall",
+      "--train-per-cell",
+      "1",
+      "--eval-per-cell",
+      "12",
+      "--key-style",
+      "shared",
+      "--vocab",
+      "8",
+      "--seed",
+      "77"
+    ],
+    "seed": 77
+  },
+  "verifier": "exact match of the value (answer field)",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "recall": 4
+    },
+    "n_pairs": {
+      "32": 2,
+      "64": 2
+    },
+    "gap_words": {
+      "200": 2,
+      "50": 2
+    },
+    "vocab": {
+      "8": 4
+    },
+    "key_style": {
+      "shared": 4
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

@@ -1,0 +1,34 @@
+{
+  "name": "step9_rfc_val",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "rfc_qa",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/step9_rfc_val.pt",
+  "out_sha256": "4868c946f9053b947f64e915d0574ea7eb8deb7ba2bbe6b6608ccc9ce3d035dc",
+  "out_size_bytes": 171392,
+  "n_rows": 29,
+  "n_tokens": 7048,
+  "n_supervised_tokens": 2553,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 1916
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "rfc_qa"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

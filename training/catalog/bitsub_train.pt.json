@@ -1,0 +1,47 @@
+{
+  "name": "bitsub_train.pt",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "",
+  "date": "2026-10-12",
+  "script": "training/tokenize_plain_cot.py",
+  "out_path": "training/tokenised/bitsub_train.pt",
+  "out_sha256": "c7133690cc2f74e2a76707bd3a8a81737d5eb6162b5abec8cb42a9b946031697",
+  "out_size_bytes": 244815,
+  "n_rows": 103,
+  "n_tokens": 10069,
+  "n_supervised_tokens": 1148,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 927
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "bitsub_train.jsonl"
+  ],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/tokenize_plain_cot.py",
+      "--input",
+      "<parent>.jsonl",
+      "--out-train",
+      "<this>.pt",
+      "--out-val",
+      "<name>_val.pt",
+      "--val-pct",
+      "10"
+    ]
+  },
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

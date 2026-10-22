@@ -1,0 +1,60 @@
+{
+  "name": "p1_shared_eval",
+  "stage": "combine",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/p1_shared_eval.jsonl",
+  "out_sha256": "c467fa998c47c5a16aac5e819014bd1895bdece5c9b41b572b0e628a4abe065a",
+  "out_size_bytes": 2278121,
+  "n_rows": 1080,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "recall",
+  "status": "live",
+  "parents": [
+    "p1s4_eval",
+    "p1s8_eval"
+  ],
+  "recipe": {
+    "cmd": [
+      "cat p1s4_eval.jsonl p1s8_eval.jsonl"
+    ],
+    "deterministic": true
+  },
+  "verifier": "exact match of the value (answer field)",
+  "notes": "Byte-identical to the concatenation of p1s4_eval and p1s8_eval (SHA-256 equal, 2026-10-06).",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "blank": 360,
+      "inwindow": 360,
+      "recall": 360
+    },
+    "n_pairs": {
+      "16": 360,
+      "32": 180,
+      "4": 180,
+      "8": 360
+    },
+    "gap_words": {
+      "200": 540,
+      "50": 540
+    },
+    "vocab": {
+      "4": 540,
+      "8": 540
+    },
+    "key_style": {
+      "shared": 1080
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

@@ -1,0 +1,45 @@
+{
+  "name": "staged_recall_eval",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/staged_recall_eval.jsonl",
+  "out_sha256": "8aa2643e6216c9d67aac8e46b6216db21d5280522bacaa37aeed50379e5b6774",
+  "out_size_bytes": 1391786,
+  "n_rows": 1080,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "recall",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "exact match of the value (answer field)",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "blank": 360,
+      "inwindow": 360,
+      "recall": 360
+    },
+    "n_pairs": {
+      "2": 360,
+      "4": 360,
+      "8": 360
+    },
+    "gap_words": {
+      "0": 360,
+      "200": 360,
+      "50": 360
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

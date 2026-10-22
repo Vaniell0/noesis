@@ -1,0 +1,33 @@
+{
+  "name": "A0_eval/tasks_bit_book",
+  "stage": "raw",
+  "provenance": "generated",
+  "origin": "eval slice of the matrix generators",
+  "date": "2026-10-13",
+  "script": "experiments/A0_eval/gen_matrix_wordsearch.py",
+  "out_path": "experiments/A0_eval/tasks_bit_book.jsonl",
+  "out_sha256": "033492da6fe8452c94726dff260ba7fc030100710c6619e90984b43264c5bc7a",
+  "out_size_bytes": 2963,
+  "n_rows": 6,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "items",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "bit_decoding": 6
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

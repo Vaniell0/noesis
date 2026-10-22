@@ -1,0 +1,66 @@
+{
+  "name": "p1_shared_train",
+  "stage": "combine",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/p1_shared_train.jsonl",
+  "out_sha256": "5450394751bc8f5df3a5c7c18486e21ca449d8b9565ff9e006c8a5843de49983",
+  "out_size_bytes": 9739095,
+  "n_rows": 4800,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "recall",
+  "status": "live",
+  "parents": [
+    "p1s4_train",
+    "p1s8_train"
+  ],
+  "recipe": {
+    "cmd": [
+      "union of p1s4_train and p1s8_train, shuffled"
+    ],
+    "deterministic": false
+  },
+  "verifier": "exact match of the value (answer field)",
+  "notes": "Same rows as p1s4_train + p1s8_train (sorted-line SHA-256 equal, 2026-10-06), different order. The shuffle seed was not recorded.",
+  "evidence": [
+    {
+      "run": "P1 staged-recall CE (G1d-0.4B, 100 steps, train+eval = p1_shared)",
+      "result": "recall 0.9625, inwindow 0.9875, blank 0.025 on 240 items: binding skill learned, no gap effect",
+      "verdict": "helped",
+      "ref": "docs/rl-track.md",
+      "date": "2026-10-02"
+    }
+  ],
+  "profile": {
+    "arm": {
+      "recall": 4800
+    },
+    "n_pairs": {
+      "16": 1600,
+      "32": 800,
+      "4": 800,
+      "8": 1600
+    },
+    "gap_words": {
+      "200": 2400,
+      "50": 2400
+    },
+    "vocab": {
+      "4": 2400,
+      "8": 2400
+    },
+    "key_style": {
+      "shared": 4800
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

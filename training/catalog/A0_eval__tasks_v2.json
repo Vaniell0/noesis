@@ -1,0 +1,38 @@
+{
+  "name": "A0_eval/tasks_v2",
+  "stage": "raw",
+  "provenance": "generated",
+  "origin": "algorithmic eval generator, built because tasks.jsonl is not clean",
+  "date": "2026-10-13",
+  "script": "experiments/A0_eval/gen_tasks_v2.py",
+  "out_path": "experiments/A0_eval/tasks_v2.jsonl",
+  "out_sha256": "c485418a09ee4539f4e0240105adb2e5efbbc5feb800d6257aa104791c437a7c",
+  "out_size_bytes": 25800,
+  "n_rows": 80,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "items",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "arithmetic_chain": 12,
+      "bit_decoding": 20,
+      "extraction": 12,
+      "scheduling": 12,
+      "string_ops": 12,
+      "symbolic": 12
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

@@ -1,0 +1,50 @@
+{
+  "name": "sr_shared4_eval",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/sr_shared4_eval.jsonl",
+  "out_sha256": "323e6031e47e39184f85df4108f74501f9a99d987b07dfa1640eaa90cef83bd1",
+  "out_size_bytes": 707281,
+  "n_rows": 360,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "recall",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "exact match of the value (answer field)",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "blank": 120,
+      "inwindow": 120,
+      "recall": 120
+    },
+    "n_pairs": {
+      "16": 120,
+      "4": 120,
+      "8": 120
+    },
+    "gap_words": {
+      "200": 180,
+      "50": 180
+    },
+    "vocab": {
+      "4": 360
+    },
+    "key_style": {
+      "shared": 360
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

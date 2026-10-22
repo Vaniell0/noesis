@@ -1,0 +1,34 @@
+{
+  "name": "react_train",
+  "stage": "tokenize",
+  "provenance": "external-hf",
+  "origin": "react",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/react_train.pt",
+  "out_sha256": "5dc2bc20723f8bd4632b9d3a3437de7ab73412405b500adbc32bd27de1ce4c2a",
+  "out_size_bytes": 90817221,
+  "n_rows": 27068,
+  "n_tokens": 3774931,
+  "n_supervised_tokens": 2396143,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 1637567
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "react"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

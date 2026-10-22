@@ -1,0 +1,38 @@
+{
+  "name": "aporia_train.jsonl",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "hand-written ambiguity cases",
+  "date": "2026-10-12",
+  "script": "training/scripts/gen_aporia_corpus.py",
+  "out_path": "training/corpus_open/aporia_train.jsonl",
+  "out_sha256": "2438d04d4c86feed6b16a86b7b8df2b8709204a8e9a281c5c7cca81f4a17dedd",
+  "out_size_bytes": 88868,
+  "n_rows": 80,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "think",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_aporia_corpus.py",
+      "--out",
+      "training/corpus_open/aporia_train.jsonl",
+      "--n",
+      "80"
+    ]
+  },
+  "verifier": "",
+  "notes": "Built with n=80 (pilot_step10.yaml header); row count 80 matches. The script docstring example says 60.",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

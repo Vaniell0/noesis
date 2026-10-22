@@ -1,0 +1,34 @@
+{
+  "name": "react_val",
+  "stage": "tokenize",
+  "provenance": "external-hf",
+  "origin": "react",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/react_val.pt",
+  "out_sha256": "325f22c2ec32c2b9a7d51f07b4edf2711f4ee4c9071f8763d325c49336248298",
+  "out_size_bytes": 9713393,
+  "n_rows": 2932,
+  "n_tokens": 403654,
+  "n_supervised_tokens": 254672,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 172657
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "react"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

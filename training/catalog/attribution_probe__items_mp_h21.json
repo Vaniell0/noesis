@@ -1,0 +1,34 @@
+{
+  "name": "attribution_probe/items_mp_h21",
+  "stage": "raw",
+  "provenance": "generated",
+  "origin": "probe item sets (TruthfulQA / C4 mining where noted in the probe's mine_*.py)",
+  "date": "2026-10-20",
+  "script": "",
+  "out_path": "experiments/attribution_probe/items_mp_h21.jsonl",
+  "out_sha256": "31f35ba134d20ce15e58dfed3a26519e1bed84c4e9f1d131e98454e52f04f5ba",
+  "out_size_bytes": 26340,
+  "n_rows": 240,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "probe-items",
+  "format": "items",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "invalid": 120,
+      "valid": 120
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

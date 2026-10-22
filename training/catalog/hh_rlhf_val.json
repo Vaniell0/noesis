@@ -1,0 +1,34 @@
+{
+  "name": "hh_rlhf_val",
+  "stage": "tokenize",
+  "provenance": "external-hf",
+  "origin": "Anthropic/hh-rlhf",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/hh_rlhf_val.pt",
+  "out_sha256": "b59c12b05c5e3588476e56a39c3585cbe49eb9be216ef10996827b3ca431f289",
+  "out_size_bytes": 15343877,
+  "n_rows": 3086,
+  "n_tokens": 638204,
+  "n_supervised_tokens": 280825,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 27774
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "hh_rlhf"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

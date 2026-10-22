@@ -1,0 +1,33 @@
+{
+  "name": "toolbench_sample_val",
+  "stage": "tokenize",
+  "provenance": "external-hf",
+  "origin": "Yhyu13/ToolBench_toolllama_G123_dfs",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/toolbench_sample_val.pt",
+  "out_sha256": "5c6edf008876514934995bfddfcce74952902a77cf1d15f82b4deed6b4f0adfa",
+  "out_size_bytes": 3280214,
+  "n_rows": 212,
+  "n_tokens": 204768,
+  "n_supervised_tokens": 26646,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424"
+  },
+  "role": "eval",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "toolbench_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

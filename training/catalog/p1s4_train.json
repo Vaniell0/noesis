@@ -1,0 +1,70 @@
+{
+  "name": "p1s4_train",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "key->value pairs, filler gap, one query (answer only recoverable from state)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_staged_recall.py",
+  "out_path": "training/corpus_open/p1s4_train.jsonl",
+  "out_sha256": "23940b6909c38173b0374d2a1f4e72106ff20c27300e6e40a635a5c684130eae",
+  "out_size_bytes": 4590916,
+  "n_rows": 2400,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "recall",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "experiments/A0_eval/gen_staged_recall.py",
+      "--name",
+      "p1s4",
+      "--key-style",
+      "shared",
+      "--vocab",
+      "4",
+      "--n-pairs",
+      "4,8,16",
+      "--gap-words",
+      "50,200",
+      "--train-per-cell",
+      "400",
+      "--eval-per-cell",
+      "30",
+      "--seed",
+      "1"
+    ],
+    "seed": 1
+  },
+  "verifier": "exact match of the value (answer field)",
+  "notes": "Command recovered from the 2026-10-02 session transcript; p1s4_eval comes from the same call.",
+  "evidence": [],
+  "profile": {
+    "arm": {
+      "recall": 2400
+    },
+    "n_pairs": {
+      "16": 800,
+      "4": 800,
+      "8": 800
+    },
+    "gap_words": {
+      "200": 1200,
+      "50": 1200
+    },
+    "vocab": {
+      "4": 2400
+    },
+    "key_style": {
+      "shared": 2400
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

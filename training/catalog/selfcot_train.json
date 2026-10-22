@@ -1,0 +1,34 @@
+{
+  "name": "selfcot_train",
+  "stage": "tokenize",
+  "provenance": "generated",
+  "origin": "selfcot",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/selfcot_train.pt",
+  "out_sha256": "ae72f2f5d63d01ec0dbb600a3f4b0a7bd9d6ee6c34dd947c2ea6361b860d5628",
+  "out_size_bytes": 168128,
+  "n_rows": 24,
+  "n_tokens": 6917,
+  "n_supervised_tokens": 5934,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 3974
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "selfcot"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

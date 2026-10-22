@@ -1,0 +1,39 @@
+{
+  "name": "step10_combined_train",
+  "stage": "combine",
+  "provenance": "generated",
+  "origin": "six-source step10 mix",
+  "date": "2026-10-12",
+  "script": "training/scripts/combine_step10_corpus.py",
+  "out_path": "training/tokenised/step10_combined_train.pt",
+  "out_sha256": "7333af32ce11f70be8c17e38060217d6e37c91c0a5b83ba5b6d2a217b7f7fbbe",
+  "out_size_bytes": 3497961,
+  "n_rows": 703,
+  "n_tokens": 145413,
+  "n_supervised_tokens": 69228,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424",
+    "n_state_tokens": 39604
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "step9_rfc_train",
+    "bitsub_train.pt",
+    "selfcot_train",
+    "hh_rlhf_train",
+    "aporia_train.pt",
+    "premise_refusal_train.pt"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "Rebuild recipe in training/config/recipes/step10.yaml (writes step10_combined_train_rebuild.pt).",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

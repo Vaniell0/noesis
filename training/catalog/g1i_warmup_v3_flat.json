@@ -1,0 +1,52 @@
+{
+  "name": "g1i_warmup_v3_flat",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "matrix_tasks with procedural <think> that restates the answer",
+  "date": "2026-10-12",
+  "script": "training/scripts/gen_g1i_warmup.py",
+  "out_path": "training/corpus_open/g1i_warmup_v3_flat.jsonl",
+  "out_sha256": "acad0123cda48c4a1d0d683649aee4735ce75a95e81b889f0a0ee442a54a9b9d",
+  "out_size_bytes": 5887216,
+  "n_rows": 11700,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "text",
+  "status": "live",
+  "parents": [
+    "matrix_tasks"
+  ],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_g1i_warmup.py",
+      "--tasks",
+      "training/corpus_open/matrix_tasks.jsonl",
+      "--out",
+      "training/corpus_open/g1i_warmup_v3.jsonl",
+      "--per-bucket",
+      "300"
+    ],
+    "seed": 7,
+    "deterministic": true
+  },
+  "verifier": "",
+  "notes": "",
+  "evidence": [
+    {
+      "run": "Phase-1 warm-up data audit 2026-10-02",
+      "result": "10529/10529 think spans contain the answer verbatim (median 18 tokens): the data teaches the tag structure, not reasoning",
+      "verdict": "confirmed",
+      "ref": "docs/rl-track.md",
+      "date": "2026-10-02"
+    }
+  ],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

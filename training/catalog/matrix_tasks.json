@@ -1,0 +1,65 @@
+{
+  "name": "matrix_tasks",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "procedural matrix tasks (wordsearch, arithmetic, bits, pattern, crossword)",
+  "date": "2026-10-12",
+  "script": "experiments/A0_eval/gen_tasks.py",
+  "out_path": "training/corpus_open/matrix_tasks.jsonl",
+  "out_sha256": "0ca16df762fee70cdbd25f09bbacf138ac8ff41a2897b4c7832decaa312a20e4",
+  "out_size_bytes": 38405794,
+  "n_rows": 65797,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "tasks",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python3",
+      "experiments/A0_eval/gen_tasks.py",
+      "--n-tokens",
+      "20000000",
+      "--seed",
+      "42",
+      "--out",
+      "training/corpus_open/matrix_tasks.jsonl"
+    ],
+    "seed": 42,
+    "deterministic": true
+  },
+  "verifier": "rubric field per row (regex | exact)",
+  "notes": "SHA-256 and category table in training/corpus_open/PROVENANCE.md.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "arithmetic_matrix": 12988,
+      "bits_matrix": 13126,
+      "crossword_enum": 3266,
+      "crossword_fill": 3328,
+      "matrix_wordsearch": 13098,
+      "matrix_wordsearch_name": 6679,
+      "pattern_matrix": 13312
+    },
+    "level": {
+      "1": 7784,
+      "10": 1632,
+      "11": 1696,
+      "2": 7711,
+      "3": 8568,
+      "4": 8742,
+      "5": 8802,
+      "6": 8775,
+      "7": 8821,
+      "8": 1599,
+      "9": 1667
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

@@ -1,0 +1,33 @@
+{
+  "name": "toolbench_sample_train",
+  "stage": "tokenize",
+  "provenance": "external-hf",
+  "origin": "Yhyu13/ToolBench_toolllama_G123_dfs",
+  "date": "2026-10-12",
+  "script": "",
+  "out_path": "training/tokenised/toolbench_sample_train.pt",
+  "out_sha256": "9dd9d1ef179f2120108333d40b231c3dd710ea98628254036b05bda3a8150f68",
+  "out_size_bytes": 147699176,
+  "n_rows": 9786,
+  "n_tokens": 9226165,
+  "n_supervised_tokens": 1233943,
+  "sources": {},
+  "extra": {
+    "vocab": "rwkv_vocab_v20230424"
+  },
+  "role": "train",
+  "format": "pt-blob",
+  "status": "live",
+  "parents": [
+    "toolbench_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "",
+  "evidence": [],
+  "profile": {},
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}
