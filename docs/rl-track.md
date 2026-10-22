@@ -1,5 +1,24 @@
 # RL Track — Matrix Task Curriculum (A1.5)
 
+## Current stages (2026-10-22) — read this first
+
+The training stages live in `hypotheses/HZLK.md` §6 and are not repeated here. In short: **S0** data (the model's own
+verified CoT on ciphers and tables, input/output formats diluted, G1i 2.9B teacher) → **S1** one tick of the model's own
+latent, M=1 mandatory, distillation with answer CE → **S2** optimisation in a frame (k-subspace latent noise inside log pi;
+verified answer or continuation-gain reward minus a price per tick) → **S3** time and M>1 (continue = an unreadable latent
+tick in the same softmax as the answer) → **S4** format and honesty. Every gate is one
+`experiments/run.py --backend peft --tests latent_geometry,latent_noise,known_heads` run on the checkpoint.
+
+| was (this file) | now |
+|---|---|
+| Phase 1 ThinkChain (learned markers, LoRA r=32, M=1) | S1 with the model's own latent, full FT, answer CE |
+| Phase 1.5 full-FT smoothing, M in {0,1,2} | S1: M=1 mandatory on the verified teacher set; M>1 only in S3 |
+| Phase 2 rewind marker / L_tPC | the function stays (re-think inside the loop, S3); the constant-vector implementation is falsified |
+| Phase 3 word-search GRPO, log pi on answer tokens only | S2/S3: the latent itself is in log pi; ciphers and tables instead of word-search |
+
+Everything below — the 4-stage plan of 2026-08-23, the ThinkChain run history, known risks — is kept as the record those
+decisions were paid for with; it is not the current plan.
+
 ## Measured 2026-10-02 .. 10-06 (redefined track: capability + its measurement)
 
 - **The Phase-1 teacher had no reasoning in it.** In `g1i_warmup_v3_eos_train.pt`
@@ -52,7 +71,7 @@
 
 ---
 
-## Track status (read first — the 4-stage plan, current as of 2026-08-23)
+## Track status as of 2026-08-23 (superseded 2026-10-22 by HZLK §6 stages S0-S4, see top)
 
 This file covers two related sub-tracks that share one document because Phase 3
 consumes Phase 1/1.5/2's output: **ThinkChain latent-refinement** (Phases

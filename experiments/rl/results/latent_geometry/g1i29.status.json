@@ -1,0 +1,10 @@
+{
+  "ts": 1792670229.5850751,
+  "ts_human": "2026-10-22 14:57:09",
+  "progress": [
+    24,
+    24
+  ],
+  "job": "latent_geometry",
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth"
+}

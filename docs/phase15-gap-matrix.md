@@ -1,5 +1,9 @@
 # Phase 1.5 gap matrix — Adam/Muon × markers/tokens, live tracker
 
+> **Superseded 2026-10-22.** Phase 1.5 is replaced by stage S1 in `hypotheses/HZLK.md` §6 (one tick of the model's own
+> latent, full FT, answer CE; markers and free tokens are no longer the channel). The table is kept as the record of what
+> was tested; it is no longer edited as a live tracker.
+
 **This is a live status table, not a history log — edit rows in place as
 gaps close. Historical narrative (how a result was found, debug sagas)
 stays in `docs/rl-track.md`'s Appendix; this file only tracks what's

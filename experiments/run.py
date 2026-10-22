@@ -41,6 +41,8 @@ def main() -> None:
                                   conflict_handler="resolve")
     ap.add_argument("--model", help="checkpoint path or HF owner/repo:file.pth")
     ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    ap.add_argument("--backend", choices=("blink", "peft"), default="blink",
+                    help="peft: rl.loader (embeds path, own-latent loop); probes declare which they need")
     ap.add_argument("--tests", help="comma-separated probe names, or 'all'")
     ap.add_argument("--list", action="store_true", help="list registered probes and exit")
     ap.add_argument("--out-dir", default="experiments/_common/results/adhoc",
@@ -63,7 +65,7 @@ def main() -> None:
             return
         for spec in registry.all_specs():
             h = ",".join(spec.hypothesis) or "—"
-            print(f"{spec.name:20s} [{h:8s}] {spec.description}")
+            print(f"{spec.name:20s} [{h:8s}] ({spec.backend}) {spec.description}")
         return
 
     if not args.model:
@@ -76,8 +78,20 @@ def main() -> None:
     if unknown:
         ap.error(f"unknown probe(s): {', '.join(unknown)} — known: {', '.join(registry.names())}")
 
-    print(f"[run] loading model once: {args.model} (device={args.device})")
-    model, tokenizer = load_model(args.model, device=args.device)
+    wrong = [t for t in selected if registry.get(t).backend != args.backend]
+    if wrong:
+        ap.error(f"probe(s) {', '.join(wrong)} need a different --backend than {args.backend!r}")
+
+    print(f"[run] loading model once: {args.model} (device={args.device}, backend={args.backend})")
+    if args.backend == "peft":
+        import torch
+        from experiments.rl.loader import load_rwkv7
+        model = load_rwkv7(args.model, device=args.device, dtype=torch.float32, backend="peft", ctx_len=2048)
+        for p in model.model.parameters():
+            p.requires_grad_(False)
+        tokenizer = model.tokenizer
+    else:
+        model, tokenizer = load_model(args.model, device=args.device)
     print(f"[run] model loaded — running {len(selected)} probe(s): {', '.join(selected)}")
 
     out_dir = Path(args.out_dir)

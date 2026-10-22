@@ -579,7 +579,8 @@ class LoadedModel:
         self,
         inputs_embeds: torch.Tensor,   # [B, T, D] — bypasses emb layer
         state,
-    ) -> Tuple[torch.Tensor, object]:
+        return_hidden: bool = False,
+    ):
         """Continuous forward: input is pre-computed embeddings, not token ids.
 
         Used by the WKV loop for expected-embedding / Coconut-style
@@ -596,10 +597,14 @@ class LoadedModel:
                 "forward_stateful_embeds requires peft backend "
                 "(differentiable, GPU). CPU/blink is inference-only."
             )
-        logits, shift, wkv = _peft_forward_embeds(
+        out = _peft_forward_embeds(
             self.model, self._peft_bsl, inputs_embeds,
-            state.shift, state.wkv,
+            state.shift, state.wkv, return_hidden=return_hidden,
         )
+        if return_hidden:
+            logits, shift, wkv, hidden = out
+            return logits, _PeftState(shift, wkv), hidden
+        logits, shift, wkv = out
         return logits, _PeftState(shift, wkv)
 
     def wkv_stack(self, state) -> torch.Tensor:
@@ -874,8 +879,14 @@ def _load_peft(model_path: str, device: str, dtype: torch.dtype,
 
 
 def _peft_forward_embeds(model, BlockStateList, inputs_embeds: torch.Tensor,
-                         shift_states: torch.Tensor, wkv_states: torch.Tensor):
+                         shift_states: torch.Tensor, wkv_states: torch.Tensor,
+                         return_hidden: bool = False):
     """Mirror of RWKV7.forward_infctx but skips the emb() lookup.
+
+    return_hidden=True also returns the last block's output before ln_out/head
+    [B, T, D] — the model's own continuous latent, fed back Coconut-style (no
+    vocabulary rows). Block 0 applies ln0 to its input, so only the direction of
+    a fed vector reaches the model, not its norm.
 
     See rwkvt/rwkv7/model.py:79-112 for the reference implementation.
     We reproduce the block loop + final ln_out/head over `inputs_embeds`
@@ -900,8 +911,11 @@ def _peft_forward_embeds(model, BlockStateList, inputs_embeds: torch.Tensor,
         )
         new_states[i] = new_block_state
 
+    hidden = x
     x = model.ln_out(x)
     x = model.head(x)
+    if return_hidden:
+        return x, new_states.shift_states, new_states.wkv_states, hidden
     return x, new_states.shift_states, new_states.wkv_states
 
 

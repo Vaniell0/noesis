@@ -48,6 +48,9 @@ KNOWN_PROBE_MODULES = [
     "experiments.ib_probe.run",
     "experiments.A0_state_probe.jlens_probe",
     "experiments.A0_state_probe.rich_probe",
+    "experiments.rl.latent_geometry_probe",
+    "experiments.rl.latent_noise_probe",
+    "experiments.rl.head_ablation_probe",
 ]
 
 
@@ -66,6 +69,10 @@ class ProbeSpec:
     hypothesis: List[str] = field(default_factory=list)
     description: str = ""
     add_args: Optional[AddArgsFn] = None
+    # "blink": fn gets _common.model.load_model's (model, tokenizer) - inference only.
+    # "peft": fn gets rl.loader.load_rwkv7(backend="peft")'s LoadedModel and its tokenizer -
+    # embeds path, own-latent loop, state surgery. run.py refuses to mix the two in one load.
+    backend: str = "blink"
 
 
 _REGISTRY: Dict[str, ProbeSpec] = {}
@@ -77,6 +84,7 @@ def probe(
     hypothesis: Sequence[str] = (),
     description: str = "",
     add_args: Optional[AddArgsFn] = None,
+    backend: str = "blink",
 ):
     """Decorator: register `fn(model, tokenizer, args) -> dict` under `name`."""
 
@@ -88,7 +96,7 @@ def probe(
             )
         _REGISTRY[name] = ProbeSpec(
             name=name, fn=fn, hypothesis=list(hypothesis),
-            description=description, add_args=add_args,
+            description=description, add_args=add_args, backend=backend,
         )
         return fn
 

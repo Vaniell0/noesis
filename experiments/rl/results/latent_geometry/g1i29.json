@@ -1,0 +1,91 @@
+{
+  "_meta": {
+    "experiment": "latent_geometry",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-22",
+    "status": "done",
+    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/rl/latent_geometry_probe.py",
+    "script_sha256_12": "7cbc470b8ff1",
+    "summary": {
+      "nn_cos tick0/last": "0.661 / 0.712",
+      "cross_cos last": "-0.038",
+      "tick_cos last": "0.989"
+    }
+  },
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "n_prompts": 24,
+  "items": [
+    "experiments/rl/results/head_ablation/sub_h22.jsonl",
+    "experiments/rl/results/head_ablation/sub_h20.jsonl"
+  ],
+  "embeds_path_max_abs_dlogit": 0.0,
+  "pca_k": 256,
+  "baseline": {
+    "emb_frac_token_rows": 0.797,
+    "emb_frac_random": 0.544,
+    "nn_cos_random": 0.018,
+    "norm_hidden_vs_emb": 1007.38
+  },
+  "ticks": [
+    {
+      "tick": 0,
+      "cross_cos": 0.883,
+      "nn_cos": 0.661,
+      "emb_frac": 0.999,
+      "argmax_cos": 0.021,
+      "tick_cos": null
+    },
+    {
+      "tick": 1,
+      "cross_cos": 0.54,
+      "nn_cos": 0.652,
+      "emb_frac": 0.999,
+      "argmax_cos": 0.027,
+      "tick_cos": 0.864
+    },
+    {
+      "tick": 2,
+      "cross_cos": 0.245,
+      "nn_cos": 0.644,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.244,
+      "tick_cos": 0.932
+    },
+    {
+      "tick": 3,
+      "cross_cos": 0.09,
+      "nn_cos": 0.659,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.458,
+      "tick_cos": 0.977
+    },
+    {
+      "tick": 4,
+      "cross_cos": -0.002,
+      "nn_cos": 0.684,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.213,
+      "tick_cos": 0.985
+    },
+    {
+      "tick": 5,
+      "cross_cos": -0.04,
+      "nn_cos": 0.703,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.104,
+      "tick_cos": 0.987
+    },
+    {
+      "tick": 6,
+      "cross_cos": -0.038,
+      "nn_cos": 0.712,
+      "emb_frac": 0.999,
+      "argmax_cos": 0.093,
+      "tick_cos": 0.989
+    }
+  ],
+  "note": "tick 0 = last prompt position; ticks >= 1 = hidden fed back, untrained"
+}

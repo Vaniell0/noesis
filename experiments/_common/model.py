@@ -92,7 +92,7 @@ class _TokenizerAdapter:
         return self._p.decode(ids)
 
 
-def load_model(name: str, device: str = "cpu") -> Tuple[object, _TokenizerAdapter]:
+def load_model(name: str, device: str = "cpu", dtype: str = "bf16") -> Tuple[object, _TokenizerAdapter]:
     """Load a RWKV-7 checkpoint via BlinkDL's ``rwkv`` package.
 
     Args:
@@ -103,6 +103,8 @@ def load_model(name: str, device: str = "cpu") -> Tuple[object, _TokenizerAdapte
               or ``BlinkDL/rwkv7-g1:rwkv7-g1h-2.9b-20260710-ctx10240.pth``
             - Local path to a ``.pth`` file.
         device: ``"cpu"`` (default) or ``"cuda"``.
+        dtype: ``"bf16"`` (default, the paper's inference precision) or ``"fp32"``
+            (much faster on CPUs without native bf16 matmul, e.g. the i5-1235U).
 
     Returns ``(model, tokenizer)`` where the model is an ``rwkv.RWKV``
     instance ready to run ``forward(idx, state)`` and the tokenizer is
@@ -129,8 +131,9 @@ def load_model(name: str, device: str = "cpu") -> Tuple[object, _TokenizerAdapte
     torch.set_grad_enabled(False)
     weight_path = resolve_weight_path(name)
 
-    # bf16 for weights + state, matches the paper's inference precision.
-    strategy = f"{device} bf16"
+    if dtype not in {"bf16", "fp32"}:
+        raise ValueError(f"dtype must be 'bf16' or 'fp32', got {dtype!r}")
+    strategy = f"{device} {dtype}"
     model = RWKV(model=weight_path, strategy=strategy)
 
     pipeline = PIPELINE(model, "rwkv_vocab_v20230424")

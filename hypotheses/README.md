@@ -163,10 +163,10 @@ touch pieces implicitly).*
 | H17 | CONTESTED | 0.3 | 0.099 | `H17.md` |
 | H18 | PARTIAL | 0.4 | 0.400 | `H18.md` |
 | H19 | no structured record | - | - | `H19.md` |
-| H20 | CONTESTED | 0.4 | 0.182 | `H20.md` |
-| H21 | SUPPORTED | 0.75 | 0.565 | `H21.md` |
-| H22 | CONTESTED | 0.4 | 0.069 | `H22.md` |
-| H23 | no structured record | - | - | `H23.md` |
-| H24 | no structured record | - | - | `H24.md` |
+| H20 | CONTESTED | 0.4 | 0.146 | `H20.md` |
+| H21 | SUPPORTED | 0.75 | 0.628 | `H21.md` |
+| H22 | CONTESTED | 0.4 | 0.024 | `H22.md` |
+| H23 | SUPERSEDED | - | - | `H23.md` |
+| H24 | RETIRED | - | - | `H24.md` |
 | H25 | PARTIAL | - | - | `H25.md` |
-| H26 | PARTIAL | 0.4 | 0.051 | `H26.md` |
+| H26 | PARTIAL | 0.4 | 0.040 | `H26.md` |

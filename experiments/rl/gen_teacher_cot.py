@@ -17,6 +17,8 @@ then sampled.
 Outputs
   <out>.jsonl   one record per kept attempt (text, think length, metadata) —
                 resumable, appended as it goes
+  <out>.rejected.jsonl  one record per cell with every rejected attempt and why (think not closed /
+                content / format) - added 2026-10-20 after the 0.4B kept 0 of 12 with no trace of the cause
   <out>.pt      the tokenised blob `train_think_distill.load_examples` reads:
                 ids / state_mask (think span) / loss_mask (think + answer) / starts
 
@@ -136,6 +138,7 @@ def main() -> int:
     jl.parent.mkdir(parents=True, exist_ok=True)
     done = {(r["item"], r["format"]) for r in map(json.loads, open(jl))} if jl.exists() else set()
     tried = jl.with_suffix(".tried")
+    rej = jl.with_suffix(".rejected.jsonl")
     tried_set = set(tuple(json.loads(l)) for l in open(tried)) if tried.exists() else set()
     print(f"[teacher] {len(items)} items x {len(fmts)} formats, {len(done)} kept, "
           f"{len(tried_set)} cells already tried", flush=True)
@@ -146,10 +149,16 @@ def main() -> int:
                 continue
             q = with_format(it["prompt"], FORMATS[f][0])
             kept = None
+            fails = []
             for t in range(args.tries):
                 think, ans, closed = attempt(loaded, q, args.max_think, args.max_answer,
                                              0.0 if t == 0 else args.temperature, gen)
                 content, form = verify(ans, it["answer"], f) if closed else (False, False)
+                if not (content and form):
+                    # why it was rejected: think never closed (budget), wrong content, or wrong format
+                    fails.append({"attempt": t, "closed": closed, "content": content, "form": form,
+                                  "think_tokens": len(tok.encode(think)), "answer_text": ans[:200],
+                                  "think_tail": think[-200:]})
                 if content and form:
                     kept = {"item": i, "family": it["family"], "level": it["level"],
                             "format": f, "question": q, "gold": it["answer"],
@@ -159,6 +168,10 @@ def main() -> int:
             if kept:
                 with open(jl, "a") as fh:
                     fh.write(json.dumps(kept) + "\n")
+            if fails:
+                with open(rej, "a") as fh:
+                    fh.write(json.dumps({"item": i, "family": it["family"], "level": it["level"], "format": f,
+                                         "gold": it["answer"], "fails": fails}) + "\n")
             with open(tried, "a") as fh:
                 fh.write(json.dumps([i, f]) + "\n")
             print(f"[teacher] item {i+1}/{len(items)} {it['family']} L{it['level']} {f}: "
