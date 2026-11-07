@@ -1,0 +1,111 @@
+{
+  "_meta": {
+    "experiment": "train_latent_s1",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-26",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/train_latent_s1.py",
+    "script_sha256_12": "65a1a25e5b7e",
+    "summary": {
+      "held acc M0 -> M1 (step 0)": "1.0 -> 0.111",
+      "held acc M1 (last)": "0.667",
+      "loss": "kl T=2.0"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "args": {
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "items": [
+      "training/corpus_open/ciphers_k_context_plain_eval.jsonl",
+      "training/corpus_open/ciphers_k_question_plain_eval.jsonl",
+      "training/corpus_open/ciphers_k_mixed_plain_eval.jsonl"
+    ],
+    "right_from": "experiments/rl/results/s0_g1d04b_plain/m0_pass.json",
+    "exclude_right_from": null,
+    "build_cache": false,
+    "cache_out": null,
+    "target": "self",
+    "cache": null,
+    "loss": "kl",
+    "temp": 2.0,
+    "out": "experiments/rl/results/s1_pilot_g1d04b/kl_T2.json",
+    "steps": 200,
+    "accum": 4,
+    "muon_lr": 3e-05,
+    "aux_lr": 1e-05,
+    "warmup": 20,
+    "eval_every": 50,
+    "heldout_every": 5,
+    "threads": 4,
+    "seed": 0,
+    "weights": null,
+    "limit": 0
+  },
+  "n_train": 36,
+  "n_held": 9,
+  "history": [
+    {
+      "step": 0,
+      "train": {
+        "acc_M0": 1.0,
+        "acc_M1": 0.028
+      },
+      "held": {
+        "acc_M0": 1.0,
+        "acc_M1": 0.111
+      }
+    },
+    {
+      "step": 50,
+      "loss": 0.07048387951217591,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.667
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.778
+      }
+    },
+    {
+      "step": 100,
+      "loss": 0.04039038536138832,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.833
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.778
+      }
+    },
+    {
+      "step": 150,
+      "loss": 0.0369439892238006,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.667
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.778
+      }
+    },
+    {
+      "step": 200,
+      "loss": 0.025520646153017877,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.75
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M1": 0.667
+      }
+    }
+  ],
+  "checkpoint": "experiments/rl/results/s1_pilot_g1d04b/kl_T2.pth"
+}

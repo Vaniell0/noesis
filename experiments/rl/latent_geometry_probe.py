@@ -12,7 +12,15 @@ loop, against the token embeddings:
     argmax_cos  cosine to ln0(E[argmax logits]) - is it the word the model would say?
     tick_cos    cosine to the previous tick's ln0(h) - the owner's attractor: 1 = fixed point
     cross_cos   mean pairwise cosine across prompts at the same tick - 1 = one constant for
-                every task (the marker failure)
+                every task (the marker failure). UNCENTRED: a large component shared by all prompts
+                inflates it, so it is reported next to the centred measures below (added 2026-10-22
+                after an outside review: "0.99 without mean-centring comes for free"):
+    (a centred pairwise cosine is NOT reported: centred vectors sum to zero, so its mean is ~-1/(n-1)
+    by construction whatever the geometry)
+    pc1_share   share of the across-prompt variance in the first principal component
+    eff_rank    participation ratio of the across-prompt spectrum (1 = all prompts on one line)
+    step_c      per-prompt tick-to-tick displacement of the centred latent, relative to the spread
+                across prompts (0 = fixed point relative to how different the prompts are)
 
 Baseline G1i 2.9B untrained (2026-10-22): per-prompt fixed point by tick 3 (tick_cos 0.98),
 cross_cos 0.88 -> ~0 by tick 4. A checkpoint that learned to take apart what it knows should
@@ -54,7 +62,7 @@ def load_prompts(files, per_file: int) -> list:
 def prefill_latent(loaded, ids: list):
     """Prompt through the embeds path. Returns (logits at the last position [1, V], state,
     own latent h at the last position [1, 1, D])."""
-    E = loaded.model.emb.weight
+    E = loaded.embedding_weight
     logits, st, h = loaded.forward_stateful_embeds(E[torch.tensor([ids])], loaded.new_state(batch=1),
                                                    return_hidden=True)
     return logits[:, -1], st, h[:, -1:]
@@ -64,7 +72,7 @@ def _add_args(ap):
     ap.add_argument("--lg-items", type=Path, action="append",
                     help="jsonl with a 'prompt' field; repeatable")
     ap.add_argument("--lg-per-file", type=int, default=12)
-    ap.add_argument("--lg-ticks", type=int, default=6)
+    ap.add_argument("--lg-ticks", type=int, default=8, help="H25: useful ticks ~4-8, little past ~4")
     ap.add_argument("--lg-pca-k", type=int, default=256)
 
 
@@ -74,8 +82,8 @@ def run(loaded, tok, args) -> dict:
     torch.manual_seed(0)
     prompts = load_prompts(args.lg_items, args.lg_per_file)
     model = loaded.model
-    E = model.emb.weight.float()
-    ln0 = model.blocks[0].ln0
+    E = loaded.embedding_weight.float()
+    ln0 = lambda x: loaded.feed_view(x).float()                # RWKV: ln0; Qwen: identity (what block 0 sees)
     T = args.lg_ticks
 
     with torch.no_grad():
@@ -88,7 +96,7 @@ def run(loaded, tok, args) -> dict:
             c = u - mu
             return ((c @ P.T).pow(2).sum(-1) / c.pow(2).sum(-1).clamp_min(1e-12))
 
-        rnd = F.normalize(torch.randn(512, E.shape[1]), dim=-1)
+        rnd = F.normalize(torch.randn(512, E.shape[1], device=E.device, dtype=E.dtype), dim=-1)
         tok_rows = En[torch.randint(0, E.shape[0], (512,))]
         baseline = {"emb_frac_token_rows": float(emb_frac(tok_rows).mean()),
                     "emb_frac_random": float(emb_frac(rnd).mean()),
@@ -99,7 +107,7 @@ def run(loaded, tok, args) -> dict:
         max_dlogit, norms = 0.0, []
         t0 = time.time()
         for i, prompt in enumerate(prompts):
-            ids = tok.encode(prompt)
+            ids = tok.encode(loaded.tick_frame(prompt)[0] if hasattr(loaded, "tick_frame") else prompt)
             ref, _ = loaded.forward_stateful(torch.tensor([ids]), loaded.new_state(batch=1))
             lg, st, h = prefill_latent(loaded, ids)
             max_dlogit = max(max_dlogit, float((ref[0, -1] - lg[0]).abs().max()))
@@ -128,6 +136,14 @@ def run(loaded, tok, args) -> dict:
                 vv = torch.tensor(v)
                 vv = vv[~vv.isnan()]
                 r[k] = round(float(vv.mean()), 3) if len(vv) else None
+            C = U - U.mean(0, keepdim=True)
+            ev = torch.linalg.svdvals(C).pow(2)
+            r["pc1_share"] = round(float(ev[0] / ev.sum().clamp_min(1e-12)), 3)
+            r["eff_rank"] = round(float(ev.sum() ** 2 / ev.pow(2).sum().clamp_min(1e-12)), 2)
+            if t > 0:
+                P = torch.stack(per_tick[t - 1])
+                Pc = P - P.mean(0, keepdim=True)
+                r["step_c"] = round(float((C - Pc).norm(dim=-1).mean() / C.norm(dim=-1).mean().clamp_min(1e-12)), 3)
             rows.append(r)
     settle = next((r["tick"] for r in rows if r["tick_cos"] is not None and r["tick_cos"] >= 0.98), None)
     baseline["norm_hidden_vs_emb"] = round(sum(norms) / len(norms), 2)
@@ -137,7 +153,7 @@ def run(loaded, tok, args) -> dict:
             "settle_tick_cos098": settle, "ticks": rows,
             "note": "tick 0 = last prompt position; ticks >= 1 = hidden fed back",
             "_summary": {"settle tick (tick_cos>=0.98)": str(settle),
-                         "cross_cos last": str(rows[-1]["cross_cos"]),
+                         "cross_cos last": str(rows[-1]["cross_cos"]), "eff_rank last": str(rows[-1]["eff_rank"]),
                          "nn_cos tick0/last": f"{rows[0]['nn_cos']} / {rows[-1]['nn_cos']}"}}
 
 

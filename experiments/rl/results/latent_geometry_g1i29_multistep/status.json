@@ -1,0 +1,13 @@
+{
+  "ts": 1792704907.055988,
+  "ts_human": "2026-10-23 00:35:07",
+  "progress": [
+    1,
+    1
+  ],
+  "probe": null,
+  "probe_index": 1,
+  "probe_total": 1,
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "message": "done \u2014 1/1 probes finished"
+}

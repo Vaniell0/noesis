@@ -1,18 +1,20 @@
 # RL Track — Matrix Task Curriculum (A1.5)
 
-## Current stages (2026-10-22) — read this first
+## Current stages (2026-10-27) — read this first
 
-The training stages live in `hypotheses/HZLK.md` §6 and are not repeated here. In short: **S0** data (the model's own
-verified CoT on ciphers and tables, input/output formats diluted, G1i 2.9B teacher) → **S1** one tick of the model's own
-latent, M=1 mandatory, distillation with answer CE → **S2** optimisation in a frame (k-subspace latent noise inside log pi;
-verified answer or continuation-gain reward minus a price per tick) → **S3** time and M>1 (continue = an unreadable latent
-tick in the same softmax as the answer) → **S4** format and honesty. Every gate is one
-`experiments/run.py --backend peft --tests latent_geometry,latent_noise,known_heads` run on the checkpoint.
+The training stages live in `hypotheses/HZLK.md` §6 and are not repeated here. In short: **S0** data (items the model
+answers at M=0, content and form scored apart) → **S1** the answer through M ticks of the model's own latent (M = number
+of ticks, one number), distillation by KL to the model's own M=0 distribution at temperature 2 → **S2** optimisation in a
+frame (k-subspace latent noise inside log pi; verified answer or continuation-gain reward minus a price per tick) → **S3**
+time: the model regulates M itself (continue = an unreadable latent tick in the same softmax as the answer) → **S4** format
+and honesty. Every gate is one `experiments/run.py --backend peft [--weights CKPT] --tests ...` run on the checkpoint:
+`m0_pass` (free answers at M and at 0 - a pass-through tick solves the same items at 0), `chat` (everyday questions EN/RU,
+what each tick decodes to), `latent_geometry`, `latent_noise`, `known_heads`. S1 pilot on 0.4B: HZLK §6.
 
 | was (this file) | now |
 |---|---|
-| Phase 1 ThinkChain (learned markers, LoRA r=32, M=1) | S1 with the model's own latent, full FT, answer CE |
-| Phase 1.5 full-FT smoothing, M in {0,1,2} | S1: M=1 mandatory on the verified teacher set; M>1 only in S3 |
+| Phase 1 ThinkChain (learned markers, LoRA r=32, M=1) | S1 with the model's own latent, full FT, KL to its own M=0 distribution |
+| Phase 1.5 full-FT smoothing, M in {0,1,2} | S1: M fixed by us (1, then 4); the model regulates M only in S3 |
 | Phase 2 rewind marker / L_tPC | the function stays (re-think inside the loop, S3); the constant-vector implementation is falsified |
 | Phase 3 word-search GRPO, log pi on answer tokens only | S2/S3: the latent itself is in log pi; ciphers and tables instead of word-search |
 
@@ -391,6 +393,9 @@ not resolved — read it before assuming the two stages share a curriculum.
    chains, larger magnitudes, operations past what per-channel decay +
    rank-1 write can represent), not a replacement for training WKV
    itself to compute.
+   **2026-10-28 (owner):** ROSA is the last stage of the loop, HZLK §6 S5: a QKV-ROSA
+   branch queried at every latent tick (not only through a delegate marker), so the
+   WKV state may settle and forget (H25, 2026-10-28) while ROSA keeps the exact past.
 
 Mechanism-level detail (recurrence math, decay derivation) lives in
 `docs/rwkv7-mechanics.md`. Full run-by-run narrative for Phases 1/1.5/2 is the

@@ -1,0 +1,1247 @@
+{
+  "_meta": {
+    "experiment": "chat",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-27",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth + experiments/rl/results/s1_pilot_g1d04b/kl_T2_k4.pth",
+    "script": "experiments/rl/chat_probe.py",
+    "script_sha256_12": "4ccee90872e3",
+    "summary": {
+      "What is your favourite c M=0": "<tool_call>\n{\"name\": \"answer\", \"arguments\": {\"answer\": \"My f",
+      "What is your favourite c M=4": "**My favourite colour is ******.\n**Why:**\nI love the ****** ",
+      "What car would you like  M=0": "<tool_call>\n{\"name\": \"answer\", \"arguments\": {\"answer\": \"I wo",
+      "What car would you like  M=4": "I would like to have a **Tesla Model 3**.\nHere's why:\n1. **P",
+      "Name three animals that  M=0": "<Answer>\nThe three animals that live in the ocean are:\n1. **",
+      "Name three animals that  M=4": "**Three Animals That Live in the Ocean:**\n1. **Seahorse**  \n",
+      "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442  M=0": "<tool_call>\n{\"name\": \"answer\", \"arguments\": {\"answer\": \"\u042f \u043b\u044e",
+      "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442  M=4": "**\u0426\u0432\u0435\u0442:** **\u0417\u0435\u043b\u0435\u043d\u044b\u0439**\n**\u041f\u043e\u0447\u0435\u043c\u0443:**\n\u0417\u0435\u043b\u0435\u043d\u044b\u0439 \u2014 \u044d\u0442\u043e \u0446\u0432\u0435\u0442, \u043a\u043e\u0442\u043e\u0440\u044b",
+      "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b M=0": "<tool_call>\n{\"name\": \"answer\", \"arguments\": \"{\\\"answer\\\": \\\"",
+      "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b M=4": "**\u041c\u0430\u0448\u0438\u043d\u0430, \u043a\u043e\u0442\u043e\u0440\u0443\u044e \u044f \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443:**\n**1. \u041c\u0430\u0448\u0438\u043d\u0430 \u0434",
+      "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e M=0": "<tool_call>\n{\"name\": \"search\", \"arguments\": {\"search_term\": ",
+      "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e M=4": "**\u0422\u0440\u0438 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u0436\u0438\u0432\u0443\u0449\u0438\u0435 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435:**\n1. **\u041a\u0443\u0440\u043e\u043a**  \n   - \u0416\u0438\u0432\u0435"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "weights": "experiments/rl/results/s1_pilot_g1d04b/kl_T2_k4.pth",
+  "ticks": [
+    0,
+    4
+  ],
+  "rows": [
+    {
+      "q": "What is your favourite colour, and why?",
+      "M": 0,
+      "answer": "<tool_call>\n{\"name\": \"answer\", \"arguments\": {\"answer\": \"My favourite colour is blue. It is a pure, calming colour that evokes feelings of peace, tranquility, and trust. It is often associated with the sky, the ocean, and the natural world. Blue is also a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the ocean, and the natural world. It is a colour that is often associated with the sky, the",
+      "finished": false
+    },
+    {
+      "q": "What is your favourite colour, and why?",
+      "M": 4,
+      "answer": "**My favourite colour is ******.\n**Why:**\nI love the ****** because it represents ******, a colour that is both ****** and ******. It is a colour that is ****** and ******, and it is a colour that is ****** and ******. It is a colour that is ****** and ******, and it is a colour that is ****** and ******. It is a colour that is ****** and ******, and it is a colour that is ****** and ******. It is a colour that is ****** and ******, and it is a colour that is ****** and ******. It is a colour that is ****** and ******, and it is a colour that is ****** and ******. It is a colour that is ****** and ******, and it is a colour that is ****** and ******. It is a colour that is ****** and ******, and it is a colour that is ****** and ******. It is a colour that is ****** and ******",
+      "finished": false,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "**",
+              0.271
+            ],
+            [
+              "<",
+              0.199
+            ],
+            [
+              "I",
+              0.079
+            ],
+            [
+              "My",
+              0.064
+            ],
+            [
+              "The",
+              0.03
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        },
+        {
+          "tick": 2,
+          "says": [
+            [
+              "**",
+              0.25
+            ],
+            [
+              "I",
+              0.093
+            ],
+            [
+              "My",
+              0.091
+            ],
+            [
+              "<",
+              0.071
+            ],
+            [
+              "The",
+              0.043
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ]
+          ]
+        },
+        {
+          "tick": 3,
+          "says": [
+            [
+              "**",
+              0.201
+            ],
+            [
+              "My",
+              0.096
+            ],
+            [
+              "I",
+              0.093
+            ],
+            [
+              "The",
+              0.054
+            ],
+            [
+              "<",
+              0.043
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        },
+        {
+          "tick": 4,
+          "says": [
+            [
+              "**",
+              0.157
+            ],
+            [
+              "My",
+              0.1
+            ],
+            [
+              "I",
+              0.091
+            ],
+            [
+              "The",
+              0.064
+            ],
+            [
+              "Hello",
+              0.027
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "What car would you like to have, and why?",
+      "M": 0,
+      "answer": "<tool_call>\n{\"name\": \"answer\", \"arguments\": {\"answer\": \"I would like to have a car that is reliable, fuel-efficient, and has good safety features. I would also like it to be affordable and have a good reputation in the market. I would like it to be able to handle long trips and have a comfortable ride. I would also like it to be environmentally friendly and have good fuel efficiency. I would like it to be easy to maintain and have good customer service. I would like it to be a versatile vehicle that can be used for various purposes, such as commuting, daily driving, and recreational driving. I would also like it to be a vehicle that is well-maintained and has good resale value. I would like it to be a vehicle that is safe and reliable, and that I can trust to handle any situation that may arise. I would like it to be a vehicle that is well-engineered and has good quality materials. I would like it to be a vehicle that is well-designed and has good aesthetics. I would like it to be a vehicle that is well-engineered and has good quality materials. I would like it to be a vehicle that is well-designed and has good aesthetics",
+      "finished": false
+    },
+    {
+      "q": "What car would you like to have, and why?",
+      "M": 4,
+      "answer": "I would like to have a **Tesla Model 3**.\nHere's why:\n1. **Performance**: The Tesla Model 3 is a top-tier electric vehicle with a range of over 300 miles and a top speed of up to 200 mph. It's a fast, efficient, and powerful electric car.\n2. **Sustainability**: The Model 3 is a zero-emission vehicle that produces zero tailpipe emissions, making it a great choice for those who care about the environment.\n3. **Cost-Effective**: The Model 3 is a great value for money, with a lower price point than many other electric vehicles.\n4. **Convenience**: The Model 3 has a range of up to 400 miles on a single charge, making it easy to travel long distances.\n5. **Future-Proof**: The Model 3 is designed to be a long-term investment, with a range that can be extended with battery packs.\n6. **Ease of Use**: The Model 3 is easy to drive and maintain, with a user-friendly interface and intuitive controls.\n7. **Comfort**: The Model 3 is a comfortable and stylish vehicle, with a range of up to 400 miles on a single charge",
+      "finished": false,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "I",
+              0.182
+            ],
+            [
+              "**",
+              0.16
+            ],
+            [
+              "<",
+              0.092
+            ],
+            [
+              "Hello",
+              0.051
+            ],
+            [
+              "As",
+              0.03
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ]
+          ]
+        },
+        {
+          "tick": 2,
+          "says": [
+            [
+              "I",
+              0.19
+            ],
+            [
+              "**",
+              0.152
+            ],
+            [
+              "Hello",
+              0.068
+            ],
+            [
+              "<",
+              0.042
+            ],
+            [
+              "The",
+              0.023
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ]
+          ]
+        },
+        {
+          "tick": 3,
+          "says": [
+            [
+              "I",
+              0.185
+            ],
+            [
+              "**",
+              0.129
+            ],
+            [
+              "Hello",
+              0.067
+            ],
+            [
+              "<",
+              0.028
+            ],
+            [
+              "The",
+              0.027
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        },
+        {
+          "tick": 4,
+          "says": [
+            [
+              "I",
+              0.186
+            ],
+            [
+              "**",
+              0.108
+            ],
+            [
+              "Hello",
+              0.062
+            ],
+            [
+              "The",
+              0.031
+            ],
+            [
+              "What",
+              0.022
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "Name three animals that live in the ocean.",
+      "M": 0,
+      "answer": "<Answer>\nThe three animals that live in the ocean are:\n1. **Seahorse**\n2. **Shark**\n3. **Whale**\n</Answer>",
+      "finished": true
+    },
+    {
+      "q": "Name three animals that live in the ocean.",
+      "M": 4,
+      "answer": "**Three Animals That Live in the Ocean:**\n1. **Seahorse**  \n   Seahorses are small, barrel-shaped fish that live in the ocean. They have a unique structure with a long, flexible tail that they use to swim and a long, narrow snout that they use to capture prey. Seahorses are found in the tropical and subtropical waters of the world.\n2. **Shark**  \n   Sharks are a group of fish that live in the ocean. They are known for their powerful jaws and sharp teeth, which they use to capture and eat other animals. Shark species include the great white shark, the tiger shark, and the bull shark.\n3. **Octopus**  \n   Octopuses are a group of invertebrates that live in the ocean. They are known for their intelligence, dexterity, and ability to change color and texture to blend in with their surroundings. Octopuses are found in the tropical and temperate oceans.",
+      "finished": true,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "**",
+              0.18
+            ],
+            [
+              "<",
+              0.139
+            ],
+            [
+              "1",
+              0.098
+            ],
+            [
+              "Three",
+              0.08
+            ],
+            [
+              "Answer",
+              0.048
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ]
+          ]
+        },
+        {
+          "tick": 2,
+          "says": [
+            [
+              "1",
+              0.196
+            ],
+            [
+              "**",
+              0.194
+            ],
+            [
+              "<",
+              0.09
+            ],
+            [
+              "Answer",
+              0.05
+            ],
+            [
+              "The",
+              0.044
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        },
+        {
+          "tick": 3,
+          "says": [
+            [
+              "**",
+              0.205
+            ],
+            [
+              "1",
+              0.181
+            ],
+            [
+              "<",
+              0.099
+            ],
+            [
+              "The",
+              0.05
+            ],
+            [
+              "Three",
+              0.037
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        },
+        {
+          "tick": 4,
+          "says": [
+            [
+              "**",
+              0.205
+            ],
+            [
+              "1",
+              0.15
+            ],
+            [
+              "<",
+              0.096
+            ],
+            [
+              "The",
+              0.059
+            ],
+            [
+              "Three",
+              0.039
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442 \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 0,
+      "answer": "<tool_call>\n{\"name\": \"answer\", \"arguments\": {\"answer\": \"\u042f \u043b\u044e\u0431\u043b\u044e \u043a\u0440\u0430\u0441\u043d\u044b\u0439 \u0446\u0432\u0435\u0442. \u041e\u043d \u0441\u0438\u043c\u0432\u043e\u043b\u0438\u0437\u0438\u0440\u0443\u0435\u0442 \u044d\u043d\u0435\u0440\u0433\u0438\u044e, \u0436\u0438\u0437\u043d\u0435\u043d\u043d\u043e\u0441\u0442\u044c \u0438 \u0441\u0438\u043b\u0443. \u041a\u0440\u0430\u0441\u043d\u044b\u0439 \u0446\u0432\u0435\u0442 \u0447\u0430\u0441\u0442\u043e \u0441\u0432\u044f\u0437\u0430\u043d \u0441 \u043f\u0440\u0438\u0440\u043e\u0434\u043e\u0439, \u0430 \u0442\u0430\u043a\u0436\u0435 \u0441 \u0438\u0434\u0435\u0435\u0439 \u0436\u0438\u0437\u043d\u0438 \u0438 \u0434\u0432\u0438\u0436\u0435\u043d\u0438\u044f \u0432\u043f\u0435\u0440\u0435\u0434. \u041e\u043d \u0442\u0430\u043a\u0436\u0435 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0445\u043e\u0440\u043e\u0448\u0438\u043c \u0446\u0432\u0435\u0442\u043e\u043c \u0434\u043b\u044f \u0434\u0435\u043a\u043e\u0440\u0430 \u0438 \u0443\u043a\u0440\u0430\u0448\u0435\u043d\u0438\u044f.\"}\n}</tool_call>\n<tool_call>\n{\"name\": \"answer\", \"arguments\": {\"answer\": \"\u042f \u043b\u044e\u0431\u043b\u044e \u043a\u0440\u0430\u0441\u043d\u044b\u0439 \u0446\u0432\u0435\u0442. \u041e\u043d \u0441\u0438\u043c\u0432\u043e\u043b\u0438\u0437\u0438\u0440\u0443\u0435\u0442 \u044d\u043d\u0435\u0440\u0433\u0438\u044e, \u0436\u0438\u0437\u043d\u0435\u043d\u043d\u043e\u0441\u0442\u044c \u0438 \u0441\u0438\u043b\u0443. \u041a\u0440\u0430\u0441\u043d\u044b\u0439 \u0446\u0432\u0435\u0442 \u0447\u0430\u0441\u0442\u043e \u0441\u0432\u044f\u0437\u0430\u043d \u0441 \u043f\u0440\u0438\u0440\u043e\u0434\u043e\u0439, \u0430 \u0442\u0430\u043a\u0436\u0435 \u0441 \u0438\u0434\u0435\u0435\u0439 \u0436\u0438\u0437\u043d\u0438 \u0438 \u0434\u0432\u0438\u0436\u0435\u043d\u0438\u044f \u0432\u043f\u0435\u0440\u0435\u0434. \u041e\u043d \u0442\u0430\u043a\u0436\u0435 \u044f\u0432\u043b\u044f\u0435\u0442\u0441\u044f \u0445\u043e\u0440\u043e\u0448\u0438\u043c \u0446\u0432\u0435\u0442\u043e\u043c \u0434\u043b\u044f \u0434\u0435\u043a\u043e\u0440\u0430 \u0438 \u0443\u043a\u0440\u0430\u0448\u0435\u043d\u0438\u044f.\"}\n</tool_call>\n</tool_response>",
+      "finished": true
+    },
+    {
+      "q": "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442 \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 4,
+      "answer": "**\u0426\u0432\u0435\u0442:** **\u0417\u0435\u043b\u0435\u043d\u044b\u0439**\n**\u041f\u043e\u0447\u0435\u043c\u0443:**\n\u0417\u0435\u043b\u0435\u043d\u044b\u0439 \u2014 \u044d\u0442\u043e \u0446\u0432\u0435\u0442, \u043a\u043e\u0442\u043e\u0440\u044b\u0439 \u044f \u043b\u044e\u0431\u043b\u044e. \u041e\u043d \u0441\u0438\u043c\u0432\u043e\u043b\u0438\u0437\u0438\u0440\u0443\u0435\u0442 \u0447\u0438\u0441\u0442\u043e\u0442\u0443, \u0440\u0430\u0434\u043e\u0441\u0442\u044c, \u043f\u0440\u043e\u0437\u0440\u0430\u0447\u043d\u043e\u0441\u0442\u044c \u0438 \u0441\u0432\u0435\u0442\u043b\u043e\u0435 \u0431\u0443\u0434\u0443\u0449\u0435\u0435. \u041e\u043d \u0442\u0430\u043a\u0436\u0435 \u0447\u0430\u0441\u0442\u043e \u0441\u0432\u044f\u0437\u0430\u043d \u0441 \u043f\u0440\u0438\u0440\u043e\u0434\u043e\u0439 \u0438 \u0437\u0434\u043e\u0440\u043e\u0432\u044c\u0435\u043c. \u0417\u0435\u043b\u0435\u043d\u044b\u0439 \u0446\u0432\u0435\u0442 \u0447\u0430\u0441\u0442\u043e \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442\u0441\u044f \u0432 \u0441\u0442\u0438\u043b\u044f\u0445, \u0442\u0430\u043a\u0438\u0445 \u043a\u0430\u043a \u043c\u0438\u043d\u0438\u043c\u0430\u043b\u0438\u0437\u043c, \u0441\u043e\u0432\u0440\u0435\u043c\u0435\u043d\u043d\u044b\u0439 \u0434\u0438\u0437\u0430\u0439\u043d \u0438 \u044d\u043a\u043e\u043b\u043e\u0433\u0438\u044f, \u0447\u0442\u043e\u0431\u044b \u0441\u043e\u0437\u0434\u0430\u0442\u044c \u0443\u044e\u0442\u043d\u044b\u0439 \u0438 \u044d\u043d\u0435\u0440\u0433\u0438\u0447\u043d\u044b\u0439 \u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0441\u0442\u0432\u043e.",
+      "finished": true,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "<",
+              0.216
+            ],
+            [
+              "**",
+              0.134
+            ],
+            [
+              "\u041a\u0430",
+              0.058
+            ],
+            [
+              "\u042f",
+              0.049
+            ],
+            [
+              "\u0426",
+              0.047
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.948
+            ],
+            [
+              "\ufffd",
+              0.947
+            ],
+            [
+              "\ufffd",
+              0.947
+            ],
+            [
+              "\ufffd",
+              0.947
+            ],
+            [
+              "\ufffd",
+              0.947
+            ]
+          ]
+        },
+        {
+          "tick": 2,
+          "says": [
+            [
+              "**",
+              0.164
+            ],
+            [
+              "<",
+              0.081
+            ],
+            [
+              "\u042f",
+              0.059
+            ],
+            [
+              "\u041a\u0430",
+              0.059
+            ],
+            [
+              "\u0426",
+              0.059
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.946
+            ]
+          ]
+        },
+        {
+          "tick": 3,
+          "says": [
+            [
+              "**",
+              0.152
+            ],
+            [
+              "\u0426",
+              0.061
+            ],
+            [
+              "\u041a\u0430",
+              0.06
+            ],
+            [
+              "\u042f",
+              0.059
+            ],
+            [
+              "<",
+              0.047
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        },
+        {
+          "tick": 4,
+          "says": [
+            [
+              "**",
+              0.125
+            ],
+            [
+              "\u0426",
+              0.069
+            ],
+            [
+              "\u041a\u0430",
+              0.062
+            ],
+            [
+              "\u042f",
+              0.059
+            ],
+            [
+              "\u0414",
+              0.04
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 0,
+      "answer": "<tool_call>\n{\"name\": \"answer\", \"arguments\": \"{\\\"answer\\\": \\\"\u042f \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u043c\u0430\u0448\u0438\u043d\u0443, \u043a\u043e\u0442\u043e\u0440\u0430\u044f \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0441\u0432\u043e\u0431\u043e\u0434\u043d\u043e \u043f\u0435\u0440\u0435\u0434\u0432\u0438\u0433\u0430\u0442\u044c\u0441\u044f \u043f\u043e \u0433\u043e\u0440\u043e\u0434\u0443, \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u044f \u043c\u043d\u0435 \u0438\u0441\u0441\u043b\u0435\u0434\u043e\u0432\u0430\u0442\u044c \u043d\u043e\u0432\u044b\u0435 \u043c\u0435\u0441\u0442\u0430 \u0438 \u0443\u0432\u0438\u0434\u0435\u0442\u044c \u0440\u0430\u0437\u043d\u044b\u0435 \u043a\u0443\u043b\u044c\u0442\u0443\u0440\u044b \u0438 \u0442\u0440\u0430\u0434\u0438\u0446\u0438\u0438. \u041a\u0440\u043e\u043c\u0435 \u0442\u043e\u0433\u043e, \u044f \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u043c\u0430\u0448\u0438\u043d\u0443, \u043a\u043e\u0442\u043e\u0440\u0430\u044f \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0431\u044b\u0441\u0442\u0440\u043e \u0438 \u043b\u0435\u0433\u043a\u043e \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0430\u0442\u044c\u0441\u044f \u043f\u043e \u0433\u043e\u0440\u043e\u0434\u0443, \u0447\u0442\u043e \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0431\u044b\u0441\u0442\u0440\u0435\u0435 \u0434\u043e\u0441\u0442\u0438\u0447\u044c \u043c\u043e\u0438\u0445 \u0446\u0435\u043b\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0447. \u041a\u0440\u043e\u043c\u0435 \u0442\u043e\u0433\u043e, \u044f \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u043c\u0430\u0448\u0438\u043d\u0443, \u043a\u043e\u0442\u043e\u0440\u0430\u044f \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0431\u044b\u0441\u0442\u0440\u043e \u0438 \u043b\u0435\u0433\u043a\u043e \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0430\u0442\u044c\u0441\u044f \u043f\u043e \u0433\u043e\u0440\u043e\u0434\u0443, \u0447\u0442\u043e \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0431\u044b\u0441\u0442\u0440\u0435\u0435 \u0434\u043e\u0441\u0442\u0438\u0447\u044c \u043c\u043e\u0438\u0445 \u0446\u0435\u043b\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0447. \u041a\u0440\u043e\u043c\u0435 \u0442\u043e\u0433\u043e, \u044f \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u043c\u0430\u0448\u0438\u043d\u0443, \u043a\u043e\u0442\u043e\u0440\u0430\u044f \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0431\u044b\u0441\u0442\u0440\u043e \u0438 \u043b\u0435\u0433\u043a\u043e \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0430\u0442\u044c\u0441\u044f \u043f\u043e \u0433\u043e\u0440\u043e\u0434\u0443, \u0447\u0442\u043e \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0431\u044b\u0441\u0442\u0440\u0435\u0435 \u0434\u043e\u0441\u0442\u0438\u0447\u044c \u043c\u043e\u0438\u0445 \u0446\u0435\u043b\u0435\u0439 \u0438 \u0437\u0430\u0434\u0430\u0447. \u041a\u0440\u043e\u043c\u0435 \u0442\u043e\u0433\u043e, \u044f \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u043c\u0430\u0448\u0438\u043d\u0443, \u043a\u043e\u0442\u043e\u0440\u0430\u044f \u043f\u043e\u0437\u0432\u043e\u043b\u044f\u0435\u0442 \u043c\u043d\u0435 \u0431\u044b\u0441\u0442\u0440\u043e \u0438 \u043b\u0435\u0433\u043a\u043e \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0430\u0442\u044c\u0441\u044f \u043f\u043e \u0433\u043e\u0440\u043e\u0434\u0443, \u0447\u0442\u043e \u043f\u043e\u0437\u0432\u043e",
+      "finished": false
+    },
+    {
+      "q": "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 4,
+      "answer": "**\u041c\u0430\u0448\u0438\u043d\u0430, \u043a\u043e\u0442\u043e\u0440\u0443\u044e \u044f \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443:**\n**1. \u041c\u0430\u0448\u0438\u043d\u0430 \u0434\u043b\u044f \u0440\u0430\u0431\u043e\u0442\u044b:**\n\u042f \u0431\u044b \u0445\u043e\u0442\u0435\u043b \u0438\u043c\u0435\u0442\u044c \u043c\u0430\u0448\u0438\u043d\u0443 \u0434\u043b\u044f \u0440\u0430\u0431\u043e\u0442\u044b, \u043a\u043e\u0442\u043e\u0440\u0430\u044f \u043f\u043e\u0437\u0432\u043e\u043b\u0438\u0442 \u043c\u043d\u0435 \u0432\u044b\u043f\u043e\u043b\u043d\u044f\u0442\u044c \u0440\u0430\u0437\u043b\u0438\u0447\u043d\u044b\u0435 \u0437\u0430\u0434\u0430\u0447\u0438, \u0442\u0430\u043a\u0438\u0435 \u043a\u0430\u043a:\n*   **\u041e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0430 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432:** \u041c\u0430\u0448\u0438\u043d\u0430 \u0434\u043b\u044f \u0440\u0430\u0431\u043e\u0442\u044b \u0441 \u0431\u0443\u043c\u0430\u0433\u0430\u043c\u0438, \u043f\u0435\u0447\u0430\u0442\u044c\u044e, \u043a\u043e\u043f\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435\u043c \u0438 \u043f\u043e\u0434\u0433\u043e\u0442\u043e\u0432\u043a\u043e\u0439 \u043a \u043f\u0438\u0441\u044c\u043c\u0435\u043d\u043d\u044b\u043c \u0437\u0430\u0434\u0430\u043d\u0438\u044f\u043c.\n*   **\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432:** \u041c\u0430\u0448\u0438\u043d\u0430 \u0434\u043b\u044f \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0442\u0435\u043a\u0441\u0442\u043e\u0432, \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0439, \u0432\u0438\u0434\u0435\u043e \u0438 \u0434\u0440\u0443\u0433\u0438\u0445 \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u043e\u0432.\n*   **\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043f\u0440\u0435\u0437\u0435\u043d\u0442\u0430\u0446\u0438\u0439:** \u041c\u0430\u0448\u0438\u043d\u0430 \u0434\u043b\u044f \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u043f\u0440\u0435\u0437\u0435\u043d\u0442\u0430\u0446\u0438\u0439, \u0432\u0438\u0437\u0443\u0430\u043b\u044c\u043d\u044b\u0445 \u043c\u0430\u0442\u0435\u0440\u0438\u0430\u043b\u043e\u0432 \u0438 \u0432\u0438\u0434\u0435\u043e.\n*   **\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0432\u0438\u0434\u0435\u043e:** \u041c\u0430\u0448\u0438\u043d\u0430 \u0434\u043b\u044f \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u0432\u0438\u0434\u0435\u043e, \u0441\u043d\u044f\u0442\u0438\u044f \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0432\u0438\u0434\u0435\u043e.\n*   **\u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u0444\u043e\u0442\u043e\u0433\u0440\u0430\u0444\u0438\u0439:** \u041c\u0430\u0448\u0438\u043d\u0430 \u0434\u043b\u044f \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u044f \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f \u0444\u043e\u0442\u043e\u0433\u0440\u0430\u0444\u0438\u0439, \u0441\u043d\u044f\u0442\u0438\u044f \u0438 \u0440\u0435\u0434\u0430\u043a\u0442\u0438",
+      "finished": false,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "**",
+              0.143
+            ],
+            [
+              "<",
+              0.095
+            ],
+            [
+              "\u0414",
+              0.071
+            ],
+            [
+              "\u042f",
+              0.071
+            ],
+            [
+              "\u041a\u0430",
+              0.058
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        },
+        {
+          "tick": 2,
+          "says": [
+            [
+              "**",
+              0.144
+            ],
+            [
+              "\u042f",
+              0.074
+            ],
+            [
+              "\u0414",
+              0.072
+            ],
+            [
+              "\u041a\u0430",
+              0.062
+            ],
+            [
+              "<",
+              0.043
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        },
+        {
+          "tick": 3,
+          "says": [
+            [
+              "**",
+              0.138
+            ],
+            [
+              "\u042f",
+              0.069
+            ],
+            [
+              "\u0414",
+              0.066
+            ],
+            [
+              "\u041a\u0430",
+              0.062
+            ],
+            [
+              "\n",
+              0.039
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        },
+        {
+          "tick": 4,
+          "says": [
+            [
+              "**",
+              0.123
+            ],
+            [
+              "\u042f",
+              0.068
+            ],
+            [
+              "\u041a\u0430",
+              0.062
+            ],
+            [
+              "\u0414",
+              0.059
+            ],
+            [
+              "\u041c",
+              0.036
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0436\u0438\u0432\u0443\u0442 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435.",
+      "M": 0,
+      "answer": "<tool_call>\n{\"name\": \"search\", \"arguments\": {\"search_term\": \"ocean animals\"}}\n</tool_call>\n<tool_result>\n<tool_name>search</tool_name>\n<result>\u041d\u0430\u0439\u0434\u0435\u043d\u043e 3 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u0436\u0438\u0432\u0443\u0449\u0438\u0445 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435:\n1. **\u0411\u0430\u0440\u044c\u0435\u0440\u043d\u044b\u0439 \u0440\u044b\u0431\u0430\u043a** (Seahorse)\n2. **\u0411\u0430\u0440\u044c\u0435\u0440\u043d\u044b\u0439 \u0440\u044b\u0431\u0430\u043a** (Seahorse)\n3. **\u0411\u0430\u0440\u044c\u0435\u0440\u043d\u044b\u0439 \u0440\u044b\u0431\u0430\u043a** (Seahorse)\n</result>\n</tool_result>\n<tool_result>\n<tool_name>search</tool_name>\n<result>\u041d\u0430\u0439\u0434\u0435\u043d\u043e 3 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u0436\u0438\u0432\u0443\u0449\u0438\u0445 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435:\n1. **\u0411\u0430\u0440\u044c\u0435\u0440\u043d\u044b\u0439 \u0440\u044b\u0431\u0430\u043a** (Seahorse)\n2. **\u0411\u0430\u0440\u044c\u0435\u0440\u043d\u044b\u0439 \u0440\u044b\u0431\u0430\u043a** (Seahorse)\n3. **\u0411\u0430\u0440\u044c\u0435\u0440\u043d\u044b\u0439 \u0440\u044b\u0431\u0430\u043a** (Seahorse)\n</result>\n</tool_result>\n</tool_call>",
+      "finished": true
+    },
+    {
+      "q": "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0436\u0438\u0432\u0443\u0442 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435.",
+      "M": 4,
+      "answer": "**\u0422\u0440\u0438 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u0436\u0438\u0432\u0443\u0449\u0438\u0435 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435:**\n1. **\u041a\u0443\u0440\u043e\u043a**  \n   - \u0416\u0438\u0432\u0435\u0442 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435, \u0432 \u0432\u043e\u0434\u0435 \u0438 \u0432 \u043c\u043e\u0440\u0435.  \n   - \u041d\u0430\u0445\u043e\u0434\u0438\u0442\u0441\u044f \u0432 \u0433\u043b\u0443\u0431\u0438\u043d\u0430\u0445 \u043e\u043a\u0435\u0430\u043d\u0430, \u0433\u0434\u0435 \u0435\u0433\u043e \u0442\u0435\u043b\u043e \u043d\u0435 \u043f\u043e\u0434\u0432\u0435\u0440\u0436\u0435\u043d\u043e \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f\u043c \u0442\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u044b \u0438 \u0432\u043b\u0430\u0436\u043d\u043e\u0441\u0442\u0438.  \n   - \u0416\u0438\u0432\u0435\u0442 \u0432 \u0433\u043b\u0443\u0431\u0438\u043d\u0430\u0445 \u043e\u043a\u0435\u0430\u043d\u0430, \u0433\u0434\u0435 \u0435\u0433\u043e \u0442\u0435\u043b\u043e \u043d\u0435 \u043f\u043e\u0434\u0432\u0435\u0440\u0436\u0435\u043d\u043e \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f\u043c \u0442\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u044b \u0438 \u0432\u043b\u0430\u0436\u043d\u043e\u0441\u0442\u0438.\n2. **\u041a\u0443\u0440\u043e\u043a**  \n   - \u0416\u0438\u0432\u0435\u0442 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435, \u0432 \u0432\u043e\u0434\u0435 \u0438 \u0432 \u043c\u043e\u0440\u0435.  \n   - \u041d\u0430\u0445\u043e\u0434\u0438\u0442\u0441\u044f \u0432 \u0433\u043b\u0443\u0431\u0438\u043d\u0430\u0445 \u043e\u043a\u0435\u0430\u043d\u0430, \u0433\u0434\u0435 \u0435\u0433\u043e \u0442\u0435\u043b\u043e \u043d\u0435 \u043f\u043e\u0434\u0432\u0435\u0440\u0436\u0435\u043d\u043e \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f\u043c \u0442\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u044b \u0438 \u0432\u043b\u0430\u0436\u043d\u043e\u0441\u0442\u0438.  \n   - \u0416\u0438\u0432\u0435\u0442 \u0432 \u0433\u043b\u0443\u0431\u0438\u043d\u0430\u0445 \u043e\u043a\u0435\u0430\u043d\u0430, \u0433\u0434\u0435 \u0435\u0433\u043e \u0442\u0435\u043b\u043e \u043d\u0435 \u043f\u043e\u0434\u0432\u0435\u0440\u0436\u0435\u043d\u043e \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f\u043c \u0442\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u044b \u0438 \u0432\u043b\u0430\u0436\u043d\u043e\u0441\u0442\u0438.\n3. **\u041a\u0443\u0440\u043e\u043a**  \n   - \u0416\u0438\u0432\u0435\u0442 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435, \u0432 \u0432\u043e\u0434\u0435 \u0438 \u0432 \u043c\u043e\u0440\u0435.  \n   - \u041d\u0430\u0445\u043e\u0434\u0438\u0442\u0441\u044f \u0432 \u0433\u043b\u0443\u0431\u0438\u043d\u0430\u0445 \u043e\u043a\u0435\u0430\u043d\u0430, \u0433\u0434\u0435 \u0435\u0433\u043e \u0442\u0435\u043b\u043e \u043d\u0435 \u043f\u043e\u0434\u0432\u0435\u0440\u0436\u0435\u043d\u043e \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f\u043c \u0442\u0435\u043c\u043f\u0435\u0440\u0430\u0442\u0443\u0440\u044b \u0438 \u0432\u043b\u0430\u0436\u043d\u043e",
+      "finished": false,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "**",
+              0.18
+            ],
+            [
+              "<",
+              0.12
+            ],
+            [
+              "1",
+              0.078
+            ],
+            [
+              "\u041a\u043e",
+              0.041
+            ],
+            [
+              "\u0414",
+              0.036
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.947
+            ],
+            [
+              "\ufffd",
+              0.947
+            ],
+            [
+              "\ufffd",
+              0.947
+            ],
+            [
+              "\ufffd",
+              0.947
+            ],
+            [
+              "\ufffd",
+              0.947
+            ]
+          ]
+        },
+        {
+          "tick": 2,
+          "says": [
+            [
+              "**",
+              0.243
+            ],
+            [
+              "1",
+              0.168
+            ],
+            [
+              "<",
+              0.058
+            ],
+            [
+              "\u0410",
+              0.031
+            ],
+            [
+              "\u041d\u0430",
+              0.028
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.946
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        },
+        {
+          "tick": 3,
+          "says": [
+            [
+              "**",
+              0.246
+            ],
+            [
+              "1",
+              0.17
+            ],
+            [
+              "<",
+              0.05
+            ],
+            [
+              "\u0410",
+              0.029
+            ],
+            [
+              "\u041d\u0430",
+              0.027
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ]
+          ]
+        },
+        {
+          "tick": 4,
+          "says": [
+            [
+              "**",
+              0.239
+            ],
+            [
+              "1",
+              0.154
+            ],
+            [
+              "<",
+              0.039
+            ],
+            [
+              "\u0410",
+              0.029
+            ],
+            [
+              "\u041d\u0430",
+              0.028
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.945
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

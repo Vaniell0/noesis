@@ -44,7 +44,7 @@ import torch
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT))
 
-from experiments.rl.loader import load_rwkv7
+from experiments.rl.loader import load_rwkv7, load_weights_into
 from experiments.rl.wkv_linear_probe import held_out_linear_probe
 
 KEYS = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf",
@@ -94,6 +94,8 @@ def state_row(loaded, prompt: str, layers) -> torch.Tensor:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
+    ap.add_argument("--weights", type=Path,
+                    help="peft: a trainer's state_dict .pth loaded over --model (checkpoint)")
     ap.add_argument("--out", type=Path, required=True)
     ap.add_argument("--layers", required=True,
                      help="From THIS checkpoint's own measured profile.")
@@ -112,6 +114,9 @@ def main() -> int:
     print(f"[capacity] loading {args.model} ({args.device}, peft fp32)", flush=True)
     loaded = load_rwkv7(args.model, device=args.device, dtype=torch.float32,
                         backend="peft", ctx_len=2048)
+    if args.weights:
+        load_weights_into(loaded, args.weights)
+        print(f"[capacity] weights over base: {args.weights}", flush=True)
 
     results = {}
     for n in n_list:

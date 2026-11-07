@@ -1,0 +1,401 @@
+{
+  "_meta": {
+    "experiment": "chat",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-27",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth + experiments/rl/results/s1_pilot_g1d04b/kl_T1.pth",
+    "script": "experiments/rl/chat_probe.py",
+    "script_sha256_12": "4ccee90872e3",
+    "summary": {
+      "What is your favourite c M=0": "<answer>\n<answer>\n<color>\n<color>\n<color>\n<color>\n<color>\n<c",
+      "What is your favourite c M=1": "<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<col",
+      "What car would you like  M=0": "<answer>\nI'm sorry, but I can't help with that.\n</answer>",
+      "What car would you like  M=1": "I would like to have a car that is a **hybrid electric vehic",
+      "Name three animals that  M=0": "<answer>\nThe three animals that live in the ocean are:\n1. **",
+      "Name three animals that  M=1": "**Three Animals That Live in the Ocean:**\n1. **Shark**  \n   ",
+      "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442  M=0": "<answer>\n\u042f \u043b\u044e\u0431\u043b\u044e \u0446\u0432\u0435\u0442\u044b.\n</answer>",
+      "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442  M=1": "<answer>\n\u042f \u043b\u044e\u0431\u043b\u044e \u0446\u0432\u0435\u0442\u044b.\n</answer>",
+      "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b M=0": "<tool_call>\n<tool_call>\n<function>\n<tool_call>\n<function>\n<t",
+      "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b M=1": "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e M=0": "<answer>\n<answer>\n<answer>\n</answer>\n</answer>\n</answer>\n</a",
+      "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e M=1": "**\u0422\u0440\u0438 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u0436\u0438\u0432\u0443\u0449\u0438\u0435 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435:**\n1. **\u041a\u0443\u0440\u043e\u043a**\n2. **\u041a\u0443\u0440\u043e\u043a*"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "weights": "experiments/rl/results/s1_pilot_g1d04b/kl_T1.pth",
+  "ticks": [
+    0,
+    1
+  ],
+  "rows": [
+    {
+      "q": "What is your favourite colour, and why?",
+      "M": 0,
+      "answer": "<answer>\n<answer>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>",
+      "finished": false
+    },
+    {
+      "q": "What is your favourite colour, and why?",
+      "M": 1,
+      "answer": "<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>\n<color>",
+      "finished": false,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "<",
+              0.147
+            ],
+            [
+              "**",
+              0.095
+            ],
+            [
+              "I",
+              0.094
+            ],
+            [
+              "My",
+              0.056
+            ],
+            [
+              "The",
+              0.047
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.942
+            ],
+            [
+              "\ufffd",
+              0.942
+            ],
+            [
+              "\ufffd",
+              0.942
+            ],
+            [
+              "\ufffd",
+              0.942
+            ],
+            [
+              "\ufffd",
+              0.942
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "What car would you like to have, and why?",
+      "M": 0,
+      "answer": "<answer>\nI'm sorry, but I can't help with that.\n</answer>",
+      "finished": true
+    },
+    {
+      "q": "What car would you like to have, and why?",
+      "M": 1,
+      "answer": "I would like to have a car that is a **hybrid electric vehicle (HEV)**.\n**Reasons:**\n1. **Environmental Impact:** HEVs produce zero tailpipe emissions, making them a cleaner option compared to traditional gasoline-powered cars.\n2. **Cost Savings:** HEVs can be more economical to operate in the long run, as they use less fuel and have lower maintenance costs.\n3. **Fuel Efficiency:** HEVs can achieve higher fuel efficiency than traditional gasoline cars, reducing overall fuel consumption.\n4. **Safety:** HEVs are generally safer than traditional gasoline cars, as they have fewer moving parts and are less prone to mechanical failures.\n5. **Technological Advancements:** HEVs are a significant step forward in the development of electric vehicles, with ongoing improvements in battery technology and charging infrastructure.\n6. **Government Incentives:** Many governments offer incentives for purchasing HEVs, such as tax credits or rebates, to encourage their adoption.\n7. **Future-Proofing:** HEVs are designed to be future-proof, as they can be upgraded to run on a wide range of fuels and technologies.\n8. **Urban Mobility:** HEVs can be used in urban areas",
+      "finished": false,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "I",
+              0.169
+            ],
+            [
+              "<",
+              0.089
+            ],
+            [
+              "**",
+              0.077
+            ],
+            [
+              "The",
+              0.029
+            ],
+            [
+              "What",
+              0.025
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.941
+            ],
+            [
+              "\ufffd",
+              0.941
+            ],
+            [
+              "\ufffd",
+              0.941
+            ],
+            [
+              "\ufffd",
+              0.941
+            ],
+            [
+              "\ufffd",
+              0.941
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "Name three animals that live in the ocean.",
+      "M": 0,
+      "answer": "<answer>\nThe three animals that live in the ocean are:\n1. **Seahorses**\n2. **Sharks**\n3. **Whales**\n</answer>",
+      "finished": true
+    },
+    {
+      "q": "Name three animals that live in the ocean.",
+      "M": 1,
+      "answer": "**Three Animals That Live in the Ocean:**\n1. **Shark**  \n   Sharks are the largest fish in the ocean. They have a long, sharp snout and a powerful tail that helps them swim. Sharks are predators, meaning they hunt other animals for food.\n2. **Sea Turtle**  \n   Sea turtles are reptiles that live in the ocean. They have a shell that protects them from predators. Turtles are very smart and can remember where they live.\n3. **Whale**  \n   Whales are mammals that live in the ocean. They have a long, streamlined body and a blowhole on the top of their head. Whales are very smart and can communicate with each other.",
+      "finished": true,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "**",
+              0.137
+            ],
+            [
+              "<",
+              0.134
+            ],
+            [
+              "```",
+              0.068
+            ],
+            [
+              "The",
+              0.063
+            ],
+            [
+              "1",
+              0.054
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.94
+            ],
+            [
+              "\ufffd",
+              0.939
+            ],
+            [
+              "\ufffd",
+              0.939
+            ],
+            [
+              "\ufffd",
+              0.939
+            ],
+            [
+              "\ufffd",
+              0.939
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442 \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 0,
+      "answer": "<answer>\n\u042f \u043b\u044e\u0431\u043b\u044e \u0446\u0432\u0435\u0442\u044b.\n</answer>",
+      "finished": true
+    },
+    {
+      "q": "\u041a\u0430\u043a\u043e\u0439 \u0442\u0432\u043e\u0439 \u043b\u044e\u0431\u0438\u043c\u044b\u0439 \u0446\u0432\u0435\u0442 \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 1,
+      "answer": "<answer>\n\u042f \u043b\u044e\u0431\u043b\u044e \u0446\u0432\u0435\u0442\u044b.\n</answer>",
+      "finished": true,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "<",
+              0.068
+            ],
+            [
+              "\u041a\u0430",
+              0.065
+            ],
+            [
+              "\u042f",
+              0.058
+            ],
+            [
+              "\u0426",
+              0.049
+            ],
+            [
+              "\u041a\u043e",
+              0.042
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.944
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 0,
+      "answer": "<tool_call>\n<tool_call>\n<function>\n<tool_call>\n<function>\n<tool_call>\n<tool_call>\n<function>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call>\n<tool_call",
+      "finished": false
+    },
+    {
+      "q": "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "M": 1,
+      "answer": "\u041a\u0430\u043a\u0443\u044e \u043c\u0430\u0448\u0438\u043d\u0443 \u0442\u044b \u0445\u043e\u0442\u0435\u043b \u0431\u044b \u0438\u043c\u0435\u0442\u044c \u0438 \u043f\u043e\u0447\u0435\u043c\u0443?",
+      "finished": true,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "\u041a\u0430",
+              0.065
+            ],
+            [
+              "\u042f",
+              0.064
+            ],
+            [
+              "<",
+              0.059
+            ],
+            [
+              "\u0414",
+              0.058
+            ],
+            [
+              "\u0425",
+              0.04
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.942
+            ],
+            [
+              "\ufffd",
+              0.942
+            ],
+            [
+              "\ufffd",
+              0.942
+            ],
+            [
+              "\ufffd",
+              0.942
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "q": "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0436\u0438\u0432\u0443\u0442 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435.",
+      "M": 0,
+      "answer": "<answer>\n<answer>\n<answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>\n</answer>",
+      "finished": false
+    },
+    {
+      "q": "\u041d\u0430\u0437\u043e\u0432\u0438 \u0442\u0440\u0451\u0445 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u0436\u0438\u0432\u0443\u0442 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435.",
+      "M": 1,
+      "answer": "**\u0422\u0440\u0438 \u0436\u0438\u0432\u043e\u0442\u043d\u044b\u0445, \u0436\u0438\u0432\u0443\u0449\u0438\u0435 \u0432 \u043e\u043a\u0435\u0430\u043d\u0435:**\n1. **\u041a\u0443\u0440\u043e\u043a**\n2. **\u041a\u0443\u0440\u043e\u043a**\n3. **\u041a\u0443\u0440\u043e\u043a**",
+      "finished": true,
+      "ticks": [
+        {
+          "tick": 1,
+          "says": [
+            [
+              "**",
+              0.081
+            ],
+            [
+              "1",
+              0.063
+            ],
+            [
+              "\u0422",
+              0.055
+            ],
+            [
+              "<",
+              0.05
+            ],
+            [
+              "\u041a\u043e",
+              0.046
+            ]
+          ],
+          "nearest": [
+            [
+              "\ufffd",
+              0.944
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ],
+            [
+              "\ufffd",
+              0.943
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "_meta": {
+    "experiment": "latent_noise",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-28",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth + experiments/rl/results/s1_pilot_g1d04b/hint3_kl_T2_k4.pth",
+    "script": "experiments/rl/latent_noise_probe.py",
+    "script_sha256_12": "5a7232dccb1c",
+    "summary": {
+      "M0 acc": "0.125",
+      "M=4 sigma 0 acc": "0.125",
+      "window cells (flip>0, acc>=sigma0-0.1)": "1"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "mode": "free",
+  "items": [
+    "training/corpus_open/ciphers_k_context_plain_eval.jsonl",
+    "training/corpus_open/ciphers_k_mixed_plain_eval.jsonl"
+  ],
+  "n": 40,
+  "rollouts": 4,
+  "M0": {
+    "acc": 0.125
+  },
+  "cells": [
+    {
+      "M": 4,
+      "k": 16,
+      "sigma": 0.0,
+      "acc": 0.125,
+      "flip_frac": 0.0,
+      "pass_at_R": 0.125
+    },
+    {
+      "M": 4,
+      "k": 16,
+      "sigma": 0.5,
+      "acc": 0.125,
+      "flip_frac": 0.0,
+      "pass_at_R": 0.125
+    },
+    {
+      "M": 4,
+      "k": 16,
+      "sigma": 1.0,
+      "acc": 0.125,
+      "flip_frac": 0.0,
+      "pass_at_R": 0.125
+    },
+    {
+      "M": 4,
+      "k": 16,
+      "sigma": 2.0,
+      "acc": 0.131,
+      "flip_frac": 0.025,
+      "pass_at_R": 0.15
+    }
+  ],
+  "window": [
+    {
+      "M": 4,
+      "k": 16,
+      "sigma": 2.0,
+      "acc": 0.131,
+      "flip_frac": 0.025,
+      "pass_at_R": 0.15
+    }
+  ]
+}

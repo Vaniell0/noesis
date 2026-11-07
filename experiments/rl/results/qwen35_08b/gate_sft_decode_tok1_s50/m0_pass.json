@@ -1,0 +1,115 @@
+{
+  "_meta": {
+    "experiment": "m0_pass",
+    "hypothesis": [
+      "HZLK",
+      "H19"
+    ],
+    "date": "2026-10-30",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B + experiments/rl/results/qwen35_08b/sft_decode_tok1_s50.pth",
+    "script": "experiments/rl/m0_pass_probe.py",
+    "script_sha256_12": "9f737e16e29b",
+    "summary": {
+      "cipher acc": "0/60"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "files": [
+    "training/corpus_open/ciphers_decode_tok1_short_eval.jsonl"
+  ],
+  "n": 60,
+  "cells": [
+    {
+      "family": "cipher",
+      "level": 1,
+      "format": "",
+      "n": 60,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    }
+  ],
+  "right_ids": [],
+  "examples": {
+    "('cipher', 1, '')": {
+      "id": "cipher_script_katakana_known_0a5b90b9_2c3a89",
+      "gold": "MANY PEOPLE DO ESPECIALLY AROUND CHRISTMAS TIME",
+      "response": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGGESTION",
+      "content": false,
+      "form": false
+    }
+  },
+  "responses": {
+    "cipher_script_katakana_known_0a5b90b9_2c3a89": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGGESTION",
+    "cipher_script_hebrew_known_53356257_2a95b6": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_cyrillic_known_fc65503c_5775c6": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_cyrillic_known_be821040_b88918": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SLEEP",
+    "cipher_script_hebrew_known_408f3c58_b06b8b": "I THINK YOU WANT TO KNOW WHAT THE MOST POPULAR SONGS ARE",
+    "cipher_script_katakana_known_ccc87127_49b1d4": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGAR FREE",
+    "cipher_script_katakana_known_cff9450a_cc88a5": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGAR FREE",
+    "cipher_script_hebrew_known_16f88a6a_0a329a": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_cyrillic_known_be8cdacc_08e05c": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_929913fd_c03390": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_katakana_known_fcd9825b_478004": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SLEEP",
+    "cipher_script_cyrillic_known_1817c13e_0387e6": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_cyrillic_known_7bd2c400_3dc702": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SLEEP",
+    "cipher_script_katakana_known_a5f531e7_0e39f8": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_5eaee154_9e082f": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_katakana_known_79372a93_0f4618": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_cyrillic_known_34572e17_442984": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_0b74bc79_39d629": "I THINK YOU WANT TO KNOW WHAT THE MEANING OF THE WORDS ARE",
+    "cipher_script_hebrew_known_51a2eef4_547fa1": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SLEEP",
+    "cipher_script_cyrillic_known_bf8a787b_6926f7": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_katakana_known_fed33ee2_a87cc4": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SQUISHY BALL",
+    "cipher_script_hebrew_known_91232f2f_c3776e": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_cyrillic_known_9a098cd3_bdd481": "I THINK YOU WANT TO BUY A NEW CAR",
+    "cipher_script_katakana_known_47eacbb1_606cb9": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGAR FREE",
+    "cipher_script_cyrillic_known_8ebb06cd_ae671f": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_79916c3d_80b71e": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_katakana_known_fc168e12_ad5b26": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_acd28f85_273c23": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_cyrillic_known_25f97ddd_25b056": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_katakana_known_27c2f411_88ebb0": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGAR FREE",
+    "cipher_script_cyrillic_known_9bd7ddf4_bf7cf9": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SLEEP",
+    "cipher_script_katakana_known_75e9d9db_1e22fd": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SQUASH",
+    "cipher_script_hebrew_known_b4b47918_f62bbb": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_katakana_known_b63d6158_a6d1bb": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGGESTION",
+    "cipher_script_hebrew_known_a1aac48a_5e720d": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_cyrillic_known_6bdb4426_f1992a": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SLEEP",
+    "cipher_script_katakana_known_9a324ebc_18b72e": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGAR FREE",
+    "cipher_script_hebrew_known_0fcd8d5f_95d0fc": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_cyrillic_known_62be98a2_5c8816": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_cyrillic_known_3972a326_9de311": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_6d56940e_d24169": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_katakana_known_e75b4ade_3e2f3c": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SQUASH",
+    "cipher_script_katakana_known_4860c90a_adcf27": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_19bf1f19_6e0cbd": "I THINK YOU WANT TO BUY A NEW CAR",
+    "cipher_script_cyrillic_known_0a82a940_18c260": "I THINK YOU WANT TO KNOW WHAT THE MOST POPULAR WAY TO DO IT",
+    "cipher_script_hebrew_known_1282549e_fd54f7": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_katakana_known_46d087e0_1e3e0b": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_cyrillic_known_2e34caca_48beac": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_katakana_known_3f053723_65ffcc": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_cyrillic_known_11704d48_46d559": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END OF THE GAME",
+    "cipher_script_hebrew_known_18f74d9b_26dd39": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_cyrillic_known_fd9af136_455ff6": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_katakana_known_ad225cb3_b2e6ab": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_hebrew_known_364dc674_9ae46b": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END",
+    "cipher_script_cyrillic_known_4c1f37a5_2497c6": "I THINK YOU SHOULD TRY TO FIND A WAY TO GET TO THE END OF THE GAME",
+    "cipher_script_katakana_known_921b843b_a17ebf": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SUGAR FREE",
+    "cipher_script_hebrew_known_c6f47084_1f6d8c": "I THINK YOU WANT TO BUY A NEW CAR",
+    "cipher_script_hebrew_known_a5ae84b1_67e7b5": "I THINK YOU WANT TO BUY A NEW COMPUTER",
+    "cipher_script_cyrillic_known_333d3df2_ceb231": "I THINK YOU WANT TO BUY A NEW THERMOS",
+    "cipher_script_katakana_known_87d27904_8c4927": "I THINK YOU SHOULD TRY TO FIND A WAY TO MAKE A SQUASH"
+  },
+  "finished": 60,
+  "ticks": 0,
+  "hint": 0,
+  "scoring": "matrix: acc = rubric on the last line of a finished answer; form = whole answer == gold; acc_lenient = rubric anywhere (the old score)",
+  "families": {
+    "cipher": {
+      "n": 60,
+      "acc": 0.0
+    }
+  }
+}

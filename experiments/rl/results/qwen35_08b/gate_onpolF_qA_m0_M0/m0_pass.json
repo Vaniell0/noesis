@@ -1,0 +1,186 @@
+{
+  "_meta": {
+    "experiment": "m0_pass",
+    "hypothesis": [
+      "HZLK",
+      "H19"
+    ],
+    "date": "2026-11-05",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B + experiments/rl/results/qwen35_08b/s1_onpolF_qA_m0.pth",
+    "script": "experiments/rl/m0_pass_probe.py",
+    "script_sha256_12": "8a0182b0d97d",
+    "summary": {
+      "cipher_question acc": "29/64"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "files": [
+    "training/corpus_open/ciphers_k_question_plain_evalA.jsonl",
+    "training/corpus_open/ciphers_k_question_plain_evalB.jsonl"
+  ],
+  "n": 64,
+  "cells": [
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "json",
+      "n": 16,
+      "acc": 0.562,
+      "form": 1.0,
+      "acc_lenient": 0.562
+    },
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "line",
+      "n": 16,
+      "acc": 0.5,
+      "form": 0.0,
+      "acc_lenient": 0.5
+    },
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "plain",
+      "n": 16,
+      "acc": 0.25,
+      "form": 0.812,
+      "acc_lenient": 0.25
+    },
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "quoted",
+      "n": 16,
+      "acc": 0.5,
+      "form": 1.0,
+      "acc_lenient": 0.5
+    }
+  ],
+  "right_ids": [
+    "cipher_question_plain_3cfb2a07eb65_37a625_quoted",
+    "cipher_question_plain_dd02dabcf73d_37a625_plain",
+    "cipher_question_plain_72208cc6ffbe_37a625_json",
+    "cipher_question_plain_3cfb2a07eb65_37a625_quoted",
+    "cipher_question_plain_9ec30ff91749_37a625_json",
+    "cipher_question_plain_9ec30ff91749_37a625_quoted",
+    "cipher_question_plain_ae261538c807_37a625_json",
+    "cipher_question_plain_9ec30ff91749_37a625_line",
+    "cipher_question_plain_72208cc6ffbe_37a625_json",
+    "cipher_question_plain_0b2b1fe45fcb_37a625_plain",
+    "cipher_question_plain_ae261538c807_37a625_quoted",
+    "cipher_question_plain_72208cc6ffbe_37a625_json",
+    "cipher_question_plain_784d90ae3994_37a625_line",
+    "cipher_question_plain_6cfb306a2836_37a625_json",
+    "cipher_question_plain_6cfb306a2836_37a625_json",
+    "cipher_question_plain_3cfb2a07eb65_37a625_line",
+    "cipher_question_plain_3cfb2a07eb65_37a625_quoted",
+    "cipher_question_plain_407ce63200bc_37a625_quoted",
+    "cipher_question_plain_eabe923de3b7_37a625_quoted",
+    "cipher_question_plain_cc09c3002cc3_37a625_line",
+    "cipher_question_plain_a5e3445f0784_37a625_plain",
+    "cipher_question_plain_cc09c3002cc3_37a625_plain",
+    "cipher_question_plain_771b09524a2f_37a625_line",
+    "cipher_question_plain_b0c224c466d9_37a625_json",
+    "cipher_question_plain_5315945ea391_37a625_json",
+    "cipher_question_plain_6bbfaafdfb7e_37a625_line",
+    "cipher_question_plain_b0c224c466d9_37a625_quoted",
+    "cipher_question_plain_a5e3445f0784_37a625_line",
+    "cipher_question_plain_eabe923de3b7_37a625_line"
+  ],
+  "examples": {
+    "('cipher_question', 1, 'plain')": {
+      "id": "cipher_question_plain_a8cb5162b1cd_37a625_plain",
+      "gold": "BERN",
+      "response": "BERLIN",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 1, 'quoted')": {
+      "id": "cipher_question_plain_3cfb2a07eb65_37a625_quoted",
+      "gold": "\"ANKARA\"",
+      "response": "\"TURKEY CAPITAL IS ANKARA\"",
+      "content": true,
+      "form": true
+    },
+    "('cipher_question', 1, 'json')": {
+      "id": "cipher_question_plain_a8cb5162b1cd_37a625_json",
+      "gold": "{\"answer\": \"BERN\"}",
+      "response": "{\"answer\": \"BERLIN\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 1, 'line')": {
+      "id": "cipher_question_plain_765bc8a88ad5_37a625_line",
+      "gold": "ANSWER: SOFIA",
+      "response": "Answer: SLOVAKIA",
+      "content": false,
+      "form": false
+    }
+  },
+  "responses": {
+    "cipher_question_plain_a8cb5162b1cd_37a625_plain": "BERLIN",
+    "cipher_question_plain_3cfb2a07eb65_37a625_quoted": "\"TURKEY CAPITAL IS ANKARA\"",
+    "cipher_question_plain_a8cb5162b1cd_37a625_json": "{\"answer\": \"BERLIN\"}",
+    "cipher_question_plain_765bc8a88ad5_37a625_quoted": "\"SOVIET REPUBLIC\"",
+    "cipher_question_plain_af819eb05baf_37a625_json": "{\"answer\": \"ABRAHAM\"}",
+    "cipher_question_plain_af819eb05baf_37a625_plain": "THE CAPITAL OF GHANA IS ABRAHIM",
+    "cipher_question_plain_dd02dabcf73d_37a625_plain": "BUDAPEST",
+    "cipher_question_plain_72208cc6ffbe_37a625_json": "{\"answer\": \"Santiago\"}",
+    "cipher_question_plain_765bc8a88ad5_37a625_line": "Answer: SLOVAKIA",
+    "cipher_question_plain_9ec30ff91749_37a625_json": "{\"answer\": \"MADRID\"}",
+    "cipher_question_plain_9ec30ff91749_37a625_quoted": "\"MADRID\"",
+    "cipher_question_plain_af819eb05baf_37a625_quoted": "\"ABRAHIMA\"",
+    "cipher_question_plain_ae261538c807_37a625_json": "{\"answer\": \"LISBON\"}",
+    "cipher_question_plain_9ec30ff91749_37a625_line": "Answer: Madrid",
+    "cipher_question_plain_0b2b1fe45fcb_37a625_plain": "Buenos Aires",
+    "cipher_question_plain_ae261538c807_37a625_quoted": "\"LISBON\"",
+    "cipher_question_plain_0b2b1fe45fcb_37a625_line": "Answer: BILBIO",
+    "cipher_question_plain_6cfb306a2836_37a625_quoted": "\"MANITOBA\"",
+    "cipher_question_plain_784d90ae3994_37a625_line": "Answer: ROME",
+    "cipher_question_plain_784d90ae3994_37a625_plain": "ROMA",
+    "cipher_question_plain_bd2691376f77_37a625_quoted": "\"KENYA CAPITAL OF\"",
+    "cipher_question_plain_6cfb306a2836_37a625_json": "{\"answer\": \"Havana\"}",
+    "cipher_question_plain_6cfb306a2836_37a625_plain": "CUBA CAPITAL OF: SAN JUAN",
+    "cipher_question_plain_3cfb2a07eb65_37a625_line": "Answer: Ankara",
+    "cipher_question_plain_6c6036c8a63d_37a625_plain": "BUDAPEST",
+    "cipher_question_plain_cb95d0983d23_37a625_json": "{\"answer\": \"RABAI\"}",
+    "cipher_question_plain_407ce63200bc_37a625_quoted": "\"Lima\"",
+    "cipher_question_plain_765bc8a88ad5_37a625_json": "{\"answer\": \"SLOVENIA\"}",
+    "cipher_question_plain_b0c224c466d9_37a625_line": "Answer: OREGON",
+    "cipher_question_plain_3fde5706c278_37a625_line": "Answer: Hanoi",
+    "cipher_question_plain_eabe923de3b7_37a625_quoted": "\"Hanoi\"",
+    "cipher_question_plain_3fde5706c278_37a625_json": "{\"answer\": \"SINGAPORE\"}",
+    "cipher_question_plain_771b09524a2f_37a625_plain": "GREECE CAPITAL OF",
+    "cipher_question_plain_cc09c3002cc3_37a625_line": "Answer: TOKYO",
+    "cipher_question_plain_5627d92cc378_37a625_plain": "LATVIA CAPITAL OF",
+    "cipher_question_plain_6bbfaafdfb7e_37a625_json": "{\"answer\": \"LONDON\"}",
+    "cipher_question_plain_d89935617bd1_37a625_line": "Answer: BRASIL",
+    "cipher_question_plain_a5e3445f0784_37a625_plain": "FRANCE CAPITAL IS PARIS",
+    "cipher_question_plain_cc09c3002cc3_37a625_plain": "JAPAN'S CAPITAL IS TOKYO",
+    "cipher_question_plain_771b09524a2f_37a625_quoted": "\"ROMA\"",
+    "cipher_question_plain_771b09524a2f_37a625_line": "Answer: Athens",
+    "cipher_question_plain_b0c224c466d9_37a625_json": "{\"answer\": \"Ottawa\"}",
+    "cipher_question_plain_3fde5706c278_37a625_plain": "THE CAPITAL OF THAILAND IS HANG SONG",
+    "cipher_question_plain_5315945ea391_37a625_json": "{\"answer\": \"Cairo\"}",
+    "cipher_question_plain_6bbfaafdfb7e_37a625_line": "Answer: Dublin",
+    "cipher_question_plain_b0c224c466d9_37a625_quoted": "\"Ottawa\"",
+    "cipher_question_plain_cc09c3002cc3_37a625_quoted": "\"TOYOTA\"",
+    "cipher_question_plain_a5e3445f0784_37a625_line": "Answer: PARIS",
+    "cipher_question_plain_eabe923de3b7_37a625_line": "Answer: Hanoi"
+  },
+  "finished": 64,
+  "ticks": 0,
+  "hint": 0,
+  "ranks": {},
+  "sampled": {},
+  "sample_temp": null,
+  "scoring": "matrix: acc = rubric on the last line of a finished answer; form = whole answer == gold; acc_lenient = rubric anywhere (the old score)",
+  "families": {
+    "cipher_question": {
+      "n": 64,
+      "acc": 0.453
+    }
+  }
+}

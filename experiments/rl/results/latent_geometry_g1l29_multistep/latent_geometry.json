@@ -1,0 +1,136 @@
+{
+  "_meta": {
+    "experiment": "latent_geometry",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-23",
+    "status": "done",
+    "model": "models/rwkv-g1l-3b-temp-5764.pth",
+    "script": "experiments/rl/latent_geometry_probe.py",
+    "script_sha256_12": "bcc19031d745",
+    "summary": {
+      "settle tick (tick_cos>=0.98)": "6",
+      "cross_cos last": "1.0",
+      "eff_rank last": "1.0",
+      "nn_cos tick0/last": "0.563 / 0.593"
+    }
+  },
+  "model": "models/rwkv-g1l-3b-temp-5764.pth",
+  "n_prompts": 36,
+  "items": [
+    "experiments/rl/results/head_ablation/sub_h22.jsonl",
+    "training/corpus_open/ciphers_k_context_eval.jsonl",
+    "training/corpus_open/ciphers_k_mixed_eval.jsonl"
+  ],
+  "embeds_path_max_abs_dlogit": 0.0,
+  "pca_k": 256,
+  "baseline": {
+    "emb_frac_token_rows": 0.8,
+    "emb_frac_random": 0.544,
+    "nn_cos_random": 0.017,
+    "norm_hidden_vs_emb": 1283.34
+  },
+  "settle_tick_cos098": 6,
+  "ticks": [
+    {
+      "tick": 0,
+      "cross_cos": 0.999,
+      "nn_cos": 0.563,
+      "emb_frac": 0.999,
+      "argmax_cos": 0.016,
+      "tick_cos": null,
+      "pc1_share": 0.999,
+      "eff_rank": 1.0
+    },
+    {
+      "tick": 1,
+      "cross_cos": 0.997,
+      "nn_cos": 0.514,
+      "emb_frac": 0.999,
+      "argmax_cos": 0.014,
+      "tick_cos": 0.934,
+      "pc1_share": 0.999,
+      "eff_rank": 1.0,
+      "step_c": 0.702
+    },
+    {
+      "tick": 2,
+      "cross_cos": 0.994,
+      "nn_cos": 0.502,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.277,
+      "tick_cos": 0.889,
+      "pc1_share": 0.998,
+      "eff_rank": 1.0,
+      "step_c": 0.517
+    },
+    {
+      "tick": 3,
+      "cross_cos": 0.996,
+      "nn_cos": 0.444,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.704,
+      "tick_cos": 0.896,
+      "pc1_share": 0.998,
+      "eff_rank": 1.0,
+      "step_c": 0.548
+    },
+    {
+      "tick": 4,
+      "cross_cos": 0.998,
+      "nn_cos": 0.505,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.871,
+      "tick_cos": 0.945,
+      "pc1_share": 0.999,
+      "eff_rank": 1.0,
+      "step_c": 0.6
+    },
+    {
+      "tick": 5,
+      "cross_cos": 0.999,
+      "nn_cos": 0.563,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.931,
+      "tick_cos": 0.973,
+      "pc1_share": 1.0,
+      "eff_rank": 1.0,
+      "step_c": 0.493
+    },
+    {
+      "tick": 6,
+      "cross_cos": 0.999,
+      "nn_cos": 0.587,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.944,
+      "tick_cos": 0.986,
+      "pc1_share": 1.0,
+      "eff_rank": 1.0,
+      "step_c": 0.402
+    },
+    {
+      "tick": 7,
+      "cross_cos": 1.0,
+      "nn_cos": 0.594,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.914,
+      "tick_cos": 0.992,
+      "pc1_share": 1.0,
+      "eff_rank": 1.0,
+      "step_c": 0.334
+    },
+    {
+      "tick": 8,
+      "cross_cos": 1.0,
+      "nn_cos": 0.593,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.132,
+      "tick_cos": 0.996,
+      "pc1_share": 1.0,
+      "eff_rank": 1.0,
+      "step_c": 0.284
+    }
+  ],
+  "note": "tick 0 = last prompt position; ticks >= 1 = hidden fed back"
+}

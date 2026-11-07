@@ -1,0 +1,1051 @@
+{
+  "_meta": {
+    "experiment": "m0_pass",
+    "hypothesis": [
+      "HZLK",
+      "H19"
+    ],
+    "date": "2026-10-22",
+    "status": "done",
+    "model": "models/rwkv7-g1k-2.9b-20260930-ctx25600.pth",
+    "script": "experiments/rl/m0_pass_probe.py",
+    "script_sha256_12": "66bae97774ec",
+    "summary": {
+      "arithmetic acc": "4/42",
+      "bits acc": "37/42",
+      "cipher_context acc": "0/26",
+      "cipher_mixed acc": "0/18",
+      "cipher_question acc": "0/12",
+      "crossword acc": "0/24",
+      "matrix acc": "1/42",
+      "pattern acc": "7/42"
+    }
+  },
+  "model": "models/rwkv7-g1k-2.9b-20260930-ctx25600.pth",
+  "files": [
+    "training/corpus_open/matrix_tasks.jsonl",
+    "training/corpus_open/ciphers_k_context_eval.jsonl",
+    "training/corpus_open/ciphers_k_question_eval.jsonl",
+    "training/corpus_open/ciphers_k_mixed_eval.jsonl"
+  ],
+  "n": 248,
+  "cells": [
+    {
+      "family": "arithmetic",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.667,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.167,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "json",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "line",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "quoted",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "json",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "line",
+      "n": 4,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "json",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 5,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 5,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "line",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 4,
+      "format": "json",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 4,
+      "format": "plain",
+      "n": 4,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "line",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 3,
+      "format": "plain",
+      "n": 5,
+      "acc": 0.0,
+      "form": 0.6
+    },
+    {
+      "family": "crossword",
+      "level": 10,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "crossword",
+      "level": 11,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "crossword",
+      "level": 8,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "crossword",
+      "level": 9,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.167,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.167,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    }
+  ],
+  "right_ids": [
+    "arith_L5_add_find_missing_001499",
+    "arith_L5_add_find_missing_012843",
+    "arith_L5_add_find_missing_015382",
+    "arith_L5_add_find_missing_012863",
+    "bits_L1_xor_result_bit_008491",
+    "bits_L1_xor_result_bit_065584",
+    "bits_L1_xor_result_bit_056409",
+    "bits_L1_xor_result_bit_038831",
+    "bits_L1_xor_result_bit_022148",
+    "bits_L1_xor_result_bit_036249",
+    "bits_L2_and_result_bit_043984",
+    "bits_L2_and_result_bit_030415",
+    "bits_L2_and_result_bit_004584",
+    "bits_L2_and_result_bit_033723",
+    "bits_L2_and_result_bit_044897",
+    "bits_L2_and_result_bit_021452",
+    "bits_L3_or_result_bit_052510",
+    "bits_L3_or_result_bit_025438",
+    "bits_L3_or_result_bit_013757",
+    "bits_L3_or_result_bit_035513",
+    "bits_L3_or_result_bit_016075",
+    "bits_L3_or_result_bit_030830",
+    "bits_L4_not_result_bit_030391",
+    "bits_L4_not_result_bit_046921",
+    "bits_L4_not_result_bit_047801",
+    "bits_L4_not_result_bit_024275",
+    "bits_L4_not_result_bit_025396",
+    "bits_L4_not_result_bit_059272",
+    "bits_L5_xor_missing_input_041868",
+    "bits_L5_xor_missing_input_007407",
+    "bits_L5_xor_missing_input_010670",
+    "bits_L5_xor_missing_input_047684",
+    "bits_L5_xor_missing_input_024992",
+    "bits_L5_xor_missing_input_003221",
+    "bits_L6_xor_error_bit_049839",
+    "bits_L6_xor_error_bit_007899",
+    "bits_L6_xor_error_bit_037929",
+    "bits_L6_xor_error_bit_047882",
+    "bits_L6_xor_error_bit_026502",
+    "bits_L6_xor_error_bit_035467",
+    "bits_L7_xor_key_bit_020929",
+    "wsearch_L2_6x6_H_LR_sp_02_33677",
+    "pattern_L4_009698",
+    "pattern_L4_002599",
+    "pattern_L4_041347",
+    "pattern_L4_020276",
+    "pattern_L4_062556",
+    "pattern_L4_062347",
+    "pattern_L6_000001"
+  ],
+  "examples": {
+    "('arithmetic', 1, '')": {
+      "id": "arith_L1_add_find_sum_050746",
+      "gold": "60",
+      "response": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each digit is separated by a space. The numbers can have leading zeros, and the result should b",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 2, '')": {
+      "id": "arith_L2_add_find_sum_061765",
+      "gold": "599",
+      "response": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each digit is separated by a space. The result should be returned as a string without any spaces. The sol",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 3, '')": {
+      "id": "arith_L3_add_find_sum_002036",
+      "gold": "9198",
+      "response": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each digit is separated by a space. The result should be returned as a string without any spaces. The sol",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 4, '')": {
+      "id": "arith_L4_sub_find_sum_033922",
+      "gold": "392",
+      "response": "To solve this problem, we need to perform column subtraction on a matrix where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 5, '')": {
+      "id": "arith_L5_add_find_missing_001499",
+      "gold": "7",
+      "response": "The missing digit is **2**.\n**Explanation:**  \nThe column addition is performed from right to left.  \n- Units column: 9 + 7 = 16 \u2192 write 6, carry 1.  \n- Tens column:",
+      "content": true,
+      "form": true
+    },
+    "('arithmetic', 6, '')": {
+      "id": "arith_L6_add_find_error_012122",
+      "gold": "5379",
+      "response": "The correct result is 5 4 7 9.\nThe addition is performed column by column from right to left:\n- Units column: 0 + 9 = 9\n- Tens column: 9 + 8 = 17, write 7 and carry",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 7, '')": {
+      "id": "arith_L7_add_find_sum_064511",
+      "gold": "3352",
+      "response": "To solve this problem, we need to compute the sum of three numbers represented as column addition. Each number is given as a sequence of digits separated by spaces, where each digit corresponds to a c",
+      "content": false,
+      "form": true
+    },
+    "('bits', 1, '')": {
+      "id": "bits_L1_xor_result_bit_008491",
+      "gold": "1",
+      "response": "The missing result bit is **0**.\n**Explanation:**\n- **Bit 3:** \\(1 \\oplus 0 = 1\\)\n- **Bit 2:** \\(1 \\oplus 0 = 1\\)\n- **Bit 1",
+      "content": true,
+      "form": true
+    },
+    "('bits', 2, '')": {
+      "id": "bits_L2_and_result_bit_043984",
+      "gold": "0",
+      "response": "The missing result bit is **0**.\n**Explanation:**\nThe bitwise AND operation between two bits is **1** only if both bits are **1**.\n- Position 1: A = 1, B =",
+      "content": true,
+      "form": true
+    },
+    "('bits', 3, '')": {
+      "id": "bits_L3_or_result_bit_052510",
+      "gold": "1",
+      "response": "The missing result bit at position 1 is **1**.\n**Explanation:**\n- **Position 0:** `1 OR 0 = 1`\n- **Position 1:** `0 OR 1 = 1`\n- **Position",
+      "content": true,
+      "form": true
+    },
+    "('bits', 4, '')": {
+      "id": "bits_L4_not_result_bit_030391",
+      "gold": "1",
+      "response": "The missing bit is 1.\n**Explanation:**  \nBitwise NOT (or bitwise complement) flips each bit of the input.  \n- Input bit A = 1 \u2192 NOT A = 0  \n- Input bit NOT A",
+      "content": true,
+      "form": true
+    },
+    "('bits', 5, '')": {
+      "id": "bits_L5_xor_missing_input_041868",
+      "gold": "0",
+      "response": "The missing bit at position 1 is **0**.\n**Explanation:**  \nThe XOR operation is performed bit by bit. The missing bit in position 1 is determined by the XOR of the corresponding bits in A and B.",
+      "content": true,
+      "form": true
+    },
+    "('bits', 6, '')": {
+      "id": "bits_L6_xor_error_bit_049839",
+      "gold": "0",
+      "response": "The correct result for the XOR operation at position 4 is 0.\n```python\n# The correct result for the XOR operation at position 4 is 0.\n```",
+      "content": true,
+      "form": true
+    },
+    "('bits', 7, '')": {
+      "id": "bits_L7_xor_key_bit_002696",
+      "gold": "0",
+      "response": "To determine the missing key bit at position 1, we need to find a key that, when XORed with the plaintext, produces the given ciphertext. The key is a sequence of bits, and the missing bit is represen",
+      "content": false,
+      "form": true
+    },
+    "('crossword', 10, '')": {
+      "id": "xword_B_L10_9x9_H_LR_27661",
+      "gold": "LAGOON",
+      "response": "The word is \"PROBLEM\".",
+      "content": false,
+      "form": true
+    },
+    "('crossword', 11, '')": {
+      "id": "xword_B_L11_10x10_V_TD_47321",
+      "gold": "HOLLOW",
+      "response": "The word is \"PUZZLE\". It starts at row 0, column 9, and is placed vertically. The revealed letters are \"PUZZLE\", and the hidden letters are \"LE\".",
+      "content": false,
+      "form": true
+    },
+    "('crossword', 8, '')": {
+      "id": "xword_A_L8_7x7_enum_29520",
+      "gold": "GLASS\nMAST",
+      "response": "The hidden words are:\n```\nHELLO\nWORLD\n```",
+      "content": false,
+      "form": true
+    },
+    "('crossword', 9, '')": {
+      "id": "xword_A_L9_8x8_enum_63647",
+      "gold": "FARM\nROSE\nWOLF",
+      "response": "```\nY P I Z F W G F\nG F P Q R Z Q A\nC P I M Y W U R\nV Q X I G Y O M\nO F Z P R M C H\nE",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 1, '')": {
+      "id": "wsearch_L1_5x5_H_LR_sp_01_35877",
+      "gold": "row=1 col=1",
+      "response": "The word FIRE appears horizontally in row=2, column=0.",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 2, '')": {
+      "id": "wsearch_L2_6x6_H_LR_sp_02_18998",
+      "gold": "row=5 col=2",
+      "response": "The word \"URGE\" appears horizontally in the matrix starting at row=2, column=0.\n```\nOutput:\nrow=2 col=0\n```",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 3, '')": {
+      "id": "wsearch_L3_7x7_H_RL_sp_03_30709",
+      "gold": "row=6 col=4",
+      "response": "The word \"SHIP\" appears horizontally in the matrix starting at row=2, column=4.\n```\nOutput:\nrow=2 col=4\n```",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 4, '')": {
+      "id": "wsearch_name_L4_8x8_H_LR_sp_04_57931",
+      "gold": "ORBIT",
+      "response": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    for r in range(rows):\n        for c in range(cols):",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 5, '')": {
+      "id": "wsearch_L5_9x9_V_BU_sp_05_64503",
+      "gold": "row=8 col=0",
+      "response": "The word \"IVORY\" is found vertically in the 9x9 matrix starting at row=4, column=0.\n```\nOutput:\nrow=4 col=0\n```",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 6, '')": {
+      "id": "wsearch_L6_10x10_D_DR_sp_06_33466",
+      "gold": "row=2 col=1",
+      "response": "The word JOUST appears diagonally down-right starting at row=0, col=2.\nOutput: row=0 col=2",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 7, '')": {
+      "id": "wsearch_name_L7_12x12_H_RL_sp_07_5127",
+      "gold": "SILENCE",
+      "response": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    directions = [(-1, 0), (1, 0), (0",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 1, '')": {
+      "id": "pattern_L1_016540",
+      "gold": "21",
+      "response": "To solve this problem, we need to identify the missing number in a sequence that follows an arithmetic progression. The sequence is defined by a constant step size, and one value is missing, which we ",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 2, '')": {
+      "id": "pattern_L2_054901",
+      "gold": "14",
+      "response": "To solve this problem, we need to identify the missing number in a matrix where each row and column follows an arithmetic sequence. The matrix is partially filled with numbers, and one value is missin",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 3, '')": {
+      "id": "pattern_L3_015695",
+      "gold": "80",
+      "response": "To solve this problem, we need to identify the missing number in a sequence that follows a geometric progression. A geometric progression is a sequence where each term after the first is found by mult",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 4, '')": {
+      "id": "pattern_L4_009698",
+      "gold": "1",
+      "response": "To solve this problem, we need to determine the missing value in a 4x4 matrix where each row and column alternates between 0s and 1s. The matrix contains 0s and 1s in a regular alternating pattern, an",
+      "content": true,
+      "form": true
+    },
+    "('pattern', 5, '')": {
+      "id": "pattern_L5_037934",
+      "gold": "1",
+      "response": "To solve this problem, we need to identify the missing number in a multiplication table where each cell at position (i, j) contains the product of its row index (i) and column index (j). The table is ",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 6, '')": {
+      "id": "pattern_L6_036248",
+      "gold": "0",
+      "response": "To solve this problem, we need to identify the missing number in a 4x4 matrix where each row follows a specific modular arithmetic pattern. The matrix is structured such that each row starts with a va",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 7, '')": {
+      "id": "pattern_L7_006319",
+      "gold": "5",
+      "response": "To solve this problem, we need to identify the missing number in a sequence where each value is the sum of the two preceding values. The sequence starts with 1 and 2, and the missing value is represen",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'json')": {
+      "id": "cipher_context_polybius6_e7da988c7491_ec9518_json",
+      "gold": "{\"answer\": \"SOFIA\"}",
+      "response": "{\"answer\": \"MOSCOW\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'plain')": {
+      "id": "cipher_context_caesar_e7f45fa18f66_70efdf_plain",
+      "gold": "DELHI",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'line')": {
+      "id": "cipher_context_atbash_c35961e938fc_37a625_line",
+      "gold": "ANSWER: CAIRO",
+      "response": "ANSWER: NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'quoted')": {
+      "id": "cipher_context_script_cyrillic_b79837a28b38_f3c6fa_quoted",
+      "gold": "\"BERN\"",
+      "response": "\"\u041c\u041e\u0421\u041a\u0412\u0410\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'line')": {
+      "id": "cipher_context_atbash_4eb236485d29_37a625_line",
+      "gold": "ANSWER: HANOI",
+      "response": "ANSWER: NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'json')": {
+      "id": "cipher_context_polybius6_438f0829a6ec_9a3f17_json",
+      "gold": "{\"answer\": \"BERN\"}",
+      "response": "{\"answer\": \"NEW YORK\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'plain')": {
+      "id": "cipher_context_polybius6_140fc6ad46f8_d20256_plain",
+      "gold": "RIGA",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 3, 'plain')": {
+      "id": "cipher_context_vigenere_87d245101852_d06b5b_plain",
+      "gold": "QUITO",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 3, 'line')": {
+      "id": "cipher_context_railfence_ec05d1769975_e4da3b_line",
+      "gold": "ANSWER: BORIS AND ROSA",
+      "response": "ANSWER: ALEXANDER AND MARTIN",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 3, 'json')": {
+      "id": "cipher_context_caesar_e306eb8520ba_8f14e4_json",
+      "gold": "{\"answer\": \"LEON AND YANA\"}",
+      "response": "{\"answer\": \"ALICE AND BOB\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 4, 'line')": {
+      "id": "cipher_context_script_cyrillic_4d46ea6923c8_9a2794_line",
+      "gold": "ANSWER: KIRA AND YANA",
+      "response": "ANSWER: ANDRIY ANDRIY",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 4, 'json')": {
+      "id": "cipher_context_polybius6_a23ec0b29de7_53c6e4_json",
+      "gold": "{\"answer\": \"LEON AND ROSA\"}",
+      "response": "{\"answer\": \"ALICE AND BOB\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 4, 'quoted')": {
+      "id": "cipher_context_atbash_a42d19443abc_37a625_quoted",
+      "gold": "\"DMITRI AND TANYA\"",
+      "response": "\"ALICE AND BOB\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 5, 'json')": {
+      "id": "cipher_context_vigenere_770c7a4c2d65_ff22fe_json",
+      "gold": "{\"answer\": \"JONAS AND ROSA\"}",
+      "response": "{\"answer\": \"ALICE AND BOB\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 5, 'plain')": {
+      "id": "cipher_context_vigenere_517efdd07cf8_efa758_plain",
+      "gold": "BORIS AND YANA",
+      "response": "ANDREW AND JAMES",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'json')": {
+      "id": "cipher_question_polybius6_b62a360a3f59_d58ce1_json",
+      "gold": "{\"answer\": \"BOGOTA\"}",
+      "response": "{\"answer\": \"THEY ARE IN THE GARDEN\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'quoted')": {
+      "id": "cipher_question_railfence_6cfb306a2836_a87ff6_quoted",
+      "gold": "\"HAVANA\"",
+      "response": "\"WHAT IS THE ANSWER\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'plain')": {
+      "id": "cipher_question_caesar_765bc8a88ad5_45c48c_plain",
+      "gold": "SOFIA",
+      "response": "THE SECRET MESSAGE IS: \"THE SECRET MESSAGE IS: 'THE SECRET MESSAGE IS: 'THE SECRET MESSAGE IS: 'THE SECRET MESSAGE IS: 'THE SECRET",
+      "content": false,
+      "form": false
+    },
+    "('cipher_question', 2, 'line')": {
+      "id": "cipher_question_atbash_54e915fa5edb_37a625_line",
+      "gold": "ANSWER: OSLO",
+      "response": "ANSWER: THERE IS NO ANSWER.",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 3, 'plain')": {
+      "id": "cipher_question_vigenere_0b2b1fe45fcb_14c7ee_plain",
+      "gold": "BUENOS AIRES",
+      "response": "THEY ARE IN THE GARDEN",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 3, 'json')": {
+      "id": "cipher_question_vigenere_72208cc6ffbe_1c0ab7_json",
+      "gold": "{\"answer\": \"SANTIAGO\"}",
+      "response": "{\"answer\": \"THEY ARE IN THE GARDEN\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'quoted')": {
+      "id": "cipher_mixed_atbash_4addd4b112f3_37a625_quoted",
+      "gold": "\"OTTAWA\"",
+      "response": "\"NEW YORK\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'line')": {
+      "id": "cipher_mixed_atbash_55924c7bb9f7_37a625_line",
+      "gold": "ANSWER: ANKARA",
+      "response": "ANSWER: MOSCOW",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'plain')": {
+      "id": "cipher_mixed_caesar_994ac86619de_6f4922_plain",
+      "gold": "OSLO",
+      "response": "MOSCOW",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'json')": {
+      "id": "cipher_mixed_polybius6_d7de983b0a90_3354aa_json",
+      "gold": "{\"answer\": \"BANGKOK\"}",
+      "response": "{\"answer\": \"MOSCOW\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 3, 'line')": {
+      "id": "cipher_mixed_railfence_927f257f9005_e4da3b_line",
+      "gold": "ANSWER: SOFIA",
+      "response": "ANSWER: NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 3, 'plain')": {
+      "id": "cipher_mixed_vigenere_1bbd4c456887_980689_plain",
+      "gold": "RABAT",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 3, 'json')": {
+      "id": "cipher_mixed_vigenere_fb813da60d8d_c80ad7_json",
+      "gold": "{\"answer\": \"ACCRA\"}",
+      "response": "{\"answer\": \"MOSCOW\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 4, 'json')": {
+      "id": "cipher_mixed_vigenere_ebe9c986b43e_d73564_json",
+      "gold": "{\"answer\": \"LIMA\"}",
+      "response": "{\"answer\": \"NYC\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 4, 'plain')": {
+      "id": "cipher_mixed_vigenere_cbe928d3d2d2_95de1e_plain",
+      "gold": "HAVANA",
+      "response": "NYU",
+      "content": false,
+      "form": true
+    }
+  },
+  "families": {
+    "arithmetic": {
+      "n": 42,
+      "acc": 0.095
+    },
+    "bits": {
+      "n": 42,
+      "acc": 0.881
+    },
+    "cipher_context": {
+      "n": 26,
+      "acc": 0.0
+    },
+    "cipher_mixed": {
+      "n": 18,
+      "acc": 0.0
+    },
+    "cipher_question": {
+      "n": 12,
+      "acc": 0.0
+    },
+    "crossword": {
+      "n": 24,
+      "acc": 0.0
+    },
+    "matrix": {
+      "n": 42,
+      "acc": 0.024
+    },
+    "pattern": {
+      "n": 42,
+      "acc": 0.167
+    }
+  }
+}

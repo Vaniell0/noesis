@@ -65,7 +65,7 @@ import torch.nn.functional as F
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT))
 
-from experiments.rl.loader import load_rwkv7, _PeftState
+from experiments.rl.loader import load_rwkv7, load_weights_into, _PeftState
 from experiments.rl.state_capacity_probe import make_sample, KEYS
 
 
@@ -232,6 +232,8 @@ def main() -> int:
                     default=Path("training/corpus_open/g1i_warmup_v3_flat.jsonl"))
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--weights", type=Path,
+                    help="peft: a trainer's state_dict .pth loaded over --model (checkpoint)")
     args = ap.parse_args()
 
     layers = [int(x) for x in args.layers.split(",")]
@@ -240,6 +242,9 @@ def main() -> int:
     print(f"[lens] loading {args.model}", flush=True)
     loaded = load_rwkv7(args.model, device=args.device, dtype=torch.float32,
                         backend="peft", ctx_len=2048)
+    if args.weights:
+        load_weights_into(loaded, args.weights)
+        print(f"[lens] weights over base: {args.weights}", flush=True)
     for p in loaded.model.parameters():
         p.requires_grad_(False)          # the state is the only leaf
 

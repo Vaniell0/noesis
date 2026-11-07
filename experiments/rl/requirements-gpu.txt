@@ -35,3 +35,9 @@ ninja  # rwkv package JIT-compiles a CUDA matmul kernel on first `backend="blink
        # to load C++ extensions" without it. Found 2026-09-10, only surfaces
        # the first time the blink path is actually exercised (peft-only runs
        # never hit this import).
+# Added 2026-10-28 for the S1 path (run.py --backend peft, train_latent_s1.py, the gate probes): the same set the
+# laptop runs with (experiments/_logs/s1_answers/common.sh), plus transformers for the Qwen3.5 bridge (plan B.3c).
+numpy
+pyyaml
+huggingface_hub
+transformers==5.20.2

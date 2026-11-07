@@ -160,8 +160,20 @@ import rwkv
 print("rwkv:", rwkv.__version__ if hasattr(rwkv, "__version__") else "(no __version__ attr)")
 PY
 
+echo "--- optional: Qwen3.5 fast kernels (DeltaNet + conv); transformers falls back to torch without them ---"
+python -m pip install flash-linear-attention causal-conv1d || echo "  (fast kernels not installed - Qwen runs on the slow fallback)"
+
 echo ""
-echo "=== bootstrap done. Before a real training launch: ==="
+echo "=== S1 path (2026-10-28; train_think_distill below is the older path) ==="
+echo "  Copy by hand (gitignored, never committed): models/rwkv7-g1i-2.9b-20260805-ctx16384.pth,"
+echo "  ~/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth, training/corpus_open/ciphers_k_*_plain_{eval,train}.jsonl,"
+echo "  experiments/rl/results/s0_*/m0_pass.json, experiments/rl/results/s1_pilot_g1d04b/{kl_T2_k4,hint3_kl_T2_k4}.pth,"
+echo "  experiments/rl/results/head_ablation/sub_h22.jsonl"
+echo "  Smoke (must pass before any long run):"
+echo "    python experiments/run.py --backend peft --device cuda --dtype bf16 --model <0.4B> --tests m0_pass,chat --cc-ticks 0,4 ..."
+echo "    python experiments/rl/train_latent_s1.py --device cuda --dtype bf16 --model <0.4B> --limit 4 --steps 2 --eval-every 1 ..."
+echo ""
+echo "=== bootstrap done. Before a real training launch (older think-distill path): ==="
 echo "  1. Copy base model + checkpoint dir + tokenised .pt data files"
 echo "     (see this script's header comment for exact paths)."
 echo "  2. python experiments/rl/merge_checkpoint_dir.py  # merge on the VM"

@@ -41,8 +41,10 @@ def main() -> None:
                                   conflict_handler="resolve")
     ap.add_argument("--model", help="checkpoint path or HF owner/repo:file.pth")
     ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
+    ap.add_argument("--dtype", choices=("fp32", "bf16"), default="fp32", help="peft only: bf16 on the GPU")
     ap.add_argument("--backend", choices=("blink", "peft"), default="blink",
                     help="peft: rl.loader (embeds path, own-latent loop); probes declare which they need")
+    ap.add_argument("--weights", help="peft only: a trainer's state_dict .pth loaded over --model (gate a checkpoint)")
     ap.add_argument("--tests", help="comma-separated probe names, or 'all'")
     ap.add_argument("--list", action="store_true", help="list registered probes and exit")
     ap.add_argument("--out-dir", default="experiments/_common/results/adhoc",
@@ -83,10 +85,20 @@ def main() -> None:
         ap.error(f"probe(s) {', '.join(wrong)} need a different --backend than {args.backend!r}")
 
     print(f"[run] loading model once: {args.model} (device={args.device}, backend={args.backend})")
+    if args.weights and args.backend != "peft":
+        ap.error("--weights needs --backend peft")
     if args.backend == "peft":
         import torch
+        from experiments.rl.hf_loader import is_hf_dir, load_hf
         from experiments.rl.loader import load_rwkv7
-        model = load_rwkv7(args.model, device=args.device, dtype=torch.float32, backend="peft", ctx_len=2048)
+        dt = {"fp32": torch.float32, "bf16": torch.bfloat16}[args.dtype]
+        if is_hf_dir(args.model):                               # a HF model directory: same interface (rl/hf_loader.py)
+            model = load_hf(args.model, args.device, dt)
+        else:
+            model = load_rwkv7(args.model, device=args.device, dtype=dt, backend="peft", ctx_len=2048)
+        if args.weights:
+            from experiments.rl.loader import load_weights_into
+            load_weights_into(model, args.weights)
         for p in model.model.parameters():
             p.requires_grad_(False)
         tokenizer = model.tokenizer
@@ -107,7 +119,7 @@ def main() -> None:
         result = spec.fn(model, tokenizer, args)
         out_path = save_result(
             out_dir / f"{name}.json", result,
-            experiment=name, hypothesis=spec.hypothesis, model=args.model,
+            experiment=name, hypothesis=spec.hypothesis, model=args.model + (f" + {args.weights}" if args.weights else ""),
             script=inspect.getfile(spec.fn),
         )
         print(f"[run]     -> {out_path}")

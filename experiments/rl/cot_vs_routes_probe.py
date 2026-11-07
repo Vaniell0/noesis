@@ -22,10 +22,16 @@ tokens. Ten items is a hint. This measures it on more items, untrained model:
 
 Everything per item is written (answers, token counts, the decoder's confidence on
 r0), so any routing policy can be scored offline: accuracy vs tokens. No training.
+
+--items (2026-10-29): rows from jsonl files (e.g. gen_ciphers knowledge rows) instead of the
+matrix families, scored by gen_ciphers.check_answer on the answer text. A Hugging Face model
+directory (Qwen3.5, hf_loader) runs the same routes and CoT: its own think template, its EOS,
+the cache cloned by deepcopy, and the answer read after "</think>\n\n" as the S1 trainer does.
 """
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import sys
 from collections import Counter
@@ -41,7 +47,17 @@ from experiments.rl.fork_agreement_probe import _gen, _first_int, _first_number_
 
 
 def _clone(st):
-    return _PeftState(st.shift.clone(), st.wkv.clone())
+    if isinstance(st, _PeftState):
+        return _PeftState(st.shift.clone(), st.wkv.clone())
+    return copy.deepcopy(st)                                    # HF cache (hf_loader)
+
+
+def _frame(loaded, q):
+    """(prompt ids up to the open think block, the closer, what follows a CoT that closed itself)."""
+    tok = loaded.tokenizer
+    if getattr(loaded, "backend", "") == "hf":
+        return tok.encode(loaded.think_prompt(q)), tok.encode("\n</think>\n\n"), tok.encode("\n\n")
+    return tok.encode(f"User: {q}\n\nAssistant: <think>"), tok.encode("\n</think>\n"), tok.encode("\n")
 
 
 @torch.no_grad()
@@ -65,24 +81,26 @@ def _close_and_answer(loaded, logits, st, closer):
 
 
 @torch.no_grad()
-def one_item(loaded, q, max_think, checkpoints, feed_norm, mean_emb):
+def one_item(loaded, q, max_think, checkpoints, feed_norm, mean_emb, read=None):
     tok = loaded.tokenizer
-    closer = tok.encode("\n</think>\n")
+    read = read or _first_int
+    head, closer, after_close = _frame(loaded, q)
+    eos = getattr(loaded, "eos_ids", frozenset({0}))
     rec = {"routes": {}, "cot": {}}
-    head = tok.encode(f"User: {q}\n\nAssistant: <think>")
     logits0, st0 = loaded.forward_stateful(torch.tensor([head]), loaded.new_state(batch=1))
 
     # silent routes, all from clones of the same post-question state
     text, ids, lps = _close_and_answer(loaded, logits0, _clone(st0), closer)
-    rec["routes"]["r0"] = _first_int(text)
+    rec["routes"]["r0"] = read(text)
     rec["r0_first_num_prob"] = _first_number_token_prob(tok, ids, lps)
     rec["r0_mean_logprob"] = sum(lps) / max(1, len(lps))
     for name, n, mode in (("lat2", 2, "expected"), ("lat8", 8, "expected"), ("const8", 8, "const")):
         lg, st = _ticks(loaded, logits0, _clone(st0), n, mode, feed_norm, mean_emb)
-        rec["routes"][name] = _first_int(_close_and_answer(loaded, lg, st, closer)[0])
-    rr = tok.encode(f"User: {q}\n\nUser: {q}\n\nAssistant: <think>")
+        rec["routes"][name] = read(_close_and_answer(loaded, lg, st, closer)[0])
+    rr = _frame(loaded, f"{q}\n\n{q}")[0] if getattr(loaded, "backend", "") == "hf" else \
+        tok.encode(f"User: {q}\n\nUser: {q}\n\nAssistant: <think>")
     lg, st = loaded.forward_stateful(torch.tensor([rr]), loaded.new_state(batch=1))
-    rec["routes"]["reread"] = _first_int(_close_and_answer(loaded, lg, st, closer)[0])
+    rec["routes"]["reread"] = read(_close_and_answer(loaded, lg, st, closer)[0])
     rec["reread_extra_tokens"] = len(rr) - len(head)
 
     # teacher CoT with answer read at checkpoints
@@ -91,7 +109,7 @@ def one_item(loaded, q, max_think, checkpoints, feed_norm, mean_emb):
     cps = sorted(set(checkpoints))
     for step in range(1, max_think + 1):
         nxt = int(logits[0, -1].float().argmax())
-        if nxt == 0:
+        if nxt in eos:
             break
         out.append(nxt)
         logits, st = loaded.forward_stateful(torch.tensor([[nxt]]), st)
@@ -99,12 +117,13 @@ def one_item(loaded, q, max_think, checkpoints, feed_norm, mean_emb):
             closed = True
             break
         if step in cps:
-            rec["cot"][str(step)] = _first_int(_close_and_answer(loaded, logits, _clone(st), closer)[0])
+            rec["cot"][str(step)] = read(_close_and_answer(loaded, logits, _clone(st), closer)[0])
     if closed:
-        text, _, _ = _gen(loaded, *loaded.forward_stateful(torch.tensor([tok.encode("\n")]), st))
-        rec["cot_final"] = _first_int(text)
+        text, _, _ = _gen(loaded, *loaded.forward_stateful(torch.tensor([after_close]), st))
+        rec["cot_final"] = read(text)
     else:
-        rec["cot_final"] = _first_int(_close_and_answer(loaded, logits, st, closer)[0])
+        rec["cot_final"] = read(_close_and_answer(loaded, logits, st, closer)[0])
+    rec["cot_text"] = tok.decode(out)
     rec["cot_tokens"] = len(out)
     rec["cot_closed"] = closed
     return rec
@@ -122,17 +141,37 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=31)
     ap.add_argument("--threads", type=int, default=10)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--items", type=Path, action="append",
+                    help="jsonl rows (gen_ciphers knowledge rows) instead of the matrix families; --per-cell rows per "
+                         "(file, view), scored by check_answer")
     args = ap.parse_args()
     torch.set_num_threads(args.threads)
 
-    loaded = load_rwkv7(args.model, device="cpu", dtype=torch.float32,
-                        backend="peft", lora_r=0, ctx_len=8192)
+    from experiments.rl.hf_loader import is_hf_dir, load_hf
+    loaded = load_hf(args.model) if is_hf_dir(args.model) else \
+        load_rwkv7(args.model, device="cpu", dtype=torch.float32, backend="peft", lora_r=0, ctx_len=8192)
     E = loaded.embedding_weight.float()
     feed_norm = float(E.norm(dim=-1).median())
     mean_emb = E.mean(0)
-    fams = set(args.families.split(","))
-    items = [it for it in make_items(args.per_cell, [int(x) for x in args.levels.split(",")], args.seed)
-             if it["family"] in fams]
+    if args.items:
+        from training.scripts.gen_ciphers import check_answer
+        items, per = [], Counter()
+        for f in args.items:
+            for line in open(f):
+                r = json.loads(line)
+                key = (str(f), r.get("view"))
+                if per[key] < args.per_cell:
+                    per[key] += 1
+                    items.append({"prompt": r["prompt"], "answer": r["answer"], "family": r.get("view"),
+                                  "level": r.get("level"), "row": r})
+        read = lambda s: s.strip()                              # noqa: E731 - the answer text, scored below
+        right = lambda p, r: p is not None and check_answer(r["row"], p)[0]   # noqa: E731
+    else:
+        fams = set(args.families.split(","))
+        items = [it for it in make_items(args.per_cell, [int(x) for x in args.levels.split(",")], args.seed)
+                 if it["family"] in fams]
+        read = None
+        right = lambda p, r: p == r["gold"]                     # noqa: E731
     cps = [int(x) for x in args.checkpoints.split(",")]
     part = args.out.with_suffix(".partial.jsonl")
     done = [json.loads(l) for l in open(part)] if part.exists() else []
@@ -140,9 +179,11 @@ def main() -> int:
     for i, it in enumerate(items):
         if i < len(done):
             continue
-        q = with_format(it["prompt"], FORMATS[args.format][0])
-        rec = one_item(loaded, q, args.max_think, cps, feed_norm, mean_emb)
+        q = it["prompt"] if args.items else with_format(it["prompt"], FORMATS[args.format][0])
+        rec = one_item(loaded, q, args.max_think, cps, feed_norm, mean_emb, read)
         rec.update({"item": i, "family": it["family"], "level": it["level"], "gold": it["answer"]})
+        if args.items:
+            rec["row"] = it["row"]
         with open(part, "a") as f:
             f.write(json.dumps(rec) + "\n")
         done.append(rec)
@@ -152,7 +193,7 @@ def main() -> int:
 
     # offline policies
     def acc(preds):
-        return round(sum(p == r["gold"] for p, r in zip(preds, done)) / len(done), 3)
+        return round(sum(bool(right(p, r)) for p, r in zip(preds, done)) / len(done), 3)
     summ = {"n": len(done)}
     for rname in ("r0", "lat2", "lat8", "const8", "reread"):
         summ[f"silent:{rname}"] = acc([r["routes"][rname] for r in done])

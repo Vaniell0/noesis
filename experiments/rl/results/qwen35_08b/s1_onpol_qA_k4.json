@@ -1,0 +1,97 @@
+{
+  "_meta": {
+    "experiment": "train_latent_s1",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-11-04",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "script": "experiments/rl/train_latent_s1.py",
+    "script_sha256_12": "14062c207c76",
+    "summary": {
+      "held acc M0 -> M4 (step 0)": "0.0 -> 0.0",
+      "held acc M4 (last)": "0.0",
+      "loss": "kl T=2.0",
+      "ticks": "M=4"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "args": {
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "items": [
+      "training/corpus_open/ciphers_k_question_plain_trainA.jsonl"
+    ],
+    "right_from": null,
+    "exclude_right_from": null,
+    "build_cache": false,
+    "cache_out": null,
+    "target": "cache",
+    "cache": "experiments/rl/results/qwen35_08b/cot_teacher_questionA.pt",
+    "loss": "kl",
+    "temp": 2.0,
+    "teacher_hint": 0,
+    "teacher_cot": 0,
+    "keep_raw_teacher": false,
+    "cot_check": 0,
+    "on_policy": true,
+    "student_temp": 1.0,
+    "student_max_new": 32,
+    "ticks": 4,
+    "out": "experiments/rl/results/qwen35_08b/s1_onpol_qA_k4.json",
+    "steps": 60,
+    "accum": 2,
+    "muon_lr": 3e-05,
+    "aux_lr": 1e-05,
+    "warmup": 20,
+    "eval_every": 30,
+    "heldout_every": 5,
+    "threads": 4,
+    "seed": 0,
+    "weights": null,
+    "limit": 0,
+    "eval_max": 20,
+    "device": "cpu",
+    "dtype": "fp32"
+  },
+  "n_train": 37,
+  "n_held": 10,
+  "history": [
+    {
+      "step": 0,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      }
+    },
+    {
+      "step": 30,
+      "loss": 0.43054971110541373,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      }
+    },
+    {
+      "step": 60,
+      "loss": 0.15164716556901112,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      }
+    }
+  ],
+  "checkpoint": "experiments/rl/results/qwen35_08b/s1_onpol_qA_k4.pth"
+}

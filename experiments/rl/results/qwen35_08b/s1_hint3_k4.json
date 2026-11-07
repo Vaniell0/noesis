@@ -1,0 +1,94 @@
+{
+  "_meta": {
+    "experiment": "train_latent_s1",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-29",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "script": "experiments/rl/train_latent_s1.py",
+    "script_sha256_12": "65cc4e00af3e",
+    "summary": {
+      "held acc M0 -> M4 (step 0)": "0.0 -> 0.0",
+      "held acc M4 (last)": "0.067",
+      "loss": "kl T=2.0",
+      "ticks": "M=4"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "args": {
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "items": [
+      "training/corpus_open/ciphers_k_mixed_plain_train.jsonl"
+    ],
+    "right_from": "experiments/rl/results/qwen35_08b/s0_train_hint3/m0_pass.json",
+    "exclude_right_from": "experiments/rl/results/qwen35_08b/s0_train_hint0/m0_pass.json",
+    "build_cache": false,
+    "cache_out": null,
+    "target": "cache",
+    "cache": "experiments/rl/results/qwen35_08b/hint3_teacher_mixed150.pt",
+    "loss": "kl",
+    "temp": 2.0,
+    "teacher_hint": 0,
+    "teacher_cot": 0,
+    "keep_raw_teacher": false,
+    "cot_check": 0,
+    "ticks": 4,
+    "out": "experiments/rl/results/qwen35_08b/s1_hint3_k4.json",
+    "steps": 80,
+    "accum": 2,
+    "muon_lr": 3e-05,
+    "aux_lr": 1e-05,
+    "warmup": 20,
+    "eval_every": 40,
+    "heldout_every": 5,
+    "threads": 4,
+    "seed": 0,
+    "weights": null,
+    "limit": 150,
+    "eval_max": 40,
+    "device": "cpu",
+    "dtype": "fp32"
+  },
+  "n_train": 120,
+  "n_held": 30,
+  "history": [
+    {
+      "step": 0,
+      "train": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0,
+        "acc_M4": 0.0
+      }
+    },
+    {
+      "step": 40,
+      "loss": 4.361640867590904,
+      "train": {
+        "acc_M0": 0.075,
+        "acc_M4": 0.1
+      },
+      "held": {
+        "acc_M0": 0.033,
+        "acc_M4": 0.067
+      }
+    },
+    {
+      "step": 80,
+      "loss": 2.106494429707527,
+      "train": {
+        "acc_M0": 0.175,
+        "acc_M4": 0.1
+      },
+      "held": {
+        "acc_M0": 0.1,
+        "acc_M4": 0.067
+      }
+    }
+  ],
+  "checkpoint": "experiments/rl/results/qwen35_08b/s1_hint3_k4.pth"
+}

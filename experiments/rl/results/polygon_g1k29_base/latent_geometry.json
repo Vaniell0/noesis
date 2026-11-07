@@ -1,0 +1,92 @@
+{
+  "_meta": {
+    "experiment": "latent_geometry",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-22",
+    "status": "done",
+    "model": "models/rwkv7-g1k-2.9b-20260930-ctx25600.pth",
+    "script": "experiments/rl/latent_geometry_probe.py",
+    "script_sha256_12": "c8c28a52c72a",
+    "summary": {
+      "settle tick (tick_cos>=0.98)": "5",
+      "cross_cos last": "0.99",
+      "nn_cos tick0/last": "0.553 / 0.557"
+    }
+  },
+  "model": "models/rwkv7-g1k-2.9b-20260930-ctx25600.pth",
+  "n_prompts": 24,
+  "items": [
+    "experiments/rl/results/head_ablation/sub_h22.jsonl",
+    "experiments/rl/results/head_ablation/sub_h20.jsonl"
+  ],
+  "embeds_path_max_abs_dlogit": 0.0,
+  "pca_k": 256,
+  "baseline": {
+    "emb_frac_token_rows": 0.796,
+    "emb_frac_random": 0.544,
+    "nn_cos_random": 0.017,
+    "norm_hidden_vs_emb": 1183.63
+  },
+  "settle_tick_cos098": 5,
+  "ticks": [
+    {
+      "tick": 0,
+      "cross_cos": 0.939,
+      "nn_cos": 0.553,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.018,
+      "tick_cos": null
+    },
+    {
+      "tick": 1,
+      "cross_cos": 0.831,
+      "nn_cos": 0.514,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.056,
+      "tick_cos": 0.835
+    },
+    {
+      "tick": 2,
+      "cross_cos": 0.843,
+      "nn_cos": 0.513,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.597,
+      "tick_cos": 0.888
+    },
+    {
+      "tick": 3,
+      "cross_cos": 0.919,
+      "nn_cos": 0.51,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.829,
+      "tick_cos": 0.935
+    },
+    {
+      "tick": 4,
+      "cross_cos": 0.961,
+      "nn_cos": 0.534,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.912,
+      "tick_cos": 0.967
+    },
+    {
+      "tick": 5,
+      "cross_cos": 0.98,
+      "nn_cos": 0.548,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.806,
+      "tick_cos": 0.984
+    },
+    {
+      "tick": 6,
+      "cross_cos": 0.99,
+      "nn_cos": 0.557,
+      "emb_frac": 0.999,
+      "argmax_cos": -0.677,
+      "tick_cos": 0.992
+    }
+  ],
+  "note": "tick 0 = last prompt position; ticks >= 1 = hidden fed back"
+}

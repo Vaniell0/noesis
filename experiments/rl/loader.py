@@ -384,7 +384,8 @@ class MuonHybrid:
         by_base: dict = {}
         for name, p in named_params:
             is_hidden_2d = (p.ndim == 2 and name.endswith(".weight")
-                             and (".att." in name or ".ffn." in name))
+                             and any(m in name for m in (".att.", ".ffn.",  # RWKV-7
+                                                         ".self_attn.", ".linear_attn.", ".mlp.")))  # HF Qwen3.5
             (self.muon_params if is_hidden_2d else self.other_params).append(p)
             if not is_hidden_2d:
                 continue
@@ -535,6 +536,17 @@ class LoadedModel:
     _emb_weight: Optional[torch.Tensor] = None
 
     # ---- unified interface -------------------------------------------
+    # shared with experiments/rl/hf_loader.HFLoaded, so the S1 loop and its probes run on either
+    eos_ids = frozenset({0})
+
+    def silent_prompt(self, q: str) -> str:
+        """The project's silent route: the answer right after an empty think block."""
+        return f"User: {q}\n\nAssistant: <think>\n</think>\n"
+
+    def feed_view(self, x: torch.Tensor) -> torch.Tensor:
+        """What block 0 sees of a fed vector: ln0 keeps only its direction."""
+        return self.model.blocks[0].ln0(x.to(self.dtype)).float()
+
 
     def new_state(self, batch: int = 1):
         """Return an initial (zero) state suitable for forward_stateful."""
@@ -560,7 +572,7 @@ class LoadedModel:
         """
         if self.backend == "peft":
             logits, shift, wkv = self.model.forward_infctx(
-                input_ids, state.shift, state.wkv,
+                input_ids.to(self.device), state.shift, state.wkv,
             )
             return logits, _PeftState(shift, wkv)
         # blink path
@@ -1041,8 +1053,8 @@ def load_weights_into(loaded: LoadedModel, path) -> None:
     checkpoint applied to a full-FT model, say — fails loudly instead of
     silently probing the base.
     """
-    if loaded.backend != "peft":
-        raise RuntimeError("load_weights_into needs the peft backend")
+    if loaded.backend not in ("peft", "hf"):
+        raise RuntimeError("load_weights_into needs the peft backend or the HF adapter")
     sd = torch.load(path, map_location="cpu", weights_only=True)
     loaded.model.load_state_dict(sd, strict=True)
     print(f"[loader] weights <- {path} ({len(sd)} tensors)", flush=True)

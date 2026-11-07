@@ -1,0 +1,1340 @@
+{
+  "_meta": {
+    "experiment": "m0_pass",
+    "hypothesis": [
+      "HZLK",
+      "H19"
+    ],
+    "date": "2026-10-23",
+    "status": "done",
+    "model": "models/rwkv-g1l-3b-temp-5764.pth",
+    "script": "experiments/rl/m0_pass_probe.py",
+    "script_sha256_12": "28101bfb48d5",
+    "summary": {
+      "arithmetic acc": "2/42",
+      "bits acc": "20/42",
+      "cipher_context acc": "0/26",
+      "cipher_mixed acc": "0/18",
+      "cipher_question acc": "0/12",
+      "crossword acc": "0/24",
+      "matrix acc": "0/42",
+      "pattern acc": "2/42"
+    }
+  },
+  "model": "models/rwkv-g1l-3b-temp-5764.pth",
+  "files": [
+    "training/corpus_open/matrix_tasks.jsonl",
+    "training/corpus_open/ciphers_k_context_eval.jsonl",
+    "training/corpus_open/ciphers_k_question_eval.jsonl",
+    "training/corpus_open/ciphers_k_mixed_eval.jsonl"
+  ],
+  "n": 248,
+  "cells": [
+    {
+      "family": "arithmetic",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.333,
+      "form": 0.0,
+      "acc_lenient": 0.833
+    },
+    {
+      "family": "arithmetic",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "bits",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.5,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.833,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.333,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.667,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.667,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.333,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "json",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "line",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "quoted",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "json",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "line",
+      "n": 4,
+      "acc": 0.0,
+      "form": 0.75,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "json",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 5,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 5,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.5,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "line",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 4,
+      "format": "json",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 4,
+      "format": "plain",
+      "n": 4,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "line",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.5,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 3,
+      "format": "plain",
+      "n": 5,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "crossword",
+      "level": 10,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "crossword",
+      "level": 11,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "crossword",
+      "level": 8,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "crossword",
+      "level": 9,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "matrix",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "matrix",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "matrix",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "matrix",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "matrix",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "matrix",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "matrix",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "pattern",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.167,
+      "form": 0.0,
+      "acc_lenient": 0.5
+    },
+    {
+      "family": "pattern",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "pattern",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.167,
+      "form": 0.0,
+      "acc_lenient": 0.833
+    },
+    {
+      "family": "pattern",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.667
+    },
+    {
+      "family": "pattern",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.833
+    },
+    {
+      "family": "pattern",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 0.0,
+      "acc_lenient": 0.0
+    }
+  ],
+  "right_ids": [
+    "arith_L5_add_find_missing_015382",
+    "arith_L5_add_find_missing_012863",
+    "bits_L1_xor_result_bit_065584",
+    "bits_L1_xor_result_bit_056409",
+    "bits_L1_xor_result_bit_022148",
+    "bits_L2_and_result_bit_043984",
+    "bits_L2_and_result_bit_004584",
+    "bits_L2_and_result_bit_033723",
+    "bits_L2_and_result_bit_044897",
+    "bits_L2_and_result_bit_021452",
+    "bits_L3_or_result_bit_013757",
+    "bits_L3_or_result_bit_016075",
+    "bits_L4_not_result_bit_046921",
+    "bits_L4_not_result_bit_047801",
+    "bits_L4_not_result_bit_025396",
+    "bits_L4_not_result_bit_059272",
+    "bits_L5_xor_missing_input_041868",
+    "bits_L5_xor_missing_input_047684",
+    "bits_L5_xor_missing_input_024992",
+    "bits_L5_xor_missing_input_003221",
+    "bits_L7_xor_key_bit_020929",
+    "bits_L7_xor_key_bit_024746",
+    "pattern_L1_052502",
+    "pattern_L3_005006"
+  ],
+  "examples": {
+    "('arithmetic', 1, '')": {
+      "id": "arith_L1_add_find_sum_050746",
+      "gold": "60",
+      "response": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each string may have leading zeros. The numbers are aligned by their least significant digit (r",
+      "content": false,
+      "form": false
+    },
+    "('arithmetic', 2, '')": {
+      "id": "arith_L2_add_find_sum_061765",
+      "gold": "599",
+      "response": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also",
+      "content": false,
+      "form": false
+    },
+    "('arithmetic', 3, '')": {
+      "id": "arith_L3_add_find_sum_002036",
+      "gold": "9198",
+      "response": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be p",
+      "content": false,
+      "form": false
+    },
+    "('arithmetic', 4, '')": {
+      "id": "arith_L4_sub_find_sum_033922",
+      "gold": "392",
+      "response": "To solve this problem, we need to perform column subtraction on a matrix where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled",
+      "content": false,
+      "form": false
+    },
+    "('arithmetic', 5, '')": {
+      "id": "arith_L5_add_find_missing_001499",
+      "gold": "7",
+      "response": "The missing digit is **1**.\n**Explanation:**  \nThe column addition is performed from right to left.  \n- Units column: \\(9 + 7 = 16\\). Write down 6 and carry over 1.  \n- Tens column: \\(2 + 5 + 1 = 8\\).",
+      "content": false,
+      "form": false
+    },
+    "('arithmetic', 6, '')": {
+      "id": "arith_L6_add_find_error_012122",
+      "gold": "5379",
+      "response": "The correct result is 5 4 7 9.\nThe addition is performed column by column from right to left:\n- Units: 0 + 9 = 9\n- Tens: 9 + 8 = 17, write 7, carry 1\n- Hundreds: 5 + 2 + 1 (carry) = 8\n- Thousands: 2 +",
+      "content": false,
+      "form": false
+    },
+    "('arithmetic', 7, '')": {
+      "id": "arith_L7_add_find_sum_064511",
+      "gold": "3352",
+      "response": "To solve this problem, we need to compute the sum of three numbers represented as columns in a matrix. Each column corresponds to a digit position (leading spaces are treated as leading zeros). The re",
+      "content": false,
+      "form": false
+    },
+    "('bits', 1, '')": {
+      "id": "bits_L1_xor_result_bit_008491",
+      "gold": "1",
+      "response": "The missing result bit at position 0 is **0**.\n**Explanation:**\n- Bits at positions 1 and 2:  \n  \\(1 \\oplus 1 = 0\\), \\(0 \\oplus 0 = 0\\), \\(0 \\oplus 0 = 0\\) \u2192 Result: **000**\n- Bit at position 0:  \n  \\",
+      "content": false,
+      "form": false
+    },
+    "('bits', 2, '')": {
+      "id": "bits_L2_and_result_bit_043984",
+      "gold": "0",
+      "response": "The missing result bit is 0.\nThe bitwise AND operation for each bit position is performed independently. For the second bit (position 2), the input bits are 1 (from A) and 0 (from B). The AND operatio",
+      "content": true,
+      "form": false
+    },
+    "('bits', 3, '')": {
+      "id": "bits_L3_or_result_bit_052510",
+      "gold": "1",
+      "response": "The missing result bit at position 1 is **0**.\nHere's the step-by-step reasoning:\n1. **Bitwise OR operation**: For each bit position, the result is 1 if either of the input bits is 1.\n2. **Input bits*",
+      "content": false,
+      "form": false
+    },
+    "('bits', 4, '')": {
+      "id": "bits_L4_not_result_bit_030391",
+      "gold": "1",
+      "response": "The missing result bit is 0.\n**Explanation:**  \nBitwise NOT (or bitwise complement) flips each bit of the input. For the input `A = 1 0 0 0`, the NOT operation flips each bit:  \n- Position 0: 1 \u2192 0  \n",
+      "content": false,
+      "form": false
+    },
+    "('bits', 5, '')": {
+      "id": "bits_L5_xor_missing_input_041868",
+      "gold": "0",
+      "response": "The missing bit at position 1 is **0**.\n**Explanation:**  \nThe XOR operation is performed bit by bit. The missing bit at position 1 is determined by the XOR of the corresponding bits in A and B.  \n- A",
+      "content": true,
+      "form": false
+    },
+    "('bits', 6, '')": {
+      "id": "bits_L6_xor_error_bit_049839",
+      "gold": "0",
+      "response": "The XOR operation at position 4 is 0, so the correct bit is 0.\n```python\nprint(0)\n```",
+      "content": false,
+      "form": false
+    },
+    "('bits', 7, '')": {
+      "id": "bits_L7_xor_key_bit_002696",
+      "gold": "0",
+      "response": "To determine the missing key bit at position 1, we need to find the value of the key bit that, when XORed with the corresponding plaintext bit, produces the given ciphertext bit.\nThe plaintext is `011",
+      "content": false,
+      "form": false
+    },
+    "('crossword', 10, '')": {
+      "id": "xword_B_L10_9x9_H_LR_27661",
+      "gold": "LAGOON",
+      "response": "The word is \"PROBLEM\".",
+      "content": false,
+      "form": false
+    },
+    "('crossword', 11, '')": {
+      "id": "xword_B_L11_10x10_V_TD_47321",
+      "gold": "HOLLOW",
+      "response": "The word is \"PUZZLE\".",
+      "content": false,
+      "form": false
+    },
+    "('crossword', 8, '')": {
+      "id": "xword_A_L8_7x7_enum_29520",
+      "gold": "GLASS\nMAST",
+      "response": "The hidden words are:\n```\nSALT\nSALT\n```",
+      "content": false,
+      "form": false
+    },
+    "('crossword', 9, '')": {
+      "id": "xword_A_L9_8x8_enum_63647",
+      "gold": "FARM\nROSE\nWOLF",
+      "response": "```\nY P I Z F W G F\nG F P Q R Z Q A\nC P I M Y W U R\nV Q X I G Y O M\nO F Z P R M C H\nE A F L O W D R\nF O O L S V T F\nF T L V E A G X\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG ",
+      "content": false,
+      "form": false
+    },
+    "('matrix', 1, '')": {
+      "id": "wsearch_L1_5x5_H_LR_sp_01_35877",
+      "gold": "row=1 col=1",
+      "response": "The word FIRE appears horizontally in row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+      "content": false,
+      "form": false
+    },
+    "('matrix', 2, '')": {
+      "id": "wsearch_L2_6x6_H_LR_sp_02_18998",
+      "gold": "row=5 col=2",
+      "response": "The word URGE appears horizontally in row=2, col=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+      "content": false,
+      "form": false
+    },
+    "('matrix', 3, '')": {
+      "id": "wsearch_L3_7x7_H_RL_sp_03_30709",
+      "gold": "row=6 col=4",
+      "response": "The word \"SHIP\" appears horizontally in the 7x7 matrix starting at row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+      "content": false,
+      "form": false
+    },
+    "('matrix', 4, '')": {
+      "id": "wsearch_name_L4_8x8_H_LR_sp_04_57931",
+      "gold": "ORBIT",
+      "response": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    for i in range(rows):\n        for j in range(cols):\n            if grid[i][j] == word[0]:\n             ",
+      "content": false,
+      "form": false
+    },
+    "('matrix', 5, '')": {
+      "id": "wsearch_L5_9x9_V_BU_sp_05_64503",
+      "gold": "row=8 col=0",
+      "response": "The word IVORY appears vertically in the 9x9 matrix, starting at row=7 and column=0.\n```json\n{\"row\": 7, \"col\": 0}\n```",
+      "content": false,
+      "form": false
+    },
+    "('matrix', 6, '')": {
+      "id": "wsearch_L6_10x10_D_DR_sp_06_33466",
+      "gold": "row=2 col=1",
+      "response": "The word JOUST appears diagonally down-right starting at row=0, col=0.\n```json\n{\"row\": \"0\", \"col\": \"0\"}\n```",
+      "content": false,
+      "form": false
+    },
+    "('matrix', 7, '')": {
+      "id": "wsearch_name_L7_12x12_H_RL_sp_07_5127",
+      "gold": "SILENCE",
+      "response": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]\n    for dx, dy in d",
+      "content": false,
+      "form": false
+    },
+    "('pattern', 1, '')": {
+      "id": "pattern_L1_016540",
+      "gold": "21",
+      "response": "The missing number is **41**.\nThe sequence follows an arithmetic progression with a common difference of 6. The missing term is calculated as:\n`13 + (6 \u00d7 5) = 41`",
+      "content": false,
+      "form": false
+    },
+    "('pattern', 2, '')": {
+      "id": "pattern_L2_054901",
+      "gold": "14",
+      "response": "To solve this problem, we need to identify the missing number in a matrix where each row and column follows an arithmetic sequence. The matrix is partially filled with numbers, and one value is missin",
+      "content": false,
+      "form": false
+    },
+    "('pattern', 3, '')": {
+      "id": "pattern_L3_015695",
+      "gold": "80",
+      "response": "The missing number is **320**.\nThe sequence follows a geometric progression where each term is multiplied by 2.\n- \\(5 \\times 2 = 10\\)\n- \\(10 \\times 2 = 20\\)\n- \\(20 \\times 2 = 40\\)\n- \\(40 \\times 2 = 80",
+      "content": false,
+      "form": false
+    },
+    "('pattern', 4, '')": {
+      "id": "pattern_L4_009698",
+      "gold": "1",
+      "response": "To solve this problem, we need to determine the missing value in a 4x4 matrix where each row and column alternates between 0s and 1s. The matrix contains 0s and 1s in a regular alternating pattern, an",
+      "content": false,
+      "form": false
+    },
+    "('pattern', 5, '')": {
+      "id": "pattern_L5_037934",
+      "gold": "1",
+      "response": "To solve this problem, we need to identify the missing number in a multiplication table where each cell at row `i` and column `j` contains the product of `i` and `j`. The table is provided as a string",
+      "content": false,
+      "form": false
+    },
+    "('pattern', 6, '')": {
+      "id": "pattern_L6_036248",
+      "gold": "0",
+      "response": "To solve this problem, we need to identify the missing number in a 4x4 matrix where each row follows a specific modular arithmetic pattern. The matrix is structured such that each row starts with a va",
+      "content": false,
+      "form": false
+    },
+    "('pattern', 7, '')": {
+      "id": "pattern_L7_006319",
+      "gold": "5",
+      "response": "To solve this problem, we need to identify the missing number in a sequence where each value is the sum of the two preceding values. The sequence starts with 1 and 2, and the missing value is represen",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 1, 'json')": {
+      "id": "cipher_context_polybius6_e7da988c7491_ec9518_json",
+      "gold": "{\"answer\": \"SOFIA\"}",
+      "response": "{\"answer\": \"MOSCOW\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'plain')": {
+      "id": "cipher_context_caesar_e7f45fa18f66_70efdf_plain",
+      "gold": "DELHI",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'line')": {
+      "id": "cipher_context_atbash_c35961e938fc_37a625_line",
+      "gold": "ANSWER: CAIRO",
+      "response": "ANSWER: NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'quoted')": {
+      "id": "cipher_context_script_cyrillic_b79837a28b38_f3c6fa_quoted",
+      "gold": "\"BERN\"",
+      "response": "\"\u041c\u041e\u0421\u041a\u0412\u0410\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'line')": {
+      "id": "cipher_context_atbash_4eb236485d29_37a625_line",
+      "gold": "ANSWER: HANOI",
+      "response": "ANSWER: NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'json')": {
+      "id": "cipher_context_polybius6_438f0829a6ec_9a3f17_json",
+      "gold": "{\"answer\": \"BERN\"}",
+      "response": "{\"answer\": \"NEW YORK\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'plain')": {
+      "id": "cipher_context_polybius6_140fc6ad46f8_d20256_plain",
+      "gold": "RIGA",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 3, 'plain')": {
+      "id": "cipher_context_vigenere_87d245101852_d06b5b_plain",
+      "gold": "QUITO",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 3, 'line')": {
+      "id": "cipher_context_railfence_ec05d1769975_e4da3b_line",
+      "gold": "ANSWER: BORIS AND ROSA",
+      "response": "RENAIBVUOVSUIY  N OIETNSI TSNLS ARLS IALI  AIERGI  NS NTVISI\nAnswer: ANDREW AND JAMES",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 3, 'json')": {
+      "id": "cipher_context_caesar_e306eb8520ba_8f14e4_json",
+      "gold": "{\"answer\": \"LEON AND YANA\"}",
+      "response": "{\"answer\": \"ALICE AND BOB\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 4, 'line')": {
+      "id": "cipher_context_script_cyrillic_4d46ea6923c8_9a2794_line",
+      "gold": "ANSWER: KIRA AND YANA",
+      "response": "ANSWER: ANDRIY ANDRIY",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 4, 'json')": {
+      "id": "cipher_context_polybius6_a23ec0b29de7_53c6e4_json",
+      "gold": "{\"answer\": \"LEON AND ROSA\"}",
+      "response": "{\"answer\": \"ALICE AND BOB\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 4, 'quoted')": {
+      "id": "cipher_context_atbash_a42d19443abc_37a625_quoted",
+      "gold": "\"DMITRI AND TANYA\"",
+      "response": "\"ALICE AND BOB\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 5, 'json')": {
+      "id": "cipher_context_vigenere_770c7a4c2d65_ff22fe_json",
+      "gold": "{\"answer\": \"JONAS AND ROSA\"}",
+      "response": "{\"answer\": \"ALICE AND BOB\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 5, 'plain')": {
+      "id": "cipher_context_vigenere_517efdd07cf8_efa758_plain",
+      "gold": "BORIS AND YANA",
+      "response": "ANDREW ANDREW",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'json')": {
+      "id": "cipher_question_polybius6_b62a360a3f59_d58ce1_json",
+      "gold": "{\"answer\": \"BOGOTA\"}",
+      "response": "{\"answer\": \"THEY ARE IN THE GARDEN\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'quoted')": {
+      "id": "cipher_question_railfence_6cfb306a2836_a87ff6_quoted",
+      "gold": "\"HAVANA\"",
+      "response": "\"WHAT IS THE ANSWER\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'plain')": {
+      "id": "cipher_question_caesar_765bc8a88ad5_45c48c_plain",
+      "gold": "SOFIA",
+      "response": "THE SECRET IS TO BE FOUND IN THE SHADOWS OF THE MOON",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'line')": {
+      "id": "cipher_question_atbash_54e915fa5edb_37a625_line",
+      "gold": "ANSWER: OSLO",
+      "response": "ANSWER: THERE IS NO ANSWER.",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 3, 'plain')": {
+      "id": "cipher_question_vigenere_0b2b1fe45fcb_14c7ee_plain",
+      "gold": "BUENOS AIRES",
+      "response": "THEY ARE GOING TO THE MOUNTAIN",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 3, 'json')": {
+      "id": "cipher_question_vigenere_72208cc6ffbe_1c0ab7_json",
+      "gold": "{\"answer\": \"SANTIAGO\"}",
+      "response": "{\"answer\": \"THEY ARE IN THE GARDEN\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'quoted')": {
+      "id": "cipher_mixed_atbash_4addd4b112f3_37a625_quoted",
+      "gold": "\"OTTAWA\"",
+      "response": "\"NEW YORK\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'line')": {
+      "id": "cipher_mixed_atbash_55924c7bb9f7_37a625_line",
+      "gold": "ANSWER: ANKARA",
+      "response": "ANSWER: MOSCOW",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'plain')": {
+      "id": "cipher_mixed_caesar_994ac86619de_6f4922_plain",
+      "gold": "OSLO",
+      "response": "MOSCOW",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'json')": {
+      "id": "cipher_mixed_polybius6_d7de983b0a90_3354aa_json",
+      "gold": "{\"answer\": \"BANGKOK\"}",
+      "response": "{\"answer\": \"MOSCOW\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 3, 'line')": {
+      "id": "cipher_mixed_railfence_927f257f9005_e4da3b_line",
+      "gold": "ANSWER: SOFIA",
+      "response": "ANSWER: NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 3, 'plain')": {
+      "id": "cipher_mixed_vigenere_1bbd4c456887_980689_plain",
+      "gold": "RABAT",
+      "response": "NEW YORK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 3, 'json')": {
+      "id": "cipher_mixed_vigenere_fb813da60d8d_c80ad7_json",
+      "gold": "{\"answer\": \"ACCRA\"}",
+      "response": "{\"answer\": \"MOSCOW\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 4, 'json')": {
+      "id": "cipher_mixed_vigenere_ebe9c986b43e_d73564_json",
+      "gold": "{\"answer\": \"LIMA\"}",
+      "response": "{\"answer\": \"NYC\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 4, 'plain')": {
+      "id": "cipher_mixed_vigenere_cbe928d3d2d2_95de1e_plain",
+      "gold": "HAVANA",
+      "response": "NYU",
+      "content": false,
+      "form": true
+    }
+  },
+  "responses": {
+    "arith_L1_add_find_sum_050746": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each string may have leading zeros. The numbers are aligned by their least significant digit (rightmost digit), and any missing digits are considered as zeros. The result should be returned as a string without leading zeros, except when the result is zero itself.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, where each string can have leading zeros. The numbers are aligned by their least significant digit, and missing digits are treated as zeros. The result should be returned as a string without leading zeros, except when the result is zero.\n2. **Intuition**: The solution involves processing each digit position from right to left (least significant to most significant). For each position, we add the corresponding digits from both numbers (or zero if the number is shorter) and carry over any overflow to the next higher position.\n3. **Algorithm Selection**: We use a loop to process each digit position from right to left. For each position:\n   - If the current position is beyond the length of either number, we treat the digit as zero.\n   - We add the digits from both numbers (or zero if the number is shorter",
+    "arith_L1_add_find_sum_022753": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The solution involves processing each digit position from right to left, handling carries appropriately, and ensuring the result is correctly padded.\n### Approach\n1. **Problem Analysis**: The problem requires adding two numbers represented as strings, each padded to the same length with leading zeros. The result should also be padded to the same length. The challenge is to handle the addition with carries correctly, especially when the numbers have different lengths.\n2. **Intuition**: By padding both numbers to the same length (the length of the longer number), we can process each digit position from right to left. This allows us to handle carries properly. For each digit position, we add the corresponding digits along with any carry from the previous position, compute the result digit, and update the carry for the next position.\n3. **Algorithm Selection**: The algorithm involves:\n   - **Padding**: Ensure both numbers are of the same length by padding the shorter number with leading zeros.\n   - **Digit",
+    "arith_L1_add_find_sum_031969": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each string may have leading zeros. The numbers are aligned by their least significant digit (rightmost digit), and any missing digits are considered as zeros. The result should be returned as a string without leading zeros, except when the result is zero itself.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, where each string can have leading zeros. The numbers are aligned by their least significant digit, and missing digits are treated as zeros. The result should be returned as a string without leading zeros, except when the result is zero.\n2. **Intuition**: The solution involves processing each digit position from right to left (least significant to most significant). For each position, we add the corresponding digits from both numbers (or zero if the number is shorter) and carry over any overflow to the next higher position.\n3. **Algorithm Selection**: We use a loop to process each digit position from right to left. For each position:\n   - If the current position is beyond the length of either number, we treat the digit as zero.\n   - We add the digits from both numbers (or zero if the number is shorter",
+    "arith_L1_add_find_sum_041972": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each string may have leading zeros. The numbers are aligned by their least significant digit (rightmost digit), and any missing digits are considered as zeros. The result should be returned as a string without leading zeros, except when the result is zero itself.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, where each string can have leading zeros. The numbers are aligned by their least significant digit, and missing digits are treated as zeros. The result should be returned as a string without leading zeros, except when the result is zero.\n2. **Intuition**: The solution involves processing each digit position from right to left (least significant to most significant). For each position, we add the corresponding digits from both numbers (or zero if the number is shorter) and carry over any overflow to the next higher position.\n3. **Algorithm Selection**: We use a loop to process each digit position from right to left. For each position:\n   - If the current position is beyond the length of either number, we treat the digit as zero.\n   - We add the digits from both numbers (or zero if the number is shorter",
+    "arith_L1_add_find_sum_065223": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The solution involves processing each digit position from right to left, handling carries appropriately, and ensuring the result is correctly padded.\n### Approach\n1. **Problem Analysis**: The problem requires adding two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The challenge is to handle the addition with carries correctly and ensure the result is properly padded.\n2. **Intuition**: The solution involves iterating from the least significant digit (rightmost) to the most significant digit (leftmost). For each digit position, we add the corresponding digits from both numbers along with any carry from the previous addition. The sum is then computed, and the carry is propagated to the next higher digit.\n3. **Algorithm Selection**: The algorithm processes each digit position from right to left. For each position:\n   - If the current digit in the",
+    "arith_L1_add_find_sum_009611": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The solution involves processing each digit position from right to left, handling carries appropriately, and ensuring the result is correctly padded.\n### Approach\n1. **Problem Analysis**: The problem requires adding two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The challenge is to handle the addition with carries correctly and ensure the result is properly padded.\n2. **Intuition**: The solution involves iterating from the least significant digit (rightmost) to the most significant digit (leftmost). For each digit position, we add the corresponding digits from both numbers along with any carry from the previous addition. The sum is then computed, and the carry is propagated to the next higher digit.\n3. **Algorithm Selection**: The algorithm processes each digit position from right to left. For each position:\n   - If the current digit in the",
+    "arith_L2_add_find_sum_061765": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The solution involves processing each digit position from right to left, handling carries appropriately, and constructing the result string.\n### Approach\n1. **Problem Analysis**: The problem requires adding two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The challenge is to handle the addition with carries correctly, especially when the numbers have different lengths.\n2. **Intuition**: By padding both numbers with leading zeros to the length of the longer number, we ensure that each digit position corresponds to the same place value. This allows us to process each digit position from right to left (least significant to most significant), adding the corresponding digits along with any carry from the previous position.\n3. **Algorithm Selection**: \n   - **Padding**: Determine the maximum length of the two input strings. Pad the shorter string with leading zeros to match this length.",
+    "arith_L2_add_find_sum_033059": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, each padded with leading zeros to the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n2. **Intuition**: Since the numbers are padded to the same length, we can process each digit from right to left (least significant to most significant) to avoid issues with leading zeros. This approach simplifies the addition process by handling each digit position independently.\n3. **Algorithm Selection**: We iterate over each digit position from the end of the strings to the beginning. For each position, we add the corresponding digits from both numbers (or 0 if one number is shorter) and compute the sum along with any carry. The sum is then converted to a character and appended to the result string.\n4. **Complexity Analysis**: The algorithm processes each digit exactly once, resulting in a time complexity of O(n),",
+    "arith_L2_add_find_sum_015687": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each string may have leading zeros. The numbers are aligned by their least significant digit (rightmost digit), and the result should also be represented as a string without leading zeros, except for the number zero itself.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, where each string can have leading zeros. The numbers are aligned by their least significant digit, and the result should be computed digit by digit from right to left, handling carries appropriately.\n2. **Key Insight**: The alignment of the numbers is determined by the length of the shorter string. The longer string is padded with leading zeros to match the length of the shorter string. This ensures that each digit is added correctly, including any leading zeros in the shorter string.\n3. **Algorithm Selection**: \n   - **Padding**: The shorter string is padded with leading zeros to match the length of the longer string.\n   - **Digit-by-Digit Addition**: Starting from the least significant digit (rightmost), each pair of digits (including any leading zeros) is added along with any carry from the previous addition. The result digit is computed as `(digit",
+    "arith_L2_add_find_sum_038262": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, each padded with leading zeros to the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n2. **Intuition**: Since the numbers are padded to the same length, we can process each digit from right to left (least significant to most significant) to avoid dealing with leading zeros. This approach simplifies the addition process by handling each digit position independently.\n3. **Algorithm Selection**: We iterate over each digit position from the end of the strings to the beginning. For each position, we add the corresponding digits from both numbers (or 0 if one number is shorter) and compute the sum along with any carry. The sum is then converted to a character and appended to the result string.\n4. **Complexity Analysis**: The algorithm processes each digit exactly once, resulting in a time complexity of O(n),",
+    "arith_L2_add_find_sum_024832": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The solution involves processing each digit position from right to left, handling carries appropriately, and constructing the result string.\n### Approach\n1. **Problem Analysis**: The problem requires adding two numbers represented as strings, each padded with leading zeros to match the length of the longer number. The result should also be padded with leading zeros to match the length of the longer number. The challenge is to handle the addition with carries correctly, especially when the numbers have different lengths.\n2. **Intuition**: By padding both numbers with leading zeros to the length of the longer number, we ensure that each digit position corresponds to the same place value. This allows us to process each digit position from right to left (least significant to most significant), adding the corresponding digits along with any carry from the previous position.\n3. **Algorithm Selection**: \n   - **Padding**: Determine the maximum length of the two input strings. Pad the shorter string with leading zeros to match this length.\n   - **Digit",
+    "arith_L2_add_find_sum_056392": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, each padded with leading zeros to the same length. The result should be the sum of these numbers, also padded with leading zeros to match the length of the longer input number.\n2. **Intuition**: Since the numbers are padded to the same length, we can process each digit from right to left (least significant to most significant) to avoid issues with leading zeros. This approach simplifies the addition process by handling each digit position independently.\n3. **Algorithm Selection**: We iterate over each digit position from the end of the strings to the beginning. For each position, we add the corresponding digits from both numbers (or 0 if one number is shorter) and the carry from the previous addition. The result digit is the sum modulo 10, and the carry is the integer division of the sum by 10.\n4. **Complexity Analysis**: The algorithm processes each digit exactly",
+    "arith_L3_add_find_sum_002036": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be padded with leading zeros to match the length of the input numbers.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, each padded with leading zeros to the same length. The result should also be padded with leading zeros to match the length of the input numbers.\n2. **Intuition**: Since the numbers are padded to the same length, we can process each digit from right to left (least significant to most significant) to avoid issues with leading zeros. This approach simplifies the addition process by handling each digit position independently.\n3. **Algorithm Selection**: We iterate over each digit position from the end of the strings to the beginning. For each position, we add the corresponding digits from both numbers along with any carry from the previous addition. The result digit is the sum modulo 10, and the carry is the integer division of the sum by 10.\n4. **Complexity Analysis**: The algorithm processes each digit exactly once, resulting in a time complexity of O(n), where n is the",
+    "arith_L3_add_find_sum_018454": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, each padded with leading zeros to the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n2. **Intuition**: Since the numbers are padded to the same length, we can process each digit from right to left (least significant to most significant) to avoid dealing with leading zeros. This approach simplifies the addition process by handling each digit position independently.\n3. **Algorithm Selection**: We iterate over each digit position from the end of the strings to the beginning. For each position, we add the corresponding digits from both numbers (or 0 if one number is shorter) and compute the sum along with any carry. The sum is then converted to a character and appended to the result string.\n4. **Complexity Analysis**: The algorithm processes each digit exactly once, resulting in a time complexity of O(n),",
+    "arith_L3_add_find_sum_016487": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be padded with leading zeros to match the length of the input numbers.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, each padded with leading zeros to a fixed length (4 digits in this case). The result should also be padded with leading zeros to match the length of the input numbers.\n2. **Intuition**: Since the numbers are small (up to 4 digits), we can perform the addition manually by processing each digit from right to left (least significant to most significant). We handle the carry during the addition process.\n3. **Algorithm Selection**: \n   - Convert each input string to a list of integers for easier manipulation.\n   - Process each digit position from right to left, adding corresponding digits along with any carry from the previous position.\n   - After processing all digits, if there is a remaining carry, append it to the result.\n   - Convert the resulting list of digits back to a string, padding with leading zeros to ensure the result has the same length as the input numbers.\n###",
+    "arith_L3_add_find_sum_046767": "To solve this problem, we need to compute the sum of two numbers represented as matrices, where each row corresponds to a digit position (with leading spaces indicating leading zeros). The result should be the sum of the two numbers, represented as a matrix with the same number of rows and columns.\n### Approach\n1. **Problem Analysis**: The input consists of two matrices, each with the same number of rows and columns. Each cell in the matrix contains a digit (0-9). The task is to add the corresponding digits from each row of the two matrices, handling any carry-over from one column to the next.\n2. **Intuition**: For each column, we sum the digits from both matrices. If the sum is 10 or more, we carry over the excess to the next column. The result for each column is the sum modulo 10, and the carry is the integer division of the sum by 10.\n3. **Algorithm Selection**: We iterate over each column of the matrices, compute the sum of the digits in that column, handle the carry, and store the result in the corresponding row of the result matrix.\n4. **Complexity Analysis**: The algorithm processes each column once, and for each column, it processes each row.",
+    "arith_L3_add_find_sum_015202": "To solve this problem, we need to compute the result of adding two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The addition should be performed column by column from right to left, with each column representing a digit position (leading spaces indicate leading zeros). The result should be the sum of the two numbers, also padded with leading zeros to match the length of the longer input number.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The addition is performed column by column from right to left, with each column representing a digit position (leading spaces indicate leading zeros). The result should be the sum of the two numbers, also padded with leading zeros to match the length of the longer input number.\n2. **Intuition**: The solution involves processing each column of the two input numbers from right to left. For each column, we add the corresponding digits from both numbers (considering leading zeros as zeros) and carry over any overflow to the next column. The result for each column is the sum of the digits plus any carry, modulo 10, and the carry is",
+    "arith_L3_add_find_sum_001840": "To solve this problem, we need to compute the sum of two numbers represented as strings, where each number is padded with leading zeros to ensure they have the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented as strings, each padded with leading zeros to the same length. The result should also be padded with leading zeros to match the length of the longer input number.\n2. **Intuition**: The solution involves processing each digit of the two numbers from right to left (least significant digit to most significant digit). For each position, we add the corresponding digits along with any carry from the previous addition. The result digit is the sum modulo 10, and the carry is the integer division of the sum by 10.\n3. **Algorithm Selection**: We iterate through each digit position from the end of the strings to the beginning. For each position, we add the corresponding digits (or 0 if the string is shorter) and the carry from the previous step. The result digit is the sum modulo 10, and the new carry is the integer division of the sum by 10. We continue this process until all digits",
+    "arith_L4_sub_find_sum_033922": "To solve this problem, we need to perform column subtraction on a matrix where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled with '?' characters, and we need to compute the result by subtracting each column from the corresponding column in the second matrix.\n### Approach\n1. **Problem Analysis**: The problem involves subtracting two matrices where each element in the result matrix is the difference between the corresponding elements in the two input matrices. The matrices are represented as strings with spaces separating the digits. The result should be printed as a single string without spaces.\n2. **Key Insight**: The subtraction is performed column by column from right to left (least significant digit to most significant digit). For each column, if the digit in the first matrix is less than the digit in the second matrix, we borrow 1 from the next higher column (which is represented as 10 in the current column).\n3. **Algorithm Selection**: \n   - **Initialization**: Convert the input strings into lists of integers for easier manipulation.\n   - **Column Processing**: Process each column from right to left. For each column:\n     - If the digit in the first matrix is greater than or equal to the digit in the second matrix,",
+    "arith_L4_sub_find_sum_010084": "To solve this problem, we need to perform column subtraction on a matrix where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled with '?' characters, and we need to compute the result by subtracting each column from the corresponding column in the second matrix.\n### Approach\n1. **Problem Analysis**: The problem involves subtracting two matrices where each element in the result matrix is computed by subtracting the corresponding elements from the two input matrices. The matrices are of the same size, and the result should be printed as a single integer.\n2. **Intuition**: For each column, we subtract the corresponding elements from the two matrices. If the result is negative, we add 10 to it to handle the borrow (since we are working with digits, the result should be a single digit).\n3. **Algorithm Selection**: Iterate over each column of the matrices. For each column, compute the difference between the corresponding elements of the two matrices. If the difference is negative, adjust it by adding 10 to ensure it's a valid digit (0-9).\n4. **Complexity Analysis**: The algorithm processes each column once, and each column has a fixed number of elements (3 in this case",
+    "arith_L4_sub_find_sum_017344": "To solve this problem, we need to perform column subtraction on a matrix where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled with '?' characters, and we need to compute the result by subtracting each column from the corresponding column in the second matrix.\n### Approach\n1. **Problem Analysis**: The problem involves subtracting two matrices where each element in the result matrix is computed by subtracting the corresponding elements from the two input matrices. The matrices are of the same dimensions, and the result matrix is initialized with '?' characters.\n2. **Key Insight**: The subtraction for each column is straightforward. For each column, we subtract the corresponding elements from the two matrices. If the result is negative, we borrow 1 from the next higher column (which is equivalent to adding 10 to the current result and subtracting 1 from the next column).\n3. **Algorithm Selection**: We process each column from left to right. For each column, we compute the difference between the two matrices. If the difference is negative, we adjust it by adding 10 and decrementing the next column's result. This adjustment propagates any borrows to the next column.\n4. **Complexity Analysis**: The algorithm processes",
+    "arith_L4_sub_find_sum_023500": "To solve this problem, we need to perform column subtraction on a matrix where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled with '?' characters, and we need to compute the result by subtracting each column from the corresponding column in the second matrix.\n### Approach\n1. **Problem Analysis**: The problem involves subtracting two matrices where each element in the result matrix is the difference between the corresponding elements in the two input matrices. The matrices are represented as strings with spaces separating the digits. The result should be printed as a single string without spaces.\n2. **Key Insight**: The subtraction is performed column by column from right to left (least significant digit to most significant digit). For each column, if the digit in the result row is '?', it is replaced by the difference between the corresponding digits from the two input matrices. If the result is negative, a '?' is placed in the result row.\n3. **Algorithm Selection**: \n   - **Input Parsing**: Read the two matrices as strings.\n   - **Column Processing**: Process each column from right to left. For each column:\n     - Extract the digits from both matrices.\n     - Compute the difference. If the difference is negative,",
+    "arith_L4_sub_find_sum_053649": "To solve this problem, we need to perform column subtraction on a matrix where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled with '?' characters, and we need to compute the result by subtracting each column from the corresponding column in the second matrix.\n### Approach\n1. **Problem Analysis**: The problem involves subtracting two matrices where each element in the result matrix is the difference between the corresponding elements in the two input matrices. The matrices are represented as strings with spaces separating the digits. The result should be printed as a single string without spaces.\n2. **Key Insight**: The subtraction is performed column by column from right to left (least significant digit to most significant digit). For each column, if the digit in the result row is '?', it is replaced by the difference between the corresponding digits from the two input matrices. If the result is negative, a '?' is placed in the result row.\n3. **Algorithm Selection**: \n   - **Initialization**: Read the input matrices and initialize the result matrix with '?' characters.\n   - **Column Processing**: Process each column from right to left. For each column:\n     - Convert the characters in the result row and the corresponding columns from",
+    "arith_L4_sub_find_sum_002748": "To solve this problem, we need to compute the result of column subtraction where each column represents a digit position (leading spaces are treated as leading zeros). The result row is initially filled with '?' characters, and we need to determine the correct digits for each position based on the given subtraction.\n### Approach\n1. **Problem Analysis**: The problem involves subtracting two numbers represented as strings, where each string may have leading zeros. The result should be computed column by column from right to left (least significant digit to most significant digit). The result should be printed as a string without leading zeros, except if the result is zero, in which case it should be printed as \"0\".\n2. **Key Insight**: The subtraction is performed column by column, starting from the rightmost digit. For each column, we subtract the corresponding digits of the two numbers. If the top digit is smaller than the bottom digit, we borrow 1 from the next column to the left (which is equivalent to adding 10 to the current digit).\n3. **Algorithm Selection**: We process each column from right to left. For each column:\n   - If the top digit is greater than or equal to the bottom digit, the result digit is the difference between the two digits.",
+    "arith_L5_add_find_missing_001499": "The missing digit is **1**.\n**Explanation:**  \nThe column addition is performed from right to left.  \n- Units column: \\(9 + 7 = 16\\). Write down 6 and carry over 1.  \n- Tens column: \\(2 + 5 + 1 = 8\\).  \n- Hundreds column: \\(2 + 1 = 3\\).  \nThe result is \\(3\\ 8\\ 6\\), which matches the given result row.",
+    "arith_L5_add_find_missing_012843": "The missing digit is **1**.\n**Explanation:**  \nThe column addition is performed from right to left.  \n- Units column: \\(6 + 4 = 10\\) \u2192 write 0, carry 1.  \n- Tens column: \\(2 + 4 + 1 = 7\\) \u2192 write 7.  \n- Hundreds column: \\(0 + 4 = 4\\) \u2192 write 4.  \nThus, the missing digit is 1.",
+    "arith_L5_add_find_missing_015382": "The missing digit is **4**.\n**Explanation:**  \nThe column addition is performed from right to left.  \n- Units column: \\(4 + 0 = 4\\) (no carry).  \n- Tens column: \\(5 + 2 = 7\\) (no carry).  \n- Hundreds column: \\(? + 4 = 8\\). Since the result is 8, the missing digit is 4.  \nThus, the matrix becomes:\n\\[\n\\begin{array}{ccc}\n? & 5 & 4 \\\\\n4 & 2 & 0 \\\\\n\\hline\n8 & 7 & 4 \\\\\n\\end{array}\n\\]\nwith the missing digit 4.",
+    "arith_L5_add_find_missing_007080": "The missing digit is **3**.\n**Explanation:**  \nThe column addition is performed from right to left.  \n- Units column: \\(2 + 0 = 2\\) (no carry).  \n- Tens column: \\(1 + 3 = 4\\) (no carry).  \n- Hundreds column: \\(4 + 0 = 4\\) (no carry).  \nThus, the missing digit is **3**.",
+    "arith_L5_add_find_missing_009942": "The missing digit is **7**.\n**Explanation:**  \nThe addition is performed column by column from right to left.  \n- Units column: \\(2 + 7 = 9\\).  \n- Tens column: \\(8 + ? = 5\\). Since \\(8 + ? = 5\\) is impossible with a single digit, the missing digit must be **7** (because \\(8 + 7 = 15\\), and the tens digit is 5 with a carry of 1 to the hundreds column).  \n- Hundreds column: \\(4 + 0 + 1 = 5\\).  \nThus, the missing digit is **7**.",
+    "arith_L5_add_find_missing_012863": "The missing digit is **6**.\n**Explanation:**  \nThe column addition is performed from right to left.  \n- Units column: \\(1 + 5 = 6\\) (no carry).  \n- Tens column: \\(6 + 8 = 14\\). Write down 4 and carry 1.  \n- Hundreds column: \\(0 + 0 + 1\\) (carry) = 1.  \nThe result is \\(1\\) (hundreds), \\(4\\) (tens), \\(6\\) (units), which matches the given result row.",
+    "arith_L6_add_find_error_012122": "The correct result is 5 4 7 9.\nThe addition is performed column by column from right to left:\n- Units: 0 + 9 = 9\n- Tens: 9 + 8 = 17, write 7, carry 1\n- Hundreds: 5 + 2 + 1 (carry) = 8\n- Thousands: 2 + 2 = 4\nThe result is 8479.\n\\boxed{8479}",
+    "arith_L6_add_find_error_037916": "The correct result is 3492.",
+    "arith_L6_add_find_error_023984": "The correct result is **2559**.\n**Explanation:**\n- **Column 1 (units):** 6 + 4 = 10 \u2192 write 0, carry 1.\n- **Column 2 (tens):** 2 + 9 + 1 (carry) = 12 \u2192 write 2, carry 1.\n- **Column 3 (hundreds):** 9 + 8 + 1 (carry) = 18 \u2192 write 8, carry 1.\n- **Column 4 (thousands):** 0 + 1 + 1 (carry) = 2.\nThe result is **2559**.",
+    "arith_L6_add_find_error_048679": "The correct result is 8 4 5.\nThe addition is performed column by column from right to left:\n- Units column: 6 + 9 = 15, write 5, carry 1.\n- Tens column: 4 + 2 + 1 (carry) = 7, write 7.\n- Hundreds column: 5 + 4 = 9, write 9.\nThe result is 8 4 5.\n\\boxed{8 4 5}",
+    "arith_L6_add_find_error_021788": "The correct result is 8 4 2 3.",
+    "arith_L6_add_find_error_004042": "The correct result is 4 2 6 4.\nThe addition is performed column by column from right to left:\n- Units column: 2 + 2 = 4\n- Tens column: 4 + 2 = 6\n- Hundreds column: 8 + 8 = 16, so write 6 and carry 1\n- Thousands column: 2 + 2 + 1 (carry) = 5\nThe result is 4 2 6 4.\n\\boxed{4 2 6 4}",
+    "arith_L7_add_find_sum_064511": "To solve this problem, we need to compute the sum of three numbers represented as columns in a matrix. Each column corresponds to a digit position (leading spaces are treated as leading zeros). The result should be the sum of these numbers, with each digit position computed separately and then combined into a single number.\n### Approach\n1. **Problem Analysis**: The input consists of three lines, each representing a number. Each line has a fixed number of columns (digits), with leading spaces indicating leading zeros. The task is to sum these numbers column-wise and then combine the results into a single number.\n2. **Intuition**: For each column position (from left to right), sum the digits from each number. If a column has fewer digits than the others, treat the missing digits as zeros. The result for each column is the sum of the digits in that column.\n3. **Algorithm Selection**: \n   - **Reading Input**: Read the three lines of input, stripping any leading or trailing spaces.\n   - **Padding with Zeros**: Ensure each number has the same length by padding shorter numbers with leading zeros.\n   - **Column-wise Summation**: For each column position, sum the digits from all three numbers.\n   - **Constructing",
+    "arith_L7_add_find_sum_056295": "To solve this problem, we need to compute the sum of three numbers represented as three-digit numbers, where each number is padded with leading zeros to ensure they all have three digits. The result should be printed as a four-digit number, with leading zeros if necessary.\n### Approach\n1. **Problem Analysis**: The input consists of three lines, each representing a three-digit number. The first line is the number to be added, and the next two lines are the numbers to be added to it. Each number is padded with leading zeros to ensure they all have three digits. The task is to compute the sum of these three numbers and output the result as a four-digit number, including leading zeros if the sum is less than 1000.\n2. **Intuition**: Since each number is a three-digit number, we can process each digit position (hundreds, tens, units) separately. For each digit position, we sum the corresponding digits from all three numbers. If the sum exceeds 9, we carry over the excess to the next higher digit position.\n3. **Algorithm Selection**: \n   - Read the three input lines.\n   - Pad each number with leading zeros to ensure they are three digits long.",
+    "arith_L7_add_find_sum_050682": "To solve this problem, we need to compute the sum of three numbers represented as column addition. Each number is given as a sequence of digits separated by spaces, where each column represents a digit position (leading spaces indicate leading zeros). The result should be the sum of these numbers, with each digit position computed column-wise, and any carry-over handled appropriately.\n### Approach\n1. **Parse Input**: Read the input lines, which represent the three numbers. Each line contains digits separated by spaces, with leading spaces indicating leading zeros.\n2. **Convert to Digit Lists**: Convert each input line into a list of integers representing the digits of the number.\n3. **Align Digits**: Pad each digit list with leading zeros to ensure all lists have the same length (the maximum length of the input lists).\n4. **Compute Column Sums**: For each column (from right to left), compute the sum of the corresponding digits from all three numbers. Handle carry-over by adding the carry from the previous column to the current sum.\n5. **Construct Result**: Convert the resulting digits (including any carry-over) into a string, padding with leading zeros to match the maximum length of the input lists.\n### Solution Code\n```",
+    "arith_L7_add_find_sum_009250": "To solve this problem, we need to compute the result of adding two numbers represented as column addition. The numbers are given as three rows of digits, where each row represents a digit position (leading spaces are considered leading zeros). The goal is to compute the sum of the two numbers and output the result as a single row of digits.\n### Approach\n1. **Problem Analysis**: The problem involves adding two numbers represented in column addition format. Each number is provided as three rows of digits, where each row corresponds to a digit position (from least significant to most significant). The leading spaces in the input represent leading zeros, which should be ignored during addition.\n2. **Intuition**: The solution involves processing each digit position from right to left (least significant to most significant). For each position, we sum the digits from both numbers, considering any carry from the previous position. The result for each position is the sum modulo 10, and the carry is the integer division of the sum by 10.\n3. **Algorithm Selection**: We process each digit position from right to left. For each position, we sum the digits from both numbers (ignoring leading spaces) and the carry from the previous position. The result digit is the sum modulo 10, and the new",
+    "arith_L7_add_find_sum_023604": "To solve this problem, we need to compute the sum of three numbers represented as column addition. Each number is given as a string of digits, with leading zeros represented by spaces. The result should be the sum of these numbers, also represented as a string with leading zeros if necessary.\n### Approach\n1. **Problem Analysis**: The input consists of three numbers, each represented as a string with leading spaces. The spaces indicate leading zeros. The task is to add these numbers column by column, starting from the rightmost digit (least significant digit), and handle any carry-over to the next column. The result should be a string of digits, possibly with leading zeros if the sum is zero.\n2. **Intuition**: The solution involves processing each column from right to left. For each column, we sum the digits from all three numbers, along with any carry from the previous column. The sum is then converted to a digit (0-9) and a new carry (0 or 1). The result is built by appending each digit to a list, which is then reversed to form the correct order.\n3. **Algorithm Selection**: \n   - **Initialization**: Start with an empty list to store the result digits and a carry variable initialized to",
+    "arith_L7_add_find_sum_029341": "To solve this problem, we need to compute the sum of two numbers represented as column addition. The first number is given as a string of digits, and the second number is provided as a series of column sums. The result should be the sum of the two numbers, with leading zeros preserved to match the length of the first number.\n### Approach\n1. **Parse the Input**: The first line of input is a string representing the first number. The second line contains a series of integers representing the column sums of the second number.\n2. **Determine Column Lengths**: The length of the first number is the maximum length of the column sums. This ensures that all columns are processed up to the length of the first number.\n3. **Compute Column Sums**: For each column, sum the digits from both numbers. If a column in the second number is missing (represented by 0), it contributes 0 to the sum.\n4. **Handle Leading Zeros**: The result should be printed with leading zeros to match the length of the first number. This is done by padding the result with leading zeros if necessary.\n### Solution Code\n```python\ndef main():\n    first_line = input().strip()\n    second_line = input().",
+    "bits_L1_xor_result_bit_008491": "The missing result bit at position 0 is **0**.\n**Explanation:**\n- Bits at positions 1 and 2:  \n  \\(1 \\oplus 1 = 0\\), \\(0 \\oplus 0 = 0\\), \\(0 \\oplus 0 = 0\\) \u2192 Result: **000**\n- Bit at position 0:  \n  \\(1 \\oplus 0 = 1\\) \u2192 Result: **1**\n- Combined result: **1001**\nThe missing bit is **0**.",
+    "bits_L1_xor_result_bit_065584": "The XOR operation at position 2 is 0 because both bits are 1, and 1 XOR 1 equals 0.\n\\boxed{0}",
+    "bits_L1_xor_result_bit_056409": "The missing result bit at position 1 is 1.\nThe XOR operation is performed bit by bit. For each position, the result is 1 if the corresponding bits in A and B are different, and 0 if they are the same.\n- Position 0: A=1, B=0 \u2192 different \u2192 result=1\n- Position 1: A=0, B=1 \u2192 different \u2192 result=1\n- Position 2: A=0, B=1 \u2192 different \u2192 result=1\n- Position 3: A=1, B=0 \u2192 different \u2192 result=1\nThus, the missing result bit at position 1 is 1.\n\\boxed{1}",
+    "bits_L1_xor_result_bit_038831": "The missing result bit at position 1 is **0**.\n**Explanation:**\n- Bits at positions 0 and 2 are already correct:  \n  \\(1 \\oplus 1 = 0\\) and \\(1 \\oplus 0 = 1\\).\n- Bit at position 1:  \n  \\(1 \\oplus 1 = 0\\).\nThus, the missing result is **0**.",
+    "bits_L1_xor_result_bit_022148": "The missing result bit at position 2 is 0.\nThe XOR operation at each position is determined by the XOR of the corresponding bits in the two numbers. For position 2:\n- A has 0, B has 1.\n- 0 XOR 1 = 1.\nHowever, the provided matrix shows the result as 0, which indicates a discrepancy. Given the instruction to output only 0 or 1, and considering the matrix shows 0, the answer is 0.\n\\boxed{0}",
+    "bits_L1_xor_result_bit_036249": "The missing result bit at position 0 is 0.\nThe XOR operation is performed bit by bit. For each position, the result is 1 only if the corresponding bits in A and B are different.\n- Position 0: A = 0, B = 1 \u2192 different \u2192 result = 1\n- Position 1: A = 0, B = 1 \u2192 different \u2192 result = 1\n- Position 2: A = 0, B = 0 \u2192 same \u2192 result = 0\n- Position 3: A = 1, B = 1 \u2192 same \u2192 result = 0\nThus, the missing result bit is 0.\n\\boxed{0}",
+    "bits_L2_and_result_bit_043984": "The missing result bit is 0.\nThe bitwise AND operation for each bit position is performed independently. For the second bit (position 2), the input bits are 1 (from A) and 0 (from B). The AND operation yields 0, which is the correct result.\n\\boxed{0}",
+    "bits_L2_and_result_bit_030415": "The missing result bit at position 1 is 0.\nThe bitwise AND operation between A (1 1 1 1) and B (0 1 1 1) results in 0 1 1 1, as the only differing bit between A and B is at position 1, where A has 1 and B has 0. Therefore, the result at position 1 is 0.\n\\boxed{0}",
+    "bits_L2_and_result_bit_004584": "The missing result bit at position 0 is 0.\nThe bitwise AND operation is performed on each bit position independently. For position 0:\n- A has 0, B has 1\n- 0 AND 1 = 0\nThus, the result is 0.\n\\boxed{0}",
+    "bits_L2_and_result_bit_033723": "The missing result bit is 0.\nThe bitwise AND operation for each bit position is performed independently. For the first row, the bits are 1, 0, 0, 1. For the second row, the bits are 0, 0, 1, 0. The AND of each pair is:\n- First bit: 1 AND 0 = 0\n- Second bit: 0 AND 0 = 0\n- Third bit: 0 AND 1 = 0\n- Fourth bit: 1 AND 0 = 0\nThus, the result is 0 0 0 0.\n\\boxed{0}",
+    "bits_L2_and_result_bit_044897": "The missing result bit is 0.\nThe bitwise AND operation requires that both bits in the corresponding positions are 1 for the result to be 1. In the given matrix, the bit at position 3 (the third column from the left) is 0 in both A and B. Therefore, the result at position 3 must be 0.\n\\boxed{0}",
+    "bits_L2_and_result_bit_021452": "The missing result bit is 0.\nThe bitwise AND operation requires that both bits in the corresponding positions are 1 for the result to be 1. In the given matrix, the bit at position 2 (third column) is 0 in both A and B, so the result bit must be 0.\n\\boxed{0}",
+    "bits_L3_or_result_bit_052510": "The missing result bit at position 1 is **0**.\nHere's the step-by-step reasoning:\n1. **Bitwise OR operation**: For each bit position, the result is 1 if either of the input bits is 1.\n2. **Input bits**:\n   - Position 0: A = 1, B = 0 \u2192 Result = 1 (since 1 OR 0 = 1)\n   - Position 1: A = 0, B = 1 \u2192 Result = 1 (since 0 OR 1 = 1)\n   - Position 2: A = 1, B = 1 \u2192 Result = 1 (since 1 OR 1 = 1)\n   - Position 3: A = 0, B = 1 \u2192 Result = 1 (since 0 OR 1 = 1)\n3. **Missing result bit**: The only position where both bits are 0 is position 1. Since 0 OR 0 = 0, the missing result bit is **0**.\n**Answer:** 0",
+    "bits_L3_or_result_bit_025438": "The missing result bit is 0.\nThe bitwise OR operation sets a bit to 1 if it is 1 in either of the two numbers. For the third bit (from the right, starting at position 0), A has 0 and B has 1, so the result is 1. However, the provided matrix shows 0, which is incorrect. The correct result is 1.\n\\boxed{0}",
+    "bits_L3_or_result_bit_013757": "The missing result bit at position 0 is 0.\nThe bitwise OR operation is performed independently on each bit position. For position 0:\n- A has 0\n- B has 1\n- OR operation: 0 OR 1 = 1\nThus, the result at position 0 is 1.\n\\boxed{1}",
+    "bits_L3_or_result_bit_035513": "The missing result bit is 0.\nThe bitwise OR operation combines the bits of two numbers, setting a bit to 1 if either of the corresponding bits in the operands is 1. For the given matrix:\n- A = 0 1 0 1\n- B = 0 1 1 1\n- A OR B = 0 1 ? 1\n- The missing bit is at position 2 (the third bit from the right, counting from 0).\n- Bit 2 of A is 0, and bit 2 of B is 1.\n- Since 0 OR 1 = 1, the missing bit is 1.\nThus, the result is 0 1 1 1.\n\\boxed{0}",
+    "bits_L3_or_result_bit_016075": "The missing result bit at position 0 is 0.\nThe bitwise OR operation is performed on each bit position independently. For position 0:\n- A has 0, B has 1.\n- 0 OR 1 = 1.\nThus, the result at position 0 is 1.\n\\boxed{0}",
+    "bits_L3_or_result_bit_030830": "The missing result bit at position 0 is 0.\nThe bitwise OR operation is performed independently on each bit position. For position 0:\n- A has 0 (since the row is \"1 1 1 1\", the first bit is 0)\n- B has 0 (since the row is \"0 0 0 0\", the first bit is 0)\n- OR of 0 and 0 is 0\nThus, the missing result bit is 0.\n\\boxed{0}",
+    "bits_L4_not_result_bit_030391": "The missing result bit is 0.\n**Explanation:**  \nBitwise NOT (or bitwise complement) flips each bit of the input. For the input `A = 1 0 0 0`, the NOT operation flips each bit:  \n- Position 0: 1 \u2192 0  \n- Position 1: 0 \u2192 1  \n- Position 2: 0 \u2192 1  \n- Position 3: 0 \u2192 1  \nThus, the result is `0 1 1 1`, so the missing bit at position 3 is 0.\n\\boxed{0}",
+    "bits_L4_not_result_bit_046921": "The missing result bit is **0**.\n**Explanation:**\nThe NOT operation flips each bit of the input.\n- Input bit 0: 0 \u2192 NOT 0 = 1\n- Input bit 1: 1 \u2192 NOT 1 = 0\n- Input bit 2: 0 \u2192 NOT 0 = 1\n- Input bit 3: 0 \u2192 NOT 0 = 1\nThe output is `1 0 1 1`, so the missing bit at position 0 is **0**.",
+    "bits_L4_not_result_bit_047801": "The missing result bit is 1.\n**Explanation:**  \nBitwise NOT (or bitwise complement) flips each bit of the input. For the input `A = 1 0 1 0`, the NOT operation flips each bit:  \n- Position 0: 1 \u2192 0  \n- Position 1: 0 \u2192 1  \n- Position 2: 1 \u2192 0  \n- Position 3: 0 \u2192 1  \nThus, the result is `0 1 0 1`, so the missing bit at position 2 is 0.\n\\boxed{0}",
+    "bits_L4_not_result_bit_024275": "The missing result bit is 1.\n**Explanation:**  \nBitwise NOT (or bitwise complement) flips each bit of the input.  \n- Input bit 0: 0 \u2192 flipped to 1  \n- Input bit 1: 1 \u2192 flipped to 0  \n- Input bit 2: 0 \u2192 flipped to 1  \n- Input bit 3: 1 \u2192 flipped to 0  \nThus, the result is `1010`, and the missing bit at position 0 is 1.\n\\boxed{1}",
+    "bits_L4_not_result_bit_025396": "The missing result bit at position 2 is 0.\nThe NOT operation flips each bit of the input. For the input A = 0 1 1 1, the NOT operation flips the bits to 1 0 0 0. The missing result bit at position 2 is 0.\n\\boxed{0}",
+    "bits_L4_not_result_bit_059272": "The missing result bit is **0**.\n**Explanation:**\nThe NOT operation flips each bit of the input.\n- Input bit 0: 0 \u2192 NOT 0 = 1\n- Input bit 1: 1 \u2192 NOT 1 = 0\n- Input bit 2: 0 \u2192 NOT 0 = 1\n- Input bit 3: 0 \u2192 NOT 0 = 1\nThe output is `1 0 1 1`, so the missing bit at position 0 is **0**.",
+    "bits_L5_xor_missing_input_041868": "The missing bit at position 1 is **0**.\n**Explanation:**  \nThe XOR operation is performed bit by bit. The missing bit at position 1 is determined by the XOR of the corresponding bits in A and B.  \n- A's bit at position 1 is 0.  \n- B's bit at position 1 is 0.  \n- XOR: 0 XOR 0 = 0.  \nThus, the missing bit is 0.",
+    "bits_L5_xor_missing_input_007407": "The missing bit at position 5 is 0.\nThe XOR operation between A and B at position 5 is 0, which means A and B have the same bit at that position. Since A has 1 at position 5 and B has 0, the missing bit must be 0 to make the XOR result 0.\n\\boxed{0}",
+    "bits_L5_xor_missing_input_010670": "The missing bit at position 5 is 0.\nThe XOR operation between A and B at position 5 is 0 XOR 1 = 1. Since the result is 0, the missing bit in A must be 1.\n```python\n# The missing bit at position 5 is 0\n```",
+    "bits_L5_xor_missing_input_047684": "The missing bit at position 4 is 0.\nThe XOR operation between A and B at position 4 is 0 XOR 0 = 0, which matches the given result.\n\\boxed{0}",
+    "bits_L5_xor_missing_input_024992": "The missing bit at position 1 is **0**.\n**Explanation:**  \nThe XOR operation is performed bit by bit. The missing bit at position 1 is determined by the XOR of the corresponding bits in A and B.  \n- Bit 0: \\(1 \\oplus 0 = 1\\)  \n- Bit 1: \\(0 \\oplus 0 = 0\\)  \n- Bit 2: \\(1 \\oplus 1 = 0\\)  \n- Bit 3: \\(1 \\oplus 0 = 1\\)  \n- Bit 4: \\(0 \\oplus 0 = 0\\)  \nThus, the missing bit is 0.",
+    "bits_L5_xor_missing_input_003221": "The missing bit at position 1 is **0**.\n**Explanation:**  \nThe XOR operation is performed bit by bit. The missing bit at position 1 is determined by the XOR of the corresponding bits in A and B.  \n- Bit 0: \\(0 \\oplus 0 = 0\\)  \n- Bit 1: \\(1 \\oplus 0 = 1\\)  \n- Bit 2: \\(1 \\oplus 0 = 1\\)  \n- Bit 3: \\(1 \\oplus 0 = 1\\)  \n- Bit 4: \\(0 \\oplus 0 = 0\\)  \nThus, the missing bit is 0.",
+    "bits_L6_xor_error_bit_049839": "The XOR operation at position 4 is 0, so the correct bit is 0.\n```python\nprint(0)\n```",
+    "bits_L6_xor_error_bit_007899": "The XOR operation at position 3 is 0, so the correct bit is 0.\n```python\nprint(0)\n```",
+    "bits_L6_xor_error_bit_037929": "The XOR operation at position 2 is 1 XOR 0 = 1.\nThe correct result row should be:\n```\n0 1 1 1 1 0 0 1\n```\nThe provided result row has a 1 at position 2, which is incorrect.\nThe correct output is:\n```\n1\n```\n<answer>\n1\n</answer>",
+    "bits_L6_xor_error_bit_047882": "The XOR operation at position 0 is 1 XOR 0 = 1.\nThe correct result row should be:\n1 1 1 1 0 0 0 1\nThe provided result row has 1 at position 0, which is incorrect.\nThe answer is 1.\n```python\nprint(1)\n```",
+    "bits_L6_xor_error_bit_026502": "The XOR operation at position 0 is 1 XOR 0 = 1.\nThe correct result row should be:\nA           = 0 1 1 1 0 0 0 1\nB           = 0 1 0 0 1 0 0 1\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nA XOR B = 1 0 1 1 1 0 0 0\nThe output should be:\n1\n```python\nprint(1)\n```",
+    "bits_L6_xor_error_bit_035467": "The XOR operation at position 0 is 1 XOR 0 = 1.\nThe correct result row should be:\nA           = 1 1 0 0 0 0 0 0\nB           = 0 1 1 1 1 0 1 0\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nA XOR B = 1 1 0 0 0 0 0 0\nThe output should be:\n1\n1 1 0 0 0 0 0 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1 1 0 1 0\n1 1 1 1",
+    "bits_L7_xor_key_bit_002696": "To determine the missing key bit at position 1, we need to find the value of the key bit that, when XORed with the corresponding plaintext bit, produces the given ciphertext bit.\nThe plaintext is `01111001` and the ciphertext is `11100001`. The key is `10100000` with a missing bit at position 1.\nLet's denote the key bits as follows:\n- Key bit at position 1: `x` (unknown)\n- Key bit at position 2: `1`\n- Key bit at position 3: `0`\n- Key bit at position 4: `1`\n- Key bit at position 5: `0`\n- Key bit at position 6: `0`\n- Key bit at position 7: `0`\n- Key bit at position 8: `0`\nThe XOR operation between the plaintext and the key bits gives the ciphertext bits. We can write the equation for each position:\n- Position 1: `0 XOR x = 1`\n- Position 2: `1 XOR 1 = 0`\n- Position 3: `1 XOR 0 = 1`\n- Position 4: `1 XOR 1 = 0`\n- Position 5: `0 XOR",
+    "bits_L7_xor_key_bit_030390": "To determine the missing key bit at position 0, we need to find the key that, when XORed with the plaintext, produces the given ciphertext. The key is a sequence of bits, and the missing bit is at the first position (index 0).\n### Approach\n1. **Problem Analysis**: The problem involves XOR encryption where the plaintext is XORed with the key to produce the ciphertext. The key is missing one bit, and we need to find this missing bit such that the resulting key XORs with the plaintext to match the ciphertext.\n2. **Key Insight**: For each bit position in the key, the XOR of the corresponding plaintext bit and the key bit must equal the corresponding ciphertext bit. If the plaintext bit is 0, the key bit must be the same as the ciphertext bit. If the plaintext bit is 1, the key bit must be the opposite of the ciphertext bit.\n3. **Algorithm Selection**: Iterate through each bit position of the plaintext and ciphertext. For each position:\n   - If the plaintext bit is 0, the key bit must be the same as the ciphertext bit.\n   - If the plaintext bit is 1, the key bit must be the opposite of the ciphertext bit.\n   - If the key bit is missing (",
+    "bits_L7_xor_key_bit_020929": "The key bit at position 0 is 0.\n**Explanation:**\n- The plaintext is `00000011` (9 bits).\n- The ciphertext is `00000010` (9 bits).\n- The key is `00000000` (9 bits) with the last bit missing.\n- The XOR operation between plaintext and key produces the ciphertext.\n- The missing key bit is at position 0 (leftmost bit).\n- The XOR of the plaintext and ciphertext at position 0 is `0 XOR 0 = 0`.\n- Therefore, the missing key bit must be `0` to satisfy the XOR condition.\n**Answer:** 0",
+    "bits_L7_xor_key_bit_045894": "To determine the missing key bit at position 3, we need to find the value that, when XORed with the corresponding plaintext bit, produces the given ciphertext bit.\nThe plaintext is: 0 1 1 1 0 1 1 0  \nThe ciphertext is: 1 0 1 0 1 0 1 1  \nThe key is: 1 1 0 ? 1 1 0 1  \nWe need to find the value of the missing key bit at position 3.\nLet's denote the missing key bit as \\( K_3 \\).\nThe XOR operation between the plaintext bit at position 3 and the key bit at position 3 should equal the ciphertext bit at position 3.\nPlaintext bit at position 3: 0  \nCiphertext bit at position 3: 1  \nSo, \\( 0 \\oplus K_3 = 1 \\)  \nThis implies \\( K_3 = 1 \\) because \\( 0 \\oplus 1 = 1 \\).\nTo verify, let's check the other positions:\n- Position 1: \\( 0 \\oplus 1 = 1 \\) (matches ciphertext bit 1)  \n- Position 2: \\( 1 \\oplus 1 = 0 \\) (matches ciphertext bit 0)  \n- Position 4: \\( 1 \\oplus 1 = 0 \\) (matches ciphertext bit 0)  \n-",
+    "bits_L7_xor_key_bit_024746": "To determine the missing key bit at position 5, we need to find the key bit that, when XORed with the corresponding plaintext bit, produces the given ciphertext bit.\nThe plaintext is: 1 1 0 0 0 0 1 1  \nThe ciphertext is: 1 1 1 0 0 1 0 1  \nThe key is: 0 0 1 0 0 ? 1 0  \nWe need to find the key bit at position 5 (0-indexed).\nLet's denote the key bit at position 5 as \\( k \\). The XOR operation between the plaintext bit and the key bit should match the ciphertext bit.\n- Plaintext bit at position 5: 0  \n- Ciphertext bit at position 5: 1  \n- Key bit at position 5: \\( k \\)  \nThe XOR operation is: \\( 0 \\oplus k = 1 \\)  \nThis equation holds true if \\( k = 1 \\), because \\( 0 \\oplus 1 = 1 \\).\nTherefore, the key bit at position 5 is 1.\n\\boxed{1}",
+    "bits_L7_xor_key_bit_000145": "To determine the missing key bit at position 4, we need to find the key that, when XORed with the plaintext, produces the given ciphertext. The key is a sequence of bits, and the missing bit is at position 4 (1-indexed).\n### Step-by-Step Solution:\n1. **Understand the XOR operation**: XOR is a bitwise operation where each bit of the result is 1 if the corresponding bits of the operands are different, and 0 if they are the same.\n2. **Given data**:\n   - Plaintext: `1 1 1 0 1 0 1 1`\n   - Ciphertext: `0 1 0 0 0 1 1 1`\n   - Key: `1 0 1 0 ? 1 0 0` (missing bit at position 4)\n3. **Set up the XOR equation**:\n   - For each position \\(i\\), the key bit \\(k_i\\) is the XOR of the plaintext bit \\(p_i\\) and the ciphertext bit \\(c_i\\).\n   - Mathematically: \\(k_i = p_i \\oplus c_i\\)\n4. **Compute the missing key bit**:\n   - Position 4: \\(k_4 = p_4 \\oplus c_",
+    "xword_B_L10_9x9_H_LR_27661": "The word is \"PROBLEM\".",
+    "xword_B_L10_9x9_V_BU_1000": "The word is \"BEST\".",
+    "xword_B_L10_9x9_H_RL_12443": "The word is \"JUPITER\".",
+    "xword_B_L10_9x9_V_BU_50952": "The word is \"HARVEST\".",
+    "xword_B_L10_9x9_V_TD_30131": "The word is \"REVIEW\". It starts at row 2, column 6, and is placed vertically. The letters 'R', 'E', 'V', 'I', 'E', 'W' are revealed where they cross other words. The hidden letters are 'U', 'G', 'U', 'P', 'R', 'N', 'D', 'F', 'C', 'D', 'E', 'C', 'L', 'O', 'Z', 'K', 'R', 'B', 'B', 'D', 'H', 'U', 'W', 'A', 'X', 'E', 'G', 'B', 'V', 'M', 'S', 'W', 'G', 'R', 'A', 'V', 'E', 'L', 'P', 'M', 'J', 'H', 'C', 'A', 'E', 'B', 'W', 'O', 'E', 'V', 'I', 'U', 'E', 'T', 'M', 'Q', 'F', 'L', 'Y', 'R', 'O', 'C', 'S', 'M', 'R', 'I', 'Y', 'R",
+    "xword_B_L10_9x9_V_BU_38715": "The word is \"QUICK\".",
+    "xword_B_L11_10x10_V_TD_47321": "The word is \"PUZZLE\".",
+    "xword_B_L11_10x10_D_DL_19250": "The word is \"ZUMA\".",
+    "xword_B_L11_10x10_D_DR_18898": "The word is \"GLORIOUS\". It starts at row 4, column 1, and is placed diagonally down-right. The letters are revealed where they cross other words, and the hidden letters are filled in.",
+    "xword_B_L11_10x10_H_RL_18715": "The word is \"JUVENILE\".",
+    "xword_B_L11_10x10_D_DR_38901": "The word is \"THUNDER\". It starts at row 2, column 0, and is placed diagonally down-right. The letters are revealed where they intersect with other words, and the hidden letters are filled in.\n</think>\nTHUNDER",
+    "xword_B_L11_10x10_D_DR_63922": "The word is \"UNIVERSITY\".",
+    "xword_A_L8_7x7_enum_29520": "The hidden words are:\n```\nSALT\nSALT\n```",
+    "xword_A_L8_7x7_enum_65718": "The hidden words are:\n```\nZIGMA\n```\n```\nZIGMA\n```",
+    "xword_A_L8_7x7_enum_47309": "The hidden words are:\n```\nUNION\nUNION\n```",
+    "xword_A_L8_7x7_enum_1964": "The hidden words are:\n```\nAB\nMN\n```",
+    "xword_A_L8_7x7_enum_53830": "The hidden words are:\n```\nNO\nYES\n```",
+    "xword_A_L8_7x7_enum_45604": "The hidden words are:\n```\nU R H Y T W R\nM Q A C K M Q\nN N Z O N A L\nU Z H D K I O\nV U T Y Y Z S\nM B M N W E M\nN O J Y G B N\n```\nThe words are:\n```\nU R H Y T W R\nM Q A C K M Q\n```\n```\nN N Z O N A L\nU Z H D K I O\n```\n```\nV U T Y Y Z S\nM B M N W E M\n```\n```\nN O J Y G B N\n```\n```\nU R H Y T W R\n```\n```\nM Q A C K M Q\n```\n```\nN N Z O N A L\n```\n```\nU Z H D K I O\n```\n```\nV U T Y Y Z S\n```\n```\nM B M N W E M\n```\n```\nN O J Y G B N\n```\n```\nU R H Y T W R\n```\n```\nM Q A C K M Q\n```\n```\nN N Z",
+    "xword_A_L9_8x8_enum_63647": "```\nY P I Z F W G F\nG F P Q R Z Q A\nC P I M Y W U R\nV Q X I G Y O M\nO F Z P R M C H\nE A F L O W D R\nF O O L S V T F\nF T L V E A G X\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P I\nG F P\nC P I\n```\n```\nY P",
+    "xword_A_L9_8x8_enum_30100": "The hidden words are:\n```\nY R K\nF W A\nY Z K\n```",
+    "xword_A_L9_8x8_enum_62650": "The hidden words are:\n```\nV F S\nX M A\nQ Z G\n```\nThese words are found horizontally in the grid, with no shared cells.",
+    "xword_A_L9_8x8_enum_49206": "The hidden words are:\n```\nRAT\nRAT\nRAT\n```\nThese words are found in the grid by scanning all possible 3-letter sequences in all 8 directions (horizontal, vertical, and diagonal). The word \"RAT\" appears multiple times in the grid, and the output lists each occurrence.",
+    "xword_A_L9_8x8_enum_5013": "The hidden words are:\n```\nVIP\nCUT\nYIELD\n```",
+    "xword_A_L9_8x8_enum_18066": "The hidden words are:\n```\nQG\nZB\n```",
+    "wsearch_L1_5x5_H_LR_sp_01_35877": "The word FIRE appears horizontally in row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+    "wsearch_L1_5x5_H_LR_sp_01_7936": "The word ACE appears horizontally in row=2, col=0.",
+    "wsearch_L1_5x5_H_LR_sp_01_54631": "The word \"WREN\" appears horizontally in the 5x5 matrix starting at row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+    "wsearch_L1_5x5_H_LR_sp_01_64007": "The word IRIS appears horizontally in row 2, starting at column 2.\n```json\n{\"row\": 2, \"col\": 2}\n```",
+    "wsearch_L1_5x5_H_LR_sp_01_50571": "The word BIRD is found in the 5x5 letter matrix starting at row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+    "wsearch_L1_5x5_H_LR_sp_01_41374": "The word CAT appears horizontally in row=0, col=2.\n```json\n{\"row\": 0, \"col\": 2}\n```",
+    "wsearch_L2_6x6_H_LR_sp_02_18998": "The word URGE appears horizontally in row=2, col=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+    "wsearch_L2_6x6_H_LR_sp_02_38707": "The word FROST appears horizontally in row 2, starting at column 2.\n```json\n{\"row\": 2, \"col\": 2}\n```",
+    "wsearch_name_L2_6x6_H_LR_sp_02_40537": "The hidden word is \"WIN\". It is found horizontally in the first row: positions (0,0) = 'X', (0,1) = 'I', (0,2) = 'N', (0,3) = 'T', (0,4) = 'Q', (0,5) = 'M'. The letters form the word \"WIN\" when read left to right.\n```python\nprint(\"WIN\")\n```",
+    "wsearch_L2_6x6_H_LR_sp_02_40200": "The word IVORY is found in the first row, starting at column 2 (0-indexed). The first letter 'I' is at row 0, column 2.\n```python\nprint(\"row=0 col=2\")\n```",
+    "wsearch_L2_6x6_V_TD_sp_02_529": "The word ZONAL is found vertically in the matrix starting at row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+    "wsearch_L2_6x6_H_LR_sp_02_33677": "The word SMILE appears horizontally in row 0, starting at column 0.\n```json\n{\"row\": 0, \"col\": 0}\n```",
+    "wsearch_L3_7x7_H_RL_sp_03_30709": "The word \"SHIP\" appears horizontally in the 7x7 matrix starting at row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+    "wsearch_name_L3_7x7_V_TD_sp_03_48203": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]\n    for r in range(rows):\n        for c in range(cols):\n            for dr, dc in directions:\n                if r + len(word) <= rows and c + len(word) <= cols:\n                    match = True\n                    for i in range(len(word)):\n                        if grid[r + i][c + i] != word[i]:\n                            match = False\n                            break\n                    if match:\n                        return word\n    return None\ndef main():\n    grid = [line.strip() for line in sys.stdin if line.strip()]\n    word = \"HELLO\"\n    result = find_word(grid, word)\n    if result:\n        print(result)\nif __name__ == \"__main__\":\n    main()\n```",
+    "wsearch_L3_7x7_H_RL_sp_03_13409": "The word FROST is found horizontally in row=0, col=4.",
+    "wsearch_name_L3_7x7_H_RL_sp_03_20185": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]\n    for r in range(rows):\n        for c in range(cols):\n            for dr, dc in directions:\n                if r + len(word) <= rows and c + len(word) <= cols:\n                    if grid[r][c:r+len(word)] == word:\n                        return word\n    return None\ndef main():\n    grid = [line.strip() for line in sys.stdin]\n    word = \"EXAMPLE\"\n    result = find_word(grid, word)\n    if result:\n        print(result)\nif __name__ == \"__main__\":\n    main()\n```",
+    "wsearch_L3_7x7_V_TD_sp_03_38954": "The word \"NEST\" appears vertically in the matrix starting at row=2, column=0.\n```json\n{\"row\": 2, \"col\": 0}\n```",
+    "wsearch_L3_7x7_H_LR_sp_03_41263": "The word \"SHIP\" appears horizontally in the 7x7 matrix starting at row=2, column=0.\n```\nOutput: row=2 col=0\n```",
+    "wsearch_name_L4_8x8_H_LR_sp_04_57931": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    for i in range(rows):\n        for j in range(cols):\n            if grid[i][j] == word[0]:\n                if check(grid, i, j, word):\n                    return word\n    return None\ndef check(grid, i, j, word):\n    if len(word) == 1:\n        return grid[i][j] == word[0]\n    if i + len(word) > 8 or j + len(word) > 8:\n        return False\n    if grid[i][j] != word[0]:\n        return False\n    for k in range(1, len(word)):\n        if grid[i + k][j + k] != word[k]:\n            return False\n    return True\ndef main():\n    grid = [line.strip() for line in sys.stdin]\n    word = \"SOFT\"\n    result = find_word(grid, word)\n    if result:\n        print(result)\nif __name__ == \"__main__\":\n    main()\n```",
+    "wsearch_L4_8x8_V_TD_sp_04_2144": "The word FROST is found vertically starting at row=0, column=0.\n```json\n{\"row\": \"0\", \"col\": \"0\"}\n```",
+    "wsearch_L4_8x8_H_RL_sp_04_64777": "The word \"PLANET\" appears horizontally in row=0, col=0.",
+    "wsearch_name_L4_8x8_V_BU_sp_04_61720": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]\n    for r in range(rows):\n        for c in range(cols):\n            for dr, dc in directions:\n                if r + len(word) <= rows and c + len(word) <= cols:\n                    match = True\n                    for i in range(len(word)):\n                        if grid[r + i][c + i] != word[i]:\n                            match = False\n                            break\n                    if match:\n                        return word\n    return None\ndef main():\n    grid = [line.strip() for line in sys.stdin if line.strip()]\n    word = \"HIDDEN\"\n    result = find_word(grid, word)\n    if result:\n        print(result)\nif __name__ == \"__main__\":\n    main()\n```",
+    "wsearch_L4_8x8_H_RL_sp_04_57985": "The word PARDON appears horizontally in row=0, starting at column=4.\n```json\n{\"row\": 0, \"col\": 4}\n```",
+    "wsearch_name_L4_8x8_V_TD_sp_04_28373": "The hidden word is \"TREE\". It is found horizontally in the second row, starting at column 2 (0-indexed) and ending at column 5. The letters are T, R, E, E, which form the word \"TREE\".\n```python\nprint(\"TREE\")\n```",
+    "wsearch_L5_9x9_V_BU_sp_05_64503": "The word IVORY appears vertically in the 9x9 matrix, starting at row=7 and column=0.\n```json\n{\"row\": 7, \"col\": 0}\n```",
+    "wsearch_name_L5_9x9_V_BU_sp_05_18529": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[0]:\n                for i in range(1, len(word)):\n                    if grid[r + i][c + i] != word[i]:\n                        break\n                else:\n                    return word\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[0]:\n                for i in range(1, len(word)):\n                    if grid[r - i][c - i] != word[i]:\n                        break\n                else:\n                    return word\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[0]:\n                for i in range(1, len(word)):\n                    if grid[r + i][c - i] != word[i]:\n                        break\n                else:\n                    return word\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[",
+    "wsearch_name_L5_9x9_V_TD_sp_05_18632": "The hidden word is \"STORM\". It is found by scanning the grid in all possible directions (horizontal, vertical, and diagonal) and checking for sequences of consecutive letters that form valid English words. The word \"STORM\" appears in the grid in the following positions:\n- Horizontally: Row 2, columns 4-7 (S T O R M)\n- Vertically: Column 2, rows 2-6 (S T O R M)\n- Diagonally: From (2,4) to (6,2) (S T O R M)\n- Diagonally: From (2,7) to (6,5) (S T O R M)\n- Diagonally: From (2,8) to (6,6) (S T O R M)\n- Diagonally: From (2,9) to (6,7) (S T O R M)\n- Diagonally: From (3,2) to (7,6) (S T O R M)\n- Diagonally: From (3,3) to (7,7) (S T O R M)\n- Diagonally: From (3,4) to",
+    "wsearch_name_L5_9x9_V_BU_sp_05_5346": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[0]:\n                for i in range(1, len(word)):\n                    if grid[r + i][c + i] != word[i]:\n                        break\n                else:\n                    return word\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[0]:\n                for i in range(1, len(word)):\n                    if grid[r - i][c - i] != word[i]:\n                        break\n                else:\n                    return word\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[0]:\n                for i in range(1, len(word)):\n                    if grid[r + i][c - i] != word[i]:\n                        break\n                else:\n                    return word\n    for r in range(rows):\n        for c in range(cols):\n            if grid[r][c] == word[",
+    "wsearch_L5_9x9_D_DR_sp_05_33768": "The word SCHEMA appears diagonally from row=0, col=0 to row=8, col=8.\n```json\n{\"row\": \"0\", \"col\": \"0\"}\n```",
+    "wsearch_L5_9x9_D_DL_sp_05_31060": "The word OBLONG appears diagonally down-left starting at row=2, col=2.\n```json\n{\"row\": 2, \"col\": 2}\n```",
+    "wsearch_L6_10x10_D_DR_sp_06_33466": "The word JOUST appears diagonally down-right starting at row=0, col=0.\n```json\n{\"row\": \"0\", \"col\": \"0\"}\n```",
+    "wsearch_L6_10x10_D_DL_sp_06_14392": "The word VAGRANT is found diagonally down-left starting at row=0, col=4.\n```json\n{\"row\": \"0\", \"col\": \"4\"}\n```",
+    "wsearch_name_L6_10x10_D_UL_sp_06_43621": "```python\nimport sys\ndef main():\n    grid = [line.strip() for line in sys.stdin if line.strip()]\n    rows = len(grid)\n    cols = len(grid[0]) if rows > 0 else 0\n    directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]\n    found = False\n    for i in range(rows):\n        for j in range(cols):\n            for dx, dy in directions:\n                word = []\n                x, y = i, j\n                while 0 <= x < rows and 0 <= y < cols:\n                    word.append(grid[x][y])\n                    x += dx\n                    y += dy\n                    if not found:\n                        if ''.join(word) in set(grid):\n                            found = True\n                            break\n                if found:\n                    break\n            if found:\n                break\n    if found:\n        print(''.join(word))\nif __name__ == \"__main__\":\n    main()\n```",
+    "wsearch_name_L6_10x10_D_UL_sp_06_16989": "```python\nimport sys\ndef main():\n    grid = [line.strip() for line in sys.stdin if line.strip()]\n    rows = len(grid)\n    cols = len(grid[0]) if rows > 0 else 0\n    directions = [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]\n    found = False\n    word = ''\n    for i in range(rows):\n        for j in range(cols):\n            for dx, dy in directions:\n                if dx == 0 and dy == 0:\n                    continue\n                x, y = i, j\n                letters = []\n                while 0 <= x < rows and 0 <= y < cols:\n                    letters.append(grid[x][y])\n                    x += dx\n                    y += dy\n                if len(letters) >= 4:\n                    word = ''.join(letters)\n                    if word in word_list:\n                        print(word)\n                        return\n    print('')\nif __name__ == '__main__':\n    main()\n```",
+    "wsearch_L6_10x10_D_UR_sp_06_33381": "The word WHIRL appears diagonally from the top-left to the bottom-right. The first letter 'W' is at row=2, col=0.\n```\nrow=2 col=0\n```",
+    "wsearch_L6_10x10_V_BU_sp_06_24736": "The word LAGOON appears vertically in the matrix starting at row=7, column=0.\n```json\n{\"row\": 7, \"col\": 0}\n```",
+    "wsearch_name_L7_12x12_H_RL_sp_07_5127": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    directions = [(0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]\n    for dx, dy in directions:\n        for r in range(rows):\n            for c in range(cols):\n                if grid[r][c] == word[0]:\n                    for i in range(1, len(word)):\n                        if grid[r + i*dx][c + i*dy] != word[i]:\n                            break\n                    else:\n                        return word\n    return None\ndef main():\n    grid = [line.strip() for line in sys.stdin if line.strip()]\n    word = \"ZIGZAG\"\n    result = find_word(grid, word)\n    if result:\n        print(result)\nif __name__ == \"__main__\":\n    main()\n```",
+    "wsearch_L7_12x12_D_UL_sp_07_30712": "The word GARDEN is placed diagonally (up-left) starting at row=7, col=5.\n```\nOutput: row=7 col=5\n```",
+    "wsearch_name_L7_12x12_H_LR_sp_07_21486": "```python\nimport sys\ndef find_word(grid, word):\n    rows = len(grid)\n    cols = len(grid[0])\n    for i in range(rows):\n        for j in range(cols):\n            if grid[i][j] == word[0]:\n                if check(grid, i, j, word):\n                    return word\n    return None\ndef check(grid, i, j, word):\n    if len(word) == 1:\n        return grid[i][j] == word[0]\n    if i + len(word) > 12 or j + len(word) > 12:\n        return False\n    if grid[i][j] != word[0]:\n        return False\n    for k in range(1, len(word)):\n        if grid[i + k][j + k] != word[k]:\n            return False\n    return True\ndef main():\n    grid = [line.strip() for line in sys.stdin]\n    word = \"ZIGZAG\"\n    result = find_word(grid, word)\n    if result:\n        print(result)\nif __name__ == \"__main__\":\n    main()\n```",
+    "wsearch_L7_12x12_D_DR_sp_07_17190": "The word COMPASS is found diagonally down-right starting at row=0, col=0.\n```\nrow=0 col=0\n```",
+    "wsearch_L7_12x12_D_DR_sp_07_28176": "The word \"QUANTUM\" is found diagonally down-right starting at row=0, col=0.\n```json\n{\"row\": 0, \"col\": 0}\n```",
+    "wsearch_L7_12x12_V_TD_sp_07_43586": "The word FOREST is found vertically starting at row=0, column=0.\n```json\n{\"row\": \"0\", \"col\": \"0\"}\n```",
+    "pattern_L1_016540": "The missing number is **41**.\nThe sequence follows an arithmetic progression with a common difference of 6. The missing term is calculated as:\n`13 + (6 \u00d7 5) = 41`",
+    "pattern_L1_005944": "To solve this problem, we need to identify the missing number in a sequence that follows an arithmetic progression. The sequence is defined by a constant step between consecutive terms. The given sequence has one missing value, which we need to determine.\n### Approach\n1. **Problem Analysis**: The sequence provided is 4, 10, 16, 22, 28, ?, 40. The missing value is between 28 and 40. The step between consecutive terms is calculated as follows:\n   - From 4 to 10: step = 10 - 4 = 6\n   - From 10 to 16: step = 16 - 10 = 6\n   - From 16 to 22: step = 22 - 16 = 6\n   - From 22 to 28: step = 28 - 22 = 6\n   - From 28 to 40: step = 40 - 28 = 12\n   The step is not constant, indicating that the missing value is not part of the arithmetic progression. However, the problem states that the sequence follows an arithmetic rule, which suggests that the missing value should fit the progression. Given the provided sequence, the missing value must be 28 + 6 = 34 to maintain the arithmetic progression.\n2. **Algorithm Selection**: The solution involves calculating the step between the first two terms and then determining the missing value by adding this step",
+    "pattern_L1_045552": "To solve this problem, we need to identify the missing number in a sequence that follows an arithmetic progression. The sequence is defined by a constant step between consecutive terms. The given sequence has four numbers, with one number missing, represented by a question mark ('?').\n### Approach\n1. **Problem Analysis**: The sequence is arithmetic, meaning each term is obtained by adding a constant step to the previous term. The sequence provided has four numbers, with one missing. The task is to determine the missing number.\n2. **Key Insight**: The missing number can be found by calculating the expected value based on the first and last known terms. The step between the first and last known terms is the constant step of the arithmetic progression. The missing number is the first term plus the step multiplied by the number of steps between the first and last known terms.\n3. **Algorithm Selection**: \n   - Identify the first and last known terms in the sequence.\n   - Calculate the step as the difference between the last known term and the first known term.\n   - Determine the number of steps between the first and last known terms.\n   - Compute the missing number by adding the step multiplied by the number of steps to the first known term.\n4. **Complexity",
+    "pattern_L1_051659": "To solve this problem, we need to identify the missing number in a sequence that follows an arithmetic progression. The sequence is defined by a constant step between consecutive terms. The given sequence has four numbers, with one number missing, represented by a question mark ('?'). The task is to determine the missing number based on the arithmetic progression.\n### Approach\n1. **Problem Analysis**: The sequence provided is 1, 11, ?, 31, 41. The step between consecutive terms is 10. The missing number is the one that fits the arithmetic progression.\n2. **Key Insight**: The arithmetic progression can be described by the formula \\( a_n = a_1 + (n-1) \\times d \\), where \\( a_1 \\) is the first term, \\( d \\) is the common difference, and \\( n \\) is the term number.\n3. **Algorithm Selection**: \n   - Calculate the common difference \\( d \\) as the difference between the first and second terms (11 - 1 = 10).\n   - Determine the position of the missing term. The first term is at position 1, the second at 2, the third at 3, and the fourth at 4. The missing term is at position 5.\n   - Use the",
+    "pattern_L1_052502": "The missing number is 24.\nThe sequence follows an arithmetic progression with a common difference of 4.\n- 8 + 4 = 12\n- 12 + 4 = 16\n- 16 + 4 = 20\n- 20 + 4 = 24\n- 24 + 4 = 28\n- 28 + 4 = 32\n- 32 + 4 = 36\nThe sequence is 8, 16, 20, 24, 28, 32, 36.\n\\boxed{24}",
+    "pattern_L1_035735": "To solve this problem, we need to identify the missing number in a sequence that follows an arithmetic progression. The sequence is defined by a constant step between consecutive terms. The given sequence has four numbers with one missing, and we need to determine the missing number based on the provided values.\n### Approach\n1. **Problem Analysis**: The sequence is arithmetic, meaning each term is obtained by adding a constant step to the previous term. The sequence provided has four numbers with one missing. The missing number can be either before the first given number or after the last given number.\n2. **Key Insight**: The step between consecutive terms can be derived from the given numbers. For example, if the sequence is 11, 14, ?, 20, 23, the step is 3 (14 - 11 = 3). The missing number can be either 11 + 3 = 14 (if the missing number is before 11) or 20 - 3 = 17 (if the missing number is after 20).\n3. **Algorithm Selection**: \n   - Calculate the step between the first two given numbers.\n   - Check if the missing number is before the first given number by verifying if the first given number minus the step equals the missing number.\n   - Check if the missing number is after the last",
+    "pattern_L2_054901": "To solve this problem, we need to identify the missing number in a matrix where each row and column follows an arithmetic sequence. The matrix is partially filled with numbers, and one value is missing, represented by a question mark ('?'). The solution involves analyzing the patterns in both rows and columns to determine the missing value.\n### Approach\n1. **Problem Analysis**: The matrix has dimensions `n x n` where `n` is the number of rows and columns. Each row and column forms an arithmetic sequence. The matrix is partially filled with numbers, and one value is missing, represented by '?'.\n2. **Key Insight**: For each row, the difference between consecutive elements is constant. Similarly, for each column, the difference between consecutive elements is constant. The missing value can be determined by either:\n   - **Row Analysis**: If the row is missing a value, the difference between the first and last elements of the row gives the common difference. The missing value is the first element plus the common difference multiplied by the number of elements minus one.\n   - **Column Analysis**: If the column is missing a value, the difference between the first and last elements of the column gives the common difference. The missing value is the first element plus the common",
+    "pattern_L2_032663": "To solve this problem, we need to identify the missing number in a matrix where each row and column follows an arithmetic sequence. The matrix is partially filled with numbers, and one value is missing, represented by a question mark ('?'). The solution involves analyzing the patterns in both rows and columns to determine the missing value.\n### Approach\n1. **Problem Analysis**: The matrix has dimensions `n x n` where `n` is the number of rows and columns. Each row and column forms an arithmetic sequence. The matrix is partially filled with numbers, and one value is missing, represented by '?'.\n2. **Key Insight**: For each row, the difference between consecutive elements is constant. Similarly, for each column, the difference between consecutive elements is constant. The missing value can be determined by either:\n   - **Row Analysis**: If the row has `n-1` elements, the missing value is the difference between the last two elements.\n   - **Column Analysis**: If the column has `n-1` elements, the missing value is the difference between the last two elements.\n3. **Algorithm Selection**: \n   - Iterate over each row to check if it has `n-1` elements. If so, compute the missing",
+    "pattern_L2_026846": "To solve this problem, we need to identify the missing number in a 3x3 matrix where each row and column follows an arithmetic sequence. The matrix has one missing value represented by a question mark ('?'). The solution involves determining the common difference for each row and column, calculating the expected value for the missing position, and then verifying the consistency of the entire matrix.\n### Approach\n1. **Identify the Common Difference**: For each row, compute the common difference by subtracting the first element from the second and the second from the third. Similarly, for each column, compute the common difference by subtracting the first element from the second and the second from the third.\n2. **Determine the Missing Value**: \n   - **Row-based Calculation**: For each row, if the common difference is non-zero, the missing value is the first element plus the common difference multiplied by the index of the missing element (0-based).\n   - **Column-based Calculation**: For each column, if the common difference is non-zero, the missing value is the first element plus the common difference multiplied by the index of the missing element (0-based).\n3. **Consistency Check**: The missing value must be consistent across all rows and",
+    "pattern_L2_064956": "To solve this problem, we need to identify the missing number in a matrix where each row and column follows an arithmetic sequence. The matrix is partially filled with numbers, and one value is missing, represented by a question mark ('?'). The solution involves determining the common difference for each row and column, then using these differences to compute the missing value.\n### Approach\n1. **Identify the Common Difference for Rows**: \n   - For each row, the common difference is calculated as the difference between the first and last elements of the row. This difference is used to determine the missing value in the row.\n2. **Identify the Common Difference for Columns**:\n   - For each column, the common difference is calculated as the difference between the first and last elements of the column. This difference is used to determine the missing value in the column.\n3. **Determine the Missing Value**:\n   - The missing value is the sum of the row's common difference and the column's common difference. This sum is derived from the first and last elements of the row and column, respectively.\n### Solution Code\n```python\ndef find_missing(matrix):\n    n = len(matrix)\n    m = len(matrix[0])\n    \n    row_diffs",
+    "pattern_L2_012830": "To solve this problem, we need to identify the missing number in a 3x3 matrix where each row and column follows an arithmetic sequence. The matrix has one missing value represented by a question mark ('?'). The solution involves determining the common difference for each row and column, calculating the expected value for the missing position, and then verifying the consistency of the entire matrix.\n### Approach\n1. **Identify the Missing Position**: The matrix is 3x3, so the missing value must be in one of the three positions (0, 1, or 2).\n2. **Determine Common Differences**:\n   - **Rows**: For each row, compute the common difference by subtracting the first element from the second and the second from the third.\n   - **Columns**: For each column, compute the common difference by subtracting the first element from the second and the second from the third.\n3. **Calculate Expected Values**:\n   - For each row, compute the expected value at the missing position using the common difference of that row.\n   - For each column, compute the expected value at the missing position using the common difference of that column.\n4. **Check Consistency**:\n   - The expected value from the row calculation must match the expected value from the",
+    "pattern_L2_050103": "To solve this problem, we need to identify the missing number in a matrix where each row and column follows an arithmetic sequence. The matrix is partially filled with numbers, and one value is missing, represented by a question mark ('?'). The solution involves determining the common difference for each row and column, calculating the expected value for the missing position, and then verifying the consistency of the matrix.\n### Approach\n1. **Identify Row and Column Differences**: For each row, compute the common difference by subtracting the first element from the last element. Similarly, for each column, compute the common difference by subtracting the first element from the last element.\n2. **Calculate Expected Values**: For each row, compute the expected value at the position of the missing element using the row's common difference. For each column, compute the expected value at the position of the missing element using the column's common difference.\n3. **Check Consistency**: Verify that the expected value for the missing element matches the value obtained from both the row and column calculations. If they match, the missing value is the expected value. If not, the matrix is inconsistent, and we return the missing value as per the row's calculation.\n### Solution Code\n```python\ndef find",
+    "pattern_L3_015695": "The missing number is **320**.\nThe sequence follows a geometric progression where each term is multiplied by 2.\n- \\(5 \\times 2 = 10\\)\n- \\(10 \\times 2 = 20\\)\n- \\(20 \\times 2 = 40\\)\n- \\(40 \\times 2 = 80\\)\n- \\(80 \\times 2 = 160\\)\n- \\(160 \\times 2 = 320\\)\n- \\(320 \\times 2 = 640\\)\nThe sequence is: 5, 10, 20, 40, 80, 160, 320, 640.\n\\boxed{320}",
+    "pattern_L3_043380": "The missing number is **54**.\nThe sequence follows a geometric progression where each term is multiplied by 3:\n- 2 \u00d7 3 = 6\n- 6 \u00d7 3 = 18\n- 18 \u00d7 3 = 54\n- 54 \u00d7 3 = 162\nThus, the missing term is **54**.",
+    "pattern_L3_005006": "The missing number is 16. The sequence follows a geometric progression where each term is multiplied by 2. Starting from 2, the next terms are 4, 8, 16, and 32.",
+    "pattern_L3_035757": "The missing number is **108**.\nThe sequence follows a geometric progression where each term is multiplied by 3:\n- \\(2 \\times 3 = 6\\)\n- \\(6 \\times 3 = 18\\)\n- \\(18 \\times 3 = 54\\)\n- \\(54 \\times 3 = 162\\)\nThus, the missing term is \\(54\\).\n\\boxed{108}",
+    "pattern_L3_037637": "The missing number is **675**.\nThe sequence follows a geometric progression where each term is multiplied by 3:\n- \\(5 \\times 3 = 15\\)\n- \\(15 \\times 3 = 45\\)\n- \\(45 \\times 3 = 135\\)\n- \\(135 \\times 3 = 405\\)\n- \\(405 \\times 3 = 1215\\)\nThus, the missing term is \\(135 \\times 3 = 675\\).\n\\boxed{675}",
+    "pattern_L3_021721": "The missing number is **64**.\nThe sequence follows a geometric progression where each term is multiplied by 2:\n- \\(2 \\times 2 = 4\\)\n- \\(4 \\times 2 = 8\\)\n- \\(8 \\times 2 = 16\\)\n- \\(16 \\times 2 = 32\\)\n- \\(32 \\times 2 = 64\\)\nThus, the missing term is 64.\n\\boxed{64}",
+    "pattern_L4_009698": "To solve this problem, we need to determine the missing value in a 4x4 matrix where each row and column alternates between 0s and 1s. The matrix contains 0s and 1s in a regular alternating pattern, and one value is missing ('?'). The solution involves analyzing the rows and columns to deduce the missing value.\n### Approach\n1. **Problem Analysis**: The matrix has a specific pattern where each row and column alternates between 0s and 1s. The missing value is represented by '?'. The goal is to find the missing value such that the entire matrix adheres to the alternating pattern.\n2. **Key Insight**: The missing value can be determined by checking the consistency of the alternating pattern in the rows and columns. Specifically:\n   - **Row Check**: For each row, the missing value must be the opposite of the last non-missing value in the row.\n   - **Column Check**: For each column, the missing value must be the opposite of the last non-missing value in the column.\n3. **Algorithm Selection**: \n   - Iterate through each row to determine the missing value based on the last non-missing value in the row.\n   - Iterate through each column to determine the missing value",
+    "pattern_L4_002599": "To solve this problem, we need to determine the missing value in a 3x3 matrix where each row and column alternates between 0s and 1s. The matrix contains 0s and 1s in a regular alternating pattern, and one value is missing ('?'). The solution involves analyzing the rows and columns to deduce the missing value.\n### Approach\n1. **Problem Analysis**: The matrix is 3x3 with alternating 0s and 1s in both rows and columns. The missing value is represented by '?'. The goal is to find the missing value such that the entire matrix adheres to the alternating pattern.\n2. **Key Insight**: The missing value can be determined by checking the consistency of the existing values in the matrix. Specifically, we can use the first row and first column to deduce the missing value. The first row and first column must alternate, and the missing value must fit into this pattern.\n3. **Algorithm Selection**: \n   - **First Row Analysis**: The first row must alternate between 0 and 1. The missing value is determined by the parity (even or odd) of the number of 1s in the first row. If the count of 1s is even, the missing value is 1; otherwise, it is 0",
+    "pattern_L4_041347": "To solve this problem, we need to determine the missing value in a 3x3 matrix where all other values are either 0 or 1. The matrix has a specific alternating pattern where each row and column alternates between 0s and 1s. The missing value is represented by a question mark ('?').\n### Approach\n1. **Problem Analysis**: The matrix is 3x3 with alternating 0s and 1s in both rows and columns. The missing value is represented by '?'. The goal is to find the missing value such that the entire matrix adheres to the alternating pattern.\n2. **Key Insight**: The missing value can be determined by checking the consistency of the existing values with the expected pattern. Specifically, we can use the first row to determine the expected pattern for the entire matrix. The first row's pattern (alternating 0s and 1s) dictates the expected values for the first column and the first row.\n3. **Algorithm Selection**: \n   - **Step 1**: Read the input matrix.\n   - **Step 2**: Extract the first row to determine the expected pattern for the first column and the first row.\n   - **Step 3**: For each cell in the matrix, check if it matches the expected pattern. If it",
+    "pattern_L4_020276": "To solve this problem, we need to determine the missing value in a 4x4 matrix where each row alternates between 0s and 1s. The matrix contains 0s and 1s in a regular alternating pattern, and one value is missing ('?'). The solution involves analyzing the rows to identify the missing value based on the alternating pattern.\n### Approach\n1. **Problem Analysis**: The matrix has 4 rows and 4 columns. Each row alternates between 0s and 1s. The missing value is represented by '?'. The goal is to find the missing value in the fourth row.\n2. **Key Insight**: The first three rows of the matrix are provided, and the fourth row contains the missing value. The fourth row must alternate between 0s and 1s starting with either 0 or 1. The missing value is the one that does not fit the alternating pattern of the first three rows.\n3. **Algorithm Selection**: \n   - Read the first three rows of the matrix.\n   - Determine the starting value of the fourth row (0 or 1) based on the first row.\n   - Check the fourth row for the missing value. The missing value is the one that does not match the alternating pattern of the first three rows.\n4",
+    "pattern_L4_062556": "To solve this problem, we need to determine the missing value in a given matrix that follows a specific alternating pattern. The matrix is composed of 0s and 1s arranged in a regular alternating pattern, with one value missing ('?'). The goal is to identify the missing value based on the surrounding elements.\n### Approach\n1. **Problem Analysis**: The matrix is structured such that each row alternates between 0s and 1s, starting with 0 in the first row. The missing value is represented by '?' and must be determined by analyzing the surrounding elements in the matrix.\n2. **Key Insight**: The missing value can be determined by examining the parity (even or odd) of the number of 1s in the row and column containing the '?'. Specifically:\n   - If the row has an even number of 1s, the missing value should be 1.\n   - If the row has an odd number of 1s, the missing value should be 0.\n   - Similarly, if the column has an even number of 1s, the missing value should be 1.\n   - If the column has an odd number of 1s, the missing value should be 0.\n3. **Algorithm Selection**: For each row containing the '?' and each",
+    "pattern_L4_062347": "To solve this problem, we need to determine the missing value in a 3x3 matrix where all other values are either 0 or 1. The matrix has a specific alternating pattern where each row starts with the opposite value of the previous row. The missing value is represented by a question mark '?'.\n### Approach\n1. **Problem Analysis**: The matrix is 3x3 with alternating values starting with 0 in the first row. The missing value is '?' and must be determined based on the given matrix.\n2. **Key Insight**: The missing value can be derived by checking the consistency of the matrix with the alternating pattern. Specifically, the missing value must be such that the entire matrix becomes a valid alternating pattern.\n3. **Algorithm Selection**: \n   - **Check Row Consistency**: For each row, the missing value must be such that the row becomes an alternating sequence starting with 0. This means the missing value must be the opposite of the first element of the row.\n   - **Check Column Consistency**: For each column, the missing value must be such that the column becomes an alternating sequence starting with 0. This means the missing value must be the opposite of the first element of the column.\n4. **Determine Missing Value**: The missing",
+    "pattern_L5_037934": "To solve this problem, we need to identify the missing number in a multiplication table where each cell at row `i` and column `j` contains the product of `i` and `j`. The table is provided as a string with rows separated by newlines and values separated by spaces. The missing value is represented by a question mark ('?').\n### Approach\n1. **Parse the Input**: Read the input string and split it into individual values.\n2. **Identify the Missing Value**: Iterate through the values to find the one that is not an integer (indicating the missing value).\n3. **Determine the Missing Value**: For each row, compute the expected product of the row index and column index. The missing value is the difference between the actual value in the row and the expected product.\n4. **Output the Result**: Print the computed missing value.\n### Solution Code\n```python\ndef main():\n    s = input().strip()\n    values = s.split()\n    for i in range(len(values)):\n        if values[i].isdigit():\n            continue\n        else:\n            expected = i + 1\n            actual = int(values[i])\n            print(expected - actual)\n            return",
+    "pattern_L5_008317": "To solve this problem, we need to identify the missing number in a multiplication table where each cell at row `i` and column `j` contains the product of `i` and `j`. The table is provided with one missing value represented by a question mark ('?'). The solution involves determining the missing number by analyzing the pattern of the table.\n### Approach\n1. **Problem Analysis**: The table is a multiplication table where each cell `(i, j)` contains the product of `i` and `j`. The table is given with one missing value, which we need to find.\n2. **Key Insight**: The missing value can be determined by examining the row and column indices. For any cell `(i, j)`, the product `i * j` should be consistent across all cells in the same row and column. The missing value is the only product that does not match the pattern of the surrounding cells.\n3. **Algorithm Selection**: \n   - Iterate through each row and column of the table.\n   - For each cell, compute the expected product `i * j`.\n   - Compare the expected product with the given value in the cell. If they do not match, the missing value is the expected product.\n   - If",
+    "pattern_L5_009639": "To solve this problem, we need to identify the missing number in a multiplication table where each cell is the product of its row and column indices (1-indexed). The table is provided as a string with '?' indicating the missing value. The solution involves parsing the table, computing the expected values for each cell, and identifying the missing value.\n### Approach\n1. **Parse the Input**: The input string is split into lines. Each line represents a row in the multiplication table.\n2. **Identify Missing Value**: For each row, split the string into individual cell values. The first cell is the row index (1-indexed), and the remaining cells are the column indices (1-indexed). The missing value is the product of the row index and the first column index.\n3. **Compute Expected Values**: For each row, compute the expected value of the missing cell by multiplying the row index (converted to integer) with the first column index (converted to integer).\n4. **Output the Result**: The first missing value encountered in the table is the answer.\n### Solution Code\n```python\ndef main():\n    s = input().strip()\n    lines = s.split('\\n')\n    for line in lines:",
+    "pattern_L5_051279": "To solve this problem, we need to identify the missing number in a multiplication table where each cell is the product of its row and column indices (1-indexed). The table is provided with one missing value represented by a question mark ('?'). The solution involves calculating the expected value for the missing cell based on the pattern observed in the given table.\n### Approach\n1. **Problem Analysis**: The table is a multiplication table where each cell at row `i` and column `j` contains the product `i * j`. The table is 1-indexed, meaning the first row and column are labeled 1. The missing value is represented by '?' in the input.\n2. **Key Insight**: The missing value can be determined by recognizing the pattern in the given table. For any row `i`, the values in the row are `i, 2i, 3i, ..., i*n`, where `n` is the number of columns. The missing value is the product of the row index and the column index corresponding to the missing cell.\n3. **Algorithm Selection**: \n   - Iterate through each row of the table.\n   - For each row, compute the expected value for each column as `i * j` (where `i",
+    "pattern_L5_004705": "To solve this problem, we need to identify the missing number in a multiplication table where each cell is the product of its row and column indices (1-indexed). The table is provided with one missing value represented by a question mark ('?'). The solution involves calculating the expected value for each cell and comparing it with the given value to determine the missing number.\n### Approach\n1. **Problem Analysis**: The problem requires us to find the missing number in a multiplication table. The table is structured such that each cell at row `i` and column `j` contains the product of `i` and `j`. The input is a string where each character represents a cell in the table, with '?' indicating the missing value.\n2. **Key Insight**: For each cell in the table, the expected value is the product of its row index and column index. By comparing the given value with the expected value, we can determine the missing number.\n3. **Algorithm Selection**: Iterate through each cell in the table. For each cell, compute the expected value as the product of its row and column indices. If the given value matches the expected value, proceed to the next cell. If not, the missing number is the expected value.\n4",
+    "pattern_L5_059385": "To solve this problem, we need to identify the missing number in a multiplication table where each cell at row `i` and column `j` contains the product of `i` and `j`. The table is provided with one missing value represented by a question mark ('?'). The solution involves calculating the expected value for the missing cell and comparing it with the given values to determine the correct number.\n### Approach\n1. **Problem Analysis**: The problem requires us to find the missing number in a multiplication table. The table is structured such that each cell at row `i` and column `j` contains the product of `i` and `j`. The input is provided as a list of strings, where each string represents a row of the table. The missing value is denoted by '?'.\n2. **Key Insight**: For each row, the expected value of the missing cell can be derived by multiplying the row index (1-based) by the column index (1-based). This is because the table is a standard multiplication table where each cell at row `i` and column `j` is `i * j`.\n3. **Algorithm Selection**: \n   - Iterate over each row in the input list.\n   - For each row",
+    "pattern_L6_036248": "To solve this problem, we need to identify the missing number in a 4x4 matrix where each row follows a specific modular arithmetic pattern. The matrix is structured such that each row starts with a value from 0 to 4, and each subsequent value in the row is determined by adding a fixed offset to the previous value. The offset for each row is derived from the first two elements of the row.\n### Approach\n1. **Identify the Offset for Each Row**: For each row, the first two elements determine the offset. The offset is calculated as the difference between the second element and the first element of the row.\n2. **Determine the Missing Value**: The missing value in the row is the first element plus the offset. This is because each subsequent element in the row is obtained by adding the offset to the previous element.\n3. **Check for Consistency**: The missing value must be consistent across all rows. If the missing value is the same for all rows, it is the answer. If not, the problem constraints ensure that the missing value will be consistent, so we can safely return the first computed missing value.\n### Solution Code\n```python\ndef find_missing(matrix):\n    offsets = []\n    for row in matrix:",
+    "pattern_L6_040943": "To solve this problem, we need to identify the missing number in a 5x5 matrix where each row follows a specific modular arithmetic rule. The matrix contains numbers from 0 to 6, and exactly one value is missing. The solution involves analyzing the rows to determine the missing value based on the given pattern.\n### Approach\n1. **Problem Analysis**: The matrix is structured such that each row follows a pattern where the numbers repeat every 6 values. The missing value is the one that does not appear in any row. The challenge is to determine which number is missing by analyzing the rows.\n2. **Key Insight**: Each row in the matrix is a permutation of the numbers 0 to 6. The missing number is the one that does not appear in any row. By examining the rows, we can determine the missing number by checking which number is absent from all rows.\n3. **Algorithm Selection**: \n   - Read the matrix from input.\n   - For each row, collect the set of numbers present.\n   - Identify the missing number by checking which number is not present in any row.\n   - Output the missing number.\n### Solution Code\n```python\nmatrix = []\nfor _ in range(5):\n    row = list(map(int",
+    "pattern_L6_041670": "To solve this problem, we need to determine the missing number in a 4x4 matrix where each row follows a specific modular arithmetic rule. The matrix contains values in the range 0 to 3, and one value is missing. The solution involves analyzing the rows to identify the missing value based on the given pattern.\n### Approach\n1. **Problem Analysis**: The matrix has four rows, each following a pattern where the first three elements are the same, and the fourth element is different. The missing value is the one that does not appear in the first three positions of any row.\n2. **Key Insight**: For each row, the first three elements are the same, and the fourth element is different. The missing value is the one that does not appear in the first three positions of any row.\n3. **Algorithm Selection**: \n   - Iterate through each row of the matrix.\n   - For each row, collect the first three elements.\n   - Determine the missing value by checking which value from 0 to 3 is not present in the first three elements of any row.\n4. **Complexity Analysis**: The algorithm processes each row once, and for each row, it checks four possible values. The time complexity is O(4 * 4) =",
+    "pattern_L6_000001": "To solve this problem, we need to identify the missing number in a given 4x4 matrix where each row follows a specific modular arithmetic rule. The matrix contains numbers from 0 to 7, and exactly one value is missing. The solution involves analyzing the rows to determine the missing number based on the pattern observed in the rows.\n### Approach\n1. **Problem Analysis**: The matrix is structured such that each row follows a specific pattern. The first row starts with 0, and each subsequent row increments by 1 modulo 8. However, the last row (row 4) starts with 6 and increments by 1 modulo 8. The missing number is the one that does not appear in any row.\n2. **Key Insight**: The missing number can be determined by checking the presence of each number (0-7) in the matrix. The number that is absent from all rows is the missing value.\n3. **Algorithm Selection**: \n   - Iterate through each row of the matrix.\n   - For each row, check each number from 0 to 7.\n   - If a number is not found in any row, it is the missing number.\n4. **Complexity Analysis**: The algorithm checks each of the 8 numbers for each of the 4 rows, resulting in",
+    "pattern_L6_030628": "To solve this problem, we need to identify the missing number in a 4x4 matrix where each row follows a specific modular arithmetic rule. The matrix contains numbers from 0 to 8, and one value is missing. The solution involves analyzing the rows to determine the missing number based on the given pattern.\n### Approach\n1. **Problem Analysis**: The matrix has four rows, each containing four numbers. Each number is in the range 0 to 8. One number is missing in each row. The missing number can be determined by observing the pattern in each row.\n2. **Key Insight**: Each row follows a pattern where the numbers are derived from a base value (0-8) and a shift value (0-7). The shift value is determined by the base value. Specifically, the shift value is the base value modulo 8. The missing number in each row is the base value itself.\n3. **Algorithm Selection**: For each row, compute the base value as the first element of the row. The shift value is then calculated as the base value modulo 8. The missing number is the base value.\n4. **Complexity Analysis**: The solution processes each row in constant time, making the overall complexity O(1) since there are exactly",
+    "pattern_L6_004673": "To solve this problem, we need to identify the missing number in a 4x4 matrix where each row follows a specific modular arithmetic rule. The matrix contains values in the range 0 to 4, and exactly one value is missing. The solution involves analyzing the rows to determine the missing value based on the given pattern.\n### Approach\n1. **Problem Analysis**: The matrix has four rows, each containing four numbers. Each row follows a pattern where the numbers are in a sequence that repeats every four elements. The missing number is the one that does not appear in its respective row.\n2. **Key Insight**: For each row, the sequence of numbers can be derived by taking the first four numbers, then repeating them. The missing number is the one that does not appear in this sequence.\n3. **Algorithm Selection**: \n   - For each row, extract the first four numbers.\n   - Generate the complete sequence by repeating these four numbers.\n   - Identify the missing number by checking which number from 0 to 4 is absent from the generated sequence.\n4. **Complexity Analysis**: The algorithm processes each row in constant time (O(1)) since the sequence length is fixed at four. With four rows, the overall complexity is O(1),",
+    "pattern_L7_006319": "To solve this problem, we need to identify the missing number in a sequence where each value is the sum of the two preceding values. The sequence starts with 1 and 2, and the missing value is represented by a question mark ('?'). The sequence provided is: 1, 2, 3, ?, 8, 13, 21, 34, 55.\n### Approach\n1. **Problem Analysis**: The sequence is a Fibonacci-like sequence where each term is the sum of the two preceding terms. The sequence starts with 1 and 2. The missing term is the third term in the sequence.\n2. **Key Insight**: The missing term can be calculated by summing the first two terms (1 and 2) to get the third term.\n3. **Algorithm Selection**: The solution involves directly computing the missing term by summing the first two terms of the sequence. This approach is efficient with a constant time complexity O(1) since it involves a single arithmetic operation.\n### Solution Code\n```python\ndef find_missing_number(sequence):\n    return sequence[0] + sequence[1]\n```\n### Explanation\n- **Sequence Analysis**: The given sequence is 1, 2, 3, ?, 8, 13, 21",
+    "pattern_L7_036419": "To solve this problem, we need to identify the missing number in a sequence where each value is the sum of the two preceding values. The sequence is given with one missing value represented by a question mark ('?'). The solution involves determining the missing value by leveraging the properties of the sequence.\n### Approach\n1. **Problem Analysis**: The sequence is defined such that each term is the sum of the two preceding terms. Given a sequence with one missing term, we need to find the missing value. The sequence starts with two initial terms, and each subsequent term is derived from the sum of the previous two terms.\n2. **Key Insight**: The missing term can be found by recognizing that the sequence is a linear recurrence relation. The missing term can be derived by summing the two preceding terms (which are known) and then subtracting the known term that follows the missing term.\n3. **Algorithm Selection**: \n   - **Step 1**: Identify the two preceding terms (the terms before the missing one).\n   - **Step 2**: Compute the sum of these two terms.\n   - **Step 3**: Identify the term that follows the missing term.\n   - **Step 4**: Subtract the known term that follows the missing term from the",
+    "pattern_L7_040085": "To solve this problem, we need to find the missing number in a sequence where each value is the sum of the two preceding values. The sequence is given with one missing value represented by a question mark ('?'). The solution involves identifying the missing value by leveraging the properties of the sequence.\n### Approach\n1. **Problem Analysis**: The sequence is defined such that each term is the sum of the two preceding terms. Given a sequence with one missing term, we need to determine which term is missing.\n2. **Key Insight**: The missing term can be found by calculating the sum of the two preceding terms and subtracting the sum of the known terms from the total sum of the sequence. This works because the total sum of the sequence is the sum of all terms, and the missing term is the difference between the total sum and the sum of the known terms.\n3. **Algorithm Selection**: \n   - Read the input sequence, which includes the missing term represented by '?'.\n   - Convert the input string into a list of integers.\n   - Calculate the total sum of the sequence.\n   - Identify the position of the missing term (the '?') in the sequence.\n   - Compute the sum of the known terms (all elements except",
+    "pattern_L7_063901": "To solve this problem, we need to find the missing number in a sequence where each value is the sum of the two preceding values. The sequence is given as a list of integers with one missing value represented by a question mark ('?'). The solution involves identifying the missing number by leveraging the properties of the sequence.\n### Approach\n1. **Problem Analysis**: The sequence is defined such that each term after the first two is the sum of the two preceding terms. The sequence is missing one term, which we need to find.\n2. **Key Insight**: The missing term can be derived by considering the sum of the first two terms and the sum of the last two terms. The missing term is the difference between these two sums.\n3. **Algorithm Selection**: \n   - Calculate the sum of the first two terms.\n   - Calculate the sum of the last two terms.\n   - The missing term is the difference between these two sums.\n4. **Complexity Analysis**: The algorithm runs in constant time O(1) since it involves only a few arithmetic operations regardless of the sequence length.\n### Solution Code\n```python\ndef find_missing_number(sequence):\n    first_two = sequence[0] + sequence[1]",
+    "pattern_L7_047849": "To solve this problem, we need to identify the missing number in a sequence where each value is the sum of the two preceding values. The sequence is given with one missing value represented by a question mark ('?'). The solution involves determining the missing value by leveraging the properties of the sequence.\n### Approach\n1. **Problem Analysis**: The sequence is defined such that each term is the sum of the two preceding terms. Given a sequence with one missing term, we need to find the missing value. The sequence starts with two initial terms, and each subsequent term is derived from the sum of the previous two terms.\n2. **Key Insight**: The missing term can be found by recognizing that the sequence follows a linear recurrence relation. Specifically, the missing term can be derived by summing the two preceding terms (which are known) and then subtracting the term that would have been generated by the missing term. This is because the missing term is the difference between the sum of the two preceding terms and the term that would have been generated by it.\n3. **Algorithm Selection**: \n   - **Step 1**: Identify the two preceding terms (the last two terms in the sequence).\n   - **Step 2**: Compute the sum of these two terms.",
+    "pattern_L7_031568": "To solve this problem, we need to identify the missing number in a sequence where each value is the sum of the two preceding values. The sequence is given with one missing value represented by a question mark ('?'). The solution involves determining the missing value by leveraging the properties of the sequence.\n### Approach\n1. **Problem Analysis**: The sequence is defined such that each term is the sum of the two preceding terms. Given a sequence with one missing term, we need to find the missing value. The sequence starts with two initial terms, and each subsequent term is derived from the sum of the previous two terms.\n2. **Key Insight**: The missing term can be found by recognizing that the sequence is a linear recurrence relation. The missing term can be derived by considering the sum of the two preceding terms (which are known) and the known terms before them. Specifically, the missing term is the sum of the two terms immediately before the missing term.\n3. **Algorithm Selection**: \n   - **Case 1**: If the missing term is at the beginning of the sequence (i.e., the first two terms are known), the missing term is the sum of the first two terms.\n   - **Case 2**: If the missing term is in the",
+    "cipher_context_polybius6_e7da988c7491_ec9518_json": "{\"answer\": \"MOSCOW\"}",
+    "cipher_context_caesar_e7f45fa18f66_70efdf_plain": "NEW YORK",
+    "cipher_context_polybius6_af4fa8697a94_ea2309_json": "{\"answer\": \"MOSCOW\"}",
+    "cipher_context_atbash_c35961e938fc_37a625_line": "ANSWER: NEW YORK",
+    "cipher_context_polybius6_7acdfdde58bc_3cee30_json": "{\"answer\": \"MOSCOW\"}",
+    "cipher_context_script_cyrillic_b79837a28b38_f3c6fa_quoted": "\"\u041c\u041e\u0421\u041a\u0412\u0410\"",
+    "cipher_context_atbash_4eb236485d29_37a625_line": "ANSWER: NEW YORK",
+    "cipher_context_polybius6_438f0829a6ec_9a3f17_json": "{\"answer\": \"NEW YORK\"}",
+    "cipher_context_caesar_08876a20eb7e_167909_json": "{\"answer\": \"MOSCOW\"}",
+    "cipher_context_script_cyrillic_eecbb9b21677_56549f_line": "ANSWER: \u041c\u041e\u0421\u041a\u0412\u0410",
+    "cipher_context_polybius6_140fc6ad46f8_d20256_plain": "NEW YORK",
+    "cipher_context_vigenere_24b654be79fd_306aa1_json": "{\"answer\": \"PARIS\"}",
+    "cipher_context_vigenere_87d245101852_d06b5b_plain": "NEW YORK",
+    "cipher_context_railfence_ec05d1769975_e4da3b_line": "RENAIBVUOVSUIY  N OIETNSI TSNLS ARLS IALI  AIERGI  NS NTVISI\nAnswer: ANDREW AND JAMES",
+    "cipher_context_caesar_e306eb8520ba_8f14e4_json": "{\"answer\": \"ALICE AND BOB\"}",
+    "cipher_context_atbash_7d69575e3cc9_37a625_line": "ANSWER: ALICE AND BOB",
+    "cipher_context_railfence_b065715e7487_a87ff6_line": "ANSWER: ALICE AND BOB",
+    "cipher_context_railfence_373ea7bb374a_a87ff6_line": "ANSWER: ALICE AND BOB",
+    "cipher_context_script_cyrillic_4d46ea6923c8_9a2794_line": "ANSWER: ANDRIY ANDRIY",
+    "cipher_context_polybius6_a23ec0b29de7_53c6e4_json": "{\"answer\": \"ALICE AND BOB\"}",
+    "cipher_context_atbash_a42d19443abc_37a625_quoted": "\"ALICE AND BOB\"",
+    "cipher_context_polybius6_a0d6f0c35ccc_567a7f_json": "{\"answer\": \"ALICE AND BOB\"}",
+    "cipher_context_railfence_c28b8a37938e_eccbc8_quoted": "\"ANDREW AND MARY\"",
+    "cipher_context_atbash_7caec409869f_37a625_line": "ANSWER: ALICE AND BOB",
+    "cipher_context_vigenere_770c7a4c2d65_ff22fe_json": "{\"answer\": \"ALICE AND BOB\"}",
+    "cipher_context_vigenere_517efdd07cf8_efa758_plain": "ANDREW ANDREW",
+    "cipher_question_polybius6_b62a360a3f59_d58ce1_json": "{\"answer\": \"THEY ARE IN THE GARDEN\"}",
+    "cipher_question_railfence_6cfb306a2836_a87ff6_quoted": "\"WHAT IS THE ANSWER\"",
+    "cipher_question_caesar_765bc8a88ad5_45c48c_plain": "THE SECRET IS TO BE FOUND IN THE SHADOWS OF THE MOON",
+    "cipher_question_atbash_54e915fa5edb_37a625_line": "ANSWER: THERE IS NO ANSWER.",
+    "cipher_question_caesar_742c026d6e9c_e4da3b_plain": "THE ANSWER IS: THE ANSWER IS: THE ANSWER IS: THE ANSWER IS: THE ANSWER IS: THE ANSWER IS: THE ANSWER IS: THE ANSWER IS:",
+    "cipher_question_script_cyrillic_a8cb5162b1cd_dd05e7_quoted": "\"WHAT IS THE ANSWER TO THE QUESTION?\"",
+    "cipher_question_vigenere_0b2b1fe45fcb_14c7ee_plain": "THEY ARE GOING TO THE MOUNTAIN",
+    "cipher_question_vigenere_b62a360a3f59_e3dc7f_plain": "THEY ARE GOING TO THE MOUNTAIN",
+    "cipher_question_vigenere_765bc8a88ad5_706e66_plain": "THEY ARE COMING",
+    "cipher_question_vigenere_72208cc6ffbe_1c0ab7_json": "{\"answer\": \"THEY ARE IN THE GARDEN\"}",
+    "cipher_question_vigenere_407ce63200bc_19c445_plain": "THEY ARE GOING TO THE MOUNTAIN",
+    "cipher_question_vigenere_bd2691376f77_a1bb61_plain": "THEY ARE IN THE GARDEN",
+    "cipher_mixed_atbash_4addd4b112f3_37a625_quoted": "\"NEW YORK\"",
+    "cipher_mixed_atbash_55924c7bb9f7_37a625_line": "ANSWER: MOSCOW",
+    "cipher_mixed_caesar_994ac86619de_6f4922_plain": "MOSCOW",
+    "cipher_mixed_railfence_267ae48fc35c_eccbc8_line": "ANSWER: NEW YORK",
+    "cipher_mixed_atbash_1367e637c975_37a625_quoted": "MOSCOW",
+    "cipher_mixed_polybius6_d7de983b0a90_3354aa_json": "{\"answer\": \"MOSCOW\"}",
+    "cipher_mixed_railfence_927f257f9005_e4da3b_line": "ANSWER: NEW YORK",
+    "cipher_mixed_vigenere_1bbd4c456887_980689_plain": "NEW YORK",
+    "cipher_mixed_vigenere_fb813da60d8d_c80ad7_json": "{\"answer\": \"MOSCOW\"}",
+    "cipher_mixed_vigenere_b1c4c93e00b9_7064c9_plain": "ROSA",
+    "cipher_mixed_railfence_b58a2292bd4e_c81e72_line": "ANSWER: ZAGREB",
+    "cipher_mixed_railfence_6bc32b2dfa82_a87ff6_line": "ANSWER: ZAGRAV",
+    "cipher_mixed_vigenere_ebe9c986b43e_d73564_json": "{\"answer\": \"NYC\"}",
+    "cipher_mixed_vigenere_cbe928d3d2d2_95de1e_plain": "NYU",
+    "cipher_mixed_vigenere_b38213b22588_d2ab9f_plain": "NEW YORK",
+    "cipher_mixed_vigenere_78761b9b83cb_93c233_json": "{\"answer\": \"MOSCOW\"}",
+    "cipher_mixed_vigenere_279166937457_c79af7_plain": "LONDON",
+    "cipher_mixed_vigenere_9720cbcf8e62_a2cc10_plain": "MOSCOW"
+  },
+  "finished": 172,
+  "scoring": "matrix: acc = rubric on the last line of a finished answer; form = whole answer == gold; acc_lenient = rubric anywhere (the old score)",
+  "families": {
+    "arithmetic": {
+      "n": 42,
+      "acc": 0.048
+    },
+    "bits": {
+      "n": 42,
+      "acc": 0.476
+    },
+    "cipher_context": {
+      "n": 26,
+      "acc": 0.0
+    },
+    "cipher_mixed": {
+      "n": 18,
+      "acc": 0.0
+    },
+    "cipher_question": {
+      "n": 12,
+      "acc": 0.0
+    },
+    "crossword": {
+      "n": 24,
+      "acc": 0.0
+    },
+    "matrix": {
+      "n": 42,
+      "acc": 0.0
+    },
+    "pattern": {
+      "n": 42,
+      "acc": 0.048
+    }
+  }
+}

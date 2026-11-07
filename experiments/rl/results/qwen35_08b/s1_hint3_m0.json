@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "experiment": "train_latent_s1",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-29",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "script": "experiments/rl/train_latent_s1.py",
+    "script_sha256_12": "65cc4e00af3e",
+    "summary": {
+      "held acc M0 -> M0 (step 0)": "0.0 -> 0.0",
+      "held acc M0 (last)": "0.367",
+      "loss": "kl T=2.0",
+      "ticks": "M=0"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "args": {
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "items": [
+      "training/corpus_open/ciphers_k_mixed_plain_train.jsonl"
+    ],
+    "right_from": "experiments/rl/results/qwen35_08b/s0_train_hint3/m0_pass.json",
+    "exclude_right_from": "experiments/rl/results/qwen35_08b/s0_train_hint0/m0_pass.json",
+    "build_cache": false,
+    "cache_out": null,
+    "target": "cache",
+    "cache": "experiments/rl/results/qwen35_08b/hint3_teacher_mixed150.pt",
+    "loss": "kl",
+    "temp": 2.0,
+    "teacher_hint": 0,
+    "teacher_cot": 0,
+    "keep_raw_teacher": false,
+    "cot_check": 0,
+    "ticks": 0,
+    "out": "experiments/rl/results/qwen35_08b/s1_hint3_m0.json",
+    "steps": 80,
+    "accum": 2,
+    "muon_lr": 3e-05,
+    "aux_lr": 1e-05,
+    "warmup": 20,
+    "eval_every": 40,
+    "heldout_every": 5,
+    "threads": 4,
+    "seed": 0,
+    "weights": null,
+    "limit": 150,
+    "eval_max": 40,
+    "device": "cpu",
+    "dtype": "fp32"
+  },
+  "n_train": 120,
+  "n_held": 30,
+  "history": [
+    {
+      "step": 0,
+      "train": {
+        "acc_M0": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0
+      }
+    },
+    {
+      "step": 40,
+      "loss": 1.5771965116262436,
+      "train": {
+        "acc_M0": 0.15
+      },
+      "held": {
+        "acc_M0": 0.133
+      }
+    },
+    {
+      "step": 80,
+      "loss": 0.927187992632389,
+      "train": {
+        "acc_M0": 0.675
+      },
+      "held": {
+        "acc_M0": 0.367
+      }
+    }
+  ],
+  "checkpoint": "experiments/rl/results/qwen35_08b/s1_hint3_m0.pth"
+}

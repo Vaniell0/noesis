@@ -1,0 +1,104 @@
+{
+  "_meta": {
+    "experiment": "known_heads",
+    "hypothesis": [
+      "H20",
+      "H21",
+      "H22",
+      "HZLK"
+    ],
+    "date": "2026-10-22",
+    "status": "done",
+    "model": "models/rwkv7-g1k-2.9b-20260930-ctx25600.pth",
+    "script": "experiments/rl/head_ablation_probe.py",
+    "script_sha256_12": "1b2044801e0f",
+    "summary": {
+      "sub_h22/binding acc": "0.983",
+      "sub_h22/binding L14h26 harm": "0.602",
+      "sub_h22/presence acc": "1.0",
+      "sub_h22/presence L14h26 harm": "1.83",
+      "sub_h21/invalid acc": "0.9",
+      "sub_h21/invalid L14h26 harm": "-0.288",
+      "sub_h21/valid acc": "0.533",
+      "sub_h21/valid L14h26 harm": "0.224"
+    }
+  },
+  "model": "models/rwkv7-g1k-2.9b-20260930-ctx25600.pth",
+  "heads": [
+    "L14h26",
+    "L11h37",
+    "L21h5",
+    "L19h30",
+    "L19h34",
+    "L20h6",
+    "L25h32",
+    "L3h17",
+    "L17h21"
+  ],
+  "files": {
+    "experiments/rl/results/head_ablation/sub_h22.jsonl": {
+      "binding": {
+        "n": 60,
+        "acc": 0.983,
+        "harm": {
+          "L14h26": 0.602,
+          "L11h37": 0.372,
+          "L21h5": 0.361,
+          "L19h30": -0.238,
+          "L19h34": 0.133,
+          "L20h6": 0.271,
+          "L25h32": -0.317,
+          "L3h17": 1.019,
+          "L17h21": -0.034
+        }
+      },
+      "presence": {
+        "n": 30,
+        "acc": 1.0,
+        "harm": {
+          "L14h26": 1.83,
+          "L11h37": 1.214,
+          "L21h5": 0.298,
+          "L19h30": -0.868,
+          "L19h34": 0.279,
+          "L20h6": -0.083,
+          "L25h32": -0.743,
+          "L3h17": 0.66,
+          "L17h21": 0.131
+        }
+      }
+    },
+    "experiments/rl/results/head_ablation/sub_h21.jsonl": {
+      "invalid": {
+        "n": 30,
+        "acc": 0.9,
+        "harm": {
+          "L14h26": -0.288,
+          "L11h37": -0.087,
+          "L21h5": 0.036,
+          "L19h30": 0.278,
+          "L19h34": 0.388,
+          "L20h6": 0.41,
+          "L25h32": 0.222,
+          "L3h17": -0.283,
+          "L17h21": -0.387
+        }
+      },
+      "valid": {
+        "n": 30,
+        "acc": 0.533,
+        "harm": {
+          "L14h26": 0.224,
+          "L11h37": 0.041,
+          "L21h5": 0.011,
+          "L19h30": -0.32,
+          "L19h34": -0.3,
+          "L20h6": -0.209,
+          "L25h32": -0.262,
+          "L3h17": 0.387,
+          "L17h21": 0.348
+        }
+      }
+    }
+  }
+}

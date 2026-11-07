@@ -1,0 +1,98 @@
+{
+  "_meta": {
+    "experiment": "train_latent_s1",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-10-30",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "script": "experiments/rl/train_latent_s1.py",
+    "script_sha256_12": "79ad0fd02b04",
+    "summary": {
+      "held acc M0 -> M0 (step 0)": "0.0 -> 0.0",
+      "held acc M0 (last)": "0.0",
+      "loss": "ce T=2.0",
+      "ticks": "M=0"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "args": {
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "items": [
+      "training/corpus_open/ciphers_decode_tok1_short_train.jsonl"
+    ],
+    "right_from": null,
+    "exclude_right_from": null,
+    "build_cache": false,
+    "cache_out": null,
+    "target": "gold",
+    "cache": null,
+    "loss": "ce",
+    "temp": 2.0,
+    "teacher_hint": 0,
+    "teacher_cot": 0,
+    "keep_raw_teacher": false,
+    "cot_check": 0,
+    "ticks": 0,
+    "out": "experiments/rl/results/qwen35_08b/sft_decode_tok1.json",
+    "steps": 150,
+    "accum": 4,
+    "muon_lr": 3e-05,
+    "aux_lr": 1e-05,
+    "warmup": 20,
+    "eval_every": 50,
+    "heldout_every": 5,
+    "threads": 4,
+    "seed": 0,
+    "weights": null,
+    "limit": 0,
+    "eval_max": 30,
+    "device": "cpu",
+    "dtype": "fp32"
+  },
+  "n_train": 480,
+  "n_held": 120,
+  "history": [
+    {
+      "step": 0,
+      "train": {
+        "acc_M0": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0
+      }
+    },
+    {
+      "step": 50,
+      "loss": 3.3206713825464247,
+      "train": {
+        "acc_M0": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0
+      }
+    },
+    {
+      "step": 100,
+      "loss": 2.7481623977422713,
+      "train": {
+        "acc_M0": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0
+      }
+    },
+    {
+      "step": 150,
+      "loss": 1.6156345635652543,
+      "train": {
+        "acc_M0": 0.0
+      },
+      "held": {
+        "acc_M0": 0.0
+      }
+    }
+  ],
+  "checkpoint": "experiments/rl/results/qwen35_08b/sft_decode_tok1.pth"
+}

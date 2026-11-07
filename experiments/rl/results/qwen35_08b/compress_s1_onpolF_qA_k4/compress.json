@@ -1,0 +1,86 @@
+{
+  "_meta": {
+    "experiment": "compress",
+    "hypothesis": [
+      "HZLK"
+    ],
+    "date": "2026-11-05",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B + experiments/rl/results/qwen35_08b/s1_onpolF_qA_k4.pth",
+    "script": "experiments/rl/compress_probe.py",
+    "script_sha256_12": "bf3a48aa7927",
+    "summary": {
+      "mean bpb M=0": 0.8636,
+      "mean bpb M=1": 0.9156,
+      "mean bpb M=4": 0.9425
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "weights": "experiments/rl/results/qwen35_08b/s1_onpolF_qA_k4.pth",
+  "per_category": {
+    "wikipedia_english": {
+      "M0": {
+        "bits_per_byte": 0.9002,
+        "near_bits_per_token": 3.873
+      },
+      "M1": {
+        "bits_per_byte": 0.945,
+        "near_bits_per_token": 6.997
+      },
+      "M4": {
+        "bits_per_byte": 0.969,
+        "near_bits_per_token": 7.861
+      }
+    },
+    "arxiv_cs": {
+      "M0": {
+        "bits_per_byte": 0.7958,
+        "near_bits_per_token": 3.822
+      },
+      "M1": {
+        "bits_per_byte": 0.8367,
+        "near_bits_per_token": 7.387
+      },
+      "M4": {
+        "bits_per_byte": 0.8578,
+        "near_bits_per_token": 8.659
+      }
+    },
+    "bbc_news": {
+      "M0": {
+        "bits_per_byte": 0.9518,
+        "near_bits_per_token": 4.243
+      },
+      "M1": {
+        "bits_per_byte": 0.9978,
+        "near_bits_per_token": 7.608
+      },
+      "M4": {
+        "bits_per_byte": 1.0221,
+        "near_bits_per_token": 8.756
+      }
+    },
+    "github_python": {
+      "M0": {
+        "bits_per_byte": 0.8066,
+        "near_bits_per_token": 3.192
+      },
+      "M1": {
+        "bits_per_byte": 0.8831,
+        "near_bits_per_token": 7.801
+      },
+      "M4": {
+        "bits_per_byte": 0.9211,
+        "near_bits_per_token": 9.338
+      }
+    }
+  },
+  "mean_bpb": {
+    "M0": 0.8636,
+    "M1": 0.9156,
+    "M4": 0.9425
+  },
+  "window": 64,
+  "tokens": 512,
+  "docs_per_category": 8
+}

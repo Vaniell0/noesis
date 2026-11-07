@@ -1,0 +1,114 @@
+{
+ "_meta": {
+  "experiment": "train_latent_s1",
+  "hypothesis": [
+   "HZLK"
+  ],
+  "date": "2026-10-28",
+  "status": "done",
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "script": "experiments/rl/train_latent_s1.py",
+  "script_sha256_12": "fe46aa2276ac",
+  "summary": {
+   "held acc M0 -> M1 (step 0)": "0.0 -> 0.07",
+   "held acc M1 (last)": "0.233",
+   "loss": "kl T=2.0",
+   "phase": "M=1, 4 tick(s)"
+  }
+ },
+ "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+ "args": {
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "items": [
+   "training/corpus_open/ciphers_k_context_plain_train.jsonl",
+   "training/corpus_open/ciphers_k_mixed_plain_train.jsonl"
+  ],
+  "right_from": "experiments/rl/results/s0_g1d04b_train_hint3/m0_pass.json",
+  "exclude_right_from": "experiments/rl/results/s0_g1d04b_train_hint0/m0_pass.json",
+  "build_cache": false,
+  "cache_out": null,
+  "target": "cache",
+  "cache": "experiments/rl/results/s1_pilot_g1d04b/hint3_teacher_cache.pt",
+  "loss": "kl",
+  "temp": 2.0,
+  "teacher_hint": 0,
+  "phase_len": 4,
+  "out": "experiments/rl/results/s1_pilot_g1d04b/hint3_kl_T2_k4.json",
+  "steps": 200,
+  "accum": 4,
+  "muon_lr": 3e-05,
+  "aux_lr": 1e-05,
+  "warmup": 20,
+  "eval_every": 50,
+  "heldout_every": 5,
+  "threads": 4,
+  "seed": 0,
+  "weights": "experiments/rl/results/s1_pilot_g1d04b/kl_T2_k4.pth",
+  "limit": 0
+ },
+ "n_train": 168,
+ "n_held": 43,
+ "history": [
+  {
+   "step": 0,
+   "train": {
+    "acc_M0": 0.0,
+    "acc_M4": 0.018
+   },
+   "held": {
+    "acc_M0": 0.0,
+    "acc_M4": 0.07
+   }
+  },
+  {
+   "step": 50,
+   "loss": 0.217047197278589,
+   "train": {
+    "acc_M0": 0.024,
+    "acc_M4": 0.167
+   },
+   "held": {
+    "acc_M0": 0.023,
+    "acc_M4": 0.116
+   }
+  },
+  {
+   "step": 100,
+   "loss": 0.1569185401313007,
+   "train": {
+    "acc_M0": 0.071,
+    "acc_M4": 0.28
+   },
+   "held": {
+    "acc_M0": 0.07,
+    "acc_M4": 0.186
+   }
+  },
+  {
+   "step": 150,
+   "loss": 0.1443271935451776,
+   "train": {
+    "acc_M0": 0.077,
+    "acc_M4": 0.31
+   },
+   "held": {
+    "acc_M0": 0.116,
+    "acc_M4": 0.233
+   }
+  },
+  {
+   "step": 200,
+   "loss": 0.10223049279302358,
+   "train": {
+    "acc_M0": 0.048,
+    "acc_M4": 0.375
+   },
+   "held": {
+    "acc_M0": 0.047,
+    "acc_M4": 0.233
+   }
+  }
+ ],
+ "checkpoint": "experiments/rl/results/s1_pilot_g1d04b/hint3_kl_T2_k4.pth",
+ "relabel_note": "2026-10-28: acc_M1 renamed acc_M4 (the run fed 4 ticks; trainer now names the key by the tick count)"
+}

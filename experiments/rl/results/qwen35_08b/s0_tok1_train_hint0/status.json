@@ -1,0 +1,13 @@
+{
+  "ts": 1793276340.7968357,
+  "ts_human": "2026-10-29 15:19:00",
+  "progress": [
+    0,
+    1
+  ],
+  "probe": "m0_pass",
+  "probe_index": 1,
+  "probe_total": 1,
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "message": "running m0_pass (1/1)"
+}

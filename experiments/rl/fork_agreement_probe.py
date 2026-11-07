@@ -57,8 +57,9 @@ def _first_int(s: str):
 @torch.no_grad()
 def _gen(loaded, logits, st, max_new=24, temperature=0.0, gen=None):
     """Decode from (logits, state). Returns text and per-token log-probs of the
-    chosen tokens; stops at EOS (id 0), a blank line, or 'User:'."""
+    chosen tokens; stops at EOS (the loader's eos_ids; RWKV: id 0), a blank line, or 'User:'."""
     tok = loaded.tokenizer
+    eos = getattr(loaded, "eos_ids", frozenset({0}))
     out, lps = [], []
     for _ in range(max_new):
         lp = torch.log_softmax(logits[0, -1].float(), -1)
@@ -66,7 +67,7 @@ def _gen(loaded, logits, st, max_new=24, temperature=0.0, gen=None):
             nxt = int(torch.multinomial(torch.softmax(lp / temperature, -1), 1, generator=gen))
         else:
             nxt = int(lp.argmax())
-        if nxt == 0:
+        if nxt in eos:
             break
         out.append(nxt); lps.append(float(lp[nxt]))
         piece = tok.decode(out)

@@ -1,0 +1,13 @@
+{
+  "ts": 1792736412.2722428,
+  "ts_human": "2026-10-23 09:20:12",
+  "progress": [
+    0,
+    1
+  ],
+  "probe": "m0_pass",
+  "probe_index": 1,
+  "probe_total": 1,
+  "model": "models/rwkv-g1l-3b-temp-5764.pth",
+  "message": "running m0_pass (1/1)"
+}

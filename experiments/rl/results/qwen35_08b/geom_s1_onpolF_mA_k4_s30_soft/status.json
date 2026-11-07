@@ -1,0 +1,13 @@
+{
+  "ts": 1794034181.6272774,
+  "ts_human": "2026-11-07 09:49:41",
+  "progress": [
+    1,
+    1
+  ],
+  "probe": null,
+  "probe_index": 1,
+  "probe_total": 1,
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "message": "done \u2014 1/1 probes finished"
+}

@@ -1,0 +1,13 @@
+{
+  "ts": 1792993511.7100768,
+  "ts_human": "2026-10-26 08:45:11",
+  "progress": [
+    2,
+    2
+  ],
+  "probe": null,
+  "probe_index": 2,
+  "probe_total": 2,
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "message": "done \u2014 2/2 probes finished"
+}

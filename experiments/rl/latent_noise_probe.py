@@ -57,11 +57,64 @@ def _add_args(ap):
     ap.add_argument("--ln-sigma", default="0,0.02,0.05,0.1,0.2,0.5")
     ap.add_argument("--ln-k", default="16,64,0", help="0 = isotropic (k = D)")
     ap.add_argument("--ln-rollouts", type=int, default=8)
+    ap.add_argument("--ln-free", type=Path, action="append",
+                    help="free-answer mode: cipher knowledge rows (gen_ciphers), greedy answers after --ln-free-ticks "
+                         "noisy ticks, content checked by check_answer - for models at chance on the YES/NO set")
+    ap.add_argument("--ln-free-ticks", type=int, default=4)
 
 
 @registry.probe("latent_noise", hypothesis=["HZLK"], backend="peft", add_args=_add_args,
                 description="noisy own-latent feed: answer accuracy vs rollout disagreement per (M, sigma, k) - the RL start window")
+def run_free(loaded, tok, args) -> dict:
+    """The S2 window on items the model solves sometimes: per sigma, R greedy answers through M noisy ticks; an item
+    flips when its rollouts disagree on content. Noise lives in the top-k subspace of the items' own last latents."""
+    import random
+    from experiments.rl.m0_pass_probe import answer
+    from training.scripts.gen_ciphers import check_answer
+    rows = [json.loads(l) for f in args.ln_free for l in open(f) if l.strip()]
+    rows = random.Random(0).sample(rows, min(args.ln_limit, len(rows)))
+    g = torch.Generator().manual_seed(0)
+    R, M, k = args.ln_rollouts, args.ln_free_ticks, _ints(args.ln_k)[0]
+    E = loaded.embedding_weight
+    with torch.no_grad():
+        H = torch.cat([loaded.forward_stateful_embeds(E[torch.tensor([tok.encode(loaded.silent_prompt(r["prompt"]))])],
+                                                      loaded.new_state(batch=1), return_hidden=True)[2][0, -1:]
+                       for r in rows]).float()
+        _, _, Vt = torch.linalg.svd(H - H.mean(0), full_matrices=False)
+        B = None if k == 0 else Vt[:k]
+        kk = H.shape[1] if B is None else B.shape[0]
+
+        def noisy(sig):
+            def f(h):
+                eps = torch.randn(1, kk, generator=g).to(h.device)
+                n = eps if B is None else eps @ B.to(h.device)
+                return h + sig * h.norm(dim=-1, keepdim=True) * n[:, None, :].to(h.dtype) / kk ** 0.5
+            return f
+
+        def ok(r, sig):
+            resp, _ = answer(loaded, tok, r["prompt"], 48, cut_blank=True, ticks=M, noise=noisy(sig) if sig else None)
+            return check_answer(r, resp)[0]
+
+        m0 = [check_answer(r, answer(loaded, tok, r["prompt"], 48, cut_blank=True)[0])[0] for r in rows]
+        cells, t0 = [], time.time()
+        for sig in _floats(args.ln_sigma):
+            res = [[ok(r, sig)] * R if sig == 0 else [ok(r, sig) for _ in range(R)] for r in rows]
+            cells.append({"M": M, "k": kk, "sigma": sig,
+                          "acc": round(sum(map(sum, res)) / (R * len(rows)), 3),
+                          "flip_frac": round(sum(0 < sum(x) < R for x in res) / len(rows), 3),
+                          "pass_at_R": round(sum(any(x) for x in res) / len(rows), 3)})
+            progress(f"[latent_noise free] {cells[-1]} ({time.time() - t0:.0f}s)")
+    base = cells[0]["acc"] if cells and cells[0]["sigma"] == 0 else sum(m0) / len(m0)
+    window = [c for c in cells if c["flip_frac"] > 0 and c["acc"] >= base - 0.1]
+    return {"model": args.model, "mode": "free", "items": [str(f) for f in args.ln_free], "n": len(rows),
+            "rollouts": R, "M0": {"acc": round(sum(m0) / len(m0), 3)}, "cells": cells, "window": window,
+            "_summary": {"M0 acc": str(round(sum(m0) / len(m0), 3)), f"M={M} sigma 0 acc": str(base),
+                         "window cells (flip>0, acc>=sigma0-0.1)": str(len(window))}}
+
+
 def run(loaded, tok, args) -> dict:
+    if getattr(args, "ln_free", None):
+        return run_free(loaded, tok, args)
     g = torch.Generator().manual_seed(0)
     rows = [json.loads(l) for l in open(args.ln_items) if l.strip()]
     basis_prompts = [r["prompt"] for r in rows]           # basis from every row, not just the scored ones
@@ -87,7 +140,7 @@ def run(loaded, tok, args) -> dict:
         _, _, Vt = torch.linalg.svd(H - H.mean(0), full_matrices=False)
         bases = {k: (None if k == 0 else Vt[:k]) for k in ks}   # [k, D] or isotropic
         y = torch.tensor([r["y"] for r in rows])
-        m0 = torch.stack([margin(lg)[0] for lg, _, _ in pre])
+        m0 = torch.stack([margin(lg)[0] for lg, _, _ in pre]).cpu()
         out = {"M0": {"acc": round(float(((m0 > 0).long() == y).float().mean()), 3)}}
         cells = []
         t0, done, total = time.time(), 0, len(ms) * len(sigmas) * len(ks)
@@ -104,10 +157,11 @@ def run(loaded, tok, args) -> dict:
                         hh = h.repeat(R, 1, 1)
                         for _ in range(M):
                             eps = torch.randn(R, kk, generator=g)
-                            noise = eps if B is None else eps @ B
+                            eps = eps.to(hh.device)
+                            noise = eps if B is None else eps @ B.to(hh.dtype)
                             z = hh + sig * hh.norm(dim=-1, keepdim=True) * noise[:, None, :] / kk ** 0.5
                             lgt, s, hh = loaded.forward_stateful_embeds(z.to(hh.dtype), s, return_hidden=True)
-                        marg[i] = margin(lgt[:, -1])
+                        marg[i] = margin(lgt[:, -1]).cpu()
                     sign = (marg > 0)
                     cells.append({"M": M, "k": kk, "sigma": sig,
                                   "acc": round(float((sign.long() == y[:, None]).float().mean()), 3),

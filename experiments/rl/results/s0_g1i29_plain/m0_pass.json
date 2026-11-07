@@ -1,0 +1,440 @@
+{
+  "_meta": {
+    "experiment": "m0_pass",
+    "hypothesis": [
+      "HZLK",
+      "H19"
+    ],
+    "date": "2026-10-23",
+    "status": "done",
+    "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+    "script": "experiments/rl/m0_pass_probe.py",
+    "script_sha256_12": "66bae97774ec",
+    "summary": {
+      "cipher_context acc": "13/30",
+      "cipher_mixed acc": "11/20",
+      "cipher_question acc": "10/10"
+    }
+  },
+  "model": "models/rwkv7-g1i-2.9b-20260805-ctx16384.pth",
+  "files": [
+    "training/corpus_open/ciphers_k_context_plain_eval.jsonl",
+    "training/corpus_open/ciphers_k_question_plain_eval.jsonl",
+    "training/corpus_open/ciphers_k_mixed_plain_eval.jsonl"
+  ],
+  "n": 60,
+  "cells": [
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "json",
+      "n": 4,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "line",
+      "n": 1,
+      "acc": 1.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "plain",
+      "n": 3,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "json",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "line",
+      "n": 3,
+      "acc": 0.333,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "quoted",
+      "n": 3,
+      "acc": 0.667,
+      "form": 0.667
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "json",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "quoted",
+      "n": 4,
+      "acc": 0.5,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "json",
+      "n": 4,
+      "acc": 0.75,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "line",
+      "n": 3,
+      "acc": 0.333,
+      "form": 0.667
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.5,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "quoted",
+      "n": 1,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "json",
+      "n": 5,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "line",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.5
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.5
+    },
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "json",
+      "n": 3,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "line",
+      "n": 1,
+      "acc": 1.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "plain",
+      "n": 4,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 1,
+      "format": "quoted",
+      "n": 2,
+      "acc": 1.0,
+      "form": 0.0
+    }
+  ],
+  "right_ids": [
+    "cipher_context_plain_fa1ed3e115ce_37a625_line",
+    "cipher_context_plain_28079df7e61c_37a625_plain",
+    "cipher_context_plain_6bbf32199b21_37a625_json",
+    "cipher_context_plain_3676b3b3476c_37a625_json",
+    "cipher_context_plain_22a641c7fbb2_37a625_plain",
+    "cipher_context_plain_832ce6269d54_37a625_json",
+    "cipher_context_plain_195d2dec7851_37a625_json",
+    "cipher_context_plain_546392f426e3_37a625_plain",
+    "cipher_context_plain_8b1a6f465cb9_37a625_line",
+    "cipher_context_plain_ebf6e8b26260_37a625_quoted",
+    "cipher_context_plain_d2287623c74e_37a625_quoted",
+    "cipher_context_plain_aabbfb70ebce_37a625_quoted",
+    "cipher_context_plain_08ed7db9b55c_37a625_quoted",
+    "cipher_question_plain_cc09c3002cc3_37a625_quoted",
+    "cipher_question_plain_771b09524a2f_37a625_plain",
+    "cipher_question_plain_6c6036c8a63d_37a625_plain",
+    "cipher_question_plain_ae261538c807_37a625_json",
+    "cipher_question_plain_a8cb5162b1cd_37a625_json",
+    "cipher_question_plain_771b09524a2f_37a625_plain",
+    "cipher_question_plain_0b2b1fe45fcb_37a625_plain",
+    "cipher_question_plain_771b09524a2f_37a625_line",
+    "cipher_question_plain_af819eb05baf_37a625_quoted",
+    "cipher_question_plain_6bbfaafdfb7e_37a625_json",
+    "cipher_mixed_plain_42c12f2a9e82_37a625_line",
+    "cipher_mixed_plain_eef4f046a964_37a625_json",
+    "cipher_mixed_plain_78790fb14add_37a625_json",
+    "cipher_mixed_plain_dc7f92ab3704_37a625_json",
+    "cipher_mixed_plain_28d5996585aa_37a625_plain",
+    "cipher_mixed_plain_2307f398bc98_37a625_quoted",
+    "cipher_mixed_plain_e8674e51270e_37a625_json",
+    "cipher_mixed_plain_24e01946b624_37a625_json",
+    "cipher_mixed_plain_4b924491cb29_37a625_json",
+    "cipher_mixed_plain_530e53e37368_37a625_json",
+    "cipher_mixed_plain_1591649a307d_37a625_json"
+  ],
+  "examples": {
+    "('cipher_context', 1, 'line')": {
+      "id": "cipher_context_plain_fa1ed3e115ce_37a625_line",
+      "gold": "ANSWER: DAKAR",
+      "response": "HUGO LIVES IN DAKAR.",
+      "content": true,
+      "form": false
+    },
+    "('cipher_context', 1, 'plain')": {
+      "id": "cipher_context_plain_28079df7e61c_37a625_plain",
+      "gold": "MINSK",
+      "response": "MINSK",
+      "content": true,
+      "form": true
+    },
+    "('cipher_context', 1, 'json')": {
+      "id": "cipher_context_plain_6bbf32199b21_37a625_json",
+      "gold": "{\"answer\": \"OSLO\"}",
+      "response": "{\"answer\": \"OSLO\"}",
+      "content": true,
+      "form": true
+    },
+    "('cipher_context', 1, 'quoted')": {
+      "id": "cipher_context_plain_bf9d578a2221_37a625_quoted",
+      "gold": "\"TUNIS\"",
+      "response": "\"ACCRA\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'json')": {
+      "id": "cipher_context_plain_7ba8e12a831d_37a625_json",
+      "gold": "{\"answer\": \"FELIX AND ZORAN\"}",
+      "response": "{\"answer\": \"BORIS AND ZORAN\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'line')": {
+      "id": "cipher_context_plain_8b1a6f465cb9_37a625_line",
+      "gold": "ANSWER: HUGO AND TANYA",
+      "response": "HUGO AND TANYA LIVE IN LIMA",
+      "content": true,
+      "form": false
+    },
+    "('cipher_context', 2, 'quoted')": {
+      "id": "cipher_context_plain_ebf6e8b26260_37a625_quoted",
+      "gold": "\"ROSA AND TANYA\"",
+      "response": "\"ROSA AND TANYA\"",
+      "content": true,
+      "form": true
+    },
+    "('cipher_context', 2, 'plain')": {
+      "id": "cipher_context_plain_846d65d0d647_37a625_plain",
+      "gold": "FELIX AND LEON",
+      "response": "CLARA AND FELIX",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 3, 'quoted')": {
+      "id": "cipher_context_plain_aabbfb70ebce_37a625_quoted",
+      "gold": "\"LEON AND OLGA\"",
+      "response": "\"LEON AND OLGA\"",
+      "content": true,
+      "form": true
+    },
+    "('cipher_context', 3, 'plain')": {
+      "id": "cipher_context_plain_1a6d55b4d129_37a625_plain",
+      "gold": "HUGO AND ZORAN",
+      "response": "PAVEL AND ZORAN",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 3, 'line')": {
+      "id": "cipher_context_plain_8e84e8f9487e_37a625_line",
+      "gold": "ANSWER: CLARA AND SAMUEL",
+      "response": "TANYA AND CLARA",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 3, 'json')": {
+      "id": "cipher_context_plain_dc4e7dd8f53d_37a625_json",
+      "gold": "{\"answer\": \"IRINA AND YANA\"}",
+      "response": "{\"answer\": \"ALICE AND IRINA\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 1, 'quoted')": {
+      "id": "cipher_question_plain_cc09c3002cc3_37a625_quoted",
+      "gold": "\"TOKYO\"",
+      "response": "TOKYO",
+      "content": true,
+      "form": false
+    },
+    "('cipher_question', 1, 'plain')": {
+      "id": "cipher_question_plain_771b09524a2f_37a625_plain",
+      "gold": "ATHENS",
+      "response": "ATHENS",
+      "content": true,
+      "form": true
+    },
+    "('cipher_question', 1, 'json')": {
+      "id": "cipher_question_plain_ae261538c807_37a625_json",
+      "gold": "{\"answer\": \"LISBON\"}",
+      "response": "{\"answer\": \"LISBON\"}",
+      "content": true,
+      "form": true
+    },
+    "('cipher_question', 1, 'line')": {
+      "id": "cipher_question_plain_771b09524a2f_37a625_line",
+      "gold": "ANSWER: ATHENS",
+      "response": "The capital of Greece is Athens.",
+      "content": true,
+      "form": false
+    },
+    "('cipher_mixed', 1, 'line')": {
+      "id": "cipher_mixed_plain_42c12f2a9e82_37a625_line",
+      "gold": "ANSWER: LISBON",
+      "response": "HUGO LIVES IN THE CAPITAL OF PORTUGAL. ZORAN LIVES IN THE CAPITAL OF NORWAY. DMITRI LIVES IN THE CAPITAL OF SPAIN\nANSWER: LISBON",
+      "content": true,
+      "form": true
+    },
+    "('cipher_mixed', 1, 'json')": {
+      "id": "cipher_mixed_plain_eef4f046a964_37a625_json",
+      "gold": "{\"answer\": \"OTTAWA\"}",
+      "response": "{\"answer\": \"OTTAWA\"}",
+      "content": true,
+      "form": true
+    },
+    "('cipher_mixed', 1, 'plain')": {
+      "id": "cipher_mixed_plain_28d5996585aa_37a625_plain",
+      "gold": "MADRID",
+      "response": "MADRID",
+      "content": true,
+      "form": true
+    },
+    "('cipher_mixed', 1, 'quoted')": {
+      "id": "cipher_mixed_plain_2307f398bc98_37a625_quoted",
+      "gold": "\"PARIS\"",
+      "response": "\"PARIS\"",
+      "content": true,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'json')": {
+      "id": "cipher_mixed_plain_e8674e51270e_37a625_json",
+      "gold": "{\"answer\": \"ROME\"}",
+      "response": "{\"answer\": \"ROME\"}",
+      "content": true,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'quoted')": {
+      "id": "cipher_mixed_plain_700729cb1774_37a625_quoted",
+      "gold": "\"RIGA\"",
+      "response": "\"SAMUEL LIVES IN THE CAPITAL OF LATVIA\"",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'plain')": {
+      "id": "cipher_mixed_plain_bd341ec8e784_37a625_plain",
+      "gold": "BANGKOK",
+      "response": "CLARA LIVES IN THE CAPITAL OF THAILAND",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'line')": {
+      "id": "cipher_mixed_plain_f402babc040b_37a625_line",
+      "gold": "ANSWER: BOGOTA",
+      "response": "ANSWER: SANTIAGO",
+      "content": false,
+      "form": true
+    }
+  },
+  "families": {
+    "cipher_context": {
+      "n": 30,
+      "acc": 0.433
+    },
+    "cipher_mixed": {
+      "n": 20,
+      "acc": 0.55
+    },
+    "cipher_question": {
+      "n": 10,
+      "acc": 1.0
+    }
+  }
+}

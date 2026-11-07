@@ -1,0 +1,1252 @@
+{
+  "_meta": {
+    "experiment": "m0_pass",
+    "hypothesis": [
+      "HZLK",
+      "H19"
+    ],
+    "date": "2026-11-05",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+    "script": "experiments/rl/m0_pass_probe.py",
+    "script_sha256_12": "8a0182b0d97d",
+    "summary": {
+      "cipher_mixed acc": "0/120"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/qwen/Qwen3.5-0.8B",
+  "files": [
+    "training/corpus_open/ciphers_k_mixed_plain_eval.jsonl"
+  ],
+  "n": 120,
+  "cells": [
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "json",
+      "n": 14,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "line",
+      "n": 15,
+      "acc": 0.0,
+      "form": 0.467,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "plain",
+      "n": 12,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 1,
+      "format": "quoted",
+      "n": 11,
+      "acc": 0.0,
+      "form": 0.455,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "json",
+      "n": 16,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "line",
+      "n": 15,
+      "acc": 0.0,
+      "form": 0.267,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "plain",
+      "n": 18,
+      "acc": 0.0,
+      "form": 1.0,
+      "acc_lenient": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "quoted",
+      "n": 19,
+      "acc": 0.0,
+      "form": 0.737,
+      "acc_lenient": 0.0
+    }
+  ],
+  "right_ids": [],
+  "examples": {
+    "('cipher_mixed', 2, 'plain')": {
+      "id": "cipher_mixed_plain_f1773079b9f9_37a625_plain",
+      "gold": "BANGKOK",
+      "response": "THAILAND",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 1, 'quoted')": {
+      "id": "cipher_mixed_plain_b28c3c19c59f_37a625_quoted",
+      "gold": "\"PARIS\"",
+      "response": "FRANCE",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 2, 'json')": {
+      "id": "cipher_mixed_plain_966f95c510b9_37a625_json",
+      "gold": "{\"answer\": \"BUDAPEST\"}",
+      "response": "{\"answer\": \"HUNGARY\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'line')": {
+      "id": "cipher_mixed_plain_5b274b0bdb10_37a625_line",
+      "gold": "ANSWER: BUENOS AIRES",
+      "response": "ARGENTINA",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 1, 'line')": {
+      "id": "cipher_mixed_plain_10fe21ebc9dd_37a625_line",
+      "gold": "ANSWER: SANTIAGO",
+      "response": "CHILE",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 1, 'plain')": {
+      "id": "cipher_mixed_plain_fd93e136cec4_37a625_plain",
+      "gold": "HANOI",
+      "response": "VIETNAM",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 1, 'json')": {
+      "id": "cipher_mixed_plain_5c51439b5147_37a625_json",
+      "gold": "{\"answer\": \"DUBLIN\"}",
+      "response": "{\"answer\": \"IRINA\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'quoted')": {
+      "id": "cipher_mixed_plain_54e7b632465f_37a625_quoted",
+      "gold": "\"CAIRO\"",
+      "response": "\"EGYPT\"",
+      "content": false,
+      "form": true
+    }
+  },
+  "responses": {
+    "cipher_mixed_plain_f1773079b9f9_37a625_plain": "THAILAND",
+    "cipher_mixed_plain_b28c3c19c59f_37a625_quoted": "FRANCE",
+    "cipher_mixed_plain_966f95c510b9_37a625_json": "{\"answer\": \"HUNGARY\"}",
+    "cipher_mixed_plain_5b274b0bdb10_37a625_line": "ARGENTINA",
+    "cipher_mixed_plain_1ef4b0a464af_37a625_plain": "HUNGARY",
+    "cipher_mixed_plain_7bcb843a03bc_37a625_quoted": "\"POLAND\"",
+    "cipher_mixed_plain_37f75b3b8a8b_37a625_json": "{\"answer\": \"SWITZERLAND\"}",
+    "cipher_mixed_plain_10fe21ebc9dd_37a625_line": "CHILE",
+    "cipher_mixed_plain_fd93e136cec4_37a625_plain": "VIETNAM",
+    "cipher_mixed_plain_9959aa3f7b32_37a625_quoted": "\"MOROCCO\"",
+    "cipher_mixed_plain_5c51439b5147_37a625_json": "{\"answer\": \"IRINA\"}",
+    "cipher_mixed_plain_e05364e0863b_37a625_line": "BRAZIL",
+    "cipher_mixed_plain_30edc7f74086_37a625_plain": "CUBA",
+    "cipher_mixed_plain_54e7b632465f_37a625_quoted": "\"EGYPT\"",
+    "cipher_mixed_plain_50646758dc55_37a625_json": "{\"answer\": \"HUGO\"}",
+    "cipher_mixed_plain_f402babc040b_37a625_line": "CUBA",
+    "cipher_mixed_plain_97bebf7d12b6_37a625_plain": "ARGENTINA",
+    "cipher_mixed_plain_7cda008b82b1_37a625_quoted": "COLOMBIA",
+    "cipher_mixed_plain_0cb28a5f4043_37a625_json": "{\"answer\": \"CHILE\"}",
+    "cipher_mixed_plain_7b46e889c22a_37a625_line": "ANSWER: EGYPT",
+    "cipher_mixed_plain_580fcfd3b157_37a625_plain": "MOROCCO",
+    "cipher_mixed_plain_84c02b791b8a_37a625_quoted": "\"THAILAND\"",
+    "cipher_mixed_plain_671f91e6cb76_37a625_json": "{\"answer\": \"JONAS\"}",
+    "cipher_mixed_plain_e4deefa0ff29_37a625_line": "ANSWER: AUSTRALIA",
+    "cipher_mixed_plain_5a13b5c1b6d7_37a625_plain": "AUSTRALIA",
+    "cipher_mixed_plain_9ce5226e66a4_37a625_quoted": "PORTUGAL",
+    "cipher_mixed_plain_d1e5c3d47e94_37a625_json": "{\"answer\": \"CUBA\"}",
+    "cipher_mixed_plain_5e74466cf2c4_37a625_line": "SPAIN",
+    "cipher_mixed_plain_6287c44818f5_37a625_plain": "SENEGAL",
+    "cipher_mixed_plain_00d59724b8a1_37a625_quoted": "\"POLAND\"",
+    "cipher_mixed_plain_24e01946b624_37a625_json": "{\"answer\": \"ARGENTINA\"}",
+    "cipher_mixed_plain_b004da5aaf47_37a625_line": "ANSWER: THAILAND",
+    "cipher_mixed_plain_2e65e75ed184_37a625_plain": "SWEDEN",
+    "cipher_mixed_plain_b0bcb0b8f1fe_37a625_quoted": "\"LATVIA\"",
+    "cipher_mixed_plain_a3c7f8afaa19_37a625_json": "{\"answer\": \"VIETNAM\"}",
+    "cipher_mixed_plain_d01d44a1c06c_37a625_line": "ANSWER: FRANCE",
+    "cipher_mixed_plain_4d6bcd1a7a17_37a625_plain": "IRELAND",
+    "cipher_mixed_plain_1841bee21379_37a625_quoted": "\"COLOMBIA\"",
+    "cipher_mixed_plain_78790fb14add_37a625_json": "{\"answer\": \"Greta\"}",
+    "cipher_mixed_plain_f1deaee0b002_37a625_line": "ANSWER: ARGENTINA",
+    "cipher_mixed_plain_82cc55e5ac8b_37a625_plain": "ARGENTINA",
+    "cipher_mixed_plain_92e159dfb725_37a625_quoted": "\"PORTUGAL\"",
+    "cipher_mixed_plain_556016abb4ea_37a625_json": "{\"answer\": \"JAPAN\"}",
+    "cipher_mixed_plain_d9b76549bfe7_37a625_line": "ANSWER: FRANCE",
+    "cipher_mixed_plain_4ef37df375a4_37a625_plain": "THAILAND",
+    "cipher_mixed_plain_ba777b19e25b_37a625_quoted": "CANADA",
+    "cipher_mixed_plain_8bedb59f400f_37a625_json": "{\"answer\": \"CANADA\"}",
+    "cipher_mixed_plain_698af9ba5625_37a625_line": "FINLAND",
+    "cipher_mixed_plain_197b9c60035c_37a625_plain": "IRELAND",
+    "cipher_mixed_plain_700729cb1774_37a625_quoted": "\"LATVIA\"",
+    "cipher_mixed_plain_b148a3d93e5c_37a625_json": "{\"answer\": \"BULGARIA\"}",
+    "cipher_mixed_plain_9639eaebe47c_37a625_line": "TURKEY",
+    "cipher_mixed_plain_19f77c70a02d_37a625_plain": "GREECE",
+    "cipher_mixed_plain_2731f47f91f0_37a625_quoted": "GREECE",
+    "cipher_mixed_plain_1969f6cc7d9e_37a625_json": "{\"answer\": \"ITALY\"}",
+    "cipher_mixed_plain_42c12f2a9e82_37a625_line": "PORTUGAL",
+    "cipher_mixed_plain_9bb4f7de2804_37a625_plain": "SWITZERLAND",
+    "cipher_mixed_plain_2307f398bc98_37a625_quoted": "\"FRANCE\"",
+    "cipher_mixed_plain_de328a876289_37a625_json": "{\"answer\": \"ZORAN\"}",
+    "cipher_mixed_plain_87846d5a72eb_37a625_line": "ITALY",
+    "cipher_mixed_plain_4e332d73950b_37a625_plain": "SWEDEN",
+    "cipher_mixed_plain_05b48a8eead6_37a625_quoted": "NORWAY",
+    "cipher_mixed_plain_31e4830832ea_37a625_json": "{\"answer\": \"CANADA\"}",
+    "cipher_mixed_plain_2ddb96398b1b_37a625_line": "JAPAN",
+    "cipher_mixed_plain_69d5495e82c5_37a625_plain": "CUBA",
+    "cipher_mixed_plain_66999a4c9fd5_37a625_quoted": "\"SWITZERLAND\"",
+    "cipher_mixed_plain_4b924491cb29_37a625_json": "{\"answer\": \"Elena\"}",
+    "cipher_mixed_plain_20f509144ece_37a625_line": "FINLAND",
+    "cipher_mixed_plain_28d5996585aa_37a625_plain": "SPAIN",
+    "cipher_mixed_plain_a61c6503e3bf_37a625_quoted": "\"PORTUGAL\"",
+    "cipher_mixed_plain_dc7f92ab3704_37a625_json": "{\"answer\": \"ALICE\"}",
+    "cipher_mixed_plain_59f084b26ed9_37a625_line": "ANSWER: SWITZERLAND",
+    "cipher_mixed_plain_e066af93768c_37a625_plain": "JAPAN",
+    "cipher_mixed_plain_f48024846149_37a625_quoted": "\"SWITZERLAND\"",
+    "cipher_mixed_plain_ee0626e9fb2b_37a625_json": "{\"answer\": \"THE CAPITAL OF THAILAND\"}",
+    "cipher_mixed_plain_218d16784d38_37a625_line": "PERU",
+    "cipher_mixed_plain_623a67f77e99_37a625_plain": "ARGENTINA",
+    "cipher_mixed_plain_bb19e664230f_37a625_quoted": "\"PERU\"",
+    "cipher_mixed_plain_64a5bac5006b_37a625_json": "{\"answer\": \"VIKTOR\"}",
+    "cipher_mixed_plain_cdd5a052d711_37a625_line": "ANSWER: POLAND",
+    "cipher_mixed_plain_c3c5b716a3a5_37a625_plain": "GHANA",
+    "cipher_mixed_plain_c88358d42d95_37a625_quoted": "\"SPAIN\"",
+    "cipher_mixed_plain_e8674e51270e_37a625_json": "{\"answer\": \"ITALY\"}",
+    "cipher_mixed_plain_0a6e2e33fb4f_37a625_line": "CANADA",
+    "cipher_mixed_plain_0a4ebd8fb957_37a625_plain": "HUNGARY",
+    "cipher_mixed_plain_988a4b11811d_37a625_quoted": "\"POLAND\"",
+    "cipher_mixed_plain_530e53e37368_37a625_json": "{\"answer\": \"FRANCE\"}",
+    "cipher_mixed_plain_d1f31fae54fc_37a625_line": "ANSWER: EGYPT",
+    "cipher_mixed_plain_881f197399e2_37a625_plain": "FRANCE",
+    "cipher_mixed_plain_ff879a6e3ca6_37a625_quoted": "\"FINLAND\"",
+    "cipher_mixed_plain_1591649a307d_37a625_json": "{\"answer\": \"PORTUGAL\"}",
+    "cipher_mixed_plain_0037506ce9c8_37a625_line": "BULGARIA",
+    "cipher_mixed_plain_60faaa7e73b7_37a625_plain": "KENYA",
+    "cipher_mixed_plain_7a3d8832c27c_37a625_quoted": "CUBA",
+    "cipher_mixed_plain_72eb919efa3e_37a625_json": "{\"answer\": \"Rosa lives in the capital of Norway\"}",
+    "cipher_mixed_plain_4bd32b363d59_37a625_line": "IRELAND",
+    "cipher_mixed_plain_52dbe6f8563e_37a625_plain": "VIETNAM",
+    "cipher_mixed_plain_d0726bde78c7_37a625_quoted": "\"GHANA\"",
+    "cipher_mixed_plain_e0455673e010_37a625_json": "{\"answer\": \"CLARA\"}",
+    "cipher_mixed_plain_5563c290cebe_37a625_line": "BULGARIA",
+    "cipher_mixed_plain_59a6f5b967de_37a625_plain": "VIETNAM",
+    "cipher_mixed_plain_c73b21fe8976_37a625_quoted": "TURKEY",
+    "cipher_mixed_plain_8470dd47ec27_37a625_json": "{\"answer\": \"KIRA\"}",
+    "cipher_mixed_plain_ed770ad8baff_37a625_line": "PERU",
+    "cipher_mixed_plain_3ed3629143c3_37a625_plain": "AUSTRALIA",
+    "cipher_mixed_plain_fe9b903be477_37a625_quoted": "GREECE",
+    "cipher_mixed_plain_9e2332732924_37a625_json": "{\"answer\": \"THAILAND\"}",
+    "cipher_mixed_plain_08c3eeb7c49d_37a625_line": "GREECE",
+    "cipher_mixed_plain_40795de51a58_37a625_plain": "SWEDEN",
+    "cipher_mixed_plain_4256c4ec05c7_37a625_quoted": "VIETNAM",
+    "cipher_mixed_plain_b70fd397d202_37a625_json": "{\"answer\": \"SWEDEN\"}",
+    "cipher_mixed_plain_d567613fecc0_37a625_line": "SPAIN",
+    "cipher_mixed_plain_bd341ec8e784_37a625_plain": "THAILAND",
+    "cipher_mixed_plain_77450b45a380_37a625_quoted": "\"FRANCE\"",
+    "cipher_mixed_plain_eef4f046a964_37a625_json": "{\"answer\": \"CANADA\"}",
+    "cipher_mixed_plain_c01db8a13690_37a625_line": "ANSWER: GREECE",
+    "cipher_mixed_plain_132adba75901_37a625_plain": "ARGENTINA",
+    "cipher_mixed_plain_5cf88e55d606_37a625_quoted": "NORWAY",
+    "cipher_mixed_plain_7e58c10ea76c_37a625_json": "{\"answer\": \"VIETNAM\"}",
+    "cipher_mixed_plain_c7227a144e28_37a625_line": "ANSWER: FRANCE"
+  },
+  "finished": 120,
+  "ticks": 0,
+  "hint": 0,
+  "ranks": {
+    "cipher_mixed_plain_f1773079b9f9_37a625_plain": {
+      "gold": "BANGKOK",
+      "rank": 1,
+      "top": "BANGKOK",
+      "logp_gold": -5.709,
+      "logp_top": -5.709
+    },
+    "cipher_mixed_plain_b28c3c19c59f_37a625_quoted": {
+      "gold": "PARIS",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -8.704,
+      "logp_top": -8.424
+    },
+    "cipher_mixed_plain_966f95c510b9_37a625_json": {
+      "gold": "BUDAPEST",
+      "rank": 1,
+      "top": "BUDAPEST",
+      "logp_gold": -5.332,
+      "logp_top": -5.332
+    },
+    "cipher_mixed_plain_5b274b0bdb10_37a625_line": {
+      "gold": "BUENOS AIRES",
+      "rank": 12,
+      "top": "PARIS",
+      "logp_gold": -13.808,
+      "logp_top": -7.49
+    },
+    "cipher_mixed_plain_1ef4b0a464af_37a625_plain": {
+      "gold": "BUDAPEST",
+      "rank": 1,
+      "top": "BUDAPEST",
+      "logp_gold": -4.479,
+      "logp_top": -4.479
+    },
+    "cipher_mixed_plain_7bcb843a03bc_37a625_quoted": {
+      "gold": "WARSAW",
+      "rank": 4,
+      "top": "TOKYO",
+      "logp_gold": -9.543,
+      "logp_top": -7.173
+    },
+    "cipher_mixed_plain_37f75b3b8a8b_37a625_json": {
+      "gold": "BERN",
+      "rank": 22,
+      "top": "TOKYO",
+      "logp_gold": -13.538,
+      "logp_top": -7.061
+    },
+    "cipher_mixed_plain_10fe21ebc9dd_37a625_line": {
+      "gold": "SANTIAGO",
+      "rank": 4,
+      "top": "LIMA",
+      "logp_gold": -12.139,
+      "logp_top": -10.867
+    },
+    "cipher_mixed_plain_fd93e136cec4_37a625_plain": {
+      "gold": "HANOI",
+      "rank": 7,
+      "top": "VIENNA",
+      "logp_gold": -9.524,
+      "logp_top": -6.697
+    },
+    "cipher_mixed_plain_9959aa3f7b32_37a625_quoted": {
+      "gold": "RABAT",
+      "rank": 14,
+      "top": "TOKYO",
+      "logp_gold": -12.786,
+      "logp_top": -8.421
+    },
+    "cipher_mixed_plain_5c51439b5147_37a625_json": {
+      "gold": "DUBLIN",
+      "rank": 2,
+      "top": "PARIS",
+      "logp_gold": -7.122,
+      "logp_top": -7.081
+    },
+    "cipher_mixed_plain_e05364e0863b_37a625_line": {
+      "gold": "BRASILIA",
+      "rank": 29,
+      "top": "PARIS",
+      "logp_gold": -21.86,
+      "logp_top": -12.245
+    },
+    "cipher_mixed_plain_30edc7f74086_37a625_plain": {
+      "gold": "HAVANA",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -8.045,
+      "logp_top": -7.323
+    },
+    "cipher_mixed_plain_54e7b632465f_37a625_quoted": {
+      "gold": "CAIRO",
+      "rank": 12,
+      "top": "SOFIA",
+      "logp_gold": -12.352,
+      "logp_top": -8.432
+    },
+    "cipher_mixed_plain_50646758dc55_37a625_json": {
+      "gold": "DAKAR",
+      "rank": 18,
+      "top": "PARIS",
+      "logp_gold": -12.556,
+      "logp_top": -7.144
+    },
+    "cipher_mixed_plain_f402babc040b_37a625_line": {
+      "gold": "BOGOTA",
+      "rank": 4,
+      "top": "SANTIAGO",
+      "logp_gold": -11.3,
+      "logp_top": -9.859
+    },
+    "cipher_mixed_plain_97bebf7d12b6_37a625_plain": {
+      "gold": "BUENOS AIRES",
+      "rank": 21,
+      "top": "PARIS",
+      "logp_gold": -11.299,
+      "logp_top": -3.058
+    },
+    "cipher_mixed_plain_7cda008b82b1_37a625_quoted": {
+      "gold": "BOGOTA",
+      "rank": 2,
+      "top": "PARIS",
+      "logp_gold": -8.663,
+      "logp_top": -6.302
+    },
+    "cipher_mixed_plain_0cb28a5f4043_37a625_json": {
+      "gold": "SANTIAGO",
+      "rank": 5,
+      "top": "PARIS",
+      "logp_gold": -8.707,
+      "logp_top": -3.794
+    },
+    "cipher_mixed_plain_7b46e889c22a_37a625_line": {
+      "gold": "CAIRO",
+      "rank": 5,
+      "top": "PARIS",
+      "logp_gold": -14.227,
+      "logp_top": -11.283
+    },
+    "cipher_mixed_plain_580fcfd3b157_37a625_plain": {
+      "gold": "RABAT",
+      "rank": 25,
+      "top": "PARIS",
+      "logp_gold": -12.579,
+      "logp_top": -5.81
+    },
+    "cipher_mixed_plain_84c02b791b8a_37a625_quoted": {
+      "gold": "BANGKOK",
+      "rank": 1,
+      "top": "BANGKOK",
+      "logp_gold": -10.238,
+      "logp_top": -10.238
+    },
+    "cipher_mixed_plain_671f91e6cb76_37a625_json": {
+      "gold": "SANTIAGO",
+      "rank": 7,
+      "top": "LIMA",
+      "logp_gold": -9.046,
+      "logp_top": -7.309
+    },
+    "cipher_mixed_plain_e4deefa0ff29_37a625_line": {
+      "gold": "CANBERRA",
+      "rank": 3,
+      "top": "TOKYO",
+      "logp_gold": -9.814,
+      "logp_top": -8.74
+    },
+    "cipher_mixed_plain_5a13b5c1b6d7_37a625_plain": {
+      "gold": "CANBERRA",
+      "rank": 10,
+      "top": "ATHENS",
+      "logp_gold": -11.545,
+      "logp_top": -8.012
+    },
+    "cipher_mixed_plain_9ce5226e66a4_37a625_quoted": {
+      "gold": "LISBON",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -9.927,
+      "logp_top": -9.054
+    },
+    "cipher_mixed_plain_d1e5c3d47e94_37a625_json": {
+      "gold": "HAVANA",
+      "rank": 7,
+      "top": "MADRID",
+      "logp_gold": -9.126,
+      "logp_top": -6.987
+    },
+    "cipher_mixed_plain_5e74466cf2c4_37a625_line": {
+      "gold": "MADRID",
+      "rank": 3,
+      "top": "PARIS",
+      "logp_gold": -12.052,
+      "logp_top": -9.833
+    },
+    "cipher_mixed_plain_6287c44818f5_37a625_plain": {
+      "gold": "DAKAR",
+      "rank": 23,
+      "top": "PARIS",
+      "logp_gold": -13.781,
+      "logp_top": -7.926
+    },
+    "cipher_mixed_plain_00d59724b8a1_37a625_quoted": {
+      "gold": "WARSAW",
+      "rank": 9,
+      "top": "PARIS",
+      "logp_gold": -12.631,
+      "logp_top": -7.394
+    },
+    "cipher_mixed_plain_24e01946b624_37a625_json": {
+      "gold": "BUENOS AIRES",
+      "rank": 17,
+      "top": "PARIS",
+      "logp_gold": -11.153,
+      "logp_top": -5.117
+    },
+    "cipher_mixed_plain_b004da5aaf47_37a625_line": {
+      "gold": "BANGKOK",
+      "rank": 3,
+      "top": "TOKYO",
+      "logp_gold": -10.838,
+      "logp_top": -9.705
+    },
+    "cipher_mixed_plain_2e65e75ed184_37a625_plain": {
+      "gold": "STOCKHOLM",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -6.604,
+      "logp_top": -6.186
+    },
+    "cipher_mixed_plain_b0bcb0b8f1fe_37a625_quoted": {
+      "gold": "RIGA",
+      "rank": 5,
+      "top": "PARIS",
+      "logp_gold": -11.174,
+      "logp_top": -9.535
+    },
+    "cipher_mixed_plain_a3c7f8afaa19_37a625_json": {
+      "gold": "HANOI",
+      "rank": 3,
+      "top": "VIENNA",
+      "logp_gold": -9.508,
+      "logp_top": -7.124
+    },
+    "cipher_mixed_plain_d01d44a1c06c_37a625_line": {
+      "gold": "PARIS",
+      "rank": 1,
+      "top": "PARIS",
+      "logp_gold": -4.992,
+      "logp_top": -4.992
+    },
+    "cipher_mixed_plain_4d6bcd1a7a17_37a625_plain": {
+      "gold": "DUBLIN",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -7.317,
+      "logp_top": -7.269
+    },
+    "cipher_mixed_plain_1841bee21379_37a625_quoted": {
+      "gold": "BOGOTA",
+      "rank": 12,
+      "top": "TOKYO",
+      "logp_gold": -12.006,
+      "logp_top": -7.268
+    },
+    "cipher_mixed_plain_78790fb14add_37a625_json": {
+      "gold": "BERN",
+      "rank": 17,
+      "top": "PARIS",
+      "logp_gold": -12.602,
+      "logp_top": -8.336
+    },
+    "cipher_mixed_plain_f1deaee0b002_37a625_line": {
+      "gold": "BUENOS AIRES",
+      "rank": 10,
+      "top": "PARIS",
+      "logp_gold": -12.86,
+      "logp_top": -7.895
+    },
+    "cipher_mixed_plain_82cc55e5ac8b_37a625_plain": {
+      "gold": "BUENOS AIRES",
+      "rank": 25,
+      "top": "PARIS",
+      "logp_gold": -12.13,
+      "logp_top": -4.71
+    },
+    "cipher_mixed_plain_92e159dfb725_37a625_quoted": {
+      "gold": "LISBON",
+      "rank": 3,
+      "top": "PARIS",
+      "logp_gold": -10.579,
+      "logp_top": -7.055
+    },
+    "cipher_mixed_plain_556016abb4ea_37a625_json": {
+      "gold": "TOKYO",
+      "rank": 1,
+      "top": "TOKYO",
+      "logp_gold": -5.197,
+      "logp_top": -5.197
+    },
+    "cipher_mixed_plain_d9b76549bfe7_37a625_line": {
+      "gold": "PARIS",
+      "rank": 1,
+      "top": "PARIS",
+      "logp_gold": -5.083,
+      "logp_top": -5.083
+    },
+    "cipher_mixed_plain_4ef37df375a4_37a625_plain": {
+      "gold": "BANGKOK",
+      "rank": 1,
+      "top": "BANGKOK",
+      "logp_gold": -6.656,
+      "logp_top": -6.656
+    },
+    "cipher_mixed_plain_ba777b19e25b_37a625_quoted": {
+      "gold": "OTTAWA",
+      "rank": 3,
+      "top": "TOKYO",
+      "logp_gold": -9.973,
+      "logp_top": -7.303
+    },
+    "cipher_mixed_plain_8bedb59f400f_37a625_json": {
+      "gold": "OTTAWA",
+      "rank": 16,
+      "top": "TOKYO",
+      "logp_gold": -12.411,
+      "logp_top": -6.347
+    },
+    "cipher_mixed_plain_698af9ba5625_37a625_line": {
+      "gold": "HELSINKI",
+      "rank": 5,
+      "top": "PARIS",
+      "logp_gold": -13.266,
+      "logp_top": -8.045
+    },
+    "cipher_mixed_plain_197b9c60035c_37a625_plain": {
+      "gold": "DUBLIN",
+      "rank": 1,
+      "top": "DUBLIN",
+      "logp_gold": -6.643,
+      "logp_top": -6.643
+    },
+    "cipher_mixed_plain_700729cb1774_37a625_quoted": {
+      "gold": "RIGA",
+      "rank": 8,
+      "top": "TOKYO",
+      "logp_gold": -11.224,
+      "logp_top": -7.386
+    },
+    "cipher_mixed_plain_b148a3d93e5c_37a625_json": {
+      "gold": "SOFIA",
+      "rank": 1,
+      "top": "SOFIA",
+      "logp_gold": -6.99,
+      "logp_top": -6.99
+    },
+    "cipher_mixed_plain_9639eaebe47c_37a625_line": {
+      "gold": "ANKARA",
+      "rank": 7,
+      "top": "TOKYO",
+      "logp_gold": -14.646,
+      "logp_top": -7.756
+    },
+    "cipher_mixed_plain_19f77c70a02d_37a625_plain": {
+      "gold": "ATHENS",
+      "rank": 5,
+      "top": "ROME",
+      "logp_gold": -8.208,
+      "logp_top": -6.411
+    },
+    "cipher_mixed_plain_2731f47f91f0_37a625_quoted": {
+      "gold": "ATHENS",
+      "rank": 3,
+      "top": "TOKYO",
+      "logp_gold": -11.059,
+      "logp_top": -8.735
+    },
+    "cipher_mixed_plain_1969f6cc7d9e_37a625_json": {
+      "gold": "ROME",
+      "rank": 4,
+      "top": "TOKYO",
+      "logp_gold": -9.581,
+      "logp_top": -7.359
+    },
+    "cipher_mixed_plain_42c12f2a9e82_37a625_line": {
+      "gold": "LISBON",
+      "rank": 9,
+      "top": "PARIS",
+      "logp_gold": -15.042,
+      "logp_top": -10.842
+    },
+    "cipher_mixed_plain_9bb4f7de2804_37a625_plain": {
+      "gold": "BERN",
+      "rank": 2,
+      "top": "VIENNA",
+      "logp_gold": -7.038,
+      "logp_top": -5.517
+    },
+    "cipher_mixed_plain_2307f398bc98_37a625_quoted": {
+      "gold": "PARIS",
+      "rank": 1,
+      "top": "PARIS",
+      "logp_gold": -5.547,
+      "logp_top": -5.547
+    },
+    "cipher_mixed_plain_de328a876289_37a625_json": {
+      "gold": "CANBERRA",
+      "rank": 1,
+      "top": "CANBERRA",
+      "logp_gold": -6.726,
+      "logp_top": -6.726
+    },
+    "cipher_mixed_plain_87846d5a72eb_37a625_line": {
+      "gold": "ROME",
+      "rank": 3,
+      "top": "PARIS",
+      "logp_gold": -12.163,
+      "logp_top": -9.267
+    },
+    "cipher_mixed_plain_4e332d73950b_37a625_plain": {
+      "gold": "STOCKHOLM",
+      "rank": 1,
+      "top": "STOCKHOLM",
+      "logp_gold": -6.335,
+      "logp_top": -6.335
+    },
+    "cipher_mixed_plain_05b48a8eead6_37a625_quoted": {
+      "gold": "OSLO",
+      "rank": 4,
+      "top": "PARIS",
+      "logp_gold": -9.37,
+      "logp_top": -7.967
+    },
+    "cipher_mixed_plain_31e4830832ea_37a625_json": {
+      "gold": "CANBERRA",
+      "rank": 32,
+      "top": "TOKYO",
+      "logp_gold": -20.232,
+      "logp_top": -5.537
+    },
+    "cipher_mixed_plain_2ddb96398b1b_37a625_line": {
+      "gold": "LIMA",
+      "rank": 9,
+      "top": "TOKYO",
+      "logp_gold": -11.971,
+      "logp_top": -6.687
+    },
+    "cipher_mixed_plain_69d5495e82c5_37a625_plain": {
+      "gold": "HAVANA",
+      "rank": 9,
+      "top": "LIMA",
+      "logp_gold": -9.233,
+      "logp_top": -3.464
+    },
+    "cipher_mixed_plain_66999a4c9fd5_37a625_quoted": {
+      "gold": "BERN",
+      "rank": 27,
+      "top": "TOKYO",
+      "logp_gold": -19.441,
+      "logp_top": -8.719
+    },
+    "cipher_mixed_plain_4b924491cb29_37a625_json": {
+      "gold": "OSLO",
+      "rank": 7,
+      "top": "TOKYO",
+      "logp_gold": -8.641,
+      "logp_top": -6.007
+    },
+    "cipher_mixed_plain_20f509144ece_37a625_line": {
+      "gold": "HELSINKI",
+      "rank": 12,
+      "top": "TOKYO",
+      "logp_gold": -14.656,
+      "logp_top": -10.406
+    },
+    "cipher_mixed_plain_28d5996585aa_37a625_plain": {
+      "gold": "MADRID",
+      "rank": 4,
+      "top": "PARIS",
+      "logp_gold": -9.448,
+      "logp_top": -7.247
+    },
+    "cipher_mixed_plain_a61c6503e3bf_37a625_quoted": {
+      "gold": "ATHENS",
+      "rank": 3,
+      "top": "PARIS",
+      "logp_gold": -7.606,
+      "logp_top": -6.004
+    },
+    "cipher_mixed_plain_dc7f92ab3704_37a625_json": {
+      "gold": "ACCRA",
+      "rank": 14,
+      "top": "TOKYO",
+      "logp_gold": -11.596,
+      "logp_top": -7.159
+    },
+    "cipher_mixed_plain_59f084b26ed9_37a625_line": {
+      "gold": "BERN",
+      "rank": 22,
+      "top": "PARIS",
+      "logp_gold": -16.437,
+      "logp_top": -9.906
+    },
+    "cipher_mixed_plain_e066af93768c_37a625_plain": {
+      "gold": "TOKYO",
+      "rank": 1,
+      "top": "TOKYO",
+      "logp_gold": -6.13,
+      "logp_top": -6.13
+    },
+    "cipher_mixed_plain_f48024846149_37a625_quoted": {
+      "gold": "BERN",
+      "rank": 21,
+      "top": "TOKYO",
+      "logp_gold": -15.261,
+      "logp_top": -7.358
+    },
+    "cipher_mixed_plain_ee0626e9fb2b_37a625_json": {
+      "gold": "BANGKOK",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -6.225,
+      "logp_top": -4.164
+    },
+    "cipher_mixed_plain_218d16784d38_37a625_line": {
+      "gold": "LIMA",
+      "rank": 6,
+      "top": "TOKYO",
+      "logp_gold": -13.244,
+      "logp_top": -9.805
+    },
+    "cipher_mixed_plain_623a67f77e99_37a625_plain": {
+      "gold": "BUENOS AIRES",
+      "rank": 28,
+      "top": "PARIS",
+      "logp_gold": -13.724,
+      "logp_top": -4.524
+    },
+    "cipher_mixed_plain_bb19e664230f_37a625_quoted": {
+      "gold": "LIMA",
+      "rank": 4,
+      "top": "TOKYO",
+      "logp_gold": -10.653,
+      "logp_top": -7.689
+    },
+    "cipher_mixed_plain_64a5bac5006b_37a625_json": {
+      "gold": "CANBERRA",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -6.915,
+      "logp_top": -6.818
+    },
+    "cipher_mixed_plain_cdd5a052d711_37a625_line": {
+      "gold": "WARSAW",
+      "rank": 8,
+      "top": "TOKYO",
+      "logp_gold": -11.02,
+      "logp_top": -6.762
+    },
+    "cipher_mixed_plain_c3c5b716a3a5_37a625_plain": {
+      "gold": "ACCRA",
+      "rank": 30,
+      "top": "BERN",
+      "logp_gold": -15.656,
+      "logp_top": -6.193
+    },
+    "cipher_mixed_plain_c88358d42d95_37a625_quoted": {
+      "gold": "MADRID",
+      "rank": 5,
+      "top": "PARIS",
+      "logp_gold": -10.291,
+      "logp_top": -7.267
+    },
+    "cipher_mixed_plain_e8674e51270e_37a625_json": {
+      "gold": "ROME",
+      "rank": 4,
+      "top": "DUBLIN",
+      "logp_gold": -8.834,
+      "logp_top": -8.607
+    },
+    "cipher_mixed_plain_0a6e2e33fb4f_37a625_line": {
+      "gold": "OTTAWA",
+      "rank": 18,
+      "top": "PARIS",
+      "logp_gold": -17.666,
+      "logp_top": -10.869
+    },
+    "cipher_mixed_plain_0a4ebd8fb957_37a625_plain": {
+      "gold": "BUDAPEST",
+      "rank": 1,
+      "top": "BUDAPEST",
+      "logp_gold": -4.177,
+      "logp_top": -4.177
+    },
+    "cipher_mixed_plain_988a4b11811d_37a625_quoted": {
+      "gold": "WARSAW",
+      "rank": 7,
+      "top": "PARIS",
+      "logp_gold": -11.383,
+      "logp_top": -6.947
+    },
+    "cipher_mixed_plain_530e53e37368_37a625_json": {
+      "gold": "PARIS",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -5.826,
+      "logp_top": -5.621
+    },
+    "cipher_mixed_plain_d1f31fae54fc_37a625_line": {
+      "gold": "CAIRO",
+      "rank": 7,
+      "top": "TOKYO",
+      "logp_gold": -14.788,
+      "logp_top": -10.83
+    },
+    "cipher_mixed_plain_881f197399e2_37a625_plain": {
+      "gold": "PARIS",
+      "rank": 1,
+      "top": "PARIS",
+      "logp_gold": -4.789,
+      "logp_top": -4.789
+    },
+    "cipher_mixed_plain_ff879a6e3ca6_37a625_quoted": {
+      "gold": "HELSINKI",
+      "rank": 21,
+      "top": "TOKYO",
+      "logp_gold": -14.063,
+      "logp_top": -8.73
+    },
+    "cipher_mixed_plain_1591649a307d_37a625_json": {
+      "gold": "LISBON",
+      "rank": 3,
+      "top": "PARIS",
+      "logp_gold": -9.025,
+      "logp_top": -7.4
+    },
+    "cipher_mixed_plain_0037506ce9c8_37a625_line": {
+      "gold": "SOFIA",
+      "rank": 17,
+      "top": "WARSAW",
+      "logp_gold": -15.575,
+      "logp_top": -10.97
+    },
+    "cipher_mixed_plain_60faaa7e73b7_37a625_plain": {
+      "gold": "NAIROBI",
+      "rank": 9,
+      "top": "TOKYO",
+      "logp_gold": -10.122,
+      "logp_top": -7.577
+    },
+    "cipher_mixed_plain_7a3d8832c27c_37a625_quoted": {
+      "gold": "HAVANA",
+      "rank": 27,
+      "top": "TOKYO",
+      "logp_gold": -16.382,
+      "logp_top": -7.653
+    },
+    "cipher_mixed_plain_72eb919efa3e_37a625_json": {
+      "gold": "OSLO",
+      "rank": 5,
+      "top": "ROME",
+      "logp_gold": -8.302,
+      "logp_top": -6.05
+    },
+    "cipher_mixed_plain_4bd32b363d59_37a625_line": {
+      "gold": "DUBLIN",
+      "rank": 2,
+      "top": "TOKYO",
+      "logp_gold": -10.654,
+      "logp_top": -10.18
+    },
+    "cipher_mixed_plain_52dbe6f8563e_37a625_plain": {
+      "gold": "HANOI",
+      "rank": 1,
+      "top": "HANOI",
+      "logp_gold": -5.946,
+      "logp_top": -5.946
+    },
+    "cipher_mixed_plain_d0726bde78c7_37a625_quoted": {
+      "gold": "ACCRA",
+      "rank": 31,
+      "top": "TOKYO",
+      "logp_gold": -17.25,
+      "logp_top": -6.966
+    },
+    "cipher_mixed_plain_e0455673e010_37a625_json": {
+      "gold": "ACCRA",
+      "rank": 26,
+      "top": "PARIS",
+      "logp_gold": -14.389,
+      "logp_top": -7.942
+    },
+    "cipher_mixed_plain_5563c290cebe_37a625_line": {
+      "gold": "SOFIA",
+      "rank": 20,
+      "top": "STOCKHOLM",
+      "logp_gold": -16.978,
+      "logp_top": -11.922
+    },
+    "cipher_mixed_plain_59a6f5b967de_37a625_plain": {
+      "gold": "HANOI",
+      "rank": 2,
+      "top": "VIENNA",
+      "logp_gold": -6.341,
+      "logp_top": -5.629
+    },
+    "cipher_mixed_plain_c73b21fe8976_37a625_quoted": {
+      "gold": "ANKARA",
+      "rank": 10,
+      "top": "TOKYO",
+      "logp_gold": -17.165,
+      "logp_top": -8.877
+    },
+    "cipher_mixed_plain_8470dd47ec27_37a625_json": {
+      "gold": "BUDAPEST",
+      "rank": 2,
+      "top": "PARIS",
+      "logp_gold": -5.871,
+      "logp_top": -5.466
+    },
+    "cipher_mixed_plain_ed770ad8baff_37a625_line": {
+      "gold": "LIMA",
+      "rank": 1,
+      "top": "LIMA",
+      "logp_gold": -9.01,
+      "logp_top": -9.01
+    },
+    "cipher_mixed_plain_3ed3629143c3_37a625_plain": {
+      "gold": "CANBERRA",
+      "rank": 19,
+      "top": "ATHENS",
+      "logp_gold": -12.115,
+      "logp_top": -7.454
+    },
+    "cipher_mixed_plain_fe9b903be477_37a625_quoted": {
+      "gold": "ATHENS",
+      "rank": 3,
+      "top": "TOKYO",
+      "logp_gold": -11.264,
+      "logp_top": -8.698
+    },
+    "cipher_mixed_plain_9e2332732924_37a625_json": {
+      "gold": "BANGKOK",
+      "rank": 10,
+      "top": "TOKYO",
+      "logp_gold": -9.312,
+      "logp_top": -4.26
+    },
+    "cipher_mixed_plain_08c3eeb7c49d_37a625_line": {
+      "gold": "ATHENS",
+      "rank": 1,
+      "top": "ATHENS",
+      "logp_gold": -9.72,
+      "logp_top": -9.72
+    },
+    "cipher_mixed_plain_40795de51a58_37a625_plain": {
+      "gold": "STOCKHOLM",
+      "rank": 2,
+      "top": "MADRID",
+      "logp_gold": -7.009,
+      "logp_top": -7.005
+    },
+    "cipher_mixed_plain_4256c4ec05c7_37a625_quoted": {
+      "gold": "HANOI",
+      "rank": 20,
+      "top": "VIENNA",
+      "logp_gold": -13.898,
+      "logp_top": -8.523
+    },
+    "cipher_mixed_plain_b70fd397d202_37a625_json": {
+      "gold": "STOCKHOLM",
+      "rank": 1,
+      "top": "STOCKHOLM",
+      "logp_gold": -7.511,
+      "logp_top": -7.511
+    },
+    "cipher_mixed_plain_d567613fecc0_37a625_line": {
+      "gold": "MADRID",
+      "rank": 8,
+      "top": "PARIS",
+      "logp_gold": -14.322,
+      "logp_top": -10.459
+    },
+    "cipher_mixed_plain_bd341ec8e784_37a625_plain": {
+      "gold": "BANGKOK",
+      "rank": 1,
+      "top": "BANGKOK",
+      "logp_gold": -5.747,
+      "logp_top": -5.747
+    },
+    "cipher_mixed_plain_77450b45a380_37a625_quoted": {
+      "gold": "PARIS",
+      "rank": 1,
+      "top": "PARIS",
+      "logp_gold": -5.965,
+      "logp_top": -5.965
+    },
+    "cipher_mixed_plain_eef4f046a964_37a625_json": {
+      "gold": "OTTAWA",
+      "rank": 10,
+      "top": "TOKYO",
+      "logp_gold": -10.479,
+      "logp_top": -6.103
+    },
+    "cipher_mixed_plain_c01db8a13690_37a625_line": {
+      "gold": "ATHENS",
+      "rank": 1,
+      "top": "ATHENS",
+      "logp_gold": -8.03,
+      "logp_top": -8.03
+    },
+    "cipher_mixed_plain_132adba75901_37a625_plain": {
+      "gold": "BUENOS AIRES",
+      "rank": 12,
+      "top": "PARIS",
+      "logp_gold": -10.301,
+      "logp_top": -4.996
+    },
+    "cipher_mixed_plain_5cf88e55d606_37a625_quoted": {
+      "gold": "OSLO",
+      "rank": 4,
+      "top": "PARIS",
+      "logp_gold": -10.178,
+      "logp_top": -8.425
+    },
+    "cipher_mixed_plain_7e58c10ea76c_37a625_json": {
+      "gold": "HANOI",
+      "rank": 1,
+      "top": "HANOI",
+      "logp_gold": -7.687,
+      "logp_top": -7.687
+    },
+    "cipher_mixed_plain_c7227a144e28_37a625_line": {
+      "gold": "PARIS",
+      "rank": 1,
+      "top": "PARIS",
+      "logp_gold": -6.02,
+      "logp_top": -6.02
+    }
+  },
+  "sampled": {
+    "cipher_mixed_plain_f1773079b9f9_37a625_plain": 0,
+    "cipher_mixed_plain_b28c3c19c59f_37a625_quoted": 0,
+    "cipher_mixed_plain_966f95c510b9_37a625_json": 0,
+    "cipher_mixed_plain_5b274b0bdb10_37a625_line": 0,
+    "cipher_mixed_plain_1ef4b0a464af_37a625_plain": 1,
+    "cipher_mixed_plain_7bcb843a03bc_37a625_quoted": 0,
+    "cipher_mixed_plain_37f75b3b8a8b_37a625_json": 0,
+    "cipher_mixed_plain_10fe21ebc9dd_37a625_line": 0,
+    "cipher_mixed_plain_fd93e136cec4_37a625_plain": 0,
+    "cipher_mixed_plain_9959aa3f7b32_37a625_quoted": 0,
+    "cipher_mixed_plain_5c51439b5147_37a625_json": 0,
+    "cipher_mixed_plain_e05364e0863b_37a625_line": 0,
+    "cipher_mixed_plain_30edc7f74086_37a625_plain": 0,
+    "cipher_mixed_plain_54e7b632465f_37a625_quoted": 0,
+    "cipher_mixed_plain_50646758dc55_37a625_json": 0,
+    "cipher_mixed_plain_f402babc040b_37a625_line": 0,
+    "cipher_mixed_plain_97bebf7d12b6_37a625_plain": 0,
+    "cipher_mixed_plain_7cda008b82b1_37a625_quoted": 0,
+    "cipher_mixed_plain_0cb28a5f4043_37a625_json": 0,
+    "cipher_mixed_plain_7b46e889c22a_37a625_line": 0,
+    "cipher_mixed_plain_580fcfd3b157_37a625_plain": 0,
+    "cipher_mixed_plain_84c02b791b8a_37a625_quoted": 0,
+    "cipher_mixed_plain_671f91e6cb76_37a625_json": 0,
+    "cipher_mixed_plain_e4deefa0ff29_37a625_line": 0,
+    "cipher_mixed_plain_5a13b5c1b6d7_37a625_plain": 0,
+    "cipher_mixed_plain_9ce5226e66a4_37a625_quoted": 0,
+    "cipher_mixed_plain_d1e5c3d47e94_37a625_json": 0,
+    "cipher_mixed_plain_5e74466cf2c4_37a625_line": 0,
+    "cipher_mixed_plain_6287c44818f5_37a625_plain": 0,
+    "cipher_mixed_plain_00d59724b8a1_37a625_quoted": 0,
+    "cipher_mixed_plain_24e01946b624_37a625_json": 0,
+    "cipher_mixed_plain_b004da5aaf47_37a625_line": 0,
+    "cipher_mixed_plain_2e65e75ed184_37a625_plain": 0,
+    "cipher_mixed_plain_b0bcb0b8f1fe_37a625_quoted": 0,
+    "cipher_mixed_plain_a3c7f8afaa19_37a625_json": 0,
+    "cipher_mixed_plain_d01d44a1c06c_37a625_line": 2,
+    "cipher_mixed_plain_4d6bcd1a7a17_37a625_plain": 0,
+    "cipher_mixed_plain_1841bee21379_37a625_quoted": 0,
+    "cipher_mixed_plain_78790fb14add_37a625_json": 0,
+    "cipher_mixed_plain_f1deaee0b002_37a625_line": 0,
+    "cipher_mixed_plain_82cc55e5ac8b_37a625_plain": 0,
+    "cipher_mixed_plain_92e159dfb725_37a625_quoted": 0,
+    "cipher_mixed_plain_556016abb4ea_37a625_json": 0,
+    "cipher_mixed_plain_d9b76549bfe7_37a625_line": 0,
+    "cipher_mixed_plain_4ef37df375a4_37a625_plain": 0,
+    "cipher_mixed_plain_ba777b19e25b_37a625_quoted": 0,
+    "cipher_mixed_plain_8bedb59f400f_37a625_json": 0,
+    "cipher_mixed_plain_698af9ba5625_37a625_line": 0,
+    "cipher_mixed_plain_197b9c60035c_37a625_plain": 0,
+    "cipher_mixed_plain_700729cb1774_37a625_quoted": 0,
+    "cipher_mixed_plain_b148a3d93e5c_37a625_json": 0,
+    "cipher_mixed_plain_9639eaebe47c_37a625_line": 0,
+    "cipher_mixed_plain_19f77c70a02d_37a625_plain": 0,
+    "cipher_mixed_plain_2731f47f91f0_37a625_quoted": 0,
+    "cipher_mixed_plain_1969f6cc7d9e_37a625_json": 0,
+    "cipher_mixed_plain_42c12f2a9e82_37a625_line": 0,
+    "cipher_mixed_plain_9bb4f7de2804_37a625_plain": 0,
+    "cipher_mixed_plain_2307f398bc98_37a625_quoted": 0,
+    "cipher_mixed_plain_de328a876289_37a625_json": 0,
+    "cipher_mixed_plain_87846d5a72eb_37a625_line": 1,
+    "cipher_mixed_plain_4e332d73950b_37a625_plain": 0,
+    "cipher_mixed_plain_05b48a8eead6_37a625_quoted": 0,
+    "cipher_mixed_plain_31e4830832ea_37a625_json": 0,
+    "cipher_mixed_plain_2ddb96398b1b_37a625_line": 0,
+    "cipher_mixed_plain_69d5495e82c5_37a625_plain": 0,
+    "cipher_mixed_plain_66999a4c9fd5_37a625_quoted": 0,
+    "cipher_mixed_plain_4b924491cb29_37a625_json": 0,
+    "cipher_mixed_plain_20f509144ece_37a625_line": 1,
+    "cipher_mixed_plain_28d5996585aa_37a625_plain": 0,
+    "cipher_mixed_plain_a61c6503e3bf_37a625_quoted": 0,
+    "cipher_mixed_plain_dc7f92ab3704_37a625_json": 0,
+    "cipher_mixed_plain_59f084b26ed9_37a625_line": 0,
+    "cipher_mixed_plain_e066af93768c_37a625_plain": 0,
+    "cipher_mixed_plain_f48024846149_37a625_quoted": 0,
+    "cipher_mixed_plain_ee0626e9fb2b_37a625_json": 0,
+    "cipher_mixed_plain_218d16784d38_37a625_line": 0,
+    "cipher_mixed_plain_623a67f77e99_37a625_plain": 0,
+    "cipher_mixed_plain_bb19e664230f_37a625_quoted": 0,
+    "cipher_mixed_plain_64a5bac5006b_37a625_json": 0,
+    "cipher_mixed_plain_cdd5a052d711_37a625_line": 0,
+    "cipher_mixed_plain_c3c5b716a3a5_37a625_plain": 0,
+    "cipher_mixed_plain_c88358d42d95_37a625_quoted": 0,
+    "cipher_mixed_plain_e8674e51270e_37a625_json": 0,
+    "cipher_mixed_plain_0a6e2e33fb4f_37a625_line": 0,
+    "cipher_mixed_plain_0a4ebd8fb957_37a625_plain": 0,
+    "cipher_mixed_plain_988a4b11811d_37a625_quoted": 0,
+    "cipher_mixed_plain_530e53e37368_37a625_json": 0,
+    "cipher_mixed_plain_d1f31fae54fc_37a625_line": 0,
+    "cipher_mixed_plain_881f197399e2_37a625_plain": 0,
+    "cipher_mixed_plain_ff879a6e3ca6_37a625_quoted": 0,
+    "cipher_mixed_plain_1591649a307d_37a625_json": 0,
+    "cipher_mixed_plain_0037506ce9c8_37a625_line": 0,
+    "cipher_mixed_plain_60faaa7e73b7_37a625_plain": 0,
+    "cipher_mixed_plain_7a3d8832c27c_37a625_quoted": 0,
+    "cipher_mixed_plain_72eb919efa3e_37a625_json": 0,
+    "cipher_mixed_plain_4bd32b363d59_37a625_line": 0,
+    "cipher_mixed_plain_52dbe6f8563e_37a625_plain": 0,
+    "cipher_mixed_plain_d0726bde78c7_37a625_quoted": 0,
+    "cipher_mixed_plain_e0455673e010_37a625_json": 0,
+    "cipher_mixed_plain_5563c290cebe_37a625_line": 0,
+    "cipher_mixed_plain_59a6f5b967de_37a625_plain": 0,
+    "cipher_mixed_plain_c73b21fe8976_37a625_quoted": 0,
+    "cipher_mixed_plain_8470dd47ec27_37a625_json": 0,
+    "cipher_mixed_plain_ed770ad8baff_37a625_line": 0,
+    "cipher_mixed_plain_3ed3629143c3_37a625_plain": 0,
+    "cipher_mixed_plain_fe9b903be477_37a625_quoted": 0,
+    "cipher_mixed_plain_9e2332732924_37a625_json": 0,
+    "cipher_mixed_plain_08c3eeb7c49d_37a625_line": 1,
+    "cipher_mixed_plain_40795de51a58_37a625_plain": 0,
+    "cipher_mixed_plain_4256c4ec05c7_37a625_quoted": 0,
+    "cipher_mixed_plain_b70fd397d202_37a625_json": 0,
+    "cipher_mixed_plain_d567613fecc0_37a625_line": 0,
+    "cipher_mixed_plain_bd341ec8e784_37a625_plain": 0,
+    "cipher_mixed_plain_77450b45a380_37a625_quoted": 0,
+    "cipher_mixed_plain_eef4f046a964_37a625_json": 0,
+    "cipher_mixed_plain_c01db8a13690_37a625_line": 0,
+    "cipher_mixed_plain_132adba75901_37a625_plain": 0,
+    "cipher_mixed_plain_5cf88e55d606_37a625_quoted": 0,
+    "cipher_mixed_plain_7e58c10ea76c_37a625_json": 0,
+    "cipher_mixed_plain_c7227a144e28_37a625_line": 1
+  },
+  "sample_temp": 1.0,
+  "scoring": "matrix: acc = rubric on the last line of a finished answer; form = whole answer == gold; acc_lenient = rubric anywhere (the old score)",
+  "families": {
+    "cipher_mixed": {
+      "n": 120,
+      "acc": 0.0
+    }
+  }
+}

@@ -1,0 +1,1029 @@
+{
+  "_meta": {
+    "experiment": "m0_pass",
+    "hypothesis": [
+      "HZLK",
+      "H19"
+    ],
+    "date": "2026-10-22",
+    "status": "done",
+    "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+    "script": "experiments/rl/m0_pass_probe.py",
+    "script_sha256_12": "66bae97774ec",
+    "summary": {
+      "arithmetic acc": "0/42",
+      "bits acc": "22/42",
+      "cipher_context acc": "0/26",
+      "cipher_mixed acc": "0/18",
+      "cipher_question acc": "0/12",
+      "crossword acc": "0/24",
+      "matrix acc": "0/42",
+      "pattern acc": "5/42"
+    }
+  },
+  "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+  "files": [
+    "training/corpus_open/matrix_tasks.jsonl",
+    "training/corpus_open/ciphers_k_context_eval.jsonl",
+    "training/corpus_open/ciphers_k_question_eval.jsonl",
+    "training/corpus_open/ciphers_k_mixed_eval.jsonl"
+  ],
+  "n": 248,
+  "cells": [
+    {
+      "family": "arithmetic",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "arithmetic",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 1.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.667,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.667,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.333,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.5,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "bits",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.5,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "json",
+      "n": 3,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "line",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 1,
+      "format": "quoted",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "json",
+      "n": 3,
+      "acc": 0.0,
+      "form": 0.667
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 2,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "line",
+      "n": 4,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 3,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "json",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.5
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 4,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 5,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_context",
+      "level": 5,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "line",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "plain",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 2,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "line",
+      "n": 3,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 3,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 4,
+      "format": "json",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_mixed",
+      "level": 4,
+      "format": "plain",
+      "n": 4,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "line",
+      "n": 1,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "plain",
+      "n": 2,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 2,
+      "format": "quoted",
+      "n": 2,
+      "acc": 0.0,
+      "form": 0.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 3,
+      "format": "json",
+      "n": 1,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "cipher_question",
+      "level": 3,
+      "format": "plain",
+      "n": 5,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "crossword",
+      "level": 10,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "crossword",
+      "level": 11,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "crossword",
+      "level": 8,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "crossword",
+      "level": 9,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "matrix",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 1,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 2,
+      "format": "",
+      "n": 6,
+      "acc": 0.167,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 3,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 4,
+      "format": "",
+      "n": 6,
+      "acc": 0.333,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 5,
+      "format": "",
+      "n": 6,
+      "acc": 0.333,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 6,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    },
+    {
+      "family": "pattern",
+      "level": 7,
+      "format": "",
+      "n": 6,
+      "acc": 0.0,
+      "form": 1.0
+    }
+  ],
+  "right_ids": [
+    "bits_L1_xor_result_bit_008491",
+    "bits_L1_xor_result_bit_065584",
+    "bits_L1_xor_result_bit_056409",
+    "bits_L1_xor_result_bit_038831",
+    "bits_L1_xor_result_bit_022148",
+    "bits_L1_xor_result_bit_036249",
+    "bits_L2_and_result_bit_043984",
+    "bits_L2_and_result_bit_030415",
+    "bits_L2_and_result_bit_004584",
+    "bits_L2_and_result_bit_033723",
+    "bits_L3_or_result_bit_052510",
+    "bits_L3_or_result_bit_025438",
+    "bits_L3_or_result_bit_035513",
+    "bits_L3_or_result_bit_016075",
+    "bits_L4_not_result_bit_030391",
+    "bits_L4_not_result_bit_024275",
+    "bits_L5_xor_missing_input_041868",
+    "bits_L5_xor_missing_input_024992",
+    "bits_L5_xor_missing_input_003221",
+    "bits_L7_xor_key_bit_002696",
+    "bits_L7_xor_key_bit_020929",
+    "bits_L7_xor_key_bit_045894",
+    "pattern_L2_064956",
+    "pattern_L4_041347",
+    "pattern_L4_020276",
+    "pattern_L5_037934",
+    "pattern_L5_009639"
+  ],
+  "examples": {
+    "('arithmetic', 1, '')": {
+      "id": "arith_L1_add_find_sum_050746",
+      "gold": "60",
+      "response": "```python\ndef add_columns(matrix):\n    # Convert each column to a list of integers\n    result = []\n    for row in matrix:\n        result.append([int(col) for col in row])\n    return result",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 2, '')": {
+      "id": "arith_L2_add_find_sum_061765",
+      "gold": "599",
+      "response": "```python\ndef column_addition(matrix):\n    n = len(matrix)\n    result = []\n    for i in range(n):\n        row = []\n        for j in range(n):\n            if i == j:",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 3, '')": {
+      "id": "arith_L3_add_find_sum_002036",
+      "gold": "9198",
+      "response": "```python\ndef column_addition(matrix):\n    n = len(matrix)\n    result = []\n    for i in range(n):\n        row = []\n        for j in range(n):\n            if i == j:",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 4, '')": {
+      "id": "arith_L4_sub_find_sum_033922",
+      "gold": "392",
+      "response": "```python\ndef main():\n    n = int(input())\n    matrix = [list(map(int, input().split())) for _ in range(n)]\n    result = 0\n    for i in range(n):\n        for",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 5, '')": {
+      "id": "arith_L5_add_find_missing_001499",
+      "gold": "7",
+      "response": "The missing digit is **5**.",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 6, '')": {
+      "id": "arith_L6_add_find_error_012122",
+      "gold": "5379",
+      "response": "The correct result is:\n```\n5 4 7 9\n```",
+      "content": false,
+      "form": true
+    },
+    "('arithmetic', 7, '')": {
+      "id": "arith_L7_add_find_sum_064511",
+      "gold": "3352",
+      "response": "```python\ndef column_addition(matrix):\n    # Convert each column to a list of integers\n    result = []\n    for row in matrix:\n        result.append([int(digit) for digit in row])\n    return result",
+      "content": false,
+      "form": true
+    },
+    "('bits', 1, '')": {
+      "id": "bits_L1_xor_result_bit_008491",
+      "gold": "1",
+      "response": "```python\ndef bitwise_xor(a, b):\n    return a ^ b\n# Given matrix\nA = [1, 1, 0, 0]\nB = [0, 0, 0, 1]\n#",
+      "content": true,
+      "form": true
+    },
+    "('bits', 2, '')": {
+      "id": "bits_L2_and_result_bit_043984",
+      "gold": "0",
+      "response": "The missing result bit at position 2 is 0.",
+      "content": true,
+      "form": true
+    },
+    "('bits', 3, '')": {
+      "id": "bits_L3_or_result_bit_052510",
+      "gold": "1",
+      "response": "The missing result bit at position 1 is 1.",
+      "content": true,
+      "form": true
+    },
+    "('bits', 4, '')": {
+      "id": "bits_L4_not_result_bit_030391",
+      "gold": "1",
+      "response": "The missing result bit at position 3 is 1.",
+      "content": true,
+      "form": true
+    },
+    "('bits', 5, '')": {
+      "id": "bits_L5_xor_missing_input_041868",
+      "gold": "0",
+      "response": "The missing bit at position 1 is 0.",
+      "content": true,
+      "form": true
+    },
+    "('bits', 6, '')": {
+      "id": "bits_L6_xor_error_bit_049839",
+      "gold": "0",
+      "response": "<judgement>right</judgement>",
+      "content": false,
+      "form": true
+    },
+    "('bits', 7, '')": {
+      "id": "bits_L7_xor_key_bit_002696",
+      "gold": "0",
+      "response": "<answer>\n0\n</answer>",
+      "content": true,
+      "form": true
+    },
+    "('crossword', 10, '')": {
+      "id": "xword_B_L10_9x9_H_LR_27661",
+      "gold": "LAGOON",
+      "response": "```python\ndef solve():\n    # Define the grid\n    grid = [\n        ['O', 'B', 'B', 'L', 'K', 'M', 'K', 'R', 'Y'],\n        ['Z', '",
+      "content": false,
+      "form": true
+    },
+    "('crossword', 11, '')": {
+      "id": "xword_B_L11_10x10_V_TD_47321",
+      "gold": "HOLLOW",
+      "response": "```python\ndef solve():\n    # Define the grid\n    grid = [\n        ['W', 'M', 'J', 'A', 'A', 'H', 'A', 'Y', 'X'],\n        ['T', '",
+      "content": false,
+      "form": true
+    },
+    "('crossword', 8, '')": {
+      "id": "xword_A_L8_7x7_enum_29520",
+      "gold": "GLASS\nMAST",
+      "response": "D H M W C N R\nG L A S S Q Q\nV E S J V I B\nJ K T E T A A\nK L H X P I C\nD R N X F D P",
+      "content": false,
+      "form": true
+    },
+    "('crossword', 9, '')": {
+      "id": "xword_A_L9_8x8_enum_63647",
+      "gold": "FARM\nROSE\nWOLF",
+      "response": "```\nY P I Z F W G F\nG F P Q R Z Q A\nC P I M Y W U R\nV Q X I G Y O M\nO F Z P R M C H\nE",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 1, '')": {
+      "id": "wsearch_L1_5x5_H_LR_sp_01_35877",
+      "gold": "row=1 col=1",
+      "response": "```python\nrow, col = 0, 0\nfor r in range(5):\n    for c in range(5):\n        if matrix[r][c] == 'U':\n            row = r + 1\n            col = c",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 2, '')": {
+      "id": "wsearch_L2_6x6_H_LR_sp_02_18998",
+      "gold": "row=5 col=2",
+      "response": "```python\ndef find_word(matrix):\n    rows, cols = len(matrix), len(matrix[0])\n    for i in range(rows):\n        for j in range(cols):\n            if matrix[i][j",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 3, '')": {
+      "id": "wsearch_L3_7x7_H_RL_sp_03_30709",
+      "gold": "row=6 col=4",
+      "response": "```python\nrows = [\n    'QKX',\n    'TXV',\n    'RIP',\n    'RHR',\n    'CAF',\n    'JIP',\n    'HHS',\n    'VHA',",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 4, '')": {
+      "id": "wsearch_name_L4_8x8_H_LR_sp_04_57931",
+      "gold": "ORBIT",
+      "response": "```python\ndef find_hidden_word(matrix):\n    rows = len(matrix)\n    cols = len(matrix[0])\n    for i in range(rows):\n        for j in range(cols):\n            if matrix[",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 5, '')": {
+      "id": "wsearch_L5_9x9_V_BU_sp_05_64503",
+      "gold": "row=8 col=0",
+      "response": "```python\ndef find_ivory():\n    matrix = [\n        ['K', 'P', 'D', 'G', 'O', 'C', 'F', 'M', 'G'],\n        ['K', 'I',",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 6, '')": {
+      "id": "wsearch_L6_10x10_D_DR_sp_06_33466",
+      "gold": "row=2 col=1",
+      "response": "```python\ndef find_word(matrix):\n    n = len(matrix)\n    m = len(matrix[0])\n    for i in range(n):\n        for j in range(m):\n            if matrix[i][",
+      "content": false,
+      "form": true
+    },
+    "('matrix', 7, '')": {
+      "id": "wsearch_name_L7_12x12_H_RL_sp_07_5127",
+      "gold": "SILENCE",
+      "response": "Q K E G V A Z D N Z M R\nA A Y X H M K D N R U E\nL N U H D J J V W Z Z V\nS Y Z O H I C V X",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 1, '')": {
+      "id": "pattern_L1_016540",
+      "gold": "21",
+      "response": "13  ?  29  37  45  53  61  69",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 2, '')": {
+      "id": "pattern_L2_054901",
+      "gold": "14",
+      "response": "<judgement>right</judgement>",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 3, '')": {
+      "id": "pattern_L3_015695",
+      "gold": "80",
+      "response": "5",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 4, '')": {
+      "id": "pattern_L4_009698",
+      "gold": "1",
+      "response": "To solve this problem, we need to determine if a given matrix contains any missing '?' characters. The matrix is guaranteed to have at least one '?' character, and the missing character must be in the",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 5, '')": {
+      "id": "pattern_L5_037934",
+      "gold": "1",
+      "response": "To solve this problem, we need to find the missing number in a multiplication table where each cell is filled with a unique integer from 1 to n\u00b2. The missing number is the value that is not present in",
+      "content": true,
+      "form": true
+    },
+    "('pattern', 6, '')": {
+      "id": "pattern_L6_036248",
+      "gold": "0",
+      "response": "<judgement>right</judgement>",
+      "content": false,
+      "form": true
+    },
+    "('pattern', 7, '')": {
+      "id": "pattern_L7_006319",
+      "gold": "5",
+      "response": "<judgement>right</judgement>",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'json')": {
+      "id": "cipher_context_polybius6_e7da988c7491_ec9518_json",
+      "gold": "{\"answer\": \"SOFIA\"}",
+      "response": "{\"answer\": \"Moscow\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 1, 'plain')": {
+      "id": "cipher_context_caesar_e7f45fa18f66_70efdf_plain",
+      "gold": "DELHI",
+      "response": "Niko lives in **Zielona G\u00f3ra**.",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 1, 'line')": {
+      "id": "cipher_context_atbash_c35961e938fc_37a625_line",
+      "gold": "ANSWER: CAIRO",
+      "response": "<answer>\n<ANSWER>\n<answer>\n<ANSWER>\n<ANSWER>\n<ANSWER>\n<ANSWER>\n<ANSWER>\n<ANSWER>\n<ANSWER>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 1, 'quoted')": {
+      "id": "cipher_context_script_cyrillic_b79837a28b38_f3c6fa_quoted",
+      "gold": "\"BERN\"",
+      "response": "Irina lives in **\u0421\u0442\u0440\u043e\u0438\u0442\u0435\u043b\u044c**.",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 2, 'line')": {
+      "id": "cipher_context_atbash_4eb236485d29_37a625_line",
+      "gold": "ANSWER: HANOI",
+      "response": "YLIRH OREVH RM WVOSR OVLM OREVH RM KVIGS KZEVO OREVH RM XZRIL MRPL OREVH RM ZXXIZ VOVMZ OREVH RM SZML",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 2, 'json')": {
+      "id": "cipher_context_polybius6_438f0829a6ec_9a3f17_json",
+      "gold": "{\"answer\": \"BERN\"}",
+      "response": "{\"answer\": \"Rome\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_context', 2, 'plain')": {
+      "id": "cipher_context_polybius6_140fc6ad46f8_d20256_plain",
+      "gold": "RIGA",
+      "response": "**Alice lives in **** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** ** **",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 3, 'plain')": {
+      "id": "cipher_context_vigenere_87d245101852_d06b5b_plain",
+      "gold": "QUITO",
+      "response": "<answer>\n<think>\nThe message is a Vigenere cipher with a keyword \"XJQ\". The keyword repeats over letters only, so the keyword is \"XJQ\". The keyword repeats over letters, so the",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 3, 'line')": {
+      "id": "cipher_context_railfence_ec05d1769975_e4da3b_line",
+      "gold": "ANSWER: BORIS AND ROSA",
+      "response": "RENAIBVUOVSUIY  N OIETNSI TSNLS ARLS IALI  AIERGI  NS NTVISI\n<answer>\nRENAIBVUOVSUIY  N OIETN",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 3, 'json')": {
+      "id": "cipher_context_caesar_e306eb8520ba_8f14e4_json",
+      "gold": "{\"answer\": \"LEON AND YANA\"}",
+      "response": "<ANSWER IN CAPITAL LETTERS>\n<ANSWER>\n<NAME>\n<NAME>\n</ANSWER>\n</ANSWER IN CAPITAL LETTERS>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 4, 'line')": {
+      "id": "cipher_context_script_cyrillic_4d46ea6923c8_9a2794_line",
+      "gold": "ANSWER: KIRA AND YANA",
+      "response": "<answer>\n<answer>\n<answer>\n</answer>\n</answer>\n<answer>\n<answer>\n</answer>\n</answer>\n<answer>\n<answer>\n</answer>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 4, 'json')": {
+      "id": "cipher_context_polybius6_a23ec0b29de7_53c6e4_json",
+      "gold": "{\"answer\": \"LEON AND ROSA\"}",
+      "response": "<answer>\n<answer>\n<answer>\n</answer>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 4, 'quoted')": {
+      "id": "cipher_context_atbash_a42d19443abc_37a625_quoted",
+      "gold": "\"DMITRI AND TANYA\"",
+      "response": "<answer>\n<answer>\n<answer>\n</answer>\n</answer>\n</answer>\n<answer>\n<answer>\n</answer>\n</answer>\n</answer>\n</answer>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 5, 'json')": {
+      "id": "cipher_context_vigenere_770c7a4c2d65_ff22fe_json",
+      "gold": "{\"answer\": \"JONAS AND ROSA\"}",
+      "response": "<ANSWER IN CAPITAL LETTERS>\n<ANSWER>\n<NAME>\n<NAME>\n</ANSWER>\n</ANSWER IN CAPITAL LETTERS>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_context', 5, 'plain')": {
+      "id": "cipher_context_vigenere_517efdd07cf8_efa758_plain",
+      "gold": "BORIS AND YANA",
+      "response": "<answer>\n<answer>\n<answer>\n</answer>\n</answer>\n<answer>\n<answer>\n</answer>\n</answer>\n<answer>\n<answer>\n</answer>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_question', 2, 'json')": {
+      "id": "cipher_question_polybius6_b62a360a3f59_d58ce1_json",
+      "gold": "{\"answer\": \"BOGOTA\"}",
+      "response": "{\"answer\": \"35 43 11 34 44 15 34 43 13 14 11 65 44 34 11 31 23 63 14 23 31 23 56 54 44 11\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'quoted')": {
+      "id": "cipher_question_railfence_6cfb306a2836_a87ff6_quoted",
+      "gold": "\"HAVANA\"",
+      "response": "WSCLUHI  AA CBA TEPTO ATHIF",
+      "content": false,
+      "form": false
+    },
+    "('cipher_question', 2, 'plain')": {
+      "id": "cipher_question_caesar_765bc8a88ad5_45c48c_plain",
+      "gold": "SOFIA",
+      "response": "FQJC RB CQN LJYRCJU XO KDUPJARJ",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 2, 'line')": {
+      "id": "cipher_question_atbash_54e915fa5edb_37a625_line",
+      "gold": "ANSWER: OSLO",
+      "response": "DSZG RH GSV XZKRGZO LU MLIDZB",
+      "content": false,
+      "form": false
+    },
+    "('cipher_question', 3, 'plain')": {
+      "id": "cipher_question_vigenere_0b2b1fe45fcb_14c7ee_plain",
+      "gold": "BUENOS AIRES",
+      "response": "SRUB DO DBM XWZCBVH YZ IMCOHBDJK",
+      "content": false,
+      "form": true
+    },
+    "('cipher_question', 3, 'json')": {
+      "id": "cipher_question_vigenere_72208cc6ffbe_1c0ab7_json",
+      "gold": "{\"answer\": \"SANTIAGO\"}",
+      "response": "{\"answer\": \"NCDK DV KCH TVSZODC JI TCLCZ\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 2, 'quoted')": {
+      "id": "cipher_mixed_atbash_4addd4b112f3_37a625_quoted",
+      "gold": "\"OTTAWA\"",
+      "response": "Boris lives in **New York**.",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 2, 'line')": {
+      "id": "cipher_mixed_atbash_55924c7bb9f7_37a625_line",
+      "gold": "ANSWER: ANKARA",
+      "response": "BZMZ OREVH RM GSV XZKRGZO LU QZKZM WNRGIR OREVH RM GSV XZKRGZO LU GFIPVB RIRMZ OREVH RM GSV",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 2, 'plain')": {
+      "id": "cipher_mixed_caesar_994ac86619de_6f4922_plain",
+      "gold": "OSLO",
+      "response": "Yana lives in **San Francisco**.",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 2, 'json')": {
+      "id": "cipher_mixed_polybius6_d7de983b0a90_3354aa_json",
+      "gold": "{\"answer\": \"BANGKOK\"}",
+      "response": "{\"answer\": \"Olga lives in the city of \"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 3, 'line')": {
+      "id": "cipher_mixed_railfence_927f257f9005_e4da3b_line",
+      "gold": "ANSWER: SOFIA",
+      "response": "<answer>\n<answer>\n<answer>\n</answer>",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 3, 'plain')": {
+      "id": "cipher_mixed_vigenere_1bbd4c456887_980689_plain",
+      "gold": "RABAT",
+      "response": "Kira lives in **New York**.",
+      "content": false,
+      "form": false
+    },
+    "('cipher_mixed', 3, 'json')": {
+      "id": "cipher_mixed_vigenere_fb813da60d8d_c80ad7_json",
+      "gold": "{\"answer\": \"ACCRA\"}",
+      "response": "{\"answer\": \"Moscow\"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 4, 'json')": {
+      "id": "cipher_mixed_vigenere_ebe9c986b43e_d73564_json",
+      "gold": "{\"answer\": \"LIMA\"}",
+      "response": "{\"answer\": \"Yana lives in the city of \"}",
+      "content": false,
+      "form": true
+    },
+    "('cipher_mixed', 4, 'plain')": {
+      "id": "cipher_mixed_vigenere_cbe928d3d2d2_95de1e_plain",
+      "gold": "HAVANA",
+      "response": "Yana lives in **New York**.",
+      "content": false,
+      "form": false
+    }
+  },
+  "families": {
+    "arithmetic": {
+      "n": 42,
+      "acc": 0.0
+    },
+    "bits": {
+      "n": 42,
+      "acc": 0.524
+    },
+    "cipher_context": {
+      "n": 26,
+      "acc": 0.0
+    },
+    "cipher_mixed": {
+      "n": 18,
+      "acc": 0.0
+    },
+    "cipher_question": {
+      "n": 12,
+      "acc": 0.0
+    },
+    "crossword": {
+      "n": 24,
+      "acc": 0.0
+    },
+    "matrix": {
+      "n": 42,
+      "acc": 0.0
+    },
+    "pattern": {
+      "n": 42,
+      "acc": 0.119
+    }
+  }
+}

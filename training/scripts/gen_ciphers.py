@@ -11,6 +11,18 @@ Row (same shape as matrix_tasks.jsonl, plus content_id / view / mode):
   {id, category: "cipher_<name>", level, prompt, answer, rubric: {type: "exact", value}, content_id,
    view, mode: "known"|"unknown", alphabet_cost, notes}
 
+Tasks (`--task`, default `decode` = the behaviour above). The other three choose WHAT is encrypted so that
+decoding is only the way in and the work is on knowledge (owner 2026-10-22: weights x context + the latent channel):
+  context   a table of k facts "<NAME> LIVES IN <CITY>" is encrypted; the question (plain text) needs the
+            context only. level 1-2: find one person's city (lookup); level 3+: name the two people who
+            share a city (every fact has to be read and compared - the k-items-over-a-gap case).
+  question  a world-knowledge question is encrypted ("WHAT IS THE CAPITAL OF <COUNTRY>"); the answer is in
+            the weights. Whether the model knows it is decided later by its own M=0 pass, not here.
+  mixed     the encrypted table refers to weights knowledge ("<NAME> LIVES IN THE CAPITAL OF <COUNTRY>");
+            the question needs both the decoded context and the fact.
+Answer formats are diluted per row (`--answer-formats`): plain, quoted, json, line; the rubric keeps the
+format, so a verifier can check content and form apart. These rows carry `task`, `k`, `answer_format`.
+
 Usage:
     training/.venv/bin/python training/scripts/gen_ciphers.py \\
         --payload hh_rlhf --field answer --n 3000 --views 3 --seed 7 \\
@@ -113,6 +125,159 @@ def make_row(c: C.Cipher, content_id: str, text: str, mode: str, rng: random.Ran
     }
 
 
+# ---------------------------------------------------------------- knowledge tasks (context / question / mixed)
+
+NAMES = ["ALICE", "BORIS", "CLARA", "DMITRI", "ELENA", "FELIX", "GRETA", "HUGO", "IRINA", "JONAS", "KIRA",
+         "LEON", "MARTA", "NIKO", "OLGA", "PAVEL", "ROSA", "SAMUEL", "TANYA", "VIKTOR", "YANA", "ZORAN"]
+CITIES = ["OSLO", "LIMA", "ROME", "CAIRO", "DELHI", "QUITO", "RIGA", "SEOUL", "TUNIS", "PERTH", "MINSK",
+          "DAKAR", "HANOI", "BERN", "ACCRA", "SOFIA"]
+# world facts with a one-word answer; known or not is measured by the model's own M=0 pass
+CAPITALS = {"FRANCE": "PARIS", "JAPAN": "TOKYO", "ITALY": "ROME", "SPAIN": "MADRID", "EGYPT": "CAIRO",
+            "PERU": "LIMA", "NORWAY": "OSLO", "KENYA": "NAIROBI", "CANADA": "OTTAWA", "CHILE": "SANTIAGO",
+            "GREECE": "ATHENS", "POLAND": "WARSAW", "AUSTRIA": "VIENNA", "IRELAND": "DUBLIN", "CUBA": "HAVANA",
+            "TURKEY": "ANKARA", "SWEDEN": "STOCKHOLM", "FINLAND": "HELSINKI", "PORTUGAL": "LISBON",
+            "HUNGARY": "BUDAPEST", "THAILAND": "BANGKOK", "VIETNAM": "HANOI", "ARGENTINA": "BUENOS AIRES",
+            "COLOMBIA": "BOGOTA", "MOROCCO": "RABAT", "GHANA": "ACCRA", "SENEGAL": "DAKAR", "LATVIA": "RIGA",
+            "BULGARIA": "SOFIA", "SWITZERLAND": "BERN", "AUSTRALIA": "CANBERRA", "BRAZIL": "BRASILIA"}
+
+ANSWER_FORMATS = {
+    "plain": ("Answer with the answer only, in capital letters.", lambda a: a),
+    "quoted": ('Answer with the answer only, in capital letters, inside double quotes.', lambda a: f'"{a}"'),
+    "json": ('Answer as JSON: {"answer": "<ANSWER IN CAPITAL LETTERS>"}.', lambda a: json.dumps({"answer": a})),
+    "line": ("End with one line of the form ANSWER: <answer in capital letters>.", lambda a: f"ANSWER: {a}"),
+}
+
+
+def knowledge_item(task: str, k: int, level_hint: int, rng: random.Random) -> tuple[str, str, str, int]:
+    """(plaintext to encrypt, plain-text question, answer, level). Every answer is computed from the facts."""
+    if task == "question":
+        country = rng.choice(sorted(CAPITALS))
+        return f"WHAT IS THE CAPITAL OF {country}", "Answer the decoded question.", CAPITALS[country], 2
+    names = rng.sample(NAMES, k)
+    if task == "mixed":
+        countries = rng.sample(sorted(CAPITALS), k)
+        facts = [f"{n} LIVES IN THE CAPITAL OF {c}" for n, c in zip(names, countries)]
+        who = rng.randrange(k)
+        q = f"In which city does {names[who].title()} live, according to the decoded message?"
+        return ". ".join(facts), q, CAPITALS[countries[who]], 2 + (k > 3)
+    # context
+    if level_hint <= 2 or k < 3:
+        cities = rng.sample(CITIES, k)
+        who = rng.randrange(k)
+        facts = [f"{n} LIVES IN {c}" for n, c in zip(names, cities)]
+        q = f"In which city does {names[who].title()} live, according to the decoded message?"
+        return ". ".join(facts), q, cities[who], 1 + (k > 3)
+    cities = rng.sample(CITIES, k - 1)
+    a, b = rng.sample(range(k), 2)
+    shared = cities[0]
+    assign, rest = {}, iter(cities[1:])
+    for i in range(k):
+        assign[i] = shared if i in (a, b) else next(rest)
+    facts = [f"{names[i]} LIVES IN {assign[i]}" for i in range(k)]
+    q = "Which two people live in the same city, according to the decoded message? Give both names joined by AND, in alphabetical order."
+    return ". ".join(facts), q, " AND ".join(sorted([names[a], names[b]])), 3 + (k > 4)
+
+
+def make_knowledge_row(c, task: str, k: int, level_hint: int, fmt: str, rng: random.Random) -> dict:
+    """c = None is the rung below every cipher: the same message in plain text. It separates "cannot do the
+    task" from "cannot read the cipher" (G1k at M=0, 2026-10-22: perfect answer format, content = the most
+    probable filler - NEW YORK, ALICE AND BOB - on every cipher, even caesar)."""
+    text, question, answer, level = knowledge_item(task, k, level_hint, rng)
+    instr, render = ANSWER_FORMATS[fmt]
+    if c is None:
+        key, name = None, "plain"
+        prompt = f"Read the message, then answer the question.\nMessage:\n{text}\nQuestion: {question}\n{instr}"
+        level = max(1, level - 1)
+    else:
+        key, name = c.make_key(rng), c.name
+        pt = C.prepare(c, text)
+        ct = c.encode(pt, key)
+        assert c.decode(ct, key) == pt
+        spaces = "" if c.keep_spaces else " The message was encrypted without spaces."
+        prompt = (f"Decode the message, then answer the question.\nCipher: {c.title}. Rule: {c.rule}.\n"
+                  f"{c.key_text(key)}\nMessage:\n{ct}\n{spaces.strip()}\nQuestion: {question}\n{instr}").replace("\n\n", "\n")
+    content_id = hashlib.md5(text.encode()).hexdigest()[:12]
+    kh = hashlib.md5(json.dumps(key, default=str, sort_keys=True).encode()).hexdigest()[:6]
+    return {
+        "id": f"cipher_{task}_{name}_{content_id}_{kh}_{fmt}", "category": f"cipher_{task}",
+        "level": min(level + (BASE_LEVEL.get(name, 1) > 2), 6), "prompt": prompt, "answer": render(answer),
+        "rubric": {"type": "exact", "value": answer.lower(), "format": fmt}, "content_id": content_id,
+        "view": name, "mode": "known" if c else "plain", "task": task, "k": k, "answer_format": fmt,
+        "alphabet_cost": "", "notes": f"{task} k={k} via {name}, plaintext {len(text)} chars",
+    }
+
+
+def hint_ladder(row: dict) -> list[str]:
+    """Hints for a PLAIN-rung knowledge row, weakest first, each one closer to the answer without stating it in the
+    requested format. S1 privileged-information distillation (2026-10-27): the teacher is the same model reading the
+    hint at M=0, the student gets no hint and must rebuild that state in its latent ticks - an item the model already
+    solves without a hint lets a pass-through tick lower the loss. Parsed from the prompt, so it needs no new data."""
+    if row.get("view") != "plain" or "task" not in row:
+        return []
+    msg = row["prompt"].split("Message:\n", 1)[1].split("\nQuestion:", 1)[0]
+    facts = [f.strip() for f in msg.split(".") if f.strip()]
+    q = row["prompt"].split("Question: ", 1)[1].split("\n", 1)[0]
+    if row["task"] == "question":
+        return []
+    m = re.search(r"does (\w+) live", q)
+    if m:                                                    # one person: context or mixed
+        who = m.group(1).upper()
+        i, fact = next((i, f) for i, f in enumerate(facts) if f.startswith(who + " "))
+        ladder = [f"Hint: {who.title()} is in sentence {i + 1} of the message.",
+                  f"Hint: the sentence that matters is \"{fact}\"."]
+        c = re.search(r"THE CAPITAL OF (\w+)", fact)
+        if c:
+            ladder.append(ladder[-1] + f" The capital of {c.group(1).title()} is {CAPITALS[c.group(1)].title()}.")
+        return ladder
+    cities = [f.split(" LIVES IN ")[1] for f in facts]       # the pair task: two people share a city
+    shared = next(c for c in cities if cities.count(c) == 2)
+    pair = [f.split(" LIVES IN ")[0] for f in facts if f.endswith(" " + shared)]
+    return [f"Hint: one of the two is {pair[0].title()}.",
+            f"Hint: the shared city is {shared.title()}."]
+
+
+def with_hint(row: dict, level: int) -> str:
+    """The row's prompt with hint `level` (1-based) inserted before the question; level 0 or no hint -> the prompt."""
+    ladder = hint_ladder(row)
+    if not level or not ladder:
+        return row["prompt"]
+    h = ladder[min(level, len(ladder)) - 1]
+    head, tail = row["prompt"].split("\nQuestion:", 1)
+    return f"{head}\n{h}\nQuestion:{tail}"
+
+
+def check_answer(row: dict, response: str) -> tuple[bool, bool]:
+    """(content right, form right) for a knowledge row - one checker for reward, teacher filter and eval.
+    Form is read through the requested format; content does not depend on it."""
+    gold = row["rubric"]["value"].strip().upper()
+    fmt = row["rubric"].get("format", "plain")
+    text = response.strip().split("\n\n")[0]
+    norm = lambda t: re.sub(r"[^A-Z ]+", " ", t.upper()).split()
+    got, form = None, False
+    if fmt == "json":
+        m = re.search(r"\{[^{}]*\}", text)
+        try:
+            got, form = (str(json.loads(m.group(0)).get("answer", "")), True) if m else (None, False)
+        except (json.JSONDecodeError, AttributeError):
+            got = None
+    elif fmt == "quoted":
+        m = re.fullmatch(r'\s*"([^"]+)"\s*', text)
+        got, form = (m.group(1), True) if m else (None, False)
+    elif fmt == "line":
+        m = re.search(r"^ANSWER:\s*(.+)$", text, re.M)
+        got, form = (m.group(1), True) if m else (None, False)
+    else:
+        got, form = text, bool(re.fullmatch(r"[A-Z ]+", text.strip()))
+    # Content is one rule for every requested format (2026-10-28: it was exact for plain and a substring check
+    # for the others, which moved every score): the gold answer is said, and no other answer of its kind is.
+    said = " " + " ".join(norm(text)) + " "
+    pool = set(NAMES) if " AND " in f" {gold} " else set(CITIES) | set(CAPITALS.values())
+    others = [c for c in pool if c not in gold.split(" AND ") and f" {c} " in said]
+    parts = gold.split(" AND ")                                # a pair counts in either order
+    content = all(f" {' '.join(norm(x))} " in said for x in parts) and not others
+    return bool(content), bool(form)
+
+
 def _build_argparser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser()
     ap.add_argument("--payload", default="hh_rlhf", help="catalog name of the text source (never a personal set)")
@@ -129,13 +294,40 @@ def _build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--split", default="all", choices=("all", "train", "eval"),
                     help="eval = the ~10%% of contents whose md5 falls in a fixed bucket; train = the rest")
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--task", default="decode", choices=("decode", "context", "question", "mixed"))
+    ap.add_argument("--k", default="2,3,4,6", help="facts per table for context/mixed (comma list, sampled per row)")
+    ap.add_argument("--answer-formats", default="plain,quoted,json,line")
     return ap
+
+
+def run_knowledge(args: argparse.Namespace, ciphers: list) -> dict:
+    rng = random.Random(args.seed)
+    ks = [int(x) for x in str(args.k).split(",")]
+    fmts = args.answer_formats.split(",")
+    rows, seen = [], set()
+    while len(rows) < args.n:
+        c = ciphers[len(rows) % len(ciphers)]
+        r = make_knowledge_row(c, args.task, rng.choice(ks), rng.choice([1, 2, 3, 4]), fmts[len(rows) % len(fmts)], rng)
+        if r["content_id"] in seen and args.task != "question":
+            continue
+        if not in_split(r["content_id"], args.split):
+            continue
+        seen.add(r["content_id"])
+        rows.append(r)
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    with open(args.out, "w") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"[gen_ciphers] task={args.task}: {len(rows)} rows -> {args.out}")
+    return {"out_path": args.out, "n_rows": len(rows), "n_contents": len(seen)}
 
 
 def run(args: argparse.Namespace) -> dict:
     rng = random.Random(args.seed)
     names = list(C.CIPHERS) if args.families == "all" else args.families.split(",")
-    ciphers = [C.CIPHERS[n] for n in names]
+    ciphers = [None if n == "plain" else C.CIPHERS[n] for n in names]
+    if getattr(args, "task", "decode") != "decode":
+        return run_knowledge(args, ciphers)
     out_rows, per_cipher = [], {n: 0 for n in names}
     for content_id, text in payload_texts(args.payload, args.field, args.min_chars, args.max_chars,
                                           args.long_chars, rng, args.source_rows):
