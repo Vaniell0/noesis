@@ -166,6 +166,65 @@ def verify() -> None:
     print(f"    naive-undo reconstruction error: {recon_error:.4f} (expect >> 0)")
     assert recon_error > 1e-3, "expected the naive undo to fail once a_gate is active"
 
+    print("[4] Additivity without the erase path — the controls are functions of the "
+          "step's input only, never of the state, so with the final r and w held "
+          "constant and a_gate forced to 0 the output is f(a) + g(b) for ANY weights "
+          "(hypotheses/H25.md, additivity lemma). The mixed second difference "
+          "y(a,b) - y(a,b') - y(a',b) + y(a',b') must vanish:")
+    torch.manual_seed(0)
+    torch.set_default_dtype(torch.float64)  # the forward pass allocates its state in the default dtype
+    model = FrozenFinalReadoutController(head_size, 4)
+    with torch.no_grad():
+        for p in model.parameters():
+            p.mul_(3.0)  # untrained init gives near-zero outputs; scale up so the contrast below is visible
+        a, a2, b, b2 = (torch.empty(4000).uniform_(-3.0, 3.0) for _ in range(4))
+
+        def mixed_diff(gate: float | None) -> float:
+            y = lambda p, q: model(p, q, force_a_gate=gate)[0]  # noqa: E731
+            return (y(a, b) - y(a, b2) - y(a2, b) + y(a2, b2)).abs().max().item()
+
+        diff_gate0, diff_learned = mixed_diff(0.0), mixed_diff(None)
+        y_gate0 = model(a, b, force_a_gate=0.0)[0]
+        r2_gate0 = 1.0 - ((y_gate0 - a * b) ** 2).mean().item() / (a * b).var().item()
+    torch.set_default_dtype(torch.float32)
+    print(f"    a_gate=0: max|mixed difference| = {diff_gate0:.2e} (expect ~0)   "
+          f"learned a_gate: {diff_learned:.2e} (expect >> 0)")
+    print(f"    a_gate=0: R² against a·b = {r2_gate0:+.4f} — an additive output is "
+          f"uncorrelated with a·b for independent zero-mean operands, so this is "
+          f"-E[y²]/Var(a·b) <= 0 before any training")
+    assert diff_gate0 < 1e-9, "frozen readout with a_gate=0 should be exactly additive in (a, b)"
+    assert diff_learned > 1e-3, "with the erase path on, the output should not be additive"
+
+    print("[5] Silent steps do not widen the function class — a silent step's controls "
+          "depend on nothing that varies (blank input, step index), so it multiplies the "
+          "state by a constant matrix and adds a constant. In ParityController the logit "
+          "is (m·k0(x))(u·v0(x)) + c for every n_extra, with m = A_totalᵀ r_final; only "
+          "the parametrisation of m and c changes (hypotheses/H25.md, open-loop lemma):")
+    torch.set_default_dtype(torch.float64)
+    bits = torch.cartesian_prod(*[torch.tensor([0.0, 1.0])] * 8)
+    for n_extra in (0, 2, 8):
+        torch.manual_seed(n_extra)
+        model = ParityController(head_size, 8, n_extra)
+        with torch.no_grad():
+            for p in model.parameters():
+                p.mul_(3.0)
+            c0 = model.step_controls(bits, 0)
+            blank = torch.zeros(1, 8)
+            a_total, const = torch.eye(head_size), torch.zeros(head_size, head_size)
+            for t in range(1, model.n_steps):
+                c = model.step_controls(blank, t)
+                kk = F.normalize(c["k"][0], p=2.0, dim=-1, eps=1e-8)
+                decay = decay_from_logit(-F.softplus(-c["w_raw"][0]) - 0.5)
+                A = torch.diag(decay) - torch.outer(kk * torch.sigmoid(c["a_logit"][0]), kk)
+                a_total, const = A @ a_total, A @ const + torch.outer(c["k"][0], c["v"][0])
+            m = a_total.T @ model.final_r
+            u, bias = model.readout.weight[0], model.readout.bias[0]
+            rebuilt = (c0["k"] @ m) * (c0["v"] @ u) + (model.final_r @ const) @ u + bias
+            gap = (model(bits) - rebuilt).abs().max().item()
+        print(f"    n_extra={n_extra}: max|logit - ((m·k0)(u·v0) + c)| over all 256 patterns = {gap:.2e} (expect ~0)")
+        assert gap < 1e-9, "a silent step should only reparametrise the step-0 bilinear form"
+    torch.set_default_dtype(torch.float32)
+
     print("\nAll checks passed. micro_wkv_step matches the documented RWKV-7 "
           "recurrence's known properties at toy scale.")
 
@@ -249,7 +308,17 @@ class FrozenFinalReadoutController(StagedController):
     erase/rewrite mechanism is not just available here, it is NECESSARY.
     This is the clean, decisive version of the ablation — the un-frozen
     StagedController's milder degradation (R²=0.9996→0.8364) was
-    confounded by the readout-bilinearity shortcut still being available."""
+    confounded by the readout-bilinearity shortcut still being available.
+
+    Corrected reading (2026-11-11, verify() check [4]): the necessity holds
+    by construction, for every setting of the weights, not for the trained
+    solution in particular. The controls never see the state, so with r/w
+    frozen and a_gate=0 the output is f(a) + g(b), and R² against a·b is
+    -E[(f+g)²]/Var(a·b) <= 0. The ablated R² therefore measures how large
+    an additive part the solution carries for the erase path to cancel
+    (-0.08: about 8% of the target variance), not how much the solution
+    "depends" on the erase path — every solution of this set-up depends on
+    it entirely."""
 
     def __init__(self, head_size: int, n_steps: int, hidden: int = 64):
         super().__init__(head_size, n_steps, hidden)
@@ -285,7 +354,14 @@ class ParityController(nn.Module):
     (pause tokens). Final r/w frozen at the last step (same
     FrozenFinalReadoutController discipline — closes the readout's own
     bilinear shortcut). Target: parity (XOR) of all n_bits, evaluated on
-    held-out BIT PATTERNS never seen in any form during training."""
+    held-out BIT PATTERNS never seen in any form during training.
+
+    Corrected reading (2026-11-11, verify() check [5]): the controls never
+    see the state, so a silent step is a constant affine map and n_extra
+    does not change the function class — the logit is (m·k0(x))(u·v0(x)) + c
+    at every n_extra. Differences across n_extra are optimisation (seeds
+    0-7: mean held-out 0.944 at n_extra=0, 0.973 at n_extra=2, overlapping);
+    this cell cannot show silent time buying computation."""
 
     def __init__(self, head_size: int, n_bits: int, n_extra: int, hidden: int = 64):
         super().__init__()

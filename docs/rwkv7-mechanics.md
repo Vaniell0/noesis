@@ -93,13 +93,20 @@ active when `WKV=fla`, confirmed the live setting on the training VM —
 `os.environ["WKV"] == "fla"` checked directly this session) calls
 `chunk_rwkv7(...)`, whose reference (non-fused) semantics are
 `naive_recurrent_rwkv7` in `rwkvfla/ops/rwkv7/recurrent_naive.py:10-77`.
-Per head, per step (state `S ∈ R^{N×V}`):
+Per head, per step. The buffer is allocated as `(N, V)`, but the code indexes it
+value × key (`S[i, j]`, `i` a value index, `j` a key index); this works because
+`N = V = 64`:
 
 ```python
-sab   = einsum('ik,k,j->ij', S, a_t, b_t)      # rank-1 erase/write correction
-S     = S * exp(-exp(w_t)) + sab + outer(k_t, v_t)   # decay + correction + write
-o_t   = einsum('j,ij->i', q_t, S)              # read (q_t = r_t here)
+sab   = einsum('ik,k,j->ij', S, a_t, b_t)      # rank-1 erase/write correction: (S a) bᵀ
+S     = S * exp(-exp(w_t)) + sab + outer(v_t, k_t)   # decay over key channels + correction + write v kᵀ
+o_t   = einsum('j,ij->i', q_t, S)              # read S q (q_t = r_t here)
 ```
+
+(Corrected 2026-11-11 against `fla/ops/rwkv7/recurrent_naive.py`: the write is
+`einsum('bhj,bhi->bhij', k_t, v_t)`, i.e. `v kᵀ`; the earlier text had
+`outer(k_t, v_t)`. In matrix form, `S_t = S_{t-1} diag(d_t) + (S_{t-1} a_t) b_tᵀ + v_t k_tᵀ`,
+the form used in `hypotheses/README.md` §2 with `a = −κ̂`, `b = κ̂ ⊙ α`.)
 
 Two things this pins down exactly:
 

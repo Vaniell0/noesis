@@ -7,12 +7,11 @@ genuinely useful.
 
 ## The most useful thing you can do
 
-**Try to falsify a hypothesis.** `hypotheses/README.md` lists every specific
-wager (H1..H17) with a stated prediction and a falsifier. A clean
+**Try to falsify a hypothesis.** `hypotheses/README.md` lists every claim
+with its estimator and the outcome that would refute it. A clean
 falsification on your own setup — "H7 predicts X, I ran the experiment
 with these parameters and observed Y" — is more valuable than any
-feature. `FAILED.md` is the graveyard where refuted claims land, and it
-is meant to grow.
+feature. A refutation is recorded in the hypothesis file it refutes.
 
 Push-back on the *framing* of a hypothesis is also welcome. Pair it with
 an empirical test proposal — no RNN-vs-Transformer mysticism.

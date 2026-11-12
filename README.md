@@ -44,12 +44,13 @@ inference is the price side of that bet — it makes the runtime
 economically viable to run continuously on the laptop i5-1235U without
 cloud dependency for the everyday loop.
 
-This is unproven. `hypotheses/README.md` records every specific wager — H4b
-(state as computation), H7 (understanding in weights, not context),
-H12b (multi-slot LoRA as working memory), H16 (self-initiated
-externalisation), H17 (state absorption vs history re-injection), and
-the rest — with predictions and falsifiers. A cleanly falsified
-hypothesis is a useful signal.
+This is unproven. `hypotheses/README.md` holds the research programme
+behind it, each claim with its estimator and the outcome that refutes it:
+how the state computes (H8, H25), what bounds its working memory (H12),
+whether time spent in the state buys accuracy (H10, HZLK), how training
+moves knowledge and what the optimizer selects (H7, H26), and where an
+answer comes from (H19-H22). The runtime's own wagers are listed there
+apart. A cleanly falsified hypothesis is a useful signal.
 
 ## What the runtime does, independent of interaction
 
@@ -153,9 +154,8 @@ Not running yet (stubs):
 noesis/
 ├── README.md          — this file
 ├── ROADMAP.md         — phased plan across cognitive + memory + integration
-├── hypotheses/README.md      — falsifiable claims (H1..H17)
+├── hypotheses/README.md      — the claims: objects, estimators, refuters, status table
 ├── CONTRIBUTING.md    — how to engage (hypotheses > runtime PRs)
-├── FAILED.md          — refuted hypotheses and dead experiments
 ├── docs/              — policies, principles, DSL, extensions, verdicts
 ├── training/          — A1 pipeline (blocked on GPU)
 ├── memory/            — external memory system spec + schema

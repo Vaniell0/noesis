@@ -1,364 +1,210 @@
-# State and reasoning in RWKV-7
+# State and reasoning in RWKV-7: proofs and reference
 
-Reference notes assembled before designing the `A0.4` state-utilisation
-probe (see `experiments/A0_state_probe/`). Flat facts + citations, no
-interpretation. Interpretation lives in the probe writeup, once
-measurements exist.
+The frame (`hypotheses/README.md` §3) states what follows from the setup alone. This document proves
+those statements and keeps the sourced facts about the architecture they rest on. Notation is the
+frame's (§2). Rewritten 2026-11-11 from the literature notes of 2026-07/08, which prepared the first
+state probe; their facts are kept in §6-§7.
 
-Sources: arXiv 2503.14456v2 (Peng et al., "RWKV-7 'Goose' with
-Expressive Dynamic State Evolution", March 2025); BlinkDL/RWKV-LM
-GitHub repo at commit `846b08c1` (2025-03-17); Ollama registry entry
-for `mollysama/rwkv-7-g1h`.
+Sources: arXiv 2503.14456v2 (Peng et al., "RWKV-7 'Goose' with Expressive Dynamic State Evolution",
+2025); the reference kernel `fla/ops/rwkv7/recurrent_naive.py`; `docs/rwkv7-mechanics.md` (the code
+path, checked line by line).
 
-## 1. Goose architecture — what changed in RWKV-7
+## 1. The step
 
-**State update rule (paper §3, Architecture, p. 5).** RWKV-7 replaces
-the diagonal-only state transition of RWKV-6 with a rank-one
-input-dependent perturbation:
+Per head, in the kernel's layout (value × key), with `S ∈ R^{n×n}`, `n = 64`:
 
-```
-    S_t = S_{t-1} · (diag(w_t) + z_t^T b_t) + v_t^T k_t
-    with z_t = −κ̂_t,  b_t = κ̂_t ⊙ a_t,  a_t ∈ (0, 1)^d
-```
+    S_t = S_{t−1} A_t + v_t k̃_tᵀ,        A_t = D_t − κ̂_t (α_t ⊙ κ̂_t)ᵀ,        o_t = S_t r_t
 
-Contrast (paper §3): RWKV-6 was `S_t = S_{t-1} · diag(w_t) + v_t^T k_t`
-— transitions were diagonal, so each channel of the state evolved
-independently. RWKV-7's `z_t^T b_t` term couples channels through an
-input-dependent low-rank update; this is what the paper calls
-"generalized delta rule with vector-valued gating and in-context
-learning rates" (abstract).
+- `D_t = diag(d_t)`, `d_t = exp(−exp(w_t))`. The model soft-clamps `w ≤ −0.5`, so `d ∈ [0.5452, 1)`.
+- `κ̂_t` is the erase key, unit norm; `α_t ∈ (0, 1)^n` the erase gate (a sigmoid).
+- `k̃_t` the write key, `v_t` the value, `r_t` the receptance.
 
-An alternative parametrisation RWKV-7a (paper Appendix I) admits full
-negative eigenvalues; used by authors for board-game modelling. Not
-the default; not shipped in the World3 checkpoints we use.
+The paper writes the same step with row vectors, `S_t = S_{t−1}(diag(w_t) + z_tᵀ b_t) + v_tᵀ k_t` with
+`z = −κ̂`, `b = κ̂ ⊙ a` (§3, p. 5); the kernel computes `S·diag(d) + (S a) bᵀ + v kᵀ` with `a = −κ̂`,
+`b = κ̂ ⊙ α`. The toy cell `experiments/A0_state_probe/micro_wkv.py` stores the transpose (key × value).
+Every statement below holds in either layout.
 
-**Explicit test-time-learning claim (paper §2, Background, p. 4).**
-The state update is described verbatim as "equivalent to a single step
-of stochastic gradient descent, training the state S_t at test time to
-output the desired values v_t for the keys k_t as inputs". This is the
-formal statement of the philosophy we're interested in probing: state
-evolution = compute, not just memory.
+The controls `(r, w, k̃, v, α, κ̂)_t` are functions of the layer's input at step `t`. Between layers and
+across ticks that input depends on states read earlier; this is what §4 calls the closed loop.
 
-Note on scope of that claim: it is stated for the *delta rule step*,
-not for the sequence as a whole. Whether cumulative multi-token
-evolution actually behaves like an ongoing SGD trajectory is a
-question the paper does not answer directly and A0.4 partly targets.
+## 2. The state is a linear map trained in context
 
-**Expressivity results (paper §3 p. 5; Appendix D.1–D.2, pp. 33–36).**
+**Identity.** For the loss `L(S) = ½ ‖S κ̂ − u‖²` of a linear map that should send the key `κ̂` to the
+value `u`, one gradient step with rate `η` is
 
-- "RWKV-7 possesses expressive power surpassing that of TC^0 under
-  standard complexity conjectures and can recognize all regular
-  languages" (§3).
-- Theorem 2 (Appendix D.1): RWKV-7 solves an NC^1-complete problem
-  under AC^0 reductions.
-- Corollary via Lemma 2: RWKV-7 can track swaps on 5 elements.
-- Main result (Appendix D.2): recognizes all regular languages with a
-  constant number of layers.
-- Explicit contrast (paper §3, citing Merrill et al. 2024):
-  Transformers and RNNs with diagonal transition matrices are limited
-  to functions in TC^0. This is presented as the concrete
-  architectural gap RWKV-7 closes.
+    S − η (S κ̂ − u) κ̂ᵀ = S (I − η κ̂ κ̂ᵀ) + η u κ̂ᵀ.
 
-**State dimensions for 2.9B World3** (paper Appendix E, Table of model
-architectures, p. 38):
+This equals the step of §1 when `d_t = 1`, `α_t = η·1` and `v_t k̃_tᵀ = η u κ̂ᵀ`. RWKV-7 generalises the
+three: a per-channel rate `α` (the paper's in-context learning rate), retention `d` (weight decay), and a
+write key decoupled from the erase key. The paper states the step as "equivalent to a single step of
+stochastic gradient descent, training the state S_t at test time to output the desired values v_t for
+the keys k_t as inputs" (§2, p. 4). The claim is per step; whether a sequence of steps behaves like an
+optimisation trajectory is not claimed there.
 
-| quantity        | value |
-|-----------------|-------|
-| n_layer         | 32    |
-| model dim (D)   | 2560  |
-| head_size (d_h) | 64    |
-| n_head          | 40    |
-| WKV state per layer | `n_head × d_h × d_h` = `40 × 64 × 64` = 163 840 elements |
-| WKV state per layer (bf16) | ~320 kB |
-| Full parameter count | 2 947 735 040 |
+**Consequences for capacity** (linear associative memory):
 
-Per-token snapshot of the *whole* WKV state (all layers, bf16) is
-therefore `32 × 163 840 × 2` B ≈ **10.5 MB** — not the 13 MB × 32 that
-the plan's back-of-envelope assumed. Correcting: 256 tokens × 10.5 MB
-= 2.7 GB per sequence. Still too large for full retention across all
-seeds × models × prompts, so online metric computation remains the
-right call, but the state per step is genuinely tractable to hold in
-RAM briefly.
+- *Crosstalk.* With pure writes `S = Σ_i u_i κ̂_iᵀ`, reading at `κ̂_j` gives `u_j + Σ_{i≠j} (κ̂_i·κ̂_j) u_i`.
+  Exact recall needs orthogonal keys, so at most `n` items.
+- *Overwrite.* The erase term removes what `S` currently returns at `κ̂` before writing. Repeated over a
+  set of bindings the delta rule converges to the least-squares map, exact for up to `n` linearly
+  independent keys.
+- *Horizon.* Retention below 1 removes a binding at rate `d` per step on the channels it occupies.
 
-**Context extrapolation (paper §7.5, Long Context, p. 13).** RWKV-7
-2.9B reliably retrieves passkeys up to 30k tokens; degrades near 50k.
-Trained on ≤128k. Not directly relevant to the probe but bounds the
-lengths at which state dynamics can be honestly measured.
+The size `n × n` is a ceiling; key overlap and decay set what is recalled. This is the basis of `H12.md`.
 
-**Authors' own state instrumentation (paper Appendix J, State
-Inspections, p. 50).** Authors themselves examine WKV state matrices:
+## 3. Lemmas with the controls frozen
 
-- Metrics used: root-mean-square of matrix elements (RMS) and stable
-  rank `SR(A) = (‖A‖_F / ‖A‖_2)^2`.
-- Corpus: 10 PG19 validation samples, each ≥ 8192 tokens.
-- Comparison across RWKV-5 / RWKV-6 / RWKV-7 at 1.5B.
-- Reported example: "Layer 0 Head 4, SR: 2.03, RMS: 96.74".
+### 3.1 Tick lemma
 
-**Implication for A0.4**: authors provide a *specific* pair of metrics
-(RMS, SR) they consider meaningful. Adopting SR as one of A0.4's three
-metrics has the added benefit of direct comparability to the paper.
-The plan's original three metrics (delta norm, layer entropy,
-curvature) do not overlap with SR — recommend adding SR as a fourth
-metric or replacing layer-entropy with SR. Decision pending A0.4
-design.
+**Statement.** Let the controls be constant, `A_t = A = D − κ̂ (α ⊙ κ̂)ᵀ`, `C = v k̃ᵀ`. Then:
 
-## 2. G1 training
+1. `A` is similar to the symmetric matrix `B = D − w wᵀ`, `w = √α ⊙ κ̂`; its spectrum is real.
+2. With eigenvalues `λ₁ ≥ … ≥ λₙ` and retentions sorted `d₍₁₎ ≥ … ≥ d₍ₙ₎`: `d₍ᵢ₊₁₎ ≤ λᵢ ≤ d₍ᵢ₎`, and
+   `λₙ ≥ d_min − ‖w‖² ≥ d_min − max α > −1`.
+3. `ρ(A) = λ₁ ∈ [d₍₂₎, d₍₁₎]`, so `ρ(A) < 1`, and no erase gate moves it past the two largest retentions.
+4. `S_t = S* + (S₀ − S*) Aᵗ` with `S* = C (I − A)⁻¹` of rank at most 1, and
+   `‖S_t − S*‖ ≤ √(max α / min α) · ρ(A)ᵗ · ‖S₀ − S*‖`.
 
-**No G1 documentation in RWKV-LM repo** (commit `846b08c1`). Grep for
-`G1`, `g1_`, `reasoning`, `<think>` in the repo returns nothing
-substantive. G1 training code and configuration are *not* in the main
-BlinkDL/RWKV-LM repository as of this commit. The G1 corpus, curriculum
-and reasoning-markup scheme are documented only in external artifacts
-(BlinkDL blog, HF/Ollama model cards, mollysama's registry). This is a
-material gap — we cannot reproduce G1 training from RWKV-LM alone.
+**Proof.** Write `Λ = diag(α)`, so `(α ⊙ κ̂)ᵀ = κ̂ᵀ Λ` and `A = D − κ̂ κ̂ᵀ Λ`. Diagonal matrices commute,
+so `Λ^{½} A Λ^{−½} = D − (Λ^{½} κ̂)(Λ^{½} κ̂)ᵀ = B`, which is symmetric (1). `B` is `D` minus a rank-1
+positive semidefinite matrix; by Weyl's inequality `λᵢ ≤ d₍ᵢ₎`, and by Cauchy interlacing for a rank-1
+update `λᵢ ≥ d₍ᵢ₊₁₎`. The smallest eigenvalue is at least `d_min − ‖w‖²`, and
+`‖w‖² = Σ αⱼ κ̂ⱼ² ≤ max α · ‖κ̂‖² = max α < 1` (2). Since `d_min ≥ 0.5452`, `λₙ > −0.4548`, while
+`λ₁ ≥ d₍₂₎ ≥ 0.5452`; so `|λₙ| < λ₁` and `ρ(A) = λ₁ ≤ d₍₁₎ < 1` (3, for `n ≥ 2`). For (4), `S* = S* A + C`
+has the unique solution `C (I − A)⁻¹` because 1 is not an eigenvalue, and its rank is at most that of
+`C = v k̃ᵀ`. Subtracting, `S_t − S* = (S_{t−1} − S*) A`. Finally `Aᵗ = Λ^{−½} Bᵗ Λ^{½}` and
+`‖Bᵗ‖ = ρᵗ`, so `‖Aᵗ‖ ≤ ‖Λ^{−½}‖ ‖Λ^{½}‖ ρᵗ = √(max α / min α) ρᵗ`. ∎
 
-**Standard World3 training config visible in the repo** (`RWKV-v7/README.md`
-+ `RWKV-v5/train.py`, lines 14–122):
+**Reading.** Settling and forgetting are one number: the part of the state left by the prompt and by
+earlier turns decays as `Aᵗ`, at the rate at which the loop settles.
 
-- Training entry: use `RWKV-v5/train.py` with `--my_testing "x070"`
-  and `head_size_a=64`. Same script as v5, versioned by flag.
-- Tokenizer: RWKV World (vocab 65 536).
-- Data: RWKV World v3 corpus, 3.1 T tokens, multilingual, open.
-- Framework: PyTorch Lightning + DeepSpeed.
-- Precision: bf16 activations + fp32 kernel for WKV (paper §8, p. 15).
+**Premises.** Exact for layer 0 when the same vector is fed every tick, since layer 0's controls depend
+on its input only. For deeper layers it holds asymptotically once the layers below have settled. It
+says nothing about the closed loop, where the fed latent, and with it every `A_t`, changes from tick to
+tick.
 
-Nothing in that config is G1-specific.
+**Checks.** 5000 random draws at `n = 64` with `d ∈ [0.5452, 1)`, `α ∈ (0, 1)` and unit `κ̂`: no complex
+eigenvalue, no `λ₁` outside `[d₍₂₎, d₍₁₎]`, no `λₙ ≤ d_min − max α`, no fixed point of rank above 1, the
+decay bound never exceeded (session check of 2026-11-11). In the repository:
+`micro_wkv.py::jacobian_spectral_sampling` (2000 draws at `n = 8`: `ρ` mean 0.9527, none above 1, none
+complex).
 
-**LoRA / adapter tooling is external.** RWKV-LM README points to two
-outside repos:
-- `JL-er/RWKV-PEFT` — LoRA, QLoRA, PiSSA, Qpissa, **State Tuning**.
-  State Tuning is *initial-state prompt-tuning*: a single learnable
-  `[n_layer, n_head, head_size, head_size]` vector is prepended so the
-  base model starts each sequence from a trained initial WKV state.
-  The trajectory across tokens is not part of the loss — CE alone
-  drives training. See `docs/community-map.md` §1 for the full
-  landscape; noesis's `L_state` (state-motion + curvature reward) has
-  no direct prior art in the RWKV community.
-- `Blealtan/RWKV-LM-LoRA` — infinite-ctxlen training branch.
+### 3.2 Open-loop lemma
 
-For any A1 fine-tune step involving state, `RWKV-PEFT` is the
-reference implementation to check first, not RWKV-LM proper.
+**Statement.** Call a cell *open-loop* when every control is a function of the step's input `x_t` and of
+`t`, never of the state. With `S₀ = 0`,
 
-**No built-in state-inspection utilities in RWKV-LM.** State variables
-are accessed only in RNN-mode inference demo:
-- File: `RWKV-v7/rwkv_v7_demo_rnn.py`, lines 92–102 (forward pass
-  access) and 284–288 (initialisation).
-- Layout of state list: `state[3·i + 0]` = attention `x_prev` (shape
-  `[D]`), `state[3·i + 1]` = **WKV state** (shape
-  `[n_head, head_size, head_size]`), `state[3·i + 2]` = channel-mixing
-  `x_prev` (shape `[D]`).
-- No visualisation, no probing helpers — the probe writes these itself.
+    S_T = Σ_{t ≤ T} v_t k̃_tᵀ A_{t+1} ⋯ A_T,        o_T = S_T r_T,
 
-## 3. Model availability & weight format
+and every factor depends on a single input.
 
-**Native bf16/fp16 weights.** Attempts to fetch model cards from
-`huggingface.co/mollysama/RWKV-7-G1h` and `huggingface.co/BlinkDL/rwkv-7-g1`
-returned 401 during the literature scan. HuggingFace public model
-cards should not require auth for read; suspect this is a scan-side
-rate-limit / redirect issue rather than genuine gating. **Manual
-verification required before the probe session**; if native bf16
-weights are actually gated, we fall back to (a) BlinkDL's non-G1
-World3 weights (public, native) as the only World-side data point,
-paired with (b) a G1 checkpoint from BlinkDL's release page — likely
-`RWKV-x070-Goose-World3-2.9B-*.pth` on HF `RWKV/` org, which paper §6
-(Pre-Trained Models, p. 9) lists as the released set.
+**Proof.** Unroll `S_t = S_{t−1} A_t + v_t k̃_tᵀ` from `S₀ = 0`. ∎
 
-**Available public sizes** (paper §6, p. 9): RWKV-7 World v3 at 0.19B,
-0.4B, 1.5B, 2.9B. Training tokens 1.6–5.6 T depending on size.
-Official release channel: `https://huggingface.co/RWKV`.
+So information from two different times meets only through the products of `A` (decay and erase) and
+the final read `r_T`; writes alone superpose.
 
-**Ollama registry (`mollysama/rwkv-7-g1h`).** Weights are GGUF (Q4_K_M
-for our pulled 2.9 GB tag). Quantisation method disclosed only as
-GGUF, no specific Q level for the base card. **Not suitable for the
-probe** — Q4 quantisation of weights is expected to distort state
-trajectories at a level that would confound H8/H9 measurement. Paper
-§8 (p. 15) explicitly uses fp32 kernel for WKV during training; we
-should mirror that at inference for the probe (bf16 weights, fp32 WKV
-accumulator).
+*Corollary 1 (additivity).* Let `a` arrive at the first step and `b` at the last, blanks between. If
+`r_T` and `d_T` are constants and the erase gate is 0 at every step, then `A_t = D_t` and
+`o_T = f(a) + g(b)`. For independent, zero-mean, symmetric `a` and `b` and any linear readout `y`,
+`E[y·ab] = 0`, hence `R²(y, ab) = 1 − (E[y²] + Var(ab)) / Var(ab) = −E[y²] / Var(ab) ≤ 0`.
 
-## 4. WKV state as an Information Bottleneck channel
+*Corollary 2 (silent steps).* A step with blank input has constant controls: `S ↦ S A + C`. A run of
+silent steps composes to `S ↦ S A_tot + C_tot`; followed by a read `r` it gives `o = S (A_tot r) + C_tot r`.
+When the final read is a free parameter and `A_tot` is invertible (the generic case), `A_tot r` ranges
+over all vectors, so the set of computable functions is the same for every number of silent steps.
 
-**Framing.** RWKV-7's WKV state is a fixed-capacity, lossy compression
-channel. All input the model has ever seen `X_{1..t}` must be
-represented in the same `10.5 MB` per-layer-summed matrix; whatever
-does not fit is lost. This maps directly onto Tishby et al.'s
-Information Bottleneck (Tishby, Pereira & Bialek, *The Information
-Bottleneck Method*, 1999; arXiv 0004057), which formalises finding a
-compressed representation `Z` of an input `X` that maximally preserves
-information about a target `Y` under a fixed channel capacity:
+**Checks.** `micro_wkv.py --verify` [4] (mixed second difference of the frozen cell at gate 0: 2.7e-15;
+0.22 with the learned gate) and [5] (the parity cell's logit equals `(m·k₀(x))(u·v₀(x)) + c` over all 256
+patterns at 0, 2 and 8 silent steps, to 7e-15).
 
-```
-    min  I(X ; Z) - β · I(Z ; Y)
-     Z
-```
+**Reading.** The real model is not open-loop: within a token, layer `l` computes its controls from the
+output of layer `l − 1`, which read its state; across ticks, the fed latent is the last layer's output.
+Any gain from silent time has to come from that closure.
 
-Here `X` = input token stream (context window content), `Z` = WKV
-state after ingesting `X`, `Y` = the downstream prediction target
-(next token, or a task-relevant readout). The Lagrangian says:
-minimise redundant information the state carries about the input,
-while maximising the information the state carries about what
-actually matters downstream. `β` is the tradeoff — under noesis's
-constraints, `β` is *not* a free hyperparameter; it is fixed by the
-architecture (state size) and the training objective (CE + any
-auxiliary `L_state`).
+## 4. Information bounds
 
-**Why this framing is load-bearing for noesis (not just formal window
-dressing).**
+**Data processing.** With the input fixed, the state after any number of ticks is a function of the
+state after reading it, `S₀`; so `I(S_t; Y) ≤ I(S₀; Y)`. Ticks raise the usable information `I_V`, the
+part a bounded reader (the model's remaining layers and head) extracts, never the information itself.
 
-- **P4/P5 (constant cost, cheap by construction)** foreclose growing
-  the state to fit more input. The channel width is what the shipped
-  architecture gives us; we do not scale it away.
-- **P1 (state external, cognition internal)** does the equivalent of
-  "the state does not have to hold everything, retrieval fills gaps"
-  — an IB architecture with an *external* memory tier at hand does
-  not have to allocate its bits to storing facts, and can spend them
-  on reasoning-relevant abstractions instead. This is not a hedge
-  around the bottleneck; it is the *architectural response* to it.
-- **P14 (agility over omniscience)** is the direct pragmatic
-  consequence: the bottleneck *cannot* carry everything, so a system
-  that pretends to must be confabulating. Honest not-knowing is
-  what a well-calibrated IB channel *should* produce when the
-  requested `I(Z;Y)` cannot be supported by the channel width.
-- **P13 (reasoning in state, not in tokens)** raises the stakes:
-  if state *is* the computation, then the IB channel is not just
-  a memory allocation problem — every bit spent on redundant input
-  representation is a bit *not* spent on computation.
+**Input bound.** A fact absent from the input and from the weights is out of reach for any number of
+ticks. A reward with `|R|` outcomes carries at most `log₂|R|` bits per episode, so reinforcement
+reweights what the model holds; new facts come only from a teacher or a context that has them. What is
+derivable from the weights by computation counts as held, though it is not stored as a separate item
+(`H12.md` §4).
 
-**Practical consequences that shape design and hypotheses.**
+## 5. The state as an information bottleneck
 
-1. **Forgetting is necessary and structured, not incidental.** A
-   fixed-width channel *must* discard information about `X` to leave
-   room for information about `Y`. What gets forgotten is
-   downstream-task-dependent, not just recency-dependent. This
-   reframes "why does the model forget X" from a bug to a
-   consequence of what it is optimising `I(Z;Y)` for. The right
-   research question is not "how do we make the state remember more"
-   but "how do we make the state forget the right things".
-2. **Long-horizon planning has a hard ceiling.** Any task that
-   requires threading `> capacity` bits of state through a decision
-   sequence *cannot* be solved by state alone — it must decompose
-   into a chain of state + external-memory reads (P1) or a chain
-   of state resets keyed by retrieval. Trying to lengthen the
-   effective context by pushing more tokens through the same WKV
-   is subject to diminishing returns bounded by channel capacity,
-   not by context window length.
-3. **Uneven importance is real signal, not artifact.** If the model
-   allocates disproportionate `I(Z;Y)` bits to some inputs over
-   others, that allocation is the model's own *learned* importance
-   function — noesis can read it (a state-readout head on the
-   distribution of "what did the state retain") and use it directly
-   as an emit-gate, a retrieval-relevance signal, or a compression
-   heuristic. This is H16 and H10 seen through IB glasses.
-4. **`L_state` has a formal target.** The state-motion + curvature
-   reward sketched in the community-map (§2) is a proxy for
-   pushing `I(Z;Y)` up per unit `I(X;Z)`; making the training
-   objective explicitly IB-shaped (measure `I(Z;Y)` on a proxy
-   downstream task and reward states that carry it) is an option we
-   have not exercised. Noted for A2 planning.
+The state is a fixed-capacity, lossy channel: everything the model has read must be represented in
+`n_layer × n_head × 64 × 64` numbers, and what does not fit is lost. This is the setting of the
+information bottleneck (Tishby, Pereira, Bialek 1999, arXiv physics/0004057): a representation `Z` of
+input `X` that keeps information about a target `Y` under a capacity limit,
 
-**Reconstruction / mutual-information probes as measurement.** IB
-gives a first-principles handle on H8 and H12b: rather than only
-measuring state *dynamics* (delta-norm, curvature, SR — §1 above),
-also measure state *content* by training a small decoder from `Z`
-to reconstruct `X` (upper-bounds `I(X;Z)`) or to predict `Y`
-(lower-bounds `I(Z;Y)`). These are standard IB estimation moves
-(cf. Alemi et al., *Deep Variational Information Bottleneck*, 2017;
-Saxe et al., *On the Information Bottleneck Theory of Deep
-Learning*, ICLR 2018 — with the caveat that Saxe et al. showed the
-IB "phase transition" narrative was tanh-nonlinearity-specific, so
-we import IB as *framing*, not as a prediction about training
-dynamics). Concretely for noesis:
+    min_Z  I(X; Z) − β · I(Z; Y),
 
-- **Reconstruction probe (upper bound `I(X;Z)`).** Train an MLP
-  head on frozen WKV state at position `t` to reconstruct tokens
-  at positions `t-k .. t`. Reconstruction quality vs. `k` gives a
-  practical decay curve — how many past tokens the state materially
-  preserves.
-- **Downstream probe (lower bound `I(Z;Y)`).** Same head, different
-  target: task-relevant readout (H21 premise-validity is one
-  candidate; H20 aporia-hold is another). Ratio of downstream-probe
-  quality to reconstruction quality is the *bit-efficiency* of the
-  state for that task.
-- **H12 as capacity dimensions.** Width (`n_head × head_size²`) and
-  decay `w_t` are the two independent capacity knobs — width sets
-  raw channel size, decay sets how quickly channel is freed up.
-  IB framing predicts: at fixed width, tighter decay (faster
-  forgetting) should *increase* `I(Z;Y)` for tasks whose relevant
-  horizon is short, and *decrease* it for long-horizon tasks. Direct
-  falsifier for H12b utilisation claims.
+with `Z` the state after reading `X`, and `Y` the next token or a task readout. Here `β` is not a free
+knob: the architecture fixes the channel and the training objective fixes what is kept. IB is used as a
+description of what training does under a fixed channel, not as a prediction about training dynamics
+(Saxe et al., ICLR 2018, showed the "phase transition" narrative to be specific to tanh networks).
 
-**Runtime metric candidate: channel-budget accounting.** noesis
-currently accounts for compute in CPU-seconds (calibration protocol,
-policies.md § CPU and thermal governance). An IB-shaped runtime
-would *additionally* account for `I(X;Z)` bits consumed per input —
-how much of the state's channel capacity a given input burned. A
-long noisy transcript that contributed nothing measurable to
-downstream tasks would show up as a *channel-budget cost* even if
-its CPU cost was small. Not a proposal to build this now; a note
-that the accounting hook exists in principle and would give the
-truth-system another signal to work with (H16 emit-gate could
-consult it: "did the last minute of input actually change what the
-state carries?" as an emit criterion).
+What follows for the programme:
 
-**Retrieval scoring by info-gain (parking lot).** Once
-reconstruction/downstream probes are in place, retrieval candidates
-can be scored by *estimated `I(Z_after; Y) − I(Z_before; Y)`* — pick
-the candidate that most raises task-relevant channel content. This
-is a stronger objective than cosine similarity in embedding space
-(similarity is at best a proxy for `I(X_retrieved; X_query)`, which
-is only weakly related to what actually helps the state). Not
-scheduled — noted here so future A3/retrieval design has the
-framing to reach for.
+1. *Forgetting is required, and structured by the task.* A fixed channel must drop information about
+   `X` to keep information about `Y`. The question is not how to make the state remember more but how to
+   make it drop the right things. The tick lemma gives the mechanism inside one head: forgetting runs
+   at `ρ(A)`.
+2. *Long horizons need a second store.* A task that threads more information through a decision
+   sequence than the channel holds cannot be done in the state alone; it needs exact recall beside it
+   (`HZLK.md` §6, QKV-ROSA).
+3. *Uneven allocation is a signal.* What the state keeps is the model's learned importance; readouts of
+   it are instruments (H19-H22).
+4. *Capacity has three knobs, not two.* Width (`n_head × 64²`), decay, and the overlap of the keys the
+   weights write with (§2); measured, the third binds first (`H12.md`).
 
-**What this framing does not claim.**
+Estimators that follow from the framing: a reconstruction probe (a head on the state at `t` that
+recovers tokens `t − k .. t`; an upper-bound view of `I(X; Z)` and a decay curve), and a downstream
+probe (the same head predicting a task variable; a lower bound on `I(Z; Y)`). The ratio is the state's
+bit-efficiency for that task. Measured instances: held-out linear IPC (`H10.md` §5) and the readout
+lens and capacity probe (`H25.md` §5).
 
-- Not a claim that noesis will *train* the state via an explicit IB
-  loss (though `L_state` is a step in that direction). The state is
-  currently trained implicitly via CE on next-token prediction; IB
-  is a *description* of what that training is doing under a
-  fixed-capacity channel constraint.
-- Not a claim that RWKV-7 achieves the IB *optimum* — likely far
-  from it. IB is the frame that says the optimum *exists* and is
-  measurable; how far current weights sit from it is an empirical
-  question the reconstruction/downstream probe pair could answer.
-- Not a claim that IB dictates architecture. RWKV-7 was chosen for
-  reasons in P4/H4b/H8; IB gives a language for reasoning about the
-  consequences of that choice, not a competing justification for it.
+## 6. Architecture facts
 
-## What this means for A0.4 design
+**Expressivity** (paper §3 p. 5; Appendix D.1-D.2, pp. 33-36): RWKV-7 recognises all regular languages
+with a constant number of layers and solves an NC¹-complete problem under AC⁰ reductions (tracking swaps
+on 5 elements), beyond TC⁰, the class bounding Transformers and RNNs with diagonal transitions (citing
+Merrill et al. 2024). These results are about transitions that change with the input token. With a
+constant fed vector the transition is fixed and §3.1 applies; ticks inherit this expressivity only
+through the closed loop. A variant with full negative eigenvalues (RWKV-7a, Appendix I) exists and is
+not in the shipped checkpoints.
 
-Not interpretation of the probe results (those come later) — only
-things this literature review changes about the *design* itself:
+**State size** (paper Appendix E, p. 38), with `head_size = 64` across the line:
 
-1. **Adopt SR as one of the state metrics.** Authors use it; direct
-   comparability to Appendix J of the paper is worth more than the
-   layer-entropy metric I originally sketched. Keep delta-norm and
-   curvature; add SR; drop layer-entropy (or keep as fourth if it
-   fits).
-2. **Per-token state snapshot is 10.5 MB, not ~420 MB.** The plan's
-   volume estimate was wrong (I over-multiplied). Full sequence
-   (256 tokens) = 2.7 GB. Still online-metric territory for the full
-   experiment budget, but individual sequences can be held in RAM.
-3. **State layout is well-defined** — `state[3i+1]` is WKV per layer,
-   shape `[n_head, head_size, head_size]`. Direct hook on RWKV block
-   forward, no monkey-patching required.
-4. **G1h weights resolved (2026-08-05).** `rwkv7-g1h-2.9b-20260710-ctx10240.pth`
-   is available at `~/.libs/models/rwkv7/` locally and at `/root/.libs/models/rwkv7/`
-   on the VM. H8 and H9 have been run and SUPPORTED at both 0.4B and 2.9B scale.
-   See `experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md` for numerical results.
-5. **`JL-er/RWKV-PEFT` "State Tuning" is initial-state prompt-tuning,
-   not a trajectory objective.** Verified 2026-07-25 — a single
-   learnable initial WKV vector, CE-only loss. The community is *not*
-   training against state trajectories. This means noesis's `L_state`
-   (state-motion reward + curvature) is an unclaimed slot in the
-   design space, not a re-invention. Landscape and adjacent work
-   catalogued in `docs/community-map.md` (§1 for what ships, §2 for
-   noesis's divergences, §4 for external claims we rejected during
-   verification).
-6. **Test-time-learning claim is per-step, not sequence-scope.** The
-   paper's SGD-step framing (§2) is limited to a single delta-rule
-   application. Cumulative state evolution being SGD-like is a
-   *stronger* claim the paper does not make; H8's falsification bar
-   must account for this — a single non-linear step is trivially
-   SGD-like; we're really testing whether the sequence-length dynamics
-   accumulate meaningfully.
+| model | n_layer | D | n_head | state, all layers, bf16 |
+|---|---|---|---|---|
+| 0.4B | 24 | 1024 | 16 | 3.1 MB |
+| 2.9B | 32 | 2560 | 40 | 10.5 MB |
+
+Width buys more 64 × 64 memories per layer, never larger ones; `head_size` is the rank ceiling of each
+head's memory (`docs/muon-rwkv7-finetuning.md` §5).
+
+**Context** (paper §7.5, p. 13): 2.9B retrieves passkeys reliably to about 30k tokens and degrades near
+50k; trained on up to 128k.
+
+**The authors' own state instruments** (paper Appendix J, p. 50): RMS of the elements and stable rank
+`(‖A‖_F / ‖A‖_2)²` on PG19 samples of at least 8192 tokens (example: layer 0 head 4, stable rank 2.03).
+Stable rank is an energy-concentration ratio, not a count of live directions: a matrix with one dominant
+and thirty-one real singular values scores near 1 (`docs/effort-frontier.md`, 2026-09-13). The project's
+1.1-1.3 sits in that regime while 13-16 of 64 directions are live per head on G1i.
+
+## 7. Reference facts about the line
+
+- G1 training code and corpus are not in `BlinkDL/RWKV-LM` (checked at commit `846b08c1`); the World v3
+  recipe is (`RWKV-v5/train.py --my_testing "x070"`, `head_size_a=64`, World tokenizer of 65 536 tokens,
+  bf16 activations with an fp32 WKV kernel).
+- State tuning in `JL-er/RWKV-PEFT` learns one initial state, `[n_layer, n_head, 64, 64]`, with CE alone;
+  the trajectory is not in the loss.
+- In the RNN demo (`RWKV-v7/rwkv_v7_demo_rnn.py`) the state list holds, per layer `i`, the attention
+  shift vector at `3i`, the WKV state `[n_head, 64, 64]` at `3i + 1`, and the channel-mix shift vector at
+  `3i + 2`.
+- GGUF Q4 weights (Ollama) distort state trajectories and are not used for state measurements; probes
+  run bf16 weights with an fp32 WKV accumulator, as in training.

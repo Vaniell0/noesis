@@ -343,6 +343,17 @@ pretraining that can repair the reading of them; the task is still the latent lo
     trained model as its own teacher drifted ("Answer: <answer in capital letters>", quote loops); a frozen bf16 copy
     of the base kept the form and lifted the trained facts 6 -> 16 of 28 without harming held-out ones (11 -> 13 of 21);
   - every run is read on its output (chat, samples at T), not only on accuracy.
+  - saturated, mutually contradicting prompts in sequence are training and gate material (owner 2026-11-11). They load
+    interference between stored facts, make continuations that do not follow from the first reading, and push the loop
+    into the common attractor; an item is passed only by re-thinking the task inside the loop instead of continuing the
+    first reading (H20 measures the collapse, `H12.md` the interference).
+- **The loop is learned from early in training, not grafted on at the end** (owner 2026-11-11). Late checkpoints carry a
+  settled read path: G1k and G1l fall into one attractor for all prompts, and every S1 arm on a finished model so far is a
+  pass-through. So the chain starts from World 0.4B, a plain pretrain that has not been through G1's reasoning training
+  and routes less through its state (H9). G1d 0.4B shares its trained weights (lineage cosine 0.743): it is the same kind
+  of base after the G1 training. World trained by this chain, against G1d, is therefore a comparison of two training
+  methods from one base, and what each moved is readable matrix by matrix. This is why the programme calls itself a second pretraining: organise storage against interference and
+  widen the latent ticks from the start, measured by КПД (§2), not added on top of a finished model.
 - **S2 and later optimise a policy only** (when to think, how many ticks, format, ROSA). Knowledge and reading are not
   taught there.
 - **Qwen3.5 cannot carry the latent; the loop is RWKV's (2026-11-07).** Qwen's head is tied to its input embeddings, so

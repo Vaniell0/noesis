@@ -13,6 +13,11 @@ and what merits deeper external research.
 Not a marketing comparison — a design document for future sessions
 so we do not re-discover the same landscape every chat.
 
+> **Status 2026-11-11.** A snapshot of prior art as of 2026-09-16. The project's claims, with
+> estimators and refuters, are in `hypotheses/README.md`; references below to retired designs (the
+> N/K/readout-mode axes, ThinkChain markers, word-search GRPO, the multi-slot state H12b) are kept as
+> the record of what each paper was read for. Rows of §2 that changed are marked in place.
+
 ---
 
 ## 1. What the community actually ships
@@ -925,9 +930,9 @@ technique. Each divergence is explicit about which.
 | **`L_state` — state-motion reward + curvature reward on load-bearing layers** | Mirror-image of Slow-and-Steady SFA (they minimize, we maximize). Per-layer A0.5-derived weights are empirical noesis contribution. **Risk: no unit-variance analogue anchor; CE alone may not prevent state-norm blow-up.** | `training/state_reg.py`, HYPOTHESES §H8/H9 |
 | **Runtime-persistent WKV across sessions with lens-scoped snapshots** | Community has in-process chat demos + trie prefix cache. Server-side session-persistent WKV as first-class abstraction — nobody built it. | HYPOTHESES §H17, plan §5 (lens cache), plan §10 (context transform) |
 | **K=4 tail + retrieval instead of full-history injection** | Untested wager: if WKV state holds prior context, resending full history is redundant. "K=4" is arbitrary — no empirical basis for this number. **Pressure (2026-08-12):** multi-turn law (0/2 across all models, tuned or not) shows state does not reliably enable multi-turn recall without dedicated training. The wager may still hold with correct training, but "K=4 tail works out of the box" is not supported. H17 is the formal bet; do not treat as an engineering decision until H17 passes. | HYPOTHESES §H17, plan §10 |
-| **M effort frontier (single-axis, corrected 2026-08-23: two mechanisms share the name)** | Industry uses single-scalar effort dial. RWKV community has no effort framework at all. **Stale as of 2026-08-23** — the old N/K/readout-mode framing this row used to describe was fully retired 2026-08-17 (`docs/effort-frontier.md`); the live axis is `M` (WKV-loop internal steps), with real pre-RL data (12.5% vs. 33.3% state_readout baseline, 2026-08-18). Current open problem: `M` names two structurally different mechanisms (`wkv_loop.py`'s self-feed steps vs. `train_think_distill.py`'s ThinkChain distinct phase markers) that a single effort-registry dial doesn't yet distinguish. | HYPOTHESES §H10, `docs/effort-frontier.md`, `docs/rl-track.md` §Track status |
+| **Tick frontier `acc(M)` (updated 2026-11-11)** | Industry uses a single-scalar effort dial over emitted reasoning tokens. RWKV community has no effort framework at all. The axis is `M`, ticks of the model's own latent (one mechanism since 2026-10-21); untrained 12.5% vs. 33.3% for one read (2026-08-18); every trained checkpoint so far a pass-through. | `hypotheses/H10.md`, `docs/effort-frontier.md` |
 | **Gated externalisation (H16 drip + emit gate) — RETRACTED as a separate head, 2026-08-11** | RWKV is strictly autoregressive; needs external token to fire. Poll-mode is universal community pattern. The LM head already encodes `p(emit)` — a dedicated MLP gate head turned out redundant, not "nobody built it yet." See §3.6 above. | HYPOTHESES §H16 |
-| **Multi-slot LoRA with utilisation regularizer (H12b + H12b.i)** | Standard MoE toolkit (entropy + dissimilarity + coverage) applied to RWKV WKV state. **First application of MoE anti-collapse tricks to recurrent state slots.** | HYPOTHESES §H12b/§H12b.i |
+| **Multi-slot LoRA with utilisation regularizer (H12b + H12b.i) — retired 2026-08-20** | Standard MoE toolkit (entropy + dissimilarity + coverage) applied to RWKV WKV state. Never built. Under the fast-weight reading of the state, more slots are more heads, and the bound is key overlap, not size (`hypotheses/H12.md` §5). | `hypotheses/H12.md` |
 | **Startup thermal calibration → drip rate derived** | Community drip experiments (rare) all use hardcoded rates. Per-machine calibration + fan-off invariant — noesis specific. | HYPOTHESES §H1, plan §11 |
 | **Unified multimodal substrate wager (H13a)** | VisualRWKV is bolted encoder. Unified state (text ⊕ image ⊕ audio through one delta-rule) — no community model ships this. | HYPOTHESES §H13a |
 | **Cognitive runtime as an OS-level substrate** | Only `noesis` uid; peer-user sandbox; extensions-as-embodiments (Minecraft, browser, IDE) all bind to the same state. Neither G-Assist (plugin-store bolted on driver) nor Copilot+ PC (cloud-tethered OS feature) has this shape. | README, `docs/policies.md`, `docs/extensions.md` |
@@ -973,6 +978,9 @@ snapshot for the recent session, State-Tuned bias as the "cold
 personality" of a lens. Investigate whether these compose.
 
 ### 3.4 arXiv 2504.05097 as external comparison for H12b alternatives
+
+*The multi-slot direction (H12b) was retired 2026-08-20; this paper was never read in full. Kept
+as a pointer for the working-memory question, now posed in `hypotheses/H12.md`.*
 
 The third-party State Tuning paper (April 2025) also proposes
 kernel-based virtual state upscaling (Gaussian kernel to expand

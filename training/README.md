@@ -122,7 +122,7 @@ All steps complete. See `docs/verdicts/` for per-step writeups.
 | 1 | glaive-v2 | 1e-4 | — | DONE. CE 1.70→0.02 sanity. |
 | 3 | glaive-v2 | 1e-4 | — | DONE. state_reg invisible (1:50 vs CE). |
 | 4 | glaive-v2 | 1e-3 | — | DONE. Active regime, interrupted at step 3500. |
-| 5 | glaive-v2 | 1e-3 | 6.2% (3/48) | DONE. **FAILED** — corpus mismatch: glaive-v2 is reactive (1-2 tool calls); RWKV needs reflexive multi-step. See `FAILED.md`. |
+| 5 | glaive-v2 | 1e-3 | 6.2% (3/48) | DONE. **FAILED** — corpus mismatch: glaive-v2 is reactive (1-2 tool calls); RWKV needs reflexive multi-step. See `docs/verdicts/2026-08-06-a1-pilot-step5.md`. |
 | 6 | action chains + ToolBench | 1e-3, trajectory_reg | no eval | DONE (partial epoch, VM died). No verdict recorded. |
 | 7 | action chains (Opus traces) | 1e-3 | 8.3% (4/48) | DONE. Autodiscovered `<think>` format; first honest reflexive test. |
 | 8 | DSL + L_state full span-mask | 1e-3, all-layers | 10.4% (5/48) | DONE. H10 sweep: state_readout degenerate; N=3 collapse −27pp. |
@@ -189,8 +189,8 @@ python training/merge_lora.py \
   corpora underperform, the answer is more open corpora
   (§Corpus policy §Secondary — adaptable open reasoning traces
   restructured into tool-shaped steps), not a reopening of the
-  personal corpus. See `FAILED.md` 2026-07-30 "Variant A A1-corpus
-  scope superseded" for the audit trail.
+  personal corpus. The audit trail (2026-07-30, "Variant A A1-corpus scope
+  superseded") is in the repository history.
 
 ## State-reg hook — live (A0.5 PASS)
 

@@ -45,13 +45,16 @@ through fine-tune.
 
 **Why.** Weights outlive knowledge. A model that reasons well over
 given facts generalises to new facts. A model that memorised facts
-does not automatically reason about them. See H2 and H7 in
-hypotheses/README.md.
+does not automatically reason about them. Weights hold facts and skills
+together and cannot be split; what can be measured is which way a
+training stage moves facts (`hypotheses/H7.md`).
 
-**How to apply.** Training corpora contain reasoning traces, not
-domain knowledge. Anything that could be retrieved from a document is
-retrieved, not baked. Corpus choices for A1 must be defensible under
-this principle.
+**How to apply.** Training stages are skill stages: their data adds no
+facts the model lacks (self-distillation, a hint read by the same model,
+reward). A stage is judged by the fact classes before and after it:
+"stored, not read" should become "read", and read items should not be
+lost (H7). Anything that could be retrieved from a document is retrieved,
+not baked.
 
 **Cost.** Retrieval quality becomes critical — a weak retrieval story
 makes this principle fail in practice. The model's baseline knowledge
@@ -175,24 +178,29 @@ the migration.
 
 ---
 
-## P8. Empirical over philosophical
+## P8. Measurement and proof over argument
 
-**Statement.** Any architectural claim (RNN vs Transformer, reasoning-
-first, memory-policy) is settled by measurement on the user's real
-held-out eval set, not by argument. Beautiful arguments that fail
-on the eval set lose.
+**Statement.** A claim about the model is settled by a measurement with
+its file and command, or by a proof from the setup, not by argument.
+Exploration is free: any approach, any reframing, any number of variants.
+A claim's status moves only on a test whose estimator and refuter were
+written down before the run (`hypotheses/README.md`, "How claims are
+judged").
 
-**Why.** This whole project is a wager. Wagers pay off on outcomes,
-not on reasoning quality. The temptation to preserve elegant frames
-after the numbers reject them is exactly the failure mode
-hypotheses/README.md's evaluation philosophy exists to prevent.
+**Why.** The project is empirical; most of what it knows came from trying
+approaches and seeing what works, and that is how its formal statements
+were found. What has cost it most is not reframing but misreading: a
+substitute metric reported in place of the registered one, a single seed,
+a column read as a change when it was a value, an effect that the set-up
+forced by construction.
 
-**How to apply.** Every philosophical claim in this project must be
-paired with a falsifiable hypothesis and a cheap test. Refutation
-outweighs elegance. Silence on evidence is not a valid response —
-neither is post-hoc reframing.
+**How to apply.** Every claim carries an estimator and the outcome that
+refutes it. Errors in past numbers or readings are corrected when found,
+dated, with the old reading kept. Reading an old result anew under a
+proved statement is a correction, not a rescue.
 
-**Cost.** Some beautiful ideas will die. That is the point.
+**Cost.** Some ideas will die, and some old numbers will turn out to have
+meant something else. Both are the point.
 
 ---
 
@@ -303,8 +311,8 @@ tokens (H16) *because it does not have to emit to think*.
 - Runtime and DSL treat tokens as *output events*, not as steps of
   thought. The composer does not synthesise a "here is my reasoning"
   paragraph and then act — it acts, and the reasoning trace, if
-  extracted, comes from a state-readout head (H10 `state_readout`)
-  or a drip stream (H16), not from a mandatory CoT prompt.
+  extracted, comes from a readout of the state (re-asking after prefill,
+  or decoding the latent ticks), not from a mandatory CoT prompt.
 - Utility NNs (embedders, classifiers, small policy heads) are
   fine — see P3 — but if they enter a decision path, they enter it
   as *state modulators* or *readout heads over state*, not as
@@ -316,13 +324,18 @@ tokens (H16) *because it does not have to emit to think*.
 - H8's status is the load-bearing measurement. If H8 refutes at
   substrate scale, this principle downgrades to a design bias, not
   an invariant.
+- **Status (2026-11-11): an aim, not yet a measured property.** The state
+  carries computation within one pass (H8, by a substitute measurement).
+  Thinking in latent ticks without tokens has not been shown: every
+  trained checkpoint so far is a pass-through (H10, `HZLK.md` §6), and by
+  the open-loop lemma (`docs/state-and-reasoning.md` §3.2) any gain from
+  silent time must come from ticks that keep changing the controls.
 
 **Cost.** Introspection into a diffuse hidden vector is genuinely
 harder than reading text. Debugging is state-inspection, not log-
 reading. Standard SFT recipes (which supervise on CoT tokens) map
 awkwardly onto this frame — noesis has to invent supervision that
-respects state-side computation (see H9, H12b.i utilisation
-regularizer). The frontier's default assumption is CoT-in-tokens,
+respects state-side computation (the training stages of `HZLK.md` §6). The frontier's default assumption is CoT-in-tokens,
 and every third-party tool assumes it — swimming against that
 current is real cost.
 
@@ -366,7 +379,7 @@ covert, whereas an honest refusal is a valid step in a longer chain.
 - Confabulation is a bug even when the confabulation is right by
   accident; correct-by-accident behaviour is not evidence that the
   underlying decision was sound.
-- Runtime shape (retrieval, tools, `state_readout`, drip re-visit)
+- Runtime shape (retrieval, tools, readouts of the state, drip re-visit)
   gets tried before "bake it into weights". Weight-baking is the
   irreversible option (P12) and needs a stronger justification than
   "would be handy".
@@ -375,8 +388,9 @@ covert, whereas an honest refusal is a valid step in a longer chain.
   paired with a "does not fabricate when it does not know" reading.
   A model that scores higher on the first and lower on the second is
   not obviously better under this principle.
-- Truth-system probes (H19 weight-contamination, H20 aporia, H21
-  premise-validity) are the runtime enforcement of this principle;
+- Truth-system probes (H19 source of the answer, H20 aporia, H21
+  premise-validity, H22 attribution) are the runtime enforcement of this
+  principle;
   they are load-bearing, not decoration. If any of them refutes at
   the substrate scale, this principle downgrades to a training-recipe
   target rather than a substrate property, and the corpus / SFT
@@ -404,6 +418,12 @@ covert, whereas an honest refusal is a valid step in a longer chain.
   owned first-person observation ("in my experience", "in the
   retrieved documents") — not "usually" without owner. Full probe
   design in H22.
+
+**Status (2026-11-11).** Stated before its measurements. H21 reads
+structural premise invalidity (F1 0.79-0.85, above a bag-of-words control
+by a small margin); H20 collapses on the registered metric (0.672); H22's
+test was beaten by bag of words; H19 is not run. The principle holds as a
+target; which of its mechanisms the substrate provides is still open.
 
 **Cost.**
 - Some benchmarks — and some user interactions — reward the model
@@ -436,9 +456,10 @@ premise-refusal mechanically possible; without state-side
 computation, honest not-knowing collapses back to a fluent hedge.
 H2 (reasoning-first outperforms knowledge-first at this scale) —
 the training-time expression. H7 (understanding in weights,
-knowledge in context) — the corpus discipline this drives. H19
-(weight-knowledge contamination detector) — measures whether the
-boundary actually held after fine-tune. H20 (aporia — state holds
+knowledge in context; restated 2026-11-11 as how a training stage moves
+facts between classes) — the training discipline this drives. H19
+(where an answer comes from, context or weights) — the instrument that
+tells the two sources apart. H20 (aporia — state holds
 contradictions without premature collapse) — mechanism enabling
 honest ambiguity. H21 (premise-validity readout) — mechanism
 enabling refusal of malformed queries rather than confabulated

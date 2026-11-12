@@ -34,52 +34,51 @@ guide (how to add a new probe, what each `_common/` module does).
 
 ## What's active
 
-**Registered probes** (`python experiments/run.py --list` for the live
-list, descriptions included) — all measure WKV-state geometry, all
-share one model load, all write `_meta`-stamped results:
-`ipc`, `mlp_ipc`, `rlens`, `jlens`, `rich`, `think_geometry`, `ib_probe`.
-Live in `A0_state_probe/` and `ib_probe/`.
+*Updated 2026-11-11. Every result here feeds a claim in `hypotheses/README.md`; the claim's file says
+which estimator a number is and what would refute it.*
 
-**Standalone but current** (not in the shared battery — different shape,
-usually needs a per-run choice like which prompt or which base checkpoint
-to diff against):
-- `A0_state_probe/a05_run.py` + `a05_analyze.py` — causal state
-  intervention (zero/shuffle/corrupt WKV, measure the effect) — the
-  *causal*, not decodability, test. See the plan/hypotheses/H8.md section
-  for why this matters more than another probe when a decodability
-  result is ambiguous.
-- `A0_state_probe/lora_rank_analysis.py` — SVD of a base/trained weight
-  delta. Diff against the *actual* training base (check lineage — a
-  fine-tune's base isn't always the model you'd guess).
-- `A0_eval/eval.py` — the A0.2 rubric harness (ollama or direct-rwkv
-  backend), including the N/K/readout_mode axes (see its own docstring
-  for the state_readout mechanism).
-- `A0_H12b_multislot/run_probe.py` — multi-slot K×P accuracy sweep, needs
-  its own `gen_multislot.py`-generated probe file.
+**Gate battery for the latent loop** (`python experiments/run.py --backend peft [--weights CKPT] --tests ...`,
+one model load; `--list` for descriptions): `m0_pass` (answers at `M = 0` and at `M`, fact classes with
+`--m0-rank` / `--m0-samples`; the H7 and H19 instrument), `latent_geometry` (per-tick direction, fixed
+point, cross-prompt spread), `latent_noise` (rollout disagreement under latent noise, the RL window),
+`known_heads` (zeroing known heads), `chat` (everyday questions EN/RU, what each tick decodes to),
+`compress` (bits per byte of fresh text with ticks), `backpatch` (two-hop answers after patching a later
+layer into an earlier one; HF models). Stages and gates: `hypotheses/HZLK.md` §6.
 
-**RL stack** — two tracks, not one (see `docs/rl-track.md` §Track status
-for the full split):
-- `rl/train_think_distill.py` — ThinkChain latent-refinement distillation
-  (ranked Phase 1/1.5/2 in `docs/rl-track.md`; Phase 1 done/shipped as of
-  2026-08-22, this is the currently-active track). Trains `M` explicit
-  phase-marker embeddings against a teacher's real `<think>` states.
-- `rl/train_wkv_loop.py` — the WKV-loop GRPO trainer (word-search
-  curriculum, Phase 3 in the same doc; parked behind a corpus-mismatch
-  question, not currently running). `--no-update` runs rollouts + reward
-  without a gradient step (CPU-safe smoke test / M-distribution
-  measurement, no GPU needed). Real training needs the peft backend
-  (`--device cuda`). Supports `--resume <ckpt>` to continue after an
-  interruption — matters on a preemptible instance, which can be
-  reclaimed without much warning. Writes a heartbeat every step.
+**State-geometry probes** (`--backend blink`, CPU): `ipc`, `mlp_ipc`, `rlens`, `jlens`, `rich`,
+`think_geometry`, `ib_probe`. Live in `A0_state_probe/` and `ib_probe/`. Readout lens and capacity:
+`rl/state_readout_lens.py`, `rl/state_capacity_probe.py` (`hypotheses/H25.md` §5).
+
+**Trainers.**
+- `rl/train_latent_s1.py` — stage S1: the answer through `M` ticks of the model's own latent, KL to the
+  model's own `M = 0` answers (`--loss kl|ce --temp`), full fine-tune. `rl/hf_loader.py` is the
+  transformers bridge (Qwen3.5).
+- `rl/train_staged_recall.py` — P1 staged recall (a measured result in `HZLK.md` §6, kept in the S0 mix).
+- Retired, kept runnable: `rl/train_think_distill.py` (ThinkChain markers, replaced 2026-10-22) and
+  `rl/train_wkv_loop.py` (self-feed GRPO, paused 2026-08-19; `--no-update` still measures rollouts).
+
+**Toys** (CPU, minutes): `A0_state_probe/micro_wkv.py` — the single-head cell; `--verify` runs five
+checks including the additivity and silent-step identities behind the open-loop lemma
+(`docs/state-and-reasoning.md` §3.2). Its controls never read the state, so it cannot show computation
+that needs the closed loop. Also `halting_chain.py` / `halting_rl.py` (state-dependent stopping),
+`attractor_depth_probe.py` (fine-tuning and concentration), the optimizer probes of `hypotheses/H26.md`.
+
+**Standalone but current:**
+- `A0_state_probe/a05_run.py` + `a05_analyze.py` — causal state intervention (zero / shuffle / corrupt
+  the state, measure the effect on the output).
+- `A0_state_probe/lora_rank_analysis.py` — SVD of a base/trained weight delta. Diff against the *actual*
+  training base.
+- `A0_eval/eval.py` — the 48-task rubric harness; its `N` / `K` / readout-mode axes belong to a retired
+  design (`docs/effort-frontier.md` §1).
 
 ## What's parked, and why (full audit 2026-08-18)
 
-Cross-referenced every directory against `hypotheses/README.md`/`ROADMAP.md`/
-`FAILED.md` — nothing here is unaccounted-for, but not everything is
+Cross-referenced every directory against `hypotheses/README.md`/`ROADMAP.md`
+— nothing here is unaccounted-for, but not everything is
 live:
 
 - **Correctly refuted, not broken:** `A0_portability` (H8 cross-model
-  transfer, 0/6 pass, properly filed in `FAILED.md`), `aporia_probe`
+  transfer, 0/6 pass, `A0_portability/results_a06_summary.md`), `aporia_probe`
   (H20 pilot ordering claim refuted, substrate mechanism itself not
   refuted).
 - **Blocked/deferred by design:** `A0_baseline` (2.9B eval needs GPU),
@@ -91,10 +90,9 @@ live:
   Known gaps below), but `eval_byte_wordsearch.py` did produce a real,
   closed eval result (0/56 = 0%, G1d 0.4B, random-init adapter — cited
   in `docs/rl-track.md`'s Known risks #5) — a filed result, not pure infra.
-- **Missing from this list until 2026-08-23: `A0_H12a_working_memory`**
-  — its own `README.md`, migrated into the shared framework the same day
-  as this audit (2026-08-18), result: width bottleneck confirmed at G1d
-  0.4B. Belongs alongside `A0_H12b_multislot` above.
+- **`A0_H12a_working_memory`, `A0_H12b_multislot`** — the width and decay sweeps of H12. Recall falls with
+  distance and drops between 8 and 16 items, but exact match is 0 in every cell, so the sweeps are at the
+  task's floor (`hypotheses/H12.md` §3). The multi-slot state they were built for is retired.
 - **Missing from this list until 2026-08-23: `A0.8_refine`** —
   `generate_cot_corpus.py` is the explicitly-cited ancestor of
   `experiments/rl/gen_selfcot_fast.py` (same docstring), feeding the

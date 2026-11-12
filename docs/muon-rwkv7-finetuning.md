@@ -1,8 +1,9 @@
 # Muon on a trained RWKV-7: where the step size actually goes
 
 *Assembled 2026-09-15 for external review; §2.6 and the list of what is not yet done
-(Limitations) added 2026-10-06. Audience: RWKV maintainers and anyone running Muon on a
-pretrained RWKV-7.*
+(Limitations) added 2026-10-06; §0, §2.6 and Limitations item 5 corrected 2026-11-11 (the
+`a_gate` ablation was misread, see §0). Audience: RWKV maintainers and anyone running Muon on
+a pretrained RWKV-7.*
 
 **Attach a LoRA adapter to a Muon-trained RWKV-7 and one factor steps 9-18x
 faster than the other under one shared learning rate.** At r=32 and n_embd 2560,
@@ -37,13 +38,23 @@ longer defend are in **Limitations** at the end, where they belong.
 
 ## 0. Why Muon
 
-**A mechanism result, not memory.** On 2026-08-23, testing something else, we
-found that a delta-rule erase-rewrite channel which Adam's solutions relied on
-heavily stops mattering under Muon at matched accuracy: forcing `a_gate = 0`
-destroys Adam's solution on every seed (−1.376 ± 1.326, worst −3.30) and barely
-touches Muon's (−0.029 ± 0.032). A 10-seed rerun held the shape (−2.619 ± 2.223
-against −0.295 ± 0.563, distributions not overlapping) at matched R². Same task,
-same architecture, same accuracy, reliably different internal solution.
+**A different solution at matched accuracy — and what it is not.** On 2026-08-23,
+testing something else, we found that forcing the delta-rule erase gate to zero
+(`a_gate = 0`) gives very different R² on Adam's and Muon's solutions of the same toy
+multiplication task: −1.376 ± 1.326 (worst −3.30) against −0.029 ± 0.032 over 5 seeds, and
+−2.619 ± 2.223 against −0.295 ± 0.563 over 10, at matched held-out R². We read this as
+"Adam's solution relies on the erase channel and Muon's barely does". **That reading is
+wrong** (corrected 2026-11-11). The toy cell's controls never see its state, and with the
+final read and decay frozen and the gate at zero its output is a sum `f(a) + g(b)` for any
+weights, which cannot correlate with `a·b`: R² ≤ 0 by construction. Both optimizers'
+solutions lose the product entirely without the erase channel (Muon from 0.9997 to about
+0). The column measures the power of the output left when the channel is removed: Adam's
+solutions leave 0.2-7.5 times the target variance, Muon's at lr 0.005 at most 0.08. So the
+solutions differ in size, not in which channel they use, and raising Adam's own learning
+rate moves the number most of the way to Muon's (a five-fold step: 91%, against 25% for
+switching optimizer mid-training). The finding that survives is "different settings, same
+accuracy, solutions of different size"; it does not by itself favour Muon. Algebra and
+checks: `hypotheses/H25.md` §1, `experiments/A0_state_probe/micro_wkv.py --verify` [4].
 
 **And it fits.** Muon carries one momentum buffer where Adam carries two moments.
 On this hardware Muon fits and full-FT Adam does not: a 2.9B full fine-tune under
@@ -476,10 +487,9 @@ so every comparison is paired; LoRA r=8, matched induced step ≈ 8e-4, an old s
 skill, both measured by R²): factor-wise Muon reached a higher
 new-skill R² than Adam on 30 of 30 bases (0.9974 against 0.9930), kept more of the old
 skill in 24 of 30 (+0.051 on average, sign test p = 0.0014), left the state less
-concentrated on one direction in 27 of 30 (top-1 energy 0.81 against 0.90), and depended
-less on the delta-rule erase channel — zeroing `a_gate` costs R² −0.87 under Muon and
-−4.20 under Adam (medians). That is §0's mechanism result again, now with 30 seeds and
-on LoRA. With full fine-tuning at a matched step (~1e-3) the two arms are
+concentrated on one direction in 27 of 30 (top-1 energy 0.81 against 0.90), and left a
+smaller output when the erase channel was forced off — R² −0.87 under Muon against −4.20
+under Adam (medians), read as the size of the remainder, not as dependence (§0). With full fine-tuning at a matched step (~1e-3) the two arms are
 indistinguishable on every one of these measures, which is what the 0.4B table predicts
 when both are inside their safe window.
 
@@ -568,8 +578,10 @@ The two are orthogonal, and a system using both would still want §2.4.
    implementation, which is the opposite of the usual expectation, and that is a
    cheap thing to falsify with two runs. A second, separable question is
    §2.3's: under factor-wise Muon, `r` stops being a capacity ceiling and becomes
-   a forced flat-rank-`r` update every step. Is that the intended reading of rank
-   when Muon is used with a low-rank adapter, or an unexamined side effect?
+   a forced flat-rank-`r` update every step — a claim §2.3 has since withdrawn (it held
+   only for Gaussian gradients; on real gradients the update spans up to 2r). What
+   remains of the question: is rank meant as a capacity ceiling when Muon is used with
+   a low-rank adapter?
 3. **For pretraining: is there a reason to prefer Muon beyond the ones we can no
    longer defend?** Limitations explains why we cannot currently argue "because it builds
    the state's breadth" — our own probe found breadth buildable and worthless, and
@@ -658,9 +670,13 @@ should weigh the rest against.
    key-value recall task: recall accuracy 0.72 to 0.9625, scored by ranking candidates
    (`experiments/rl/results/staged_recall_p1_step100_final.json`) — but no free-generation
    evaluation of a fine-tuned model.
-5. **Whether the toy's concentration gap is LoRA capacity or Adam's use of its step** is being
-   settled by a rank sweep with the step controlled (running); until it finishes §2.6 says only
-   that the gap exists, not why.
+5. **The toy's concentration gap is mostly adapter capacity** (rank sweep with the step
+   controlled, finished 2026-10-12; `attractor_rank_summary.py` over
+   `results/attractor_rank_r{2,8,32}.json`, 12 seeds per rank). At an equal induced step of 7e-4
+   the top-1 energy share rises as the rank falls under both optimizers (Adam 0.84 → 0.89, Muon
+   0.80 → 0.87 from r=32 to r=2), which by the rule fixed before the data means volume, not how
+   one optimizer spends it. At r=2 the two coincide (0.88 against 0.87); at r=8 and r=32 Muon stays
+   less concentrated at the same step (0.81 and 0.80 against 0.89 and 0.84).
 6. **Nothing here concerns pretraining**, which is where Muon's case for RWKV-7 is made.
 
 **The toy is a toy.** §1 is checkpoint arithmetic and holds regardless. §2 is a

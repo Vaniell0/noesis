@@ -48,8 +48,7 @@ and confounded both hypotheses.
 
 **Verdict:** FAILED. All SFT variants scored below G1d base. glaive-v2
 trains format-dispatch, not reasoning. 40% "direct" entries are
-pre-tool-call phrases, not answers. See `FAILED.md` §2026-08-06 and
-`docs/verdicts/2026-08-06-a1-pilot-step5.md`.
+pre-tool-call phrases, not answers. See `docs/verdicts/2026-08-06-a1-pilot-step5.md`.
 
 ---
 

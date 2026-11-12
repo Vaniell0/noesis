@@ -2,6 +2,14 @@
 
 How a corpus becomes a checkpoint — and why each step exists.
 
+> **Status 2026-11-11: the record of the A1 fine-tune (steps 1-10, July-August 2026).** A1 was LoRA with
+> the trajectory loss `L_state`, judged on the 48-task rubric set. It is not the current path. Training
+> now follows the stages of `hypotheses/HZLK.md` §6: the S1 trainer `experiments/rl/train_latent_s1.py`
+> (full fine-tune, KL to the model's own `M = 0` answers through the ticks), gates run on the checkpoint by
+> `experiments/run.py --backend peft`, data from the catalog (`docs/datasets.md`). What a stage must show
+> is in `hypotheses/H7.md` (fact classes) and `hypotheses/H10.md` (the `M = 0` control). The scripts,
+> the step record and the generated corpus table below are kept as they were.
+
 Every artifact named below is recorded in the dataset catalog (origin, generator command,
 parents, hash, what was measured on it): see [`docs/datasets.md`](datasets.md) and
 `python training/datasets.py usage`.
@@ -142,8 +150,9 @@ state in the right direction.
 
 Switched to DSL output format (noesis runtime's native schema). Applied
 L_state to all 8 layers ([0,4,8,12,16,20,24,28]). H10 sweep on this
-checkpoint revealed two failures: `state_readout` axis degenerate (it
-equals `prompt_cot` at every cell); N=3 re-feed causes −27pp collapse.
+checkpoint showed `state_readout` equal to `prompt_cot` at every cell (an
+evaluator bug, both modes shared one decode path; fixed 2026-08-12) and an
+N=3 re-feed collapse (−27 pp).
 Eval: **10.4% (5/48)**. DSL format also killed extraction: 100% DSL
 corpus causes the model to generate DSL for plain-text tasks too.
 

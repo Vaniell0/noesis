@@ -129,8 +129,8 @@ class MLPDecoder(nn.Module):
     structure (up to R^2~=0.86) — the state carries information nonlinearly,
     invisible to a linear decoder. `probe_lag` below tests whether the
     same gap exists for IB's reconstruction task (predict token[t-lag]
-    from state[t]) — linear IB came back ~=0 beyond lag=2 (see FAILED.md/
-    hypotheses/README.md note 2026-08-18); this is the direct check for whether
+    from state[t]) — linear IB came back ~=0 beyond lag=2 (note of
+    2026-08-18); this is the direct check for whether
     that's a real absence of structure or the same linear-decoder blindness.
     """
     def __init__(self, in_dim: int, hidden: int, n_classes: int):

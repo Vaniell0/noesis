@@ -195,7 +195,7 @@ def _arith_gen(rng: random.Random, idx: int) -> Optional[dict]:
 #   n_candidates    = max carry + 1, set by the number of addends
 # Separability demand should scale with the second and persistence with the
 # first, and both can be read against the 13-16 live directions the state
-# actually carries (docs/effort-frontier.md:203).
+# actually carries (docs/effort-frontier.md §2).
 #
 # Known shortcut, stated so the result is interpretable: a model can also
 # resolve this by buffering the input digits verbatim and computing during the

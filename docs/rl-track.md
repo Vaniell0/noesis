@@ -18,6 +18,15 @@ what each tick decodes to), `latent_geometry`, `latent_noise`, `known_heads`. S1
 | Phase 2 rewind marker / L_tPC | the function stays (re-think inside the loop, S3); the constant-vector implementation is falsified |
 | Phase 3 word-search GRPO, log pi on answer tokens only | S2/S3: the latent itself is in log pi; ciphers and tables instead of word-search |
 
+**Where it stands (2026-11-11).** A fifth stage was added 2026-10-28: **S5**, a QKV-ROSA branch queried at every
+tick, so exact history survives the settling of the state (HZLK §6). S1 ran on G1d 0.4B and, through the transformers
+bridge, on Qwen3.5 0.8B: the tick stops erasing the answer, and every trained checkpoint is a pass-through, solving at
+M=0 the same items it solves with ticks (`hypotheses/H10.md` §3); the families meant to need ticks (ciphers) have no
+teacher yet. Why, in the algebra (`docs/state-and-reasoning.md` §3): with a single target at the end, the loss is met by
+a per-prompt fixed point reached at tick 1, and a loop gains only while the fed latent keeps changing the controls. The
+chain of 2026-11-07 ran the 0.4B student stage only (`experiments/rl/results/rwkv_2026_11_07/`). Optimizer and step size:
+`hypotheses/H26.md` §3.
+
 Everything below — the 4-stage plan of 2026-08-23, the ThinkChain run history, known risks — is kept as the record those
 decisions were paid for with; it is not the current plan.
 

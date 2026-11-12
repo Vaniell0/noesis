@@ -309,6 +309,15 @@ resolve why Muon collapses at 2.9B scale on this project's real
 architecture/pipeline; that gap (row above) is unrelated in mechanism
 until shown otherwise.
 
+> **Corrected 2026-11-11: the ablation row is misread above.** The toy's controls never see the
+> state, and with the last read and decay frozen and the erase gate at 0 its output is additive in the
+> two operands for any weights, so R² against their product is ≤ 0 by construction
+> (`docs/state-and-reasoning.md` §3.2, `micro_wkv.py --verify` [4]). Both optimizers' solutions lose
+> the product entirely without the erase gate; the row measures how large an output is left, i.e. the
+> size of the terms the erase path undoes. Raising Adam's own step moves it most of the way to Muon's
+> (`hypotheses/H26.md` §1). "Adam leans on one mechanism, Muon is distributed" does not follow. The 2.9B
+> collapse was later traced to the step size (`hypotheses/H26.md` §2).
+
 ## Repeat-count isolation (`experiments/rl/state_trajectory_probe.py`, fixed M=1, step500 marker)
 
 Sweep `--phase-repeat-ticks` (2/8/16/25), reading `delta_cos_prev` (cosine

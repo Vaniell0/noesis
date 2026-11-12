@@ -1,5 +1,11 @@
 # Training data shortlist (A1)
 
+> **Status 2026-11-11: the A1 corpus plan (Variant C, July-August 2026), not current.** A1 was not
+> continued. Training data today is the project's own procedural tasks (ciphers, tables, staged recall)
+> and the model's own answers, catalogued in `docs/datasets.md`; a stage adds no facts the model lacks
+> (`hypotheses/H7.md`). Kept for the licence and provenance decisions on public corpora (§3 lists what
+> was rejected and why) and the record of steps 9-10.
+
 The noesis A1 corpus plan. Reconciled 2026-07-30 with
 `docs/policies.md § A1 fine-tune corpus scope` (Variant C hybrid).
 Both files are now the same story: this file is the operational
