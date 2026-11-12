@@ -1,0 +1,62 @@
+{
+  "name": "ciphers_k_mixed_plain_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_mixed_plain_eval.jsonl",
+  "out_sha256": "838f7a1fca3b9a825e62e4ee13ff7b7993578f96107d33073c692a69ab034fe8",
+  "out_size_bytes": 87913,
+  "n_rows": 120,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "mixed",
+      "--n",
+      "120",
+      "--families",
+      "plain",
+      "--split",
+      "eval",
+      "--seed",
+      "11",
+      "--out",
+      "training/corpus_open/ciphers_k_mixed_plain_eval.jsonl"
+    ],
+    "seed": 11,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "S0 rung below every cipher (--families plain): the same mixed task with the message in plain text; separates 'cannot do the task' from 'cannot read the cipher'.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_mixed": 120
+    },
+    "level": {
+      "1": 52,
+      "2": 68
+    },
+    "mode": {
+      "plain": 120
+    },
+    "view": {
+      "plain": 120
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

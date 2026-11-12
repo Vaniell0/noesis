@@ -1,13 +1,13 @@
 {
-  "ts": 1794035188.9297073,
-  "ts_human": "2026-11-07 10:06:28",
+  "ts": 1794083655.5665276,
+  "ts_human": "2026-11-07 23:34:15",
   "progress": [
-    0,
+    1,
     1
   ],
-  "probe": "m0_pass",
+  "probe": null,
   "probe_index": 1,
   "probe_total": 1,
   "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
-  "message": "running m0_pass (1/1)"
+  "message": "done \u2014 1/1 probes finished"
 }

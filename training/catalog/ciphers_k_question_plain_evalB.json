@@ -1,0 +1,44 @@
+{
+  "name": "ciphers_k_question_plain_evalB",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-11-04",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_question_plain_evalB.jsonl",
+  "out_sha256": "d8b327c5d9e47aa70d318203df6f882ed43fc353566b19f71c5023fc111e0872",
+  "out_size_bytes": 14145,
+  "n_rows": 24,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [
+    "ciphers_k_question_plain_eval"
+  ],
+  "recipe": {},
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "Country split of the question rung (2026-11-04): CAPITALS keys sorted, even indices = A (train), odd = B (held out); gen_ciphers splits by content_id, which kept 22 of 25 eval questions in train. Eval rows of B countries (24, 10 countries): transfer of the read skill.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_question": 24
+    },
+    "level": {
+      "1": 24
+    },
+    "mode": {
+      "plain": 24
+    },
+    "view": {
+      "plain": 24
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

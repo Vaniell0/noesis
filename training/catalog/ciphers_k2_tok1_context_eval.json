@@ -1,0 +1,62 @@
+{
+  "name": "ciphers_k2_tok1_context_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-29",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k2_tok1_context_eval.jsonl",
+  "out_sha256": "9da5c567e4c8d5b4b8d2673dcc281fbdd213d8a74e46abf20d311a3a6b3124ad",
+  "out_size_bytes": 118277,
+  "n_rows": 120,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "context",
+      "--families",
+      "script_cyrillic,script_katakana,script_hebrew",
+      "--k",
+      "2",
+      "--split",
+      "eval",
+      "--n",
+      "120",
+      "--out",
+      "training/corpus_open/ciphers_k2_tok1_context_eval.jsonl"
+    ],
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "Eval split of the single-token-alphabet context ciphers (2026-10-29).",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_context": 120
+    },
+    "level": {
+      "1": 120
+    },
+    "mode": {
+      "known": 120
+    },
+    "view": {
+      "script_cyrillic": 40,
+      "script_hebrew": 40,
+      "script_katakana": 40
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

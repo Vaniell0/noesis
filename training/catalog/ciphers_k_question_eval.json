@@ -1,0 +1,67 @@
+{
+  "name": "ciphers_k_question_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_question_eval.jsonl",
+  "out_sha256": "67216309dd09ea0b5bafbd0274d0c0fcf5aca4565f4b0af302f4dbbac4d7633a",
+  "out_size_bytes": 153554,
+  "n_rows": 192,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "question",
+      "--n",
+      "192",
+      "--families",
+      "caesar,atbash,vigenere,railfence,polybius6,script_cyrillic",
+      "--split",
+      "all",
+      "--seed",
+      "11",
+      "--out",
+      "training/corpus_open/ciphers_k_question_eval.jsonl"
+    ],
+    "seed": 11,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "S0 knowledge task, --task question: world-knowledge question encrypted (32 capitals); answer from the weights; split all: 32 facts are too few for a hash split. Answer formats rotate plain/quoted/json/line.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_question": 192
+    },
+    "level": {
+      "2": 160,
+      "3": 32
+    },
+    "mode": {
+      "known": 192
+    },
+    "view": {
+      "atbash": 32,
+      "caesar": 32,
+      "polybius6": 32,
+      "railfence": 32,
+      "script_cyrillic": 32,
+      "vigenere": 32
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

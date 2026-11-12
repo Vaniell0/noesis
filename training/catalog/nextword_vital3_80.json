@@ -1,0 +1,40 @@
+{
+  "name": "nextword_vital3_80",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-11-05",
+  "script": "",
+  "out_path": "training/corpus_open/nextword_vital3_80.jsonl",
+  "out_sha256": "0f926c2721719eaafd385d1a874778a4806089a4f046d1abbc53dd262bf36da8",
+  "out_size_bytes": 58537,
+  "n_rows": 80,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {},
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content)",
+  "notes": "Bad-sector verification (2026-11-05): next-word questions from the per-token map badsector_map_vital3 (Wikipedia Level-3 vital intros, outside the repo). 40 near (real token ranked 2-5) + 40 far (rank >100) capitalised words, >4 bits, not earlier in the prefix. Routes via cot_vs_routes_probe: silent vs own CoT.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "nextword": 80
+    },
+    "level": {
+      "1": 80
+    },
+    "view": {
+      "far": 40,
+      "near": 40
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

@@ -1,0 +1,70 @@
+{
+  "name": "ciphers_decode_tok1_short_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-29",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_decode_tok1_short_eval.jsonl",
+  "out_sha256": "cd03462fd1e543da77093700e938204a3d182d46bd17c4299513d0444d79afc9",
+  "out_size_bytes": 52595,
+  "n_rows": 60,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "decode",
+      "--families",
+      "script_cyrillic,script_katakana,script_hebrew",
+      "--views",
+      "1",
+      "--unknown-share",
+      "0",
+      "--min-chars",
+      "20",
+      "--max-chars",
+      "50",
+      "--split",
+      "eval",
+      "--n",
+      "60",
+      "--out",
+      "training/corpus_open/ciphers_decode_tok1_short_eval.jsonl"
+    ],
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "Decode rung eval (Qwen 0.8B 0/60 at M=0: copies the ciphertext).",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_script_cyrillic": 20,
+      "cipher_script_hebrew": 20,
+      "cipher_script_katakana": 20
+    },
+    "level": {
+      "1": 60
+    },
+    "mode": {
+      "known": 60
+    },
+    "view": {
+      "script_cyrillic": 20,
+      "script_hebrew": 20,
+      "script_katakana": 20
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

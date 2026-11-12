@@ -1,0 +1,70 @@
+{
+  "name": "ciphers_k_context_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_context_eval.jsonl",
+  "out_sha256": "5a15a57578616e5da60fa11ee3898ee78b77f42300f82d65836a6e996c337769",
+  "out_size_bytes": 183000,
+  "n_rows": 200,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "context",
+      "--n",
+      "200",
+      "--families",
+      "caesar,atbash,vigenere,railfence,polybius6,script_cyrillic",
+      "--split",
+      "eval",
+      "--seed",
+      "11",
+      "--out",
+      "training/corpus_open/ciphers_k_context_eval.jsonl"
+    ],
+    "seed": 11,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "S0 knowledge task, --task context: k facts NAME LIVES IN CITY encrypted; lookup (levels 1-2) or the pair sharing a city (3+); answer from the context only. Answer formats rotate plain/quoted/json/line.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_context": 200
+    },
+    "level": {
+      "1": 67,
+      "2": 59,
+      "3": 49,
+      "4": 23,
+      "5": 2
+    },
+    "mode": {
+      "known": 200
+    },
+    "view": {
+      "atbash": 34,
+      "caesar": 34,
+      "polybius6": 33,
+      "railfence": 33,
+      "script_cyrillic": 33,
+      "vigenere": 33
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

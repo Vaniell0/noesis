@@ -1,0 +1,45 @@
+{
+  "name": "ciphers_k_mixed_plain_evalB",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-11-05",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_mixed_plain_evalB.jsonl",
+  "out_sha256": "bae520a533ca90c8a96c05ec6fc46162ddc5c1e6a07c2d4744f9f7860723990e",
+  "out_size_bytes": 48206,
+  "n_rows": 66,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [
+    "ciphers_k_mixed_plain_eval"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "Country split of the plain mixed rung (2026-11-05), by the gold capital: CAPITALS keys sorted, even = A, odd = B (same split as ciphers_k_question_plain_trainA/evalA/evalB). eval rows with a B-country gold: 66 (held-out facts)",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_mixed": 66
+    },
+    "level": {
+      "1": 31,
+      "2": 35
+    },
+    "mode": {
+      "plain": 66
+    },
+    "view": {
+      "plain": 66
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

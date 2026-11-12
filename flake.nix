@@ -102,7 +102,7 @@
         cargoLock.lockFile = ./runtime/Cargo.lock;
         buildAndTestSubdir = "noesis-runtime";
         nativeBuildInputs = [ pkgs.pkg-config pkgs.llvmPackages.libclang ];
-        buildInputs       = [ rwkv-cpp ];
+        buildInputs       = [ rwkv-cpp pkgs.sqlite ];
         NOESIS_RWKV_CPP_PREFIX = "${rwkv-cpp}";
         LIBCLANG_PATH          = "${pkgs.llvmPackages.libclang.lib}/lib";
         meta = {

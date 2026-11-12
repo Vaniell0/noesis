@@ -1,0 +1,62 @@
+{
+  "name": "ciphers_k_mixed_plain_train",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-28",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_mixed_plain_train.jsonl",
+  "out_sha256": "bfd21654ef8e9c8bb39be4760b7e99c6d01995d793c8c1e3d974c79d472061e8",
+  "out_size_bytes": 435313,
+  "n_rows": 600,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "mixed",
+      "--n",
+      "600",
+      "--families",
+      "plain",
+      "--split",
+      "train",
+      "--seed",
+      "21",
+      "--out",
+      "training/corpus_open/ciphers_k_mixed_plain_train.jsonl"
+    ],
+    "seed": 21,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "S1 hinted distillation pool (2026-10-27): plain mixed items (context + capital from the weights), train split. Hint 3 gives the capital; the student must pull it from the weights (H19).",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_mixed": 600
+    },
+    "level": {
+      "1": 315,
+      "2": 285
+    },
+    "mode": {
+      "plain": 600
+    },
+    "view": {
+      "plain": 600
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

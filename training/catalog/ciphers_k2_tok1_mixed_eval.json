@@ -1,0 +1,62 @@
+{
+  "name": "ciphers_k2_tok1_mixed_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-29",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k2_tok1_mixed_eval.jsonl",
+  "out_sha256": "5ddd7851133e6c2d7cbf988337622559313ba124622688a63a8a238c0d6301c2",
+  "out_size_bytes": 126212,
+  "n_rows": 120,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "mixed",
+      "--families",
+      "script_cyrillic,script_katakana,script_hebrew",
+      "--k",
+      "2",
+      "--split",
+      "eval",
+      "--n",
+      "120",
+      "--out",
+      "training/corpus_open/ciphers_k2_tok1_mixed_eval.jsonl"
+    ],
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "Eval split of the single-token-alphabet mixed ciphers (2026-10-29).",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_mixed": 120
+    },
+    "level": {
+      "2": 120
+    },
+    "mode": {
+      "known": 120
+    },
+    "view": {
+      "script_cyrillic": 40,
+      "script_hebrew": 40,
+      "script_katakana": 40
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

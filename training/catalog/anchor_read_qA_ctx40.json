@@ -1,0 +1,48 @@
+{
+  "name": "anchor_read_qA_ctx40",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-11-05",
+  "script": "",
+  "out_path": "training/corpus_open/anchor_read_qA_ctx40.jsonl",
+  "out_sha256": "ac73f1b3114d225fc7b0a399ff55247c84fc68556e7068849de23765dd7d0e21",
+  "out_size_bytes": 31626,
+  "n_rows": 48,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "tasks",
+  "status": "live",
+  "parents": [
+    "ciphers_k_question_plain_trainA",
+    "ciphers_k_context_plain_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "On-policy anchor (2026-11-05): rows Qwen 0.8B already answers right at M=0 - trainA question rows (s0_question_trainA right_ids) + the first 40 right plain context train rows (s0_train_hint0). The frozen teacher reads the plain prompt: KL(student || base) on own tokens.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_context": 40,
+      "cipher_question": 8
+    },
+    "level": {
+      "1": 42,
+      "2": 5,
+      "3": 1
+    },
+    "mode": {
+      "plain": 48
+    },
+    "view": {
+      "plain": 48
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

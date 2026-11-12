@@ -327,6 +327,42 @@ ciphers_v1_eval:
   role: eval
   recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--payload", "hh_rlhf", "--n", "750", "--views", "3", "--seed", "8", "--split", "eval", "--out", "training/corpus_open/ciphers_v1_eval.jsonl"], seed: 8, deterministic: true}
 
+ciphers_k_context_eval:
+  role: eval
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S0 knowledge task, --task context: k facts NAME LIVES IN CITY encrypted; lookup (levels 1-2) or the pair sharing a city (3+); answer from the context only. Answer formats rotate plain/quoted/json/line."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "context", "--n", "200", "--families", "caesar,atbash,vigenere,railfence,polybius6,script_cyrillic", "--split", "eval", "--seed", "11", "--out", "training/corpus_open/ciphers_k_context_eval.jsonl"], seed: 11, deterministic: true}
+
+ciphers_k_question_eval:
+  role: eval
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S0 knowledge task, --task question: world-knowledge question encrypted (32 capitals); answer from the weights; split all: 32 facts are too few for a hash split. Answer formats rotate plain/quoted/json/line."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "question", "--n", "192", "--families", "caesar,atbash,vigenere,railfence,polybius6,script_cyrillic", "--split", "all", "--seed", "11", "--out", "training/corpus_open/ciphers_k_question_eval.jsonl"], seed: 11, deterministic: true}
+
+ciphers_k_mixed_eval:
+  role: eval
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S0 knowledge task, --task mixed: encrypted facts NAME LIVES IN THE CAPITAL OF COUNTRY; answer needs the decoded context and the fact. Answer formats rotate plain/quoted/json/line."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "mixed", "--n", "200", "--families", "caesar,atbash,vigenere,railfence,polybius6,script_cyrillic", "--split", "eval", "--seed", "11", "--out", "training/corpus_open/ciphers_k_mixed_eval.jsonl"], seed: 11, deterministic: true}
+
+ciphers_k_context_plain_eval:
+  role: eval
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S0 rung below every cipher (--families plain): the same context task with the message in plain text; separates 'cannot do the task' from 'cannot read the cipher'."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "context", "--n", "120", "--families", "plain", "--split", "eval", "--seed", "11", "--out", "training/corpus_open/ciphers_k_context_plain_eval.jsonl"], seed: 11, deterministic: true}
+
+ciphers_k_question_plain_eval:
+  role: eval
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S0 rung below every cipher (--families plain): the same question task with the message in plain text; separates 'cannot do the task' from 'cannot read the cipher'."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "question", "--n", "64", "--families", "plain", "--split", "all", "--seed", "11", "--out", "training/corpus_open/ciphers_k_question_plain_eval.jsonl"], seed: 11, deterministic: true}
+
+ciphers_k_mixed_plain_eval:
+  role: eval
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S0 rung below every cipher (--families plain): the same mixed task with the message in plain text; separates 'cannot do the task' from 'cannot read the cipher'."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "mixed", "--n", "120", "--families", "plain", "--split", "eval", "--seed", "11", "--out", "training/corpus_open/ciphers_k_mixed_plain_eval.jsonl"], seed: 11, deterministic: true}
+
 # ---- applied last: a held-out split is an eval split whatever its generator was ----------------
 re:.*_(val|eval|val_dry100):
   role: eval
@@ -391,3 +427,15 @@ _planned:
     license: CC-BY-SA-4.0
     languages: [scots]
     notes: "Not ground truth for Scots. Its worth is as a NEGATIVE control: does a model prefer fake Scots (English grammar + Scots words) over real Scots? Real-Scots sources still to be found and checked."
+
+ciphers_k_context_plain_train:
+  role: train
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S1 hinted distillation pool (2026-10-27): plain context items, train split (no content overlap with the eval set). Hints from gen_ciphers.hint_ladder."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "context", "--n", "600", "--families", "plain", "--split", "train", "--seed", "21", "--out", "training/corpus_open/ciphers_k_context_plain_train.jsonl"], seed: 21, deterministic: true}
+
+ciphers_k_mixed_plain_train:
+  role: train
+  verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
+  notes: "S1 hinted distillation pool (2026-10-27): plain mixed items (context + capital from the weights), train split. Hint 3 gives the capital; the student must pull it from the weights (H19)."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "mixed", "--n", "600", "--families", "plain", "--split", "train", "--seed", "21", "--out", "training/corpus_open/ciphers_k_mixed_plain_train.jsonl"], seed: 21, deterministic: true}

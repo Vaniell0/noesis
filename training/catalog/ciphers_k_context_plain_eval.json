@@ -1,0 +1,63 @@
+{
+  "name": "ciphers_k_context_plain_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_context_plain_eval.jsonl",
+  "out_sha256": "4209a6097e7eb4cc8b96ec1221039f57bc23febcc3b871b64e24966bc781c850",
+  "out_size_bytes": 84498,
+  "n_rows": 120,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "context",
+      "--n",
+      "120",
+      "--families",
+      "plain",
+      "--split",
+      "eval",
+      "--seed",
+      "11",
+      "--out",
+      "training/corpus_open/ciphers_k_context_plain_eval.jsonl"
+    ],
+    "seed": 11,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "S0 rung below every cipher (--families plain): the same context task with the message in plain text; separates 'cannot do the task' from 'cannot read the cipher'.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_context": 120
+    },
+    "level": {
+      "1": 72,
+      "2": 29,
+      "3": 19
+    },
+    "mode": {
+      "plain": 120
+    },
+    "view": {
+      "plain": 120
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

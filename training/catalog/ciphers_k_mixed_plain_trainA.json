@@ -1,0 +1,45 @@
+{
+  "name": "ciphers_k_mixed_plain_trainA",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-11-05",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_mixed_plain_trainA.jsonl",
+  "out_sha256": "8872200ec89ce4325cb96a36a1d3e3b136d74c9d1498b46cd629f8af97045c10",
+  "out_size_bytes": 210736,
+  "n_rows": 291,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "train",
+  "format": "tasks",
+  "status": "live",
+  "parents": [
+    "ciphers_k_mixed_plain_train"
+  ],
+  "recipe": {},
+  "verifier": "",
+  "notes": "Country split of the plain mixed rung (2026-11-05), by the gold capital: CAPITALS keys sorted, even = A, odd = B (same split as ciphers_k_question_plain_trainA/evalA/evalB). train rows whose gold capital is an A country: 291",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_mixed": 291
+    },
+    "level": {
+      "1": 154,
+      "2": 137
+    },
+    "mode": {
+      "plain": 291
+    },
+    "view": {
+      "plain": 291
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

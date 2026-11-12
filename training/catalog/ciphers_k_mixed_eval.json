@@ -1,0 +1,68 @@
+{
+  "name": "ciphers_k_mixed_eval",
+  "stage": "raw",
+  "provenance": "unknown",
+  "origin": "",
+  "date": "2026-10-22",
+  "script": "",
+  "out_path": "training/corpus_open/ciphers_k_mixed_eval.jsonl",
+  "out_sha256": "8445070041998622a90dcf0b73383803c694ce67a0f76b578a12cd900b6a9d0f",
+  "out_size_bytes": 193893,
+  "n_rows": 200,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {},
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "mixed",
+      "--n",
+      "200",
+      "--families",
+      "caesar,atbash,vigenere,railfence,polybius6,script_cyrillic",
+      "--split",
+      "eval",
+      "--seed",
+      "11",
+      "--out",
+      "training/corpus_open/ciphers_k_mixed_eval.jsonl"
+    ],
+    "seed": 11,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)",
+  "notes": "S0 knowledge task, --task mixed: encrypted facts NAME LIVES IN THE CAPITAL OF COUNTRY; answer needs the decoded context and the fact. Answer formats rotate plain/quoted/json/line.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_mixed": 200
+    },
+    "level": {
+      "2": 86,
+      "3": 97,
+      "4": 17
+    },
+    "mode": {
+      "known": 200
+    },
+    "view": {
+      "atbash": 34,
+      "caesar": 34,
+      "polybius6": 33,
+      "railfence": 33,
+      "script_cyrillic": 33,
+      "vigenere": 33
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}
