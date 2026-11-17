@@ -15,8 +15,8 @@ latent, then to choose how many ticks it takes, then to read the exact history b
 been measured so far:
 
 - **The substrate.** The state carries computation within one pass (H8, by a substitute measurement), is
-  wider than one read uses (13-16 live directions of 64 per head on G1i), and keeps 1-2 separable facts
-  per head (`H12.md`, `H25.md`). With its controls frozen a tick must settle to a rank-1 point at the rate
+  wider than one read uses (13-16 live directions of 64 per head on G1i), and keeps about 7 bound values
+  linearly readable in three layers of G1d 0.4B, more than the model recalls (`H12.md`, `H25.md`). With its controls frozen a tick must settle to a rank-1 point at the rate
   at which it forgets (`docs/state-and-reasoning.md` §3).
 - **Trained ticks.** S1 on G1d 0.4B and on Qwen3.5 0.8B: the tick stops erasing the answer, and every
   trained checkpoint is a pass-through, solving at `M = 0` what it solves with ticks (`H10.md` §3). The

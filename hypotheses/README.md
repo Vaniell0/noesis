@@ -144,7 +144,7 @@ cell (`experiments/A0_state_probe/micro_wkv.py`) stores the transpose
 | КПД (efficiency) | usable information gained per tick per unit of state motion, `R_density` | `HZLK.md` §2 |
 | bad (erased) sectors | facts in the class "stored, not read": held, missed by the one-pass read | §2 above; `H7.md`, `H19.md` |
 | interference | crosstalk between stored items through overlapping keys | `H12.md` §1 |
-| the neck of the heads | a head's capacity: 1-2 separable facts of 64 dimensions | `H25.md` §5 |
+| the neck of the heads | a layer's capacity: about 7 linearly readable bound values on G1d 0.4B (L11-13), falling from L16 to the head | `H25.md` §5 |
 | attractor, collapse | the fixed point a settling loop reaches; one point for all prompts is the collapse | `H25.md` §4 |
 | refusal to converge, open channel | ticks that keep changing the controls, so the loop does not settle at tick 1 | §3 (regular); `H10.md` §2 |
 | pass-through | a trained loop whose checkpoint at `M = 0` solves the same items | §3 (regular) |
@@ -258,7 +258,9 @@ Four statements: register, delegation, attractor, capacity. See `H25.md`.
 delegation fixed by algebra on the toy (open-loop lemma) and not
 discriminated on the real model (one readable layer of three, graded);
 attractor is the tick lemma plus its measurement on four real models;
-capacity measured at 1-2 separable facts per head.
+capacity on G1d 0.4B: a linear probe of one layer's state reads up to about 7
+bound values (sum of held-out R2; L12 holds most), not the 1-2 per head an
+erratic solver reported before 2026-11-12.
 
 **H12. Working memory is bounded by interference between keys, not by
 the size of the state.**
@@ -267,9 +269,10 @@ without crosstalk only as many bindings as the weights give it separable
 keys. See `H12.md`.
 *Rests on:* on G1d 0.4B recall falls with distance (0.25 -> 0.02 over gap
 60 -> 229) and drops between 8 and 16 items at fixed gap, both near the
-floor of the task (exact match 0); 1-2 separable facts per head of 64
-dimensions. Consistent with interference; the direct estimator (overlap of
-the keys of stored items) is not run.
+floor of the task (exact match 0); the state of L11-13 keeps about 5.5 of 8
+stored values linearly readable while the model recalls about 3, so part of
+the limit sits in the readout (corrected probe, 2026-11-12). The direct
+estimator (overlap of the keys of stored items) is not run.
 
 ### Time buys computation
 
@@ -346,8 +349,9 @@ one.**
 on the first decoded token; holds below 0.30, refuted above 0.70.
 *Rests on:* G1d 0.4B gives 0.672 on the registered number. The prose cites a
 later, softer one (0.541). Under alternation the model entrenches (the
-log-odds gap grows 10.6 -> 11.4 nats). Consistent with 1-2 separable facts
-per head.
+log-odds gap grows 10.6 -> 11.4 nats). Once read as consistent with 1-2
+separable facts per head; that count was a solver artefact (2026-11-12), and
+the state keeps about 5.5 of 8 values readable, so storage does not explain it.
 
 **H21. Premise validity is readable from the state before the answer.**
 *Estimator:* leave-one-out F1 of a small head on per-head state statistics.
@@ -373,9 +377,11 @@ rests on them more than on any single status.
   base 0.4B's ticks contract toward a point; H10's early gain from a second
   pass is most likely recall. This is the pass-through regularity.
 - **The state is a narrow neck.** Of 64 directions per head 12-29 are
-  occupied, the answer depends on about half of them, and a linear probe
-  separates 1-2 facts (H25); H20's collapse and H12's width are the same
-  neck seen from the output. This is why time has to be spent in the state
+  occupied and the answer depends on about half of them. A linear probe
+  reads more than the model recalls (about 5.5 of 8 stored values against 3
+  recalled, G1d 0.4B L11-13), and per layer it falls from L15 to L16 and
+  stays low to the head (H25, HZLK ZLK.20); H20's collapse and H12's width
+  are the same neck seen from the output. This is why time has to be spent in the state
   and why the channel must stay open.
 
 ## 6. What the programme is for

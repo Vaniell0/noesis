@@ -10,8 +10,10 @@ three questions for every artifact, and answers a fourth that was missing: **is 
 about this data confirmed, or only used.**
 
 ```
-training/datasets.py   ls | show | usage | verify | lineage | overlap | rows | backfill | index
+training/datasets.py   ls | show | usage | verify | lineage | overlap | rows | backfill | index | map | improve
 training/_common/catalog.py     reader, verifier, lineage, usage, overlap, backfill
+training/_common/datamap.py     the map: solve rate per dataset cell, model and ticks, from result files
+training/_common/improve.py     the improver: the next training round where the model solves sometimes
 training/catalog/*.json         one record per artifact (tracked in git)
 training/catalog/hints.yaml     facts a scan cannot see: origin, generator command, parents, evidence
 training/tests/test_catalog.py  throw-away-repo tests
@@ -66,6 +68,39 @@ being evaluated; a run whose result has two confounded causes).
 The `has-results` link is read from the result files themselves: every result JSON records its
 `args`, so `staged_recall_p1_step100_final.json` is what shows that P1 trained and evaluated on
 `p1_shared_*` and on no other file.
+
+## What works and when (`datasets.py map`)
+
+Computed the same way as the usage state: from result files that record which rows were solved
+(`m0_pass`: `files`, model, `--weights`, `ticks`, `hint`, `right_ids`, `responses`), joined with the
+rows' own fields. A cell is one combination of a generator's knobs; the record declares them in
+`hints.yaml` (`cells: [view, payload_kind, length, pairs_shown, revealed, table]` for the cipher
+ladders), since a scan cannot tell a knob from a derived field. Without a declaration every
+scalar field with 2-64 values is a cell field. Per run (model + weights x ticks M x hint) a cell
+is `dead` (nothing solved), `zone` (some) or `solved` (all).
+
+`datasets.py map` lists every dataset and run with rows solved and dead / zone / solved cells;
+`map NAME [--by f1,f2] [--model S] [--M k]` lists the cells of one set and of every round made
+from it. Text corpora without a verifier do not appear: solve rate does not apply to them.
+
+## The data improver (`datasets.py improve`)
+
+Plan approved 2026-11-13. For one set, one run label (as `map` prints it) and M, it writes a
+round of fresh rows where the model solves sometimes:
+
+- a measured cell weighs 0 if nothing is solved, otherwise 1 - p (the learnability reward of
+  Absolute Zero, arXiv 2505.03335), so a solved cell weighs 0 too;
+- frontier cells weigh `--explore` (0.1): on a numeric knob, the value between a live cell and a
+  dead neighbour (or the dead neighbour when nothing fits between), and one step past a solved
+  cell at the end of the grid, so the zone can move outward;
+- rows are drawn in proportion to the weights (temperature 1; MATES, arXiv 2406.06046, lost
+  diversity at 0).
+
+The round is catalogued as a child set (`<name>__<run>_M<k>_r<n>`, parents = the base set, recipe
+= the improve command, the plan in `extra.round`), so a measurement on it enters the map. A
+generator takes part by exposing `make_cell_rows(cell, n, rng, style)` in the script its record
+names (`gen_ciphers.py` does); one without it is on the map but cannot be improved yet. New knobs
+(an end mark, a demo line) are generator code, added when the map shows the failure they target.
 
 ## Personal data
 

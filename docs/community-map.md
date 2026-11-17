@@ -1192,6 +1192,29 @@ measured on LoRA factors, not on full weights.
 
 ---
 
+## 6. Read 2026-11-12 (shared by BlinkDL in Discord)
+
+- **No-22, G1l 7B preview agent exam** (2026-10-24, 568 questions, 40 runs, 22 720 passes, paired sign tests;
+  `No-22-Github/RWKV-Agent`, `docs/evaluations/g1l-prompt-format-20261024`). A trailing space after
+  "Assistant:" costs 36% (175 -> 112); a parser that accepts one sentence before the call gains 42%; an empty
+  think prefill costs 23 questions, full thinking 28; best sampling T 0.3, top_p 0.5, light penalties. The
+  dominant failure is inertia: 53% of questions fall into repeat, rejection, forced close (pass 20% vs 43%);
+  56% of repeats copy the immediately preceding step, usually a call that had succeeded; no prompt or sampling
+  change cuts it by more than about 20%. The author: only training data fixes it. Read beside HZLK ZLK.18 (G1k /
+  G1l latent settling into one point).
+- **123123213weqw, state-native agent mechanisms** (2026-10-31, G1l 7B temp preview, Albatross, RTX 4090D). A
+  state is 32.5 MiB at any history length; re-entry 246 ms at 396 tokens vs 242 ms at 12 364; restore beats
+  re-prefill above about 1.8K tokens (920 ms vs 10.9 s at 18K). Failures are protocol ones (think block, partial
+  prefill, multi-file envelopes) and a routing gate that misroutes ~10% of reads to chat, which then fabricates
+  silently. Quality holds to 23 188 tokens of a 24 576 context, near G1k's `ctx25600` (one preview build). The
+  runtime numbers bear on `H17.md`.
+- **ReWY** (arXiv 2611.01940): the chunkwise delta-rule backward reduced from seven WY products to three,
+  1.15-1.81x on NVIDIA; DeltaNet / GDN / KDA / GDN2, RWKV-7 not named; recurrence and gradients unchanged.
+- **BlinkDL 2026-11-03:** RWKV-8 "RPU, realtime intelligence" announced; RWKV-7 7.2B bf16 trains at 308k
+  tokens/s on 4x8 H100, ctx 65 536, 42% MFU; G1M ctx64K in training.
+
+---
+
 ## Maintenance
 
 - Update this file when a new claim about RWKV community is verified
