@@ -439,3 +439,32 @@ ciphers_k_mixed_plain_train:
   verifier: "training/scripts/gen_ciphers.py::check_answer (content and answer format apart)"
   notes: "S1 hinted distillation pool (2026-10-27): plain mixed items (context + capital from the weights), train split. Hint 3 gives the capital; the student must pull it from the weights (H19)."
   recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "mixed", "--n", "600", "--families", "plain", "--split", "train", "--seed", "21", "--out", "training/corpus_open/ciphers_k_mixed_plain_train.jsonl"], seed: 21, deterministic: true}
+
+# ---- cipher ladders (2026-11-13): the key given in the prompt, rungs = how much of the answer is shown ----------
+re:ciphers_ladder_.*:
+  stage: generate
+  provenance: generated
+  origin: "gen_ciphers --task ladder: Caesar / katakana / cyrillic substitution, the key in the prompt, payload words or random letters; cells = view x payload_kind x length x rung"
+  script: training/scripts/gen_ciphers.py
+  verifier: "training/scripts/gen_ciphers.py::check_answer (style trace/indexed: the letters after '=' joined must equal the plaintext)"
+  cells: [view, payload_kind, length, pairs_shown, revealed, table]
+ciphers_ladder_eval:
+  role: eval
+  notes: "v1: plaintext answer, a share of the plaintext revealed in the prompt (0-75%). G1d 0.4B M=0: 0 of 576."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "ladder", "--seed", "7", "--n", "8", "--out", "training/corpus_open/ciphers_ladder_eval.jsonl"], seed: 7, deterministic: true}
+ciphers_ladder_trace_eval:
+  role: eval
+  notes: "v2: key cipher->plain, answer as symbol=letter pairs, 4/2/1/0 pairs written for the model (prefill). G1d 0.4B M=0: 1 of 576."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "ladder", "--ladder-style", "trace", "--seed", "7", "--n", "8", "--out", "training/corpus_open/ciphers_ladder_trace_eval.jsonl"], seed: 7, deterministic: true}
+ciphers_ladder_indexed_eval:
+  role: eval
+  notes: "v3: v2 with positions on the message and the answer (1:ク=A). G1d 0.4B M=0: 28 of 576, the first zone 0<p<1."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "ladder", "--ladder-style", "indexed", "--seed", "7", "--n", "8", "--out", "training/corpus_open/ciphers_ladder_indexed_eval.jsonl"], seed: 7, deterministic: true}
+ciphers_ladder_indexed_inv_train:
+  role: train
+  notes: "v3 rows with the key plain->cipher (A=ク, an inverse lookup), whole answers: the training set of the ticks-vs-inverse-lookup test (HZLK 6b)."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "ladder", "--ladder-style", "indexed", "--ladder-table", "plain_cipher", "--ladder-rungs", "0", "--ladder-lengths", "6,12", "--seed", "11", "--n", "134", "--out", "training/corpus_open/ciphers_ladder_indexed_inv_train.jsonl"], seed: 11, deterministic: true}
+ciphers_ladder_indexed_inv_eval:
+  role: eval
+  notes: "v3, key plain->cipher, 6 and 12 letters, rungs 4/2/1/0, fresh keys (seed 7): the read set of the ticks-vs-inverse-lookup test."
+  recipe: {cmd: ["python", "training/scripts/gen_ciphers.py", "--task", "ladder", "--ladder-style", "indexed", "--ladder-table", "plain_cipher", "--ladder-lengths", "6,12", "--seed", "7", "--n", "8", "--out", "training/corpus_open/ciphers_ladder_indexed_inv_eval.jsonl"], seed: 7, deterministic: true}

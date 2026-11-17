@@ -99,16 +99,59 @@ def collect_states(loaded, think_marker, examples: list[dict], layers,
     return torch.stack(flat_states)
 
 
-def _fit_held_out(X: torch.Tensor, y: torch.Tensor, n_train: int) -> tuple:
-    Xtr, Xte = X[:n_train], X[n_train:]
-    ytr, yte = y[:n_train], y[n_train:]
+# lambda / (mean eigenvalue of the train Gram matrix). Up to 1e4: the spectrum sits in a few directions, so
+# only a lambda far above the mean eigenvalue lets a target with no signal fall back to the mean.
+CV_GRID = [10.0 ** (e / 2) for e in range(-8, 9)]
+CV_FOLDS = 5
+
+
+def ridge_setup(X: torch.Tensor, n_train: int) -> dict:
+    """Everything of the fit that does not depend on the target: train-centred Gram matrices, the
+    eigendecompositions of the CV folds and of the full train Gram matrix. One per design, shared by
+    every target and every shuffle."""
+    Xtr = X[:n_train].double()
     x_mean = Xtr.mean(0, keepdim=True)
-    Xtr_c, Xte_c = Xtr - x_mean, Xte - x_mean
+    Xtr_c, Xte_c = Xtr - x_mean, X[n_train:].double() - x_mean
+    K = Xtr_c @ Xtr_c.T
+    folds = torch.arange(n_train) % CV_FOLDS
+    fold_eigh = [torch.linalg.eigh(K[folds != f][:, folds != f]) for f in range(CV_FOLDS)]
+    s, U = torch.linalg.eigh(K)
+    return {"n_train": n_train, "K": K, "Kte": Xte_c @ Xtr_c.T, "folds": folds, "fold_eigh": fold_eigh,
+            "eig": s.clamp_min(0), "U": U, "scale": K.trace() / n_train}
+
+
+def _fit_held_out(setup: dict, y: torch.Tensor) -> tuple:
+    n_train, K = setup["n_train"], setup["K"]
+    ytr, yte = y[:n_train].double(), y[n_train:].double()
     y_mean = ytr.mean()
     ytr_c, yte_c = ytr - y_mean, yte - y_mean
-    beta = torch.linalg.lstsq(Xtr_c, ytr_c.unsqueeze(-1)).solution
-    pred_tr = (Xtr_c @ beta).squeeze(-1)
-    pred_te = (Xte_c @ beta).squeeze(-1)
+    # Ridge in the dual (n_train x n_train), float64, lambda picked on the train
+    # rows alone by 5-fold CV over a grid, so shuffled labels pick their own
+    # lambda and the floor stays near 0. Not closed-form leave-one-out: near
+    # interpolation (leverage 0.996) it rated pure-noise labels at 0.27 of their
+    # variance on a G1d 0.4B design and picked the smallest lambda for them.
+    # Not torch.linalg.lstsq: its CPU default (gelsy, pivoted QR) estimates the
+    # rank of this 280 x 2e5 float32 design erratically -- on one saved G1d 0.4B
+    # design the same slot read R2 0.885 / 0.018 / 0.913 at rcond default / 1e-3
+    # / 1e-5, and the default read 1 of 4 slots where SVD min-norm (gelsd, gelss)
+    # and ridge read 4 of 4 at R2 0.89 (checked 2026-11-12). Not a fixed small
+    # lambda either: near min-norm the shuffled floor sinks to -0.4..-0.7 and
+    # "above the floor" then admits fits worse than the mean. Results of this
+    # probe before 2026-11-12 used gelsy.
+    yd, scale, folds = ytr_c, setup["scale"], setup["folds"]
+    errs = torch.zeros(len(CV_GRID), dtype=K.dtype)
+    for f, (s, U) in enumerate(setup["fold_eigh"]):
+        tr, va = folds != f, folds == f
+        m = yd[tr].mean()
+        Uy = U.T @ (yd[tr] - m)
+        for j, a in enumerate(CV_GRID):
+            pred = K[va][:, tr] @ (U @ (Uy / (s.clamp_min(0) + a * scale))) + m
+            errs[j] += ((pred - yd[va]) ** 2).sum()
+    lam = CV_GRID[int(errs.argmin())] * scale
+    s, U = setup["eig"], setup["U"]
+    alpha = U @ ((U.T @ yd) / (s + lam))
+    pred_tr = K @ alpha
+    pred_te = setup["Kte"] @ alpha
     r2_tr = 1.0 - F.mse_loss(pred_tr, ytr_c).item() / ytr_c.var().item()
     r2_te = (1.0 - F.mse_loss(pred_te, yte_c).item() / yte_c.var().item()
               if yte_c.var().item() > 1e-8 else float("nan"))
@@ -116,11 +159,14 @@ def _fit_held_out(X: torch.Tensor, y: torch.Tensor, n_train: int) -> tuple:
 
 
 def held_out_linear_probe(X: torch.Tensor, y: torch.Tensor, n_train: int,
-                           n_shuffles: int = 20, seed: int = 0) -> dict:
+                           n_shuffles: int = 20, seed: int = 0, setup: dict | None = None) -> dict:
     """Same methodology validated at toy scale in micro_wkv.py: fit on
     the first n_train rows, evaluate held-out R² on the rest, center
-    using TRAIN statistics only (no leakage)."""
-    r2_tr, r2_te = _fit_held_out(X, y, n_train)
+    using TRAIN statistics only (no leakage). `setup` = ridge_setup(X, n_train),
+    passed in when several targets share one design."""
+    if setup is None:
+        setup = ridge_setup(X, n_train)
+    r2_tr, r2_te = _fit_held_out(setup, y)
 
     # Whether a null here is readable at all. This design has ~12k columns and
     # ~160 rows, so its power comes entirely from the state being low-rank --
@@ -133,12 +179,10 @@ def held_out_linear_probe(X: torch.Tensor, y: torch.Tensor, n_train: int,
     # So the effective rank of the TRAINING design is what decides whether
     # "the state does not encode this" is a finding or an artefact, and it is
     # reported next to the number rather than left for the reader to assume.
-    Xtr_c = X[:n_train] - X[:n_train].mean(0, keepdim=True)
-    sv = torch.linalg.svdvals(Xtr_c.float())
-    energy = (sv ** 2)
+    energy = setup["eig"].flip(0)  # squared singular values of the centred train design, descending
     p_ = energy / energy.sum().clamp_min(1e-30)
     eff_rank = float(torch.exp(-(p_ * (p_ + 1e-30).log()).sum()))
-    numerical_rank = int((sv > 0.01 * sv[0]).sum())
+    numerical_rank = int((energy > 1e-4 * energy[0]).sum())  # sv > 1% of sv[0]
 
     # The control. This probe fits ~12k features to ~160 rows, so in-sample R2
     # is ~1.0 for ANY target and held-out R2 is the only number that means
@@ -152,7 +196,7 @@ def held_out_linear_probe(X: torch.Tensor, y: torch.Tensor, n_train: int,
     shuffled = []
     for _ in range(max(0, n_shuffles)):
         perm = torch.randperm(len(y), generator=g)
-        shuffled.append(_fit_held_out(X, y[perm], n_train)[1])
+        shuffled.append(_fit_held_out(setup, y[perm])[1])
     shuffled = [v for v in shuffled if v == v]
     out = {"in_sample_r2": r2_tr, "held_out_r2": r2_te,
            "n_shuffles": len(shuffled),

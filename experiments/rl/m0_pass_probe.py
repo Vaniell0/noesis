@@ -58,14 +58,19 @@ def _sample(rows: list, per_cell: int, seed: int) -> list:
 
 @torch.no_grad()
 def answer(loaded, tok, q: str, max_new: int, cut_blank: bool = True, ticks: int = 0, noise=None,
-           temp: float = 0.0, patch: tuple | None = None) -> tuple:
+           temp: float = 0.0, patch: tuple | None = None, prefill: str = "") -> tuple:
     """(response, finished). cut_blank=False lets a model that reasons in the answer reach its conclusion.
     ticks > 0: after the prompt, feed the model's own latent back `ticks` times (the S1 loop, as
     train_latent_s1.seq_logits does), then answer from the state after the last tick. noise: h -> h, applied
     to the latent before each tick is fed (latent_noise --ln-free). temp > 0 samples each token from
     softmax(logits / temp) instead of the greedy argmax (chat --cc-temps: what the distribution holds, not only its top).
-    patch = (src, dst[, src_ids]): the prompt runs through loaded.forward_patched (back-patching, M=0 only)."""
+    patch = (src, dst[, src_ids]): the prompt runs through loaded.forward_patched (back-patching, M=0 only).
+    prefill: the start of the answer, written for the model (after the ticks); the returned response excludes it."""
     head, close = loaded.tick_frame(q) if ticks and hasattr(loaded, "tick_frame") else (loaded.silent_prompt(q), "")
+    if prefill and not ticks:
+        head += prefill
+    elif prefill:
+        close += prefill
     ids = tok.encode(head)
     if ticks:
         E = loaded.embedding_weight
@@ -170,7 +175,10 @@ def run(loaded, tok, args) -> dict:
     ranks, sampled = {}, {}
     for i, r in enumerate(rows):
         if "task" in r:
-            resp, finished = answer(loaded, tok, with_hint(r, args.m0_hint), args.m0_max_new, ticks=args.m0_ticks)
+            pre = r.get("prefill", "")                      # a ladder rung's answer start: checked with the rest
+            resp, finished = answer(loaded, tok, with_hint(r, args.m0_hint), args.m0_max_new, ticks=args.m0_ticks,
+                                    prefill=pre)
+            resp = pre + resp if pre else resp
             content, form = check_answer(r, resp)
             lenient = content
         else:
@@ -198,8 +206,8 @@ def run(loaded, tok, args) -> dict:
             for k in range(args.m0_samples):
                 torch.manual_seed(1000 * i + k)
                 sr, _ = answer(loaded, tok, with_hint(r, args.m0_hint), args.m0_max_new, ticks=args.m0_ticks,
-                               temp=args.m0_temp)
-                hits += bool(check_answer(r, sr)[0])
+                               temp=args.m0_temp, prefill=r.get("prefill", ""))
+                hits += bool(check_answer(r, r.get("prefill", "") + sr)[0])
             sampled[r["id"]] = hits
         if (i + 1) % 10 == 0 or i + 1 == len(rows):
             progress(f"[m0_pass] {i + 1}/{len(rows)} right {len(right)} ({time.time() - t0:.0f}s)")

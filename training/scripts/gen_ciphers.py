@@ -253,6 +253,12 @@ def check_answer(row: dict, response: str) -> tuple[bool, bool]:
     fmt = row["rubric"].get("format", "plain")
     text = response.strip().split("\n\n")[0]
     norm = lambda t: re.sub(r"[^A-Z ]+", " ", t.upper()).split()
+    if row.get("style") in ("trace", "indexed"):                            # the letters after '=', in order, are the plaintext
+        got = "".join(re.findall(r"=\s*([A-Za-z])", text)).upper()
+        return got == gold.replace(" ", ""), bool(re.fullmatch(r"\S+=[A-Z]( (/ )?\S+=[A-Z])*", text.strip()))
+    if row.get("task") == "ladder":                            # the whole plaintext, said as one run
+        said = " " + " ".join(norm(text)) + " "
+        return f" {' '.join(norm(gold))} " in said, bool(re.fullmatch(r"[A-Z ]+", text.strip()))
     got, form = None, False
     if fmt == "json":
         m = re.search(r"\{[^{}]*\}", text)
@@ -294,7 +300,16 @@ def _build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--split", default="all", choices=("all", "train", "eval"),
                     help="eval = the ~10%% of contents whose md5 falls in a fixed bucket; train = the rest")
     ap.add_argument("--seed", type=int, default=7)
-    ap.add_argument("--task", default="decode", choices=("decode", "context", "question", "mixed"))
+    ap.add_argument("--task", default="decode", choices=("decode", "context", "question", "mixed", "ladder"))
+    ap.add_argument("--ladder-lengths", default="6,12,24", help="ladder: plaintext letters per cell (comma list)")
+    ap.add_argument("--ladder-style", default="plain", choices=("plain", "trace", "indexed"),
+                    help="ladder: plain = plaintext answer, prefix shown in the prompt; trace = cipher->plain table, "
+                         "symbol=letter pairs, the first pairs written as the answer's prefill; indexed = trace with "
+                         "positions on the message and the answer (1:ク=A)")
+    ap.add_argument("--ladder-table", default="cipher_plain", choices=("cipher_plain", "plain_cipher"),
+                    help="ladder trace/indexed: the table's direction; plain_cipher (A=ク) makes decoding an inverse lookup")
+    ap.add_argument("--ladder-rungs", default="", help="ladder trace/indexed: pairs shown per rung (comma list; "
+                                                       "default 4,2,1,0; 0 alone = whole answers, as training rows)")
     ap.add_argument("--k", default="2,3,4,6", help="facts per table for context/mixed (comma list, sampled per row)")
     ap.add_argument("--answer-formats", default="plain,quoted,json,line")
     return ap
@@ -322,8 +337,153 @@ def run_knowledge(args: argparse.Namespace, ciphers: list) -> dict:
     return {"out_path": args.out, "n_rows": len(rows), "n_contents": len(seen)}
 
 
+# ---------------------------------------------------------------- ladder (a decode task the model can enter)
+
+# Short common words, none of them a city or capital (check_answer's pool) - the payload with a language prior.
+LADDER_WORDS = ["THE", "AND", "SUN", "RED", "DOG", "CAT", "TREE", "BOOK", "HAND", "BLUE", "MILK", "SHIP", "STONE",
+                "WATER", "HOUSE", "GREEN", "LIGHT", "RIVER", "APPLE", "CHAIR", "BREAD", "NIGHT", "SMALL", "COLD"]
+LADDER_REVEALED = (0.75, 0.5, 0.25, 0.0)
+
+
+def _rung(grid: tuple, v) -> int:
+    """1-based rung on the standard grid; 0 for a value between rungs (a cell the data improver adds)."""
+    return grid.index(v) + 1 if v in grid else 0
+
+
+def ladder_payload(kind: str, length: int, rng: random.Random) -> str:
+    """About `length` letters (spaces not counted) of whole common words, or exactly `length` random letters in
+    word-sized groups: the second has no language prior, so only the table can produce it."""
+    out, n = [], 0
+    while n < length:
+        w = rng.choice(LADDER_WORDS) if kind == "words" else "".join(
+            rng.choice(C.LETTERS) for _ in range(rng.randint(3, 5)))[:length - n]
+        out.append(w)
+        n += len(w)
+    return " ".join(out)
+
+
+def make_ladder_row(c: C.Cipher, kind: str, length: int, revealed: float, rng: random.Random) -> dict:
+    """A known-key decode whose first `revealed` share of letters is shown already decoded. The rungs run from
+    copying the rest of a prefix the model can see (0.75) to decoding all of it (0), so a model that solves
+    none of the full task still solves some rungs (Absolute Zero D.5: hints are how a learner climbs)."""
+    key = c.make_key(rng)
+    pt = ladder_payload(kind, length, rng)
+    ct = c.encode(pt, key)
+    assert c.decode(ct, key) == pt
+    k = round(revealed * len(pt))
+    k = k if k == 0 or pt[k - 1] != " " else k - 1           # a prefix never ends on a space
+    shown = (f"The first {len(pt[:k].replace(' ', ''))} letters are already decoded: {pt[:k]}\n"
+             if k else "")
+    prompt = (f"Decode the message.\nCipher: {c.title}. Rule: {c.rule}.\n{c.key_text(key)}\nMessage:\n{ct}\n"
+              f"{shown}Answer with the whole plaintext only, in capital letters.")
+    h = hashlib.md5(f"{c.name}|{kind}|{length}|{revealed}|{pt}|{ct}".encode()).hexdigest()[:10]
+    return {"id": f"ladder_{c.name}_{kind}_{length}_r{int(revealed * 100)}_{h}", "category": f"cipher_{c.name}",
+            "task": "ladder", "level": _rung(LADDER_REVEALED, revealed),
+            "answer_format": f"{c.name}/{kind}/{length}", "prompt": prompt, "answer": pt,
+            "rubric": {"type": "exact", "value": pt.lower(), "format": "plain"}, "content_id": f"ladder_{h}",
+            "view": c.name, "mode": "known", "revealed": revealed, "revealed_chars": k, "payload_kind": kind,
+            "length": length, "letters": len(pt.replace(" ", "")),
+            "notes": f"ladder rung: {c.name}, {kind}, {length} letters, {revealed:.2f} shown"}
+
+
+LADDER_PAIRS_SHOWN = (4, 2, 1, 0)
+
+
+def trace_of(pt: str, enc: dict, indexed: bool = False) -> str:
+    """The pair answer: 'ク=A ス=B / ...' (cipher symbol, '=', its plain letter; '/' between words); indexed:
+    '1:ク=A 2:ス=B / ...' (the position in the message first)."""
+    words, out, i = pt.split(), [], 0
+    for w in words:
+        pairs = []
+        for a in w:
+            i += 1
+            pairs.append(f"{i}:{enc[a]}={a}" if indexed else f"{enc[a]}={a}")
+        out.append(" ".join(pairs))
+    return " / ".join(out)
+
+
+def make_ladder_trace_row(c: C.Cipher, kind: str, length: int, shown: int, rng: random.Random,
+                          indexed: bool = False, inverse: bool = False) -> dict:
+    """The ladder as the 0.4B can enter it (cipher_lookup_probe, 2026-11-13): the key written cipher->plain
+    (decoding is then a forward lookup; the plain->cipher table of key_text gave 0.002-0.004 per new letter,
+    cipher->plain 0.57-0.81), the answer as symbol=letter pairs, and the first `shown` pairs of the answer
+    already written (row["prefill"], continued by the model): lookup starts only after 1-3 worked pairs.
+    indexed (v3): every message symbol carries its position ('1:ク 2:ス') and so does the answer ('1:ク=A'): in v2
+    greedy answers wrote the right letter for their own symbol (0.67-0.96) but the next message symbol only 0.02-0.04
+    (they walked the table in order); a unique position key makes the next symbol a forward lookup too.
+    inverse: the table written plain->cipher (A=ク), as key_text writes it - decoding is then an inverse lookup;
+    the rows a model is trained on to test whether training (with or without ticks) opens that lookup."""
+    key = c.make_key(rng)
+    pt = ladder_payload(kind, length, rng)
+    ct = c.encode(pt, key)
+    assert c.decode(ct, key) == pt
+    enc = {a: c.encode(a, key) for a in C.LETTERS}
+    assert len(set(enc.values())) == 26
+    table = "Table: " + " ".join(f"{a}={enc[a]}" if inverse else f"{enc[a]}={a}" for a in C.LETTERS)
+    answer = trace_of(pt, enc, indexed)
+    pairs = re.findall(r"\S+=[A-Z]", answer)
+    if indexed:
+        ct = " / ".join(" ".join(p.split("=")[0] for p in w.split()) for w in answer.split(" / "))
+    assert shown < len(pairs)                                  # at least one pair is left to the model
+    prefill = answer[:answer.index(pairs[shown - 1]) + len(pairs[shown - 1])] if shown else ""
+    rule = ("each plain letter before '=' in the table is written as the cipher symbol after it" if inverse else
+            "each cipher symbol stands for the plain letter after '=' in the table")
+    prompt = (f"Decode the message.\nCipher: {c.title}. Rule: {rule}; spaces stay.\n{table}\nMessage:\n{ct}\n"
+              + ("Answer position by position: its number, ':', the cipher symbol, '=', its plain letter; '/' "
+                 "between words." if indexed else
+                 "Answer symbol by symbol: each cipher symbol, '=', its plain letter; '/' between words."))
+    style = "indexed" if indexed else "trace"
+    tdir = "plain_cipher" if inverse else "cipher_plain"
+    h = hashlib.md5(f"{c.name}|{kind}|{length}|{style}{shown}|{'inv|' if inverse else ''}{pt}|{ct}".encode()).hexdigest()[:10]
+    return {"id": f"ladder_{style}{'_inv' if inverse else ''}_{c.name}_{kind}_{length}_p{shown}_{h}", "table": tdir, "category": f"cipher_{c.name}",
+            "task": "ladder", "style": style, "level": _rung(LADDER_PAIRS_SHOWN, shown), "answer_format": f"{c.name}/{kind}/{length}", "prompt": prompt,
+            "prefill": prefill, "answer": pt, "trace": answer,
+            "rubric": {"type": "exact", "value": pt.lower(), "format": "trace"}, "content_id": f"ladder_{h}",
+            "view": c.name, "mode": "known", "pairs_shown": shown, "payload_kind": kind,
+            "length": length, "letters": len(pt.replace(" ", "")),
+            "notes": f"ladder rung (trace): {c.name}, {kind}, {length} letters, {shown} pairs written"}
+
+
+def make_cell_rows(cell: dict, n: int, rng: random.Random, style: str = "indexed") -> list:
+    """The data improver's entry (training/_common/improve.py): n fresh rows (fresh keys) of one ladder cell, the
+    cell being the declared knobs (catalog hint `cells`): view, payload_kind, length, pairs_shown (trace/indexed)
+    or revealed (plain), table. A cell the grid never had (a length between two measured ones) is made the same way."""
+    c = C.CIPHERS[cell["view"]]
+    kind, length = cell["payload_kind"], int(cell["length"])
+    if style == "plain":
+        return [make_ladder_row(c, kind, length, float(cell["revealed"]), rng) for _ in range(n)]
+    shown = int(cell["pairs_shown"])
+    return [make_ladder_trace_row(c, kind, length, shown, rng, indexed=style == "indexed",
+                                  inverse=cell.get("table") == "plain_cipher") for _ in range(n)]
+
+
+def run_ladder(args: argparse.Namespace) -> dict:
+    """Every cell of cipher x payload kind x length x rung, `--n` rows per cell. Rung = revealed share of the
+    plaintext (style plain) or pairs of the answer already written (style trace)."""
+    rng = random.Random(args.seed)
+    names = args.families.split(",") if args.families != "all" else ["caesar", "script_katakana", "script_cyrillic"]
+    lengths = [int(x) for x in args.ladder_lengths.split(",")]
+    if args.ladder_style == "plain":
+        make, rungs = make_ladder_row, LADDER_REVEALED
+    else:
+        make = lambda *a: make_ladder_trace_row(*a, indexed=args.ladder_style == "indexed",
+                                                inverse=args.ladder_table == "plain_cipher")
+        rungs = [int(x) for x in args.ladder_rungs.split(",")] if args.ladder_rungs else LADDER_PAIRS_SHOWN
+    rows = [make(C.CIPHERS[n], kind, L, rv, rng)
+            for n in names for kind in ("words", "random") for L in lengths for rv in rungs
+            for _ in range(args.n)]
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    with open(args.out, "w") as f:
+        for r in rows:
+            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+    print(f"[gen_ciphers] task=ladder: {len(rows)} rows ({len(rows) // args.n} cells x {args.n}) -> {args.out}")
+    return {"out_path": args.out, "n_rows": len(rows)}
+
+
 def run(args: argparse.Namespace) -> dict:
     rng = random.Random(args.seed)
+    if getattr(args, "task", "decode") == "ladder":
+        return run_ladder(args)
     names = list(C.CIPHERS) if args.families == "all" else args.families.split(",")
     ciphers = [None if n == "plain" else C.CIPHERS[n] for n in names]
     if getattr(args, "task", "decode") != "decode":

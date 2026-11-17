@@ -52,6 +52,7 @@ KNOWN_PROBE_MODULES = [
     "experiments.rl.latent_noise_probe",
     "experiments.rl.head_ablation_probe",
     "experiments.rl.m0_pass_probe",
+    "experiments.rl.cipher_lookup_probe",
     "experiments.rl.chat_probe",
     "experiments.rl.backpatch_probe",
     "experiments.rl.compress_probe",

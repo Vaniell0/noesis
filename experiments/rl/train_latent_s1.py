@@ -105,6 +105,11 @@ def seq_logits(loaded, tok, r, ticks: int, prompt: str | None = None, ctx_ids: l
     E = loaded.embedding_weight
     q = prompt or r["prompt"]
     head, close = loaded.tick_frame(q) if ticks and not ctx_ids and hasattr(loaded, "tick_frame") else (None, "")
+    pre = "" if ctx_ids else r.get("prefill", "")              # answer pairs written for the model, as m0_pass feeds
+    if pre and not ticks:                                       # them: in the prompt at M=0, after the ticks otherwise
+        head = (head or loaded.silent_prompt(q)) + pre
+    elif pre:
+        close += pre
     p = ctx_ids or tok.encode(head or loaded.silent_prompt(q))
     a = ans or answer_ids(tok, r)
     lg, st, h = loaded.forward_stateful_embeds(E[torch.tensor([p])], loaded.new_state(batch=1), return_hidden=True)
@@ -120,14 +125,17 @@ def seq_logits(loaded, tok, r, ticks: int, prompt: str | None = None, ctx_ids: l
 
 @torch.no_grad()
 def evaluate(loaded, tok, items, ticks: int = 1) -> dict:
-    """Teacher-forced exact match of the whole answer, at M=0 and through the M ticks trained (key acc_M<ticks>)."""
+    """Teacher-forced exact match of the whole answer, at M=0 and through the M ticks trained (key acc_M<ticks>),
+    and the share of answer tokens right (tok_M<ticks>): long answers (cipher traces) move it long before acc."""
     out = {}
     for M in (0, ticks):
-        ok = 0
+        ok, hit, n = 0, 0, 0
         for r in items:
             lg, a = seq_logits(loaded, tok, r, M)
-            ok += bool((lg.argmax(-1) == a).all())
+            right = lg.argmax(-1) == a
+            ok += bool(right.all()); hit += int(right.sum()); n += len(a)
         out[f"acc_M{M}"] = round(ok / max(1, len(items)), 3)
+        out[f"tok_M{M}"] = round(hit / max(1, n), 3)
     return out
 
 
@@ -244,6 +252,11 @@ def student_sample(loaded, tok, r, ticks: int, temp: float, max_new: int) -> lis
     tick_frame, M ticks), up to and including the token that ends it (EOS or a blank line) - on-policy data."""
     E = loaded.embedding_weight
     head, close = loaded.tick_frame(r["prompt"]) if ticks and hasattr(loaded, "tick_frame") else (None, "")
+    pre = r.get("prefill", "")
+    if pre and not ticks:
+        head = (head or loaded.silent_prompt(r["prompt"])) + pre
+    elif pre:
+        close += pre
     p = tok.encode(head or loaded.silent_prompt(r["prompt"]))
     lg, st, h = loaded.forward_stateful_embeds(E[torch.tensor([p])], loaded.new_state(batch=1), return_hidden=True)
     h = h[:, -1:]
@@ -383,7 +396,8 @@ def main() -> int:
         assert args.loss == "ce", "--target gold has no distribution to KL against"
         end = [loaded._hf_tok.convert_tokens_to_ids("<|im_end|>")] if getattr(loaded, "backend", "") == "hf" else tok.encode("\n\n")
         for r in items:
-            r["_ans"] = tok.encode(r["answer"]) + end
+            gold = r.get("trace") or r["answer"]                # ladder rows: the answer is the pair trace,
+            r["_ans"] = tok.encode(gold[len(r.get("prefill", "")):]) + end   # less the pairs already written
         target = {}
     elif args.target == "self":
         with torch.no_grad():

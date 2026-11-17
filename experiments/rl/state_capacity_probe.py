@@ -45,7 +45,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_ROOT))
 
 from experiments.rl.loader import load_rwkv7, load_weights_into
-from experiments.rl.wkv_linear_probe import held_out_linear_probe
+from experiments.rl.wkv_linear_probe import held_out_linear_probe, ridge_setup
 
 KEYS = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "golf",
         "hotel", "india", "juliet", "kilo", "lima", "mike", "november",
@@ -77,11 +77,22 @@ def make_sample(rng: random.Random, n: int, vmax: int) -> tuple[str, list[int]]:
 
 
 @torch.no_grad()
-def state_row(loaded, prompt: str, layers) -> torch.Tensor:
-    state = loaded.new_state(batch=1)
+def state_row(loaded, prompt: str, layers, ticks: int = 0) -> torch.Tensor:
+    """The WKV state of `layers` after the prompt, flattened. With ticks > 0 the prompt goes through the
+    embeds path and the model's own last-layer vector is fed back `ticks` times before the state is read
+    (the latent loop of HZLK), so one-pass and post-tick readability are measured on the same items."""
     ids = loaded.tokenizer.encode(prompt)
-    inp = torch.tensor([ids]) if loaded.backend == "peft" else ids
-    _, state = loaded.forward_stateful(inp, state)
+    if ticks:
+        E = loaded.embedding_weight
+        _, state, h = loaded.forward_stateful_embeds(E[torch.tensor([ids])], loaded.new_state(batch=1),
+                                                     return_hidden=True)
+        h = h[:, -1:]
+        for _ in range(ticks):
+            _, state, h = loaded.forward_stateful_embeds(h, state, return_hidden=True)
+    else:
+        state = loaded.new_state(batch=1)
+        inp = torch.tensor([ids]) if loaded.backend == "peft" else ids
+        _, state = loaded.forward_stateful(inp, state)
     wkv = loaded.wkv_stack(state)
     feats = []
     for L in layers:
@@ -89,6 +100,25 @@ def state_row(loaded, prompt: str, layers) -> torch.Tensor:
         s = s[0] if s.dim() == 4 else s
         feats.append(s.flatten())
     return torch.cat(feats)
+
+
+def fit_slots(X: torch.Tensor, targets, n_train: int, n: int) -> dict:
+    """One held-out probe per bound value; readable = above the max of the shuffled-label floor."""
+    slots, eff_rank = [], None
+    setup = ridge_setup(X, n_train)
+    for i in range(n):
+        y = torch.tensor([float(t[i]) for t in targets])
+        p = held_out_linear_probe(X, y, n_train, setup=setup)
+        eff_rank = p["design_effective_rank"]  # a property of X, the same for every slot
+        slots.append({"slot": i, "key": KEYS[i],
+                      "r2": p["held_out_r2"],
+                      "floor": p["shuffled_held_out_mean"],
+                      "margin_sd": p["margin_sd"],
+                      "above_max": p["above_shuffled_max"]})
+    # Read = above every shuffle AND better than the train mean on held-out rows.
+    readable = sum(1 for s in slots if s["above_max"] and s["r2"] > 0)
+    return {"readable": readable, "fraction": readable / n,
+            "mean_r2": sum(s["r2"] for s in slots) / n, "eff_rank": eff_rank, "slots": slots}
 
 
 def main() -> int:
@@ -107,6 +137,13 @@ def main() -> int:
                           "is what the probe's power depends on here.")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cpu")
+    ap.add_argument("--save-design", action="store_true",
+                    help="save the state matrix X and the targets per N beside --out, so the probe's solver can be "
+                         "re-run offline (the held-out fit is underdetermined: ~280 rows, ~2e5 features)")
+    ap.add_argument("--ticks", type=int, default=0,
+                    help="own-latent ticks after the prompt before the state is read; 0 = one pass (as before)")
+    ap.add_argument("--per-layer", action="store_true",
+                    help="fit each of --layers on its own columns instead of all layers concatenated")
     args = ap.parse_args()
 
     layers = [int(x) for x in args.layers.split(",")]
@@ -127,45 +164,50 @@ def main() -> int:
         rows, targets = [], []
         for _ in range(args.samples):
             prompt, vals = make_sample(rng, n, args.vmax)
-            rows.append(state_row(loaded, prompt, layers))
+            rows.append(state_row(loaded, prompt, layers, args.ticks))
             targets.append(vals)
         X = torch.stack(rows)
+        if args.save_design:
+            torch.save({"X": X, "targets": targets, "layers": layers, "ticks": args.ticks, "torch": str(torch.__version__)},
+                       args.out.with_name(f"{args.out.stem}_N{n}.design.pt"))
         n_train = int(len(rows) * args.train_frac)
-        slots = []
-        for i in range(n):
-            y = torch.tensor([float(t[i]) for t in targets])
-            p = held_out_linear_probe(X, y, n_train)
-            slots.append({"slot": i, "key": KEYS[i],
-                          "r2": p["held_out_r2"],
-                          "floor": p["shuffled_held_out_mean"],
-                          "margin_sd": p["margin_sd"],
-                          "above_max": p["above_shuffled_max"]})
-        readable = sum(1 for s in slots if s["above_max"])
-        results[n] = {"n": n, "readable": readable,
-                      "fraction": readable / n,
-                      "mean_r2": sum(s["r2"] for s in slots) / n,
-                      "eff_rank": held_out_linear_probe(
-                          X, torch.tensor([float(t[0]) for t in targets]),
-                          n_train)["design_effective_rank"],
-                      "slots": slots,
-                      "seconds": round(time.time() - t0, 1)}
-        print(f"[capacity] N={n:>2}: readable {readable}/{n} "
+        if args.per_layer:
+            # One pass over the model, one fit per layer on that layer's columns: the stride-1 profile.
+            d = X.shape[1] // len(layers)
+            by_layer = {}
+            for k, L in enumerate(layers):
+                by_layer[L] = fit_slots(X[:, k * d:(k + 1) * d], targets, n_train, n)
+                print(f"[capacity] N={n:>2} L{L:>2}: readable {by_layer[L]['readable']}/{n} "
+                      f"(mean R2 {by_layer[L]['mean_r2']:+.3f}, eff-rank {by_layer[L]['eff_rank']:.1f})", flush=True)
+            results[n] = {"n": n, "by_layer": by_layer, "seconds": round(time.time() - t0, 1)}
+            continue
+        results[n] = {"n": n, **fit_slots(X, targets, n_train, n), "seconds": round(time.time() - t0, 1)}
+        print(f"[capacity] N={n:>2}: readable {results[n]['readable']}/{n} "
               f"(mean R2 {results[n]['mean_r2']:+.3f}, "
               f"design eff-rank {results[n]['eff_rank']:.1f}, "
               f"{results[n]['seconds']:.0f}s)", flush=True)
 
     print("\n=== usable capacity ===")
-    print(f"{'N':>4}{'readable':>10}{'fraction':>10}{'mean R2':>10}")
-    for n, r in results.items():
-        print(f"{n:>4}{r['readable']:>10}{r['fraction']:>10.2f}{r['mean_r2']:>10.3f}")
+    if args.per_layer:
+        print(f"{'L':>4}" + "".join(f"{'N=' + str(n):>8}" for n in results))
+        for L in layers:
+            print(f"{L:>4}" + "".join(f"{str(r['by_layer'][L]['readable']) + '/' + str(n):>8}" for n, r in results.items()))
+        summary = {f"N={n} L{L}": f"{r['by_layer'][L]['readable']}/{n}" for n, r in results.items() for L in layers}
+    else:
+        print(f"{'N':>4}{'readable':>10}{'fraction':>10}{'mean R2':>10}")
+        for n, r in results.items():
+            print(f"{n:>4}{r['readable']:>10}{r['fraction']:>10.2f}{r['mean_r2']:>10.3f}")
+        summary = {f"N={n}": f"{r['readable']}/{n} readable" for n, r in results.items()}
 
     from experiments._common.results import save_result
-    save_result(args.out, {"model": args.model, "layers": layers,
+    save_result(args.out, {"model": args.model, "weights": str(args.weights) if args.weights else None,
+                           "ticks": args.ticks, "layers": layers, "per_layer": args.per_layer,
                            "samples": args.samples, "vmax": args.vmax,
+                           "solver": "ridge dual f64, lambda by 5-fold CV on train rows; read = above "
+                                     "max of 20 shuffles and held-out R2 > 0",
+                           "torch": str(torch.__version__),
                            "by_n": results,
-                           "_summary": {
-                               f"N={n}": f"{r['readable']}/{n} readable"
-                               for n, r in results.items()}},
+                           "_summary": summary},
                 experiment="state_capacity", hypothesis=["H25"],
                 model=args.model, script="experiments/rl/state_capacity_probe.py")
     print(f"\nwritten: {args.out}")

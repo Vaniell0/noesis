@@ -3,7 +3,7 @@
   "stage": "raw",
   "provenance": "external-other",
   "origin": "Meta NLLB: 3001 sentences from 842 Wikimedia articles, professionally translated into ~200 languages (fully parallel)",
-  "date": "2026-10-22",
+  "date": "2026-11-13",
   "script": "",
   "out_path": "",
   "out_sha256": null,

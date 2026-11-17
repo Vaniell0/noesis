@@ -1,0 +1,75 @@
+{
+  "name": "ciphers_ladder_trace_eval",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "gen_ciphers --task ladder: Caesar / katakana / cyrillic substitution, the key in the prompt, payload words or random letters; cells = view x payload_kind x length x rung",
+  "date": "2026-11-13",
+  "script": "training/scripts/gen_ciphers.py",
+  "out_path": "training/corpus_open/ciphers_ladder_trace_eval.jsonl",
+  "out_sha256": "d432ffc6d576b889adc24d8bd840c82b6a47c3fa3be2cebfd2e927fdf33d85fb",
+  "out_size_bytes": 614927,
+  "n_rows": 576,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {
+    "cells": [
+      "view",
+      "payload_kind",
+      "length",
+      "pairs_shown",
+      "revealed",
+      "table"
+    ]
+  },
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "ladder",
+      "--ladder-style",
+      "trace",
+      "--seed",
+      "7",
+      "--n",
+      "8",
+      "--out",
+      "training/corpus_open/ciphers_ladder_trace_eval.jsonl"
+    ],
+    "seed": 7,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (style trace/indexed: the letters after '=' joined must equal the plaintext)",
+  "notes": "v2: key cipher->plain, answer as symbol=letter pairs, 4/2/1/0 pairs written for the model (prefill). G1d 0.4B M=0: 1 of 576.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_caesar": 192,
+      "cipher_script_cyrillic": 192,
+      "cipher_script_katakana": 192
+    },
+    "level": {
+      "1": 144,
+      "2": 144,
+      "3": 144,
+      "4": 144
+    },
+    "mode": {
+      "known": 576
+    },
+    "view": {
+      "caesar": 192,
+      "script_cyrillic": 192,
+      "script_katakana": 192
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

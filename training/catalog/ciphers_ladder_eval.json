@@ -1,0 +1,73 @@
+{
+  "name": "ciphers_ladder_eval",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "gen_ciphers --task ladder: Caesar / katakana / cyrillic substitution, the key in the prompt, payload words or random letters; cells = view x payload_kind x length x rung",
+  "date": "2026-11-12",
+  "script": "training/scripts/gen_ciphers.py",
+  "out_path": "training/corpus_open/ciphers_ladder_eval.jsonl",
+  "out_sha256": "a3579826cbc84a195c9bebe3e76aa2a1b5e3503b2730c5c7a2882eacbe76f558",
+  "out_size_bytes": 525742,
+  "n_rows": 576,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {
+    "cells": [
+      "view",
+      "payload_kind",
+      "length",
+      "pairs_shown",
+      "revealed",
+      "table"
+    ]
+  },
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "ladder",
+      "--seed",
+      "7",
+      "--n",
+      "8",
+      "--out",
+      "training/corpus_open/ciphers_ladder_eval.jsonl"
+    ],
+    "seed": 7,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (style trace/indexed: the letters after '=' joined must equal the plaintext)",
+  "notes": "v1: plaintext answer, a share of the plaintext revealed in the prompt (0-75%). G1d 0.4B M=0: 0 of 576.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_caesar": 192,
+      "cipher_script_cyrillic": 192,
+      "cipher_script_katakana": 192
+    },
+    "level": {
+      "1": 144,
+      "2": 144,
+      "3": 144,
+      "4": 144
+    },
+    "mode": {
+      "known": 576
+    },
+    "view": {
+      "caesar": 192,
+      "script_cyrillic": 192,
+      "script_katakana": 192
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}

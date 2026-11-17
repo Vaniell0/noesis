@@ -770,6 +770,27 @@ def _enable_peft_on_cpu() -> None:
         _fla_utils._noesis_cpu_ctx_patched = True
 
     from rwkvfla.ops.rwkv7.recurrent_naive import naive_recurrent_rwkv7
+    from rwkvfla.ops.generalized_delta_rule.dplr.naive import dplr_chunkwise
+
+    # pieces of >= _CHUNK_MIN_T tokens go chunked; ticks (T = 1) stay on the naive op. A huge value restores the
+    # reference path everywhere (the equivalence check runs both).
+    _CHUNK, _CHUNK_MIN_T = 32, int(os.environ.get("NOESIS_WKV_CHUNK_MIN_T", "64"))
+
+    def _wkv_chunked(r, k, v, w, a, b, s):
+        """The same recurrence as naive_recurrent_rwkv7, chunk by chunk (dplr_chunkwise, pure torch): ~T/32 + 64
+        Python steps instead of T. RWKV-7 is the diagonal-plus-low-rank delta rule with the state transposed:
+        S' = S diag(exp(-exp(w))) + (S a) b^T + v k^T  <->  DPLR gk = -exp(w), alpha = a, beta = b; dplr scales q by
+        d_k^-0.5, undone here. The tail is padded to a whole chunk with k = v = a = b = 0 and gk = 0, which leaves the
+        state as it was. Checked against the naive op on logits and grads (2026-11-13)."""
+        Bq, Hq, Tq, N = r.shape
+        gk = -torch.exp(w.float())
+        pad = (-Tq) % _CHUNK
+        xs = [r * N ** 0.5, k, v, a, b, gk]
+        if pad:
+            xs = [torch.nn.functional.pad(x, (0, 0, 0, pad)) for x in xs]
+        s0 = s.transpose(-1, -2) if s is not None else None
+        o, S = dplr_chunkwise(*xs, initial_state=s0, output_final_state=True, chunk_size=_CHUNK)
+        return o[:, :, :Tq].to(r.dtype), S.transpose(-1, -2).to(s.dtype if s is not None else r.dtype)
 
     def _run_rwkv7_infctx_cpu(r, k, v, w, a, b, s, HEAD_SIZE: int = 64):
         B, T, HC = w.shape
@@ -778,9 +799,22 @@ def _enable_peft_on_cpu() -> None:
         # (B,T,HC) -> (B,H,T,C), the layout naive_recurrent_rwkv7 expects
         r, w, k, v, a, b = [x.view(B, T, H, C).transpose(1, 2)
                             for x in (r, w, k, v, a, b)]
-        o, state, _ = naive_recurrent_rwkv7(
-            q=r, k=k, v=v, w=w, a=a, b=b, scale=1.0,
-            initial_state=s, output_final_state=True)
+
+        def run(r, k, v, w, a, b, s):
+            if T >= _CHUNK_MIN_T:
+                return _wkv_chunked(r, k, v, w, a, b, s)
+            o, state, _ = naive_recurrent_rwkv7(
+                q=r, k=k, v=v, w=w, a=a, b=b, scale=1.0,
+                initial_state=s, output_final_state=True)
+            return o, state
+        # The naive recurrence keeps every token's C x C state per head for backward (~1 MB per token per layer
+        # at 0.4B: a 300-token item through 24 layers needed ~12 GB on aspire, 2026-11-13). Under grad, recompute
+        # them in backward one layer at a time instead; the values are the same, only memory changes.
+        if torch.is_grad_enabled():
+            from torch.utils.checkpoint import checkpoint
+            o, state = checkpoint(run, r, k, v, w, a, b, s, use_reentrant=False)
+        else:
+            o, state = run(r, k, v, w, a, b, s)
         return o.transpose(1, 2).reshape(B, T, HC), state
 
     # Rebind everywhere, not just at the definition site. `att.py` does

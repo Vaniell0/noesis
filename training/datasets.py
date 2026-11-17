@@ -10,6 +10,8 @@
     training/.venv/bin/python training/datasets.py rows NAME -n 3
     training/.venv/bin/python training/datasets.py backfill [--no-hash] [--only REGEX] [--overwrite]
     training/.venv/bin/python training/datasets.py index            # rewrite the auto-generated doc tables
+    training/.venv/bin/python training/datasets.py map [NAME] [--by f1,f2] [--model S] [--M k]   # what works and when
+    training/.venv/bin/python training/datasets.py improve NAME --model LABEL [--M k] [--rows N] [--dry]  # next round
 
 Records live in training/catalog/ (tracked); artifacts stay local and are found by path
 and checked by SHA-256. See training/_common/catalog.py for the design.
@@ -114,6 +116,62 @@ def cmd_backfill(a):
         print("  +", n)
 
 
+def cmd_map(a):
+    from training._common import datamap
+    if a.name and not (catalog.REPO / a.name).exists():   # a catalog name: the set and every round made from it
+        from training._common import improve
+        runs = datamap.solve_runs()
+        for path in improve.family_paths(a.name):
+            _map_file(a, path, datamap.build(path, runs).get(path))
+        return
+    m = datamap.build(a.name)
+    if a.name:
+        return _map_file(a, a.name, m.get(a.name))
+    print(f"{'dataset file':44s} {'model':44s} {'M':>2s} {'hint':>4s} {'solved':>11s}  dead/zone/solved cells")
+    for s in datamap.summary(m):
+        mod = s["model"] + (f"+{s['weights']}" if s["weights"] else "")
+        if a.model and a.model not in mod:
+            continue
+        print(f"{Path(s['file']).stem:44s} {mod:44s} {s['M']:>2d} {s['hint']:>4d} "
+              f"{s['solved']:>5d}/{s['n']:<5d}  {s['dead']}/{s['zone']}/{s['solved_cells']}")
+
+
+def _map_file(a, path, e):
+    from collections import defaultdict
+    from training._common import datamap
+    if not e:
+        print(f"{path}: no result names it yet")
+        return
+    by = a.by.split(",") if a.by else e["fields"]
+    agg = defaultdict(lambda: [0, 0])
+    for c in e["cells"]:
+        mod = c["model"] + (f"+{c['weights']}" if c["weights"] else "")
+        if (a.model and a.model not in mod) or (a.M is not None and c["M"] != a.M):
+            continue
+        k = (mod, c["M"], c["hint"], tuple(c["cell"].get(f) for f in by))
+        agg[k][0] += c["n"]; agg[k][1] += c["solved"]
+    print(f"{path}: cells by {', '.join(by)}")
+    for (mod, M, hint, vals), (n, s) in sorted(agg.items(), key=lambda kv: (kv[0][:3], str(kv[0][3]))):
+        print(f"  {mod:40s} M={M} h={hint}  {' '.join(f'{f}={v}' for f, v in zip(by, vals)):60s} "
+              f"{s:>4d}/{n:<4d} {datamap.zone(s, n)}")
+    for s in e["skipped"]:
+        print("  skipped:", s)
+
+
+def cmd_improve(a):
+    from training._common import improve
+    r = improve.make_round(a.name, a.model, a.M, a.rows, a.seed, hint=a.hint, explore=a.explore, dry=a.dry)
+    if "error" in r:
+        print(r["error"])
+        return 1
+    print(f"{r['name']}: {len(r['cells'])} cells weighted, {r['rows']} rows" + ("" if a.dry else f" -> {r['out']}"))
+    for c in r["cells"]:
+        cell = " ".join(f"{k}={v}" for k, v in c["cell"].items() if v is not None)
+        print(f"  w={c['weight']:.2f} rows={c.get('rows', 0):>4d} {c['solved']:>3d}/{c['n']:<3d} {cell:58s} {c['why']}")
+    for f in r.get("failed", []):
+        print("  not made:", f)
+
+
 def cmd_index(a):
     sys.path.insert(0, str(HERE))
     import regenerate_corpus_index as rci
@@ -136,6 +194,19 @@ def main() -> int:
     p = sub.add_parser("backfill"); p.add_argument("--no-hash", action="store_true")
     p.add_argument("--only"); p.add_argument("--overwrite", action="store_true"); p.set_defaults(fn=cmd_backfill)
     p = sub.add_parser("index"); p.set_defaults(fn=cmd_index)
+    p = sub.add_parser("map", help="what works and when: solve rate per dataset cell, model and ticks, from results")
+    p.add_argument("name", nargs="?", help="catalog name or repo-relative path; none: summary of every dataset")
+    p.add_argument("--by", help="comma list of cell fields to group by (default: all)")
+    p.add_argument("--model", help="substring of the model (+weights) label")
+    p.add_argument("--M", type=int, help="ticks")
+    p.set_defaults(fn=cmd_map)
+    p = sub.add_parser("improve", help="next training round where the model solves sometimes (needs map results)")
+    p.add_argument("name"); p.add_argument("--model", required=True, help="run label as `map` prints it")
+    p.add_argument("--M", type=int, default=0); p.add_argument("--hint", type=int, default=0)
+    p.add_argument("--rows", type=int, default=400); p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--explore", type=float, default=0.1, help="weight of a frontier cell")
+    p.add_argument("--dry", action="store_true", help="print the plan, write nothing")
+    p.set_defaults(fn=cmd_improve)
     a = ap.parse_args()
     return a.fn(a) or 0
 

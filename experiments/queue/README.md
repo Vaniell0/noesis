@@ -36,6 +36,15 @@ Dry run / selection:
     python3 experiments/queue/queue_run.py --dry-run
     python3 experiments/queue/queue_run.py --only cap-ce,lens-g1l --no-idle-wait
 
+## Data improver rounds (2026-11-13)
+
+`imp-r<k>-meter`, `imp-r<k>-train`, `imp-r<k>-eval`: one round of `datasets.py improve` (docs/datasets.md)
+on the cipher ladder v3 for G1d 0.4B at M=0 — the base model on the round's rows (new frontier cells),
+training on the round, the trained model on the ladder eval set. These jobs run under `.venv` on all cores
+(`env -u PYTHONPATH ... taskset -c 0-11`), since they run only when the machine is otherwise free; round 1
+waits for the ticks-vs-inverse-lookup chain (`systemd --user` unit `noesis-queue-improve-r1`). The next
+round is generated from the map after reading round 1's output.
+
 ## Not in the queue (needs code or a decision first)
 
 - `tick_yield_probe` (M>1 criterion) — spec in

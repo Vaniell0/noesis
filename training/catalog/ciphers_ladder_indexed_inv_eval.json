@@ -1,0 +1,79 @@
+{
+  "name": "ciphers_ladder_indexed_inv_eval",
+  "stage": "generate",
+  "provenance": "generated",
+  "origin": "gen_ciphers --task ladder: Caesar / katakana / cyrillic substitution, the key in the prompt, payload words or random letters; cells = view x payload_kind x length x rung",
+  "date": "2026-11-13",
+  "script": "training/scripts/gen_ciphers.py",
+  "out_path": "training/corpus_open/ciphers_ladder_indexed_inv_eval.jsonl",
+  "out_sha256": "14fa820c1d938596394df91ea0e1170c8faee2adb0e75ff82b8db9b1fd447298",
+  "out_size_bytes": 437780,
+  "n_rows": 384,
+  "n_tokens": null,
+  "n_supervised_tokens": null,
+  "sources": {},
+  "extra": {
+    "cells": [
+      "view",
+      "payload_kind",
+      "length",
+      "pairs_shown",
+      "revealed",
+      "table"
+    ]
+  },
+  "role": "eval",
+  "format": "tasks",
+  "status": "live",
+  "parents": [],
+  "recipe": {
+    "cmd": [
+      "python",
+      "training/scripts/gen_ciphers.py",
+      "--task",
+      "ladder",
+      "--ladder-style",
+      "indexed",
+      "--ladder-table",
+      "plain_cipher",
+      "--ladder-lengths",
+      "6,12",
+      "--seed",
+      "7",
+      "--n",
+      "8",
+      "--out",
+      "training/corpus_open/ciphers_ladder_indexed_inv_eval.jsonl"
+    ],
+    "seed": 7,
+    "deterministic": true
+  },
+  "verifier": "training/scripts/gen_ciphers.py::check_answer (style trace/indexed: the letters after '=' joined must equal the plaintext)",
+  "notes": "v3, key plain->cipher, 6 and 12 letters, rungs 4/2/1/0, fresh keys (seed 7): the read set of the ticks-vs-inverse-lookup test.",
+  "evidence": [],
+  "profile": {
+    "category": {
+      "cipher_caesar": 128,
+      "cipher_script_cyrillic": 128,
+      "cipher_script_katakana": 128
+    },
+    "level": {
+      "1": 96,
+      "2": 96,
+      "3": 96,
+      "4": 96
+    },
+    "mode": {
+      "known": 384
+    },
+    "view": {
+      "caesar": 128,
+      "script_cyrillic": 128,
+      "script_katakana": 128
+    }
+  },
+  "license": "",
+  "url": "",
+  "languages": [],
+  "sensitivity": ""
+}
