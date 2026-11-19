@@ -149,8 +149,50 @@ def stage_1j(dirs):
         print(f"  {k:28s} " + " ".join(f"{key} {val:.3f}" for key, val in f.items() if isinstance(val, float)))
 
 
+def stage_1n(dirs):
+    runs = {k: v for k, v in load(dirs, "sN_*.json").items() if "final" in v}
+    if not runs:
+        print("  no runs finished")
+        return
+    fin = {}
+    for k, v in sorted(runs.items()):
+        f = v["final"]
+        M = max(int(x[1:-4]) for x in f if x.startswith("M") and x.endswith("_bpc"))
+        b = f[f"M{M}_bpc"]
+        fin[k.rsplit("_seed", 1)[0]] = b
+        print(f"  {k:24s} M{M} bpc C plain {b['C_plain']:.3f} cyr {b['C_cyr']:.3f} | A cyr {b['A_cyr']:.3f} "
+              f"B plain {b['B_plain']:.3f} | cka same {f['cka_same_text']} other {f['cka_other_text']} "
+              f"emb_align {f['emb_align']}")
+    j, cy, pl, j0 = (fin.get(x) for x in ("sN_joint_M4", "sN_cyr_M4", "sN_plain_M4", "sN_joint_M0"))
+    if j and cy:
+        d = j["C_cyr"] - cy["C_cyr"]
+        print(f"  one world: joint C_cyr - cyr-only = {d:+.3f} bpc -> "
+              f"{'CONFIRMED (<= 0.05)' if d <= 0.05 else 'REFUTED (> 0.10)' if d > 0.10 else 'between'}")
+    if j and pl:
+        d = j["C_plain"] - pl["C_plain"]
+        print(f"  capacity: joint C_plain - plain-only = {d:+.3f} bpc -> "
+              f"{'only the interface / a second copy (> 0.05)' if d > 0.05 else 'no capacity cost'}")
+    if j and j0:
+        print(f"  loop share: M4 - M0 C_cyr {j['C_cyr'] - j0['C_cyr']:+.3f}, C_plain {j['C_plain'] - j0['C_plain']:+.3f} bpc")
+    ft, rl = fin.get("sN_joint_M4_ceft"), fin.get("sN_joint_M4_rlft")
+    if ft and rl:
+        d = max(abs(rl[x] - ft[x]) for x in ("C_plain", "C_cyr"))
+        print(f"  RL on the ticks vs CE continuation: max |d| {d:.3f} bpc -> {'adds nothing (<= 0.01)' if d <= 0.01 else 'differs'}"
+              f" (C_cyr {rl['C_cyr'] - ft['C_cyr']:+.3f}, C_plain {rl['C_plain'] - ft['C_plain']:+.3f})")
+
+
+def stage_1o(dirs):
+    runs = load(dirs, "sO_graft_M8_seed*.json")
+    for k, v in runs.items():
+        print(row(k + " M8", acc(v["final"], "M8")))
+        print(row(k + " M0", acc(v["final"], "M0")))
+    ok = sum(acc(v["final"], "M8")[5] >= 0.5 for v in runs.values())
+    print(f"  grafted k6 >= 0.5: {verdict(ok, len(runs))}; grown C: 6 of 7 -> "
+          f"{'ZLK.16 toy form REFUTED (grafting as reliable)' if len(runs) >= 3 and ok >= 2 else 'supported' if len(runs) >= 3 else '-'}")
+
+
 STAGES = {"1g": stage_1g, "1k": stage_1k, "1l": stage_1l, "cipher": stage_cipher, "1h": stage_1h, "1i": stage_1i,
-          "1j": stage_1j}
+          "1j": stage_1j, "1n": stage_1n, "1o": stage_1o}
 
 
 def main() -> int:
