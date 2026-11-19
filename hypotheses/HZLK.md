@@ -89,6 +89,94 @@ evidence:
     call: methodology
     strength: weak
     note: "Optimizer for the training stages, G1d-0.4B full fine-tune, 30 steps, 3 shuffled data orders (experiments/rl/geomgrid_summary.py): best held-out dCE is equal for Muon (3e-5, -0.172) and AdamW (1e-5, -0.168); the zero crossing is at median step ~1.4e-4 for Muon against ~7.5e-5 for AdamW (window about 1.9x wider); Muon at 1e-4 is flat (+0.08). So fine-tuning lr 3e-5 to 1e-4 for Muon, not 0.02."
+# ZLK sub-claims: the source of the table in 'Sub-claims at a glance' (python experiments/regenerate_hyp_index.py).
+# regime = the data and the model's state the status was measured in (pretrained vs from scratch).
+claims:
+- id: ZLK.1
+  claim: CoT spends many tokens after the answer is already there
+  status: measured on one model, 48 items
+  regime: 'G1i 2.9B pretrained, 32 pattern items'
+- id: ZLK.2
+  claim: untrained time (re-read, ticks, pauses) is not used
+  status: regular; recall control not run
+  regime: 'G1i 2.9B pretrained, untrained ticks and re-read'
+- id: ZLK.3
+  claim: tuning narrows the output; the state survives it
+  status: partly measured
+  regime: 'pretrained, LoRA readout tuning'
+- id: ZLK.4
+  claim: a channel of the model's own latent can be trained without erasing the answer
+  status: '0.4B: tick no longer erases; every arm a pass-through'
+  regime: G1d 0.4B pretrained
+- id: ZLK.5
+  claim: the model can learn to choose its own number of ticks
+  status: toy only
+  regime: toy from scratch
+- id: ZLK.6
+  claim: with search the loop exceeds its teacher's one-pass reading
+  status: not run; bounded by T1/T2
+  regime: ''
+- id: ZLK.7
+  claim: two views of one content land close without collapse
+  status: not run
+  regime: ''
+- id: ZLK.8
+  claim: content first, format from the question; honest self-decisions
+  status: obedience measured, near 0
+  regime: 'G1i 2.9B pretrained, silent answers'
+- id: ZLK.9
+  claim: a persistent state absorbs the configuration once
+  status: H17, contested
+  regime: "none measured (the owner's sessions)"
+- id: ZLK.10
+  claim: an exact-recall branch queried at every tick keeps the past the settling state forgets
+  status: not started
+  regime: ''
+- id: ZLK.11
+  claim: a pretrained model holds facts it does not read in one pass
+  status: measured on Qwen3.5 0.8B; not on RWKV
+  regime: Qwen3.5 0.8B pretrained
+- id: ZLK.12
+  claim: a trained reader raises usable capacity toward what is held
+  status: 'external support; T15: ticks +2% on base and S1 alike, training adds nothing'
+  regime: G1d 0.4B pretrained (state readout)
+- id: ZLK.13
+  claim: storage and reading trained together pack more at equal readability
+  status: proposed; proved part for the state
+  regime: ''
+- id: ZLK.14
+  claim: relations derived from held facts are usable knowledge the loop can add
+  status: proposed
+  regime: ''
+- id: ZLK.15
+  claim: knowledge enters through a fixed teacher on the student's own tokens without breaking the rest
+  status: partly measured (Qwen)
+  regime: 'Qwen3.5 0.8B pretrained'
+- id: ZLK.16
+  claim: a loop learned from a plain pretrain beats the same chain grafted on a finished model
+  status: 'proposed; toy (11-15): ticks from step 0 carry the computation (M = 0 reads 0.00), grafted ticks on G1d were a pass-through'
+  regime: toy from scratch (chase); pretrained not run
+- id: ZLK.17
+  claim: World trained by the chain against G1d compares two training methods from one base
+  status: proposed
+  regime: ''
+- id: ZLK.18
+  claim: trained ticks widen the attractor instead of collapsing it, and the output grows more expressive
+  status: one checkpoint
+  regime: G1d 0.4B, one checkpoint
+- id: ZLK.19
+  claim: separability is installed by tasks that need it, not by an answer loss alone
+  status: 'P1 negative; toy: a task one pass cannot solve made the ticks a register, a per-hop target made the step iterable'
+  regime: toy from scratch; P1 on G1d 0.4B
+- id: ZLK.20
+  claim: the neck of one-pass reading is the late fall of rank, where key interference is highest
+  status: rank fall measured; interference not
+  regime: G1d 0.4B and 2.9B pretrained
+- id: ZLK.22
+  claim: loop training on a mix of domains folds them into one system that transfers to a held-out domain,
+    below a specialist but smoother
+  status: 'proposed (owner 11-19); toy: the step learned on context did not reach stored facts (cs)'
+  regime: ''
 -->
 
 ## HZLK. Second pretraining: make what the weights hold readable, and read it through a self-regulated latent loop
@@ -108,28 +196,33 @@ not claimed.
 
 ### Sub-claims at a glance
 
-| id | statement (short) | status |
-|---|---|---|
-| ZLK.1 | CoT spends many tokens after the answer is already there | measured on one model, 48 items |
-| ZLK.2 | untrained time (re-read, ticks, pauses) is not used | regular; recall control not run |
-| ZLK.3 | tuning narrows the output; the state survives it | partly measured |
-| ZLK.4 | a channel of the model's own latent can be trained without erasing the answer | 0.4B: tick no longer erases; every arm a pass-through |
-| ZLK.5 | the model can learn to choose its own number of ticks | toy only |
-| ZLK.6 | with search the loop exceeds its teacher's one-pass reading | not run; bounded by T1/T2 |
-| ZLK.7 | two views of one content land close without collapse | not run |
-| ZLK.8 | content first, format from the question; honest self-decisions | obedience measured, near 0 |
-| ZLK.9 | a persistent state absorbs the configuration once | H17, contested |
-| ZLK.10 | an exact-recall branch queried at every tick keeps the past the settling state forgets | not started |
-| ZLK.11 | a pretrained model holds facts it does not read in one pass | measured on Qwen3.5 0.8B; not on RWKV |
-| ZLK.12 | a trained reader raises usable capacity toward what is held | external support; T15: ticks +2% on base and S1 alike, training adds nothing |
-| ZLK.13 | storage and reading trained together pack more at equal readability | proposed; proved part for the state |
-| ZLK.14 | relations derived from held facts are usable knowledge the loop can add | proposed |
-| ZLK.15 | knowledge enters through a fixed teacher on the student's own tokens without breaking the rest | partly measured (Qwen) |
-| ZLK.16 | a loop learned from a plain pretrain beats the same chain grafted on a finished model | proposed; toy (11-15): ticks from step 0 carry the computation (M = 0 reads 0.00), grafted ticks on G1d were a pass-through |
-| ZLK.17 | World trained by the chain against G1d compares two training methods from one base | proposed |
-| ZLK.18 | trained ticks widen the attractor instead of collapsing it, and the output grows more expressive | one checkpoint |
-| ZLK.19 | separability is installed by tasks that need it, not by an answer loss alone | P1 negative; toy: a task one pass cannot solve made the ticks a register, a per-hop target made the step iterable |
-| ZLK.20 | the neck of one-pass reading is the late fall of rank, where key interference is highest | rank fall measured; interference not |
+<!-- ZLK TABLE: generated from the claims records above by experiments/regenerate_hyp_index.py -->
+
+| id | statement (short) | status | regime | evidence files | linked |
+|---|---|---|---|---|---|
+| ZLK.1 | CoT spends many tokens after the answer is already there | measured on one model, 48 items | G1i 2.9B pretrained, 32 pattern items | 0 | <-H24 |
+| ZLK.2 | untrained time (re-read, ticks, pauses) is not used | regular; recall control not run | G1i 2.9B pretrained, untrained ticks and re-read | 0 | <-H21 |
+| ZLK.3 | tuning narrows the output; the state survives it | partly measured | pretrained, LoRA readout tuning | 0 | - |
+| ZLK.4 | a channel of the model's own latent can be trained without erasing the answer | 0.4B: tick no longer erases; every arm a pass-through | G1d 0.4B pretrained | 0 | - |
+| ZLK.5 | the model can learn to choose its own number of ticks | toy only | toy from scratch | 0 | <-H24 |
+| ZLK.6 | with search the loop exceeds its teacher's one-pass reading | not run; bounded by T1/T2 | - | 0 | ZLK.1 |
+| ZLK.7 | two views of one content land close without collapse | not run | - | 0 | - |
+| ZLK.8 | content first, format from the question; honest self-decisions | obedience measured, near 0 | G1i 2.9B pretrained, silent answers | 0 | - |
+| ZLK.9 | a persistent state absorbs the configuration once | H17, contested | none measured (the owner's sessions) | 0 | H17 |
+| ZLK.10 | an exact-recall branch queried at every tick keeps the past the settling state forgets | not started | - | 0 | <-H23 |
+| ZLK.11 | a pretrained model holds facts it does not read in one pass | measured on Qwen3.5 0.8B; not on RWKV | Qwen3.5 0.8B pretrained | 0 | - |
+| ZLK.12 | a trained reader raises usable capacity toward what is held | external support; T15: ticks +2% on base and S1 alike, training adds nothing | G1d 0.4B pretrained (state readout) | 0 | ZLK.11 |
+| ZLK.13 | storage and reading trained together pack more at equal readability | proposed; proved part for the state | - | 0 | - |
+| ZLK.14 | relations derived from held facts are usable knowledge the loop can add | proposed | - | 0 | H12 |
+| ZLK.15 | knowledge enters through a fixed teacher on the student's own tokens without breaking the rest | partly measured (Qwen) | Qwen3.5 0.8B pretrained | 0 | H7 |
+| ZLK.16 | a loop learned from a plain pretrain beats the same chain grafted on a finished model | proposed; toy (11-15): ticks from step 0 carry the computation (M = 0 reads 0.00), grafted ticks on G1d were a pass-through | toy from scratch (chase); pretrained not run | 0 | H9, ZLK.12 |
+| ZLK.17 | World trained by the chain against G1d compares two training methods from one base | proposed | - | 0 | - |
+| ZLK.18 | trained ticks widen the attractor instead of collapsing it, and the output grows more expressive | one checkpoint | G1d 0.4B, one checkpoint | 0 | - |
+| ZLK.19 | separability is installed by tasks that need it, not by an answer loss alone | P1 negative; toy: a task one pass cannot solve made the ticks a register, a per-hop target made the step iterable | toy from scratch; P1 on G1d 0.4B | 0 | - |
+| ZLK.20 | the neck of one-pass reading is the late fall of rank, where key interference is highest | rank fall measured; interference not | G1d 0.4B and 2.9B pretrained | 1 | H12, ZLK.18 |
+| ZLK.22 | loop training on a mix of domains folds them into one system that transfers to a held-out domain, below a specialist but smoother | proposed (owner 11-19); toy: the step learned on context did not reach stored facts (cs) | - | 0 | - |
+
+<!-- END ZLK TABLE -->
 
 ### 1. The interpretation (the owner's reading of the record, in my words)
 
@@ -411,7 +504,7 @@ overlap is not higher (then the narrowing is compression toward the answer, not 
 and G1k 2.9B fall from 16.0 to 10.9 live directions at L21 -> L22 (depth 0.656, both corpora) and hold 8-11 at
 L24-L28; on G1d 0.4B the directions the answer depends on are 8.7 / 8.2 / 6.3 / 6.4 at L8 / L12 / L16 / L20,
 and late layers depend on directions below the occupancy threshold; P1's sharpening hit L20 hardest (6.4 ->
-2.6). The 0.4B cliff, predicted at L15 -> L16, is measured (2026-11-12, `results/state_capacity_profile_g1d04b_M0.json`,
+2.6). The 0.4B cliff, predicted at L15 -> L16, is measured (2026-11-12, `experiments/rl/results/state_capacity_profile_g1d04b_M0.json`,
 one layer = its 16 heads, CV ridge): facts read, as the sum of held-out R2 over N = 8 bound values, are 4.2 / 3.4 /
 1.6 / 0.7 at L14-L17 and 0.0-0.4 at L18-L23, against 0.4-2.2 at L2-L11; at N = 16 L15 holds 0.5 and L16 none.
 L12 alone keeps rising with stored pairs (3.6 / 5.5 / 6.8 at N = 4 / 8 / 16; its design rank is also the
@@ -573,6 +666,17 @@ nanodiff: same accuracy, ECE 0.333 -> 0.036.
 history re-injected, at a fraction of the tokens read. *Refuter:* H17's. *Rests on:* nothing; the owner's sessions
 re-read every input token about 79 times (98.8% of input tokens were cache reads), which motivates it.
 
+**ZLK.22 One system across domains.** A loop trained on a mix of domains without domain D solves D better than
+the same model trained by CE on the same mix, and below a model specialised on D; its accuracy falls more slowly with
+distance from the training mix, and the tick latents of different domains share directions. *Estimator:* held-out
+family accuracy (e.g. 5 of 25 cipher families, after the cipher control shows the cipher is read) for loop, CE-mix
+and specialist; the slope of accuracy over distance; cross-domain similarity of tick latents before and after.
+*Refuter:* no gain on the held-out family over CE-mix beyond seed spread, or gains only on families in training.
+*Rests on:* the owner's question 11-19; outside: RL transfers to unseen variants better than imitation (Chu et al.
+2025), representations converge across models (Huh et al. 2024), both without a latent loop. Toy so far: one step
+generalises within a task (1b) and did not carry from context to stored facts (cs). *My reading:* plausible because
+shared tick weights make one general step shorter than one path per domain; the real test is on World 0.4B.
+
 ### 5. Positions still argued
 
 - **What A0.5 says about World.** The owner reads it as World's WKV doing no computation. It measures how much the
@@ -647,7 +751,8 @@ rule of the tick-yield spec (`~/.claude/plans/noesis-tick-yield-probe-2026-10-26
 | closed-loop toy from scratch, stage 1 (11-15) | RWKV-7, 2 layers, width 48, 49.8K params, trained from scratch | pointer chasing in context over a 10-node cycle, k = 1..8 hops, query last; curriculum k_max 1 -> 8 over 4500 of 6000 steps; CE on the answer only; A at `M = 0`, B-E at `M = 8` from step 0 (C per-tick JEPA target, D SIGReg 0.05, E both); seeds 0-2 | first run on record where ticks are not a pass-through: B 0.97 / 0.93 / 0.87 at k = 1 / 2 / 3 against A 0.78 / 0.16 / 0.13; B read at `M = 0` gives 0.00 at k = 1 (the computation lives in the ticks). k >= 4 at chance in both (B stalls at 3 hops though 8 ticks x 2 layers would allow more). Refuter 1 ("ticks buy depth", max(B..E) - A at k* + 2 = 3 >= +0.20, same sign in 3 seeds): +0.74 / +0.74 / +0.78, CONFIRMED. B is stable and stalls at 3 hops in all seeds (k = 3 0.85-0.93, k = 4 0.13-0.21). The per-tick terms break the wall but bimodally: C seeds 1-2 reach 0.92 / 0.88 at k = 4 and 0.83 / 0.72 at k = 8 / 7, C seed 0 only 0.35 at k = 3; D and E 1 of 3 seeds past the wall (D s0 0.55 at k = 7, E s0 0.50 at k = 8), the other seeds never pass k = 1 (D s2 at chance even at k = 1). C seeds 3-6 (run by the spatium session): k = 6 0.70 / 0.92 / 0.91 / 0.83, so 6 of 7 C seeds pass k = 6 >= 0.5 (seed 0 the only failure: its JEPA loss never falls, 0.46 -> 0.52, while seed 1's falls 0.50 -> 0.12). Refuter 2 (C - B >= +0.10 at k > k* in all seeds, shuffle costs C >= 2x B): mean over k = 2..8 -0.10 / +0.51 / +0.38 against B; shuffle cost (tick input = another example's latent, own state kept) over k = 2..8 is B 0.26 / 0.25 / 0.27, C 0.20 / 0.80 / 0.66 (seeds 4-6 0.83 / 0.82 / 0.80): 2x holds in every C seed but 0. Not confirmed by the letter (seed 0), not refuted. Reading: at k = 2..3, where both solve, the shuffle costs B 0.78-0.82 and C 0.81-0.87, so the per-example tick latent carries the computation in both arms (a register); the per-tick target does not create the register, it makes the step iterable past 3 hops. The 2x clause is confounded by B's wall. Bits per parameter (quant_sweep.py, per-row absmax rounding, `quant_s1.json`): at k = 1..3 B and C tolerate the same rounding (5 bits lossless, 4 bits -0.03 to -0.20, 3 bits about half lost); at k = 8 C loses more at 4 bits (0.82 -> 0.64, 0.89 -> 0.30), the rounding error accumulates over the ticks; the strict per-k minimum is B 5, C 5-8. The iterated step costs no more weight precision per step than the unrolled one, long chains need about one bit more. State probe (toy_state_probe.py, `state_probe_s1.json`; linear decode of every pair x -> next(x) from the WKV state after the pairs, held out): untrained 0.53, A 0.73 / 0.85 / 0.86, B 0.91 / 0.93 / 0.93, C 0.73 (failed seed 0) / 0.81 / 0.90 and seeds 4-6 0.96 / 0.96 / 0.95. Gate written before the run (tick arms >= +0.10 over M = 0 means the loop changed writing): B +0.11, C on its passing seeds +0.10, seeds 4-6 +0.13. The loop changed what is written, not only how it is read. Effective rank of the WKV heads (16 x 16, 10 pairs): untrained ~7-8, A 6-8 in layer 0, C seeds 4-6 3.5-4.6 in layer 0 with the best decode: the pairs are held more decodably in fewer dominant directions (ZLK.13 in miniature). After 8 ticks the rank stays 3.5-6.8, no collapse toward 1 as in the G1d attractor. Refuter 3 (SIGReg keeps the channel free without losing > 0.05): D loses > 0.05 at k <= 3 in 2 of 3 seeds, so at weight 0.05 it cannot pass; geometry not measured | `experiments/A0_state_probe/results/closed_loop_toy/s1_*` |
 | closed-loop toy, stage 1b: affine cipher seen through runs (11-16) | same toy, C recipe (M = 8, per-tick target), A (M = 0), and a chase + affine mix | 4 runs x -> a x + b mod 16 in context, query not among them; seeds 0-1 of 3 | not learned: k = 1 0.27-0.29 (C) and 0.35-0.48 (A), above chance 0.06 but far from the rule (parity of the runs explains part). A design flaw: odd a mod 16 has order <= 4, so E^4 is the identity in 64 of 128 ciphers and E^8 in 96; A's 1.00 at k = 8 and 0.75 at k = 4 are that shortcut, not depth. In the mix the affine half stays at chance and drags the chase half (seed 0 walls at 3 hops). Refuter "the loop applies a rule inferred from runs" not met (k = 3 at M = 8 0.25-0.28 < 0.5): inferring a and b from runs is out of reach at 50K params and 6000 steps; the iterated depth was not tested because of the shortcut (seed 2 the same: k = 1 0.25-0.33). Shift rung (11-16, E(x) = x + b mod 13, b != 0, no power shortcut): the rule is inferred from the runs perfectly, C at M = 8 1.00 at every k = 1..8 in all three seeds (M = 0 read of it 0.00-0.40); A at M = 0 1.00 up to k = 5, then 0.97 / 0.52 / 0.97 at k = 6 and 0.52 / 0.12 / 0.72 at k = 8. Refuter as written not met on its M = 0 side (A 1.00 at k = 3): a shift has a closed form, x + k b, which one pass computes without iterating; the ticks win only where the closed form's arithmetic fails (k >= 6). Depth tasks for the loop need no closed form (tables, derivations) | `results/closed_loop_toy/s1b_*` |
 | closed-loop toy, stage 1f: time against parameters (11-17) | one-pass A (M = 0) with 4 / 8 layers vs C (2 layers, 8 ticks, 49.8K) | chase, curriculum, 6000 steps; seeds 0-2 | A with 4 layers (94.7K params, 1.9x), seed 0: 1.00 / 0.99 / 0.98 / 0.75 / 0.36 at k = 1..5, 0.22-0.26 at k = 6-8: depth per pass grows about one hop per layer (2 layers: 1 hop). Seeds 1 / 2: k = 3 0.83 / 0.14, k >= 5 0.12-0.18. Three seeds of the 4-layer pass: 2-4 hops, chance at k = 6-8 (0.12-0.26). C with half the parameters holds 0.72-0.92 at k = 6-8 on its passing seeds (6 of 7), +0.5-0.7 over the 4-layer pass. 8 layers running | `results/closed_loop_toy/s1f_*` |
-| closed-loop toy, stage 1e: spatium rewrite derivations (11-17) | same toy, vocab +30 symbols; CE vs CE + owner's ZLK term (tick t -> EMA latent of hop t's term) | 33,985 items (29,987 train), 8 premises #1..#8 in context, ~140 tokens, depth 1..8, true/false 50/50 with near-miss falses; 6000 steps x 64, curriculum; seed 0 | On val_laws (held-out laws), M = 8: true items 0.90-0.98, false items 0.84-0.96 at every depth 1-8, both branches (exact BFS 0.99-1.00 at 55-4,347 terms expanded per item; the model spends 8 ticks). Mechanism (deriv_breakdown.py): falses are partly a shortcut, M = 0 already 0.72-0.82 on them and shuffled ticks keep 0.79-0.97; trues need the ticks, M = 0 0.61-0.74 (CE) / 0.26-0.42 (ZLK) and shuffled ticks 0.45-0.73. ZLK refuter (ZLK - CE at depth 4-8 on val_laws >= +0.10): +0.004, refuted on seed 0, but at a 0.91 ceiling, so it decides little; ZLK moves more of the work into the ticks (its M = 0 trues 0.26-0.42 vs CE 0.61-0.74). Seed 1 replicates (depth 4-8 balanced at M = 8: CE 0.913, ZLK 0.938; seed 0: 0.914, 0.918): ZLK - CE +0.025 / +0.004, refuted by the letter on 2 seeds, at a ceiling. last_rule variant (answer = local id of the last hop's rule, true items only, chance 0.125), CE seed 0 final: val_laws M = 8 0.20-0.41 (depth 4-8 mean 0.27), M = 0 0.14-0.27, shuffled 0.17-0.29; val (seen laws) 0.19-0.40. The CE model names the last rule at about twice chance, far below its 0.91 truth accuracy: the truth answer rests mostly on a consistency check, not on a derivation it can report. ZLK last_rule seed 0: val_laws M = 8 0.37-0.50 (depth 4-8 mean 0.448 vs CE 0.270), M = 0 0.07-0.17, shuffled 0.23-0.36; val 0.41-0.57. ZLK refuter (ZLK - CE at depth 4-8 on val_laws >= +0.10) on the shortcut-proof answer: +0.18, CONFIRMED on seed 0; seeds 1-2 queued. The owner's term (tick t predicts the latent of hop t's term) is what lets the model name the rule it applied; on the truth answer it was hidden by the surface cue. cs seed 1 repeats seed 0 (chase 0.84-0.98 to k = 8, storage one-hop 0.24). | `results/closed_loop_toy/s1e_*`, `~/tmp/toy/breakdown_s0.txt` |
+| closed-loop toy, phase A: stabilising the recipe (11-17) | chase C recipe (8 ticks, per-tick node target, curriculum), one knob at a time, 5 seeds | lr 1e-3 (base 3e-3) on the laptop; batch 256 (base 128) on the Aspire; gate: k = 6 >= 0.5 in 5 of 5 seeds | k = 6 >= 0.5 by knob: base (lr 3e-3, batch 128) 6 of 7; lr 1e-3 1 of 5 (no seed collapses, k = 1 >= 0.81, but 6000 steps undertrain: 0.59 / 0.47 / 0.47 / 0.40 / 0.33); batch 256 3 of 4 (seed 0, the base's failure, now 0.95 at k = 6 and 0.96 at k = 8; seed 2 fails instead). No knob gives 5 of 5: the failure is a bad basin that moves between seeds. It is visible early: the per-tick loss at step 1500 is 0.43-0.52 in every failing or weak run (base s0, b256 s2, lr1e-3 s4) and 0.20-0.38 in every passing one, and the failing ones never fall after. A stall rule (per-tick loss > 0.40 at step 1500 -> restart with the next seed, report seeds tried) would have kept only passing runs here; it was a retrospective fit on 8 runs. Prospective test A3 (base recipe, seeds 10-14 so far): all 5 pass k = 6 (0.81-0.99), but seeds 10 and 12 had loss 0.43 / 0.49 at step 1500 and recovered: the rule is wrong on 2 of 5, its refuter (>= 7 of 8 right) cannot be met: REFUTED. The base recipe itself now passes 11 of 12 seeds. lr 1e-3 x 12000 steps (A2) running on the Aspire | `results/closed_loop_toy/sA_*` |
+| closed-loop toy, stage 1e: spatium rewrite derivations (11-17) | same toy, vocab +30 symbols; CE vs CE + owner's ZLK term (tick t -> EMA latent of hop t's term) | 33,985 items (29,987 train), 8 premises #1..#8 in context, ~140 tokens, depth 1..8, true/false 50/50 with near-miss falses; 6000 steps x 64, curriculum; seed 0 | On val_laws (held-out laws), M = 8: true items 0.90-0.98, false items 0.84-0.96 at every depth 1-8, both branches (exact BFS 0.99-1.00 at 55-4,347 terms expanded per item; the model spends 8 ticks). Mechanism (deriv_breakdown.py): falses are partly a shortcut, M = 0 already 0.72-0.82 on them and shuffled ticks keep 0.79-0.97; trues need the ticks, M = 0 0.61-0.74 (CE) / 0.26-0.42 (ZLK) and shuffled ticks 0.45-0.73. ZLK refuter (ZLK - CE at depth 4-8 on val_laws >= +0.10): +0.004, refuted on seed 0, but at a 0.91 ceiling, so it decides little; ZLK moves more of the work into the ticks (its M = 0 trues 0.26-0.42 vs CE 0.61-0.74). Seed 1 replicates (depth 4-8 balanced at M = 8: CE 0.913, ZLK 0.938; seed 0: 0.914, 0.918): Seed 2: CE 0.951, ZLK 0.933. ZLK - CE on the truth answer +0.004 / +0.025 / -0.018 over 3 seeds: refuted by the letter, at a ceiling. last_rule variant (answer = local id of the last hop's rule, true items only, chance 0.125), CE seed 0 final: val_laws M = 8 0.20-0.41 (depth 4-8 mean 0.27), M = 0 0.14-0.27, shuffled 0.17-0.29; val (seen laws) 0.19-0.40. The CE model names the last rule at about twice chance, far below its 0.91 truth accuracy: the truth answer rests mostly on a consistency check, not on a derivation it can report. ZLK last_rule seed 0: val_laws M = 8 0.37-0.50 (depth 4-8 mean 0.448 vs CE 0.270), M = 0 0.07-0.17, shuffled 0.23-0.36; val 0.41-0.57. ZLK refuter (ZLK - CE at depth 4-8 on val_laws >= +0.10) on the shortcut-proof answer: +0.18, CONFIRMED on seed 0; but CE seed 1 reaches 0.48 at depth 4-8 (seed 0 was a weak CE seed), and ZLK seed 1 ends at 0.439: ZLK - CE = +0.18 / -0.04 on seeds 0 / 1, not confirmed by the letter. Seed 2: CE 0.434, ZLK 0.295. Over 3 seeds ZLK - CE = +0.18 / -0.04 / -0.14, means 0.394 vs 0.395: the ZLK term (hop-term latent target) is REFUTED on the last_rule answer as on the truth answer; the seed-0 gain was seed noise (CE spread 0.27-0.48). Both arms name the last rule on held-out laws at about 3x chance (0.39 vs 0.125), so part of a derivation is there, with large seed variance. Label-free goal target (every tick toward the EMA latent of the goal term): seeds 0 / 1 0.46 / 0.362, mean 0.411 vs CE 0.395 (+0.016, paired +0.19 / -0.12): refuted (<= +0.03). self (tick t toward the EMA copy's tick t+1): 0.28 / 0.242, mean 0.261, below CE by 0.13: refuted, and it hurts (a target that rewards reaching the later state sooner pulls toward a fixed point). both (goal + self): 0.285 / 0.246, mean 0.266: refuted, self drags it down. Anonymised CE seed 0: 0.287 (plain CE seed 0: 0.27); seeds 1-2 running. The owner's term (tick t predicts the latent of hop t's term) is what lets the model name the rule it applied; on the truth answer it was hidden by the surface cue. cs seed 1 repeats seed 0 (chase 0.84-0.98 to k = 8, storage one-hop 0.24). | `results/closed_loop_toy/s1e_*`, `~/tmp/toy/breakdown_s0.txt` |
 | closed-loop toy, stage 1c: facts in the weights (11-16) | same toy, vocab +64 id tokens, 55,968 params | K fixed random 16-cycles named by two id tokens, no context; one-hop over all edges (capacity by Fano) and k-hop on held-out vs trained starts; 20000 steps x 256; seed 0 | One-pass capacity (A1, one-hop only): K 512 all edges (0.57 bit/param), K 1024 all edges, 64 kbit = 1.14 bit/param, K 2048 0.81 of edges = 1.46 bit/param (highest), K 4096 0.37 = 0.66 (under-trained at ~80 exposures per edge). Composition: A with the curriculum (M = 0) answers k = 2 on TRAINED starts 0.97 but on held-out starts 0.06 (chance): it memorises composites, the two-hop curse reproduced. C (8 ticks + per-hop target) at K 1024 stores less (one-hop 0.60, 0.41 bit/param: the curriculum dilutes one-hop exposure) and also composes only trained starts (k = 2 0.99 seen, 0.06 held out). With facts in the state the loop composes (stage 1); with facts in the weights it did not, at this K and schedule. Refuter not applicable (one-hop < 0.9). C at K 2048 (105 min) stores almost nothing: one-hop 0.16 at M = 8, 0.04 bit/param, k = 2 on trained starts 0.72: with the curriculum and the per-hop target from step 0, storage starves as K grows. A at K 512 with the curriculum stores EVERY edge (0.9994) and still composes only trained starts (k = 2: 1.00 seen, 0.06 held out): for one pass the two-hop curse is not a storage shortfall. C at K 512 (8 ticks + per-hop target) also stores every edge (one-hop 0.999 at M = 8) and composes trained starts (k = 2 1.00, k = 3 0.99) but not held-out ones (k = 2 0.07): refuter (ticks - M = 0 at k = 2 held out, one-hop >= 0.9) = +0.01, REFUTED on seed 0. A with a one-hop warm phase (Aw K 512): every edge, seen k = 2 1.00, held out 0.07. Reading: at K 512 the 8192 trained composites are memorisable, so the loop memorises them instead of iterating; in chase nothing repeats, so iteration is the only route. C with the one-hop warm phase (Cw K 512, 28000 steps) the same: every edge, seen k = 2 1.00, k = 3 0.90, held out 0.07. Storing first does not change it. cs (C, K 512, 20000 x 256, half chase half one-hop store, 276 min): chase perfect to k = 8 (0.98-1.00, M = 0 0.00 at k >= 2), but the stored facts barely land: one-hop 0.32 at M = 8 (0.06 bit/param) against 1.00 for A1 at K 1024 with ~300 exposures per edge here; k-hop over stored facts chance. Transfer untestable on seed 0 (one-hop < 0.9): the in-context task and storage in the weights compete in a 50K net. Control cs A (M = 0, 196 min): chase 0.90 / 0.84 at k = 1 / 2 then chance; one-hop storage 0.41 (0.10 bit/param): storage is starved by sharing the net with the context task with or without ticks, so the competition is between the tasks, not caused by the loop. | `results/closed_loop_toy/s1c_*` |
 
 ### 6c. The closed-loop toy as the bench (11-16)
@@ -668,6 +773,58 @@ One small RWKV-7 trained from scratch (`experiments/A0_state_probe/closed_loop_t
 
 Dropped from the toy line: rewarding motion (L_state, refuted), SIGReg at 0.05 (costs accuracy), weight rounding
 as a capacity measure (it measures precision, not information; kept only as the cost of a long chain).
+
+### 6d. Methodology from the toy: the recipe, why it works, what not to retry (11-17)
+
+Settled on the closed-loop toy (2-layer RWKV-7, ~50K parameters, from scratch; numbers in §6b). Each item says what
+was measured; the scale is the toy's, the transfer to trained models is §6d.5.
+
+**6d.1 Recipe.** (R1) A tick feeds the last layer's normalised output back through `ln0` as the next input; weights
+are shared across ticks; M fixed during training (8). (R2) Ticks from the first step: grown, not grafted. (R3)
+Tasks one pass cannot solve (depth beyond what the layers give) and where nothing repeats (fresh context per
+example). (R4) A curriculum on depth, k_max 1 -> 8 over 3/4 of the steps; uniform depth from the start drowns the
+gradient. (R5) Where the intermediate step is exact and atomic (one node), a per-tick target: tick t predicts a
+frozen embedding of step t. (R6) CE on the answer always.
+
+**6d.2 Why it works (mechanism, each measured).** (W1) The tick latent becomes a register holding the current value:
+feeding each tick another example's latent costs 0.78-0.87 at the depths solved, with or without R5. (W2) Without R5
+the model learns an unrolled program of fixed depth (3 hops in every seed, then chance); with R5 the same weights
+apply one step per tick (to 8 hops in 6 of 7 seeds): the per-step target turns a circuit into an iterable
+instruction. (W3) The loop changes the write side: pairs written to the WKV state decode better (0.81 -> 0.92-0.96)
+in fewer dominant directions; no collapse toward rank 1 over ticks (3.5-6.8). (W4) Time substitutes for depth: one
+pass gains about one hop per layer (4 layers, 1.9x parameters: chance at 6-8 hops); 2 layers with 8 ticks hold
+0.72-0.92 there. (W5) The iterated step costs the same weight precision per step as the unrolled one; long chains
+need about one bit more (rounding error accumulates over ticks). (W6) On derivations over held-out laws the loop
+names the rule applied at the last step at ~3x chance (0.39 vs 0.125), M = 0 at chance: partial derivation.
+
+**6d.3 Limits found.** (L1) Facts stored in the weights are not composed on unseen starts, with or without ticks,
+even when every edge is stored: trained composites are memorised (the two-hop curse holds under the loop). (L2) In
+50K parameters a context task and storage in the weights compete (stored edge accuracy 0.16-0.41 vs 1.00 alone, 0.01-0.10 bit/param; the M = 0 control
+starves too). (L3) Seed
+instability: 1 of 7 C seeds never passes one hop; derivation CE ranges 0.27-0.48 across seeds.
+
+**6d.4 Do not retry (each with the reason it failed).** (N1) Grafting ticks on a finished model with tasks one pass
+solves: pass-through (T3, T20) - the task never asked for the ticks. (N2) Rewarding state motion: motion is not
+use (held-out CE +0.40). (N3) Ungated shaping in policy gradient near zero accuracy: shaping takes over (run6).
+(N4) SIGReg against collapse: there is no collapse to prevent (W3) and it costs accuracy. (N5) Latent auxiliary
+targets on composite terms over CE (the hop-term target, goal, self): no gain over 3 seeds; R5 pays only when the
+intermediate is exact and atomic. (N6) Rule tasks with a closed form in k (shift; affine mod 16, whose powers are
+the identity) as depth tests: one pass computes them. (N7) Judging an add-on by final accuracy at the trained depths
+at a ceiling: inside the seed spread; measure what the idea predicts (extrapolation in depth or M, data
+efficiency, per-tick decode). (N8) Storing facts first, then the curriculum, to make the loop compose them: no
+change (L1). Caution on N5: the label-free targets were tested on clean derivations only, where CE
+already carries the signal; their claim is about data where the structure must be found (stage 1d, text
+enciphered), not tested yet.
+
+**6d.5 Transfer.** General RWKV-7 models: the recipe asks for R3 data (anonymised derivations, chase) and trained
+ticks with CE; ZLK.16 predicts a model closer to raw pretraining (World) learns them more readily than one tuned
+further (G1d); the laptop precursor (plan noesis-world-a30 §0) tests it. RWKV-8: RWKV-8 keeps the RWKV-7 time mix
+and adds ROSA, an exact-match suffix-automaton block over the history, trained with the rest (community map; v8 code
+not read yet); its public checkpoints are toy-scale (39.6K and ~1M parameters), the scale of this toy. L1 and ZLK.10
+mark where ROSA belongs: the exact past is fetched from history at each tick instead of being stored and composed
+in the state or the weights. Extension, not built: the same recipe with a ROSA block queried per tick, measured on
+chase with more pairs than the WKV state holds (n beyond state capacity) and on composition over facts in context
+far back; read BlinkDL's v8 code whole before writing it.
 
 ### 7. Tests with controls
 
