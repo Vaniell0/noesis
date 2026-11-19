@@ -1,0 +1,181 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "828843a72cc5",
+    "summary": {
+      "M0_known_clean": "0.876",
+      "M0_known_lie": "0.110",
+      "M0_lie_repeated": "0.581",
+      "M0_new": "0.922",
+      "capacity_M0": "{\"edge_acc\": 0.1953, \"bits\": 535, \"bits_per_param\": 0.0294}"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "doubt",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "",
+    "cipher_eval": "",
+    "cipher_max_len": 320,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_price": 0.1,
+    "width": 24,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 128,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 1000,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sI_doubt_K256_w24_seed0.json"
+  },
+  "n_params": 18192,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 1.0181,
+      "eval": {
+        "M0_known_clean": 0.8555,
+        "M0_known_lie": 0.0195,
+        "M0_lie_repeated": 0.8125,
+        "M0_new": 0.8789,
+        "capacity_M0": {
+          "edge_acc": 0.1091,
+          "bits": 73,
+          "bits_per_param": 0.004
+        }
+      },
+      "sec": 268.5
+    },
+    {
+      "step": 2000,
+      "ce": 1.0167,
+      "eval": {
+        "M0_known_clean": 0.8926,
+        "M0_known_lie": 0.0625,
+        "M0_lie_repeated": 0.7285,
+        "M0_new": 0.9043,
+        "capacity_M0": {
+          "edge_acc": 0.1338,
+          "bits": 169,
+          "bits_per_param": 0.0093
+        }
+      },
+      "sec": 535.2
+    },
+    {
+      "step": 3000,
+      "ce": 1.0339,
+      "eval": {
+        "M0_known_clean": 0.8926,
+        "M0_known_lie": 0.0625,
+        "M0_lie_repeated": 0.709,
+        "M0_new": 0.9238,
+        "capacity_M0": {
+          "edge_acc": 0.1587,
+          "bits": 297,
+          "bits_per_param": 0.0163
+        }
+      },
+      "sec": 802.9
+    },
+    {
+      "step": 4000,
+      "ce": 0.9405,
+      "eval": {
+        "M0_known_clean": 0.8809,
+        "M0_known_lie": 0.0781,
+        "M0_lie_repeated": 0.6484,
+        "M0_new": 0.9355,
+        "capacity_M0": {
+          "edge_acc": 0.1794,
+          "bits": 426,
+          "bits_per_param": 0.0234
+        }
+      },
+      "sec": 1049.2
+    },
+    {
+      "step": 5000,
+      "ce": 0.8931,
+      "eval": {
+        "M0_known_clean": 0.8809,
+        "M0_known_lie": 0.0938,
+        "M0_lie_repeated": 0.6035,
+        "M0_new": 0.9238,
+        "capacity_M0": {
+          "edge_acc": 0.1982,
+          "bits": 557,
+          "bits_per_param": 0.0306
+        }
+      },
+      "sec": 1302.2
+    },
+    {
+      "step": 6000,
+      "ce": 0.8136,
+      "eval": {
+        "M0_known_clean": 0.8867,
+        "M0_known_lie": 0.0996,
+        "M0_lie_repeated": 0.5938,
+        "M0_new": 0.9297,
+        "capacity_M0": {
+          "edge_acc": 0.1953,
+          "bits": 535,
+          "bits_per_param": 0.0294
+        }
+      },
+      "sec": 1549.3
+    }
+  ],
+  "final": {
+    "M0_known_clean": 0.876,
+    "M0_known_lie": 0.1095,
+    "M0_lie_repeated": 0.581,
+    "M0_new": 0.922,
+    "capacity_M0": {
+      "edge_acc": 0.1953,
+      "bits": 535,
+      "bits_per_param": 0.0294
+    }
+  },
+  "sec": 1553.1
+}

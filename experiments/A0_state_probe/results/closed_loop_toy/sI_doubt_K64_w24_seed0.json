@@ -1,0 +1,172 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-19",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "09fae089f236",
+    "summary": {
+      "M0_known_clean": "1.000",
+      "M0_known_lie": "1.000",
+      "M0_lie_repeated": "0.000",
+      "M0_new": "0.906",
+      "capacity_M0": "{\"edge_acc\": 0.9619, \"bits\": 3613, \"bits_per_param\": 0.1986}"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "doubt",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "",
+    "cipher_eval": "",
+    "cipher_max_len": 320,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 64,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "width": 24,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 128,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 1000,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sI_doubt_K64_w24_seed0.json"
+  },
+  "n_params": 18192,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 0.716,
+      "eval": {
+        "M0_known_clean": 0.9199,
+        "M0_known_lie": 0.5527,
+        "M0_lie_repeated": 0.1328,
+        "M0_new": 0.8477,
+        "capacity_M0": {
+          "edge_acc": 0.6045,
+          "bits": 1467,
+          "bits_per_param": 0.0806
+        }
+      },
+      "sec": 362.1
+    },
+    {
+      "step": 2000,
+      "ce": 0.1273,
+      "eval": {
+        "M0_known_clean": 0.9941,
+        "M0_known_lie": 0.9648,
+        "M0_lie_repeated": 0.0059,
+        "M0_new": 0.8789,
+        "capacity_M0": {
+          "edge_acc": 0.9619,
+          "bits": 3613,
+          "bits_per_param": 0.1986
+        }
+      },
+      "sec": 641.3
+    },
+    {
+      "step": 3000,
+      "ce": 0.1124,
+      "eval": {
+        "M0_known_clean": 1.0,
+        "M0_known_lie": 0.998,
+        "M0_lie_repeated": 0.0,
+        "M0_new": 0.9043,
+        "capacity_M0": {
+          "edge_acc": 0.9785,
+          "bits": 3764,
+          "bits_per_param": 0.2069
+        }
+      },
+      "sec": 936.7
+    },
+    {
+      "step": 4000,
+      "ce": 0.1121,
+      "eval": {
+        "M0_known_clean": 1.0,
+        "M0_known_lie": 1.0,
+        "M0_lie_repeated": 0.0,
+        "M0_new": 0.9023,
+        "capacity_M0": {
+          "edge_acc": 0.9746,
+          "bits": 3727,
+          "bits_per_param": 0.2049
+        }
+      },
+      "sec": 1211.0
+    },
+    {
+      "step": 5000,
+      "ce": 0.1084,
+      "eval": {
+        "M0_known_clean": 1.0,
+        "M0_known_lie": 1.0,
+        "M0_lie_repeated": 0.0,
+        "M0_new": 0.9102,
+        "capacity_M0": {
+          "edge_acc": 0.9658,
+          "bits": 3647,
+          "bits_per_param": 0.2005
+        }
+      },
+      "sec": 1479.7
+    },
+    {
+      "step": 6000,
+      "ce": 0.0598,
+      "eval": {
+        "M0_known_clean": 1.0,
+        "M0_known_lie": 1.0,
+        "M0_lie_repeated": 0.0,
+        "M0_new": 0.916,
+        "capacity_M0": {
+          "edge_acc": 0.9619,
+          "bits": 3613,
+          "bits_per_param": 0.1986
+        }
+      },
+      "sec": 1740.1
+    }
+  ],
+  "final": {
+    "M0_known_clean": 1.0,
+    "M0_known_lie": 1.0,
+    "M0_lie_repeated": 0.0,
+    "M0_new": 0.906,
+    "capacity_M0": {
+      "edge_acc": 0.9619,
+      "bits": 3613,
+      "bits_per_param": 0.1986
+    }
+  },
+  "sec": 1743.7
+}

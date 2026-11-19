@@ -1,0 +1,181 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "0fc9968129c7",
+    "summary": {
+      "M0_known_clean": "1.000",
+      "M0_known_lie": "1.000",
+      "M0_lie_repeated": "0.000",
+      "M0_new": "0.999",
+      "capacity_M0": "{\"edge_acc\": 0.9243, \"bits\": 13238, \"bits_per_param\": 0.0696}"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "doubt",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "",
+    "cipher_eval": "",
+    "cipher_max_len": 320,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_price": 0.1,
+    "width": 96,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 128,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 1000,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sI_doubt_K256_w96_seed0.json"
+  },
+  "n_params": 190272,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 0.9349,
+      "eval": {
+        "M0_known_clean": 0.8672,
+        "M0_known_lie": 0.0703,
+        "M0_lie_repeated": 0.6133,
+        "M0_new": 0.9199,
+        "capacity_M0": {
+          "edge_acc": 0.1606,
+          "bits": 308,
+          "bits_per_param": 0.0016
+        }
+      },
+      "sec": 611.8
+    },
+    {
+      "step": 2000,
+      "ce": 0.6154,
+      "eval": {
+        "M0_known_clean": 0.8438,
+        "M0_known_lie": 0.2871,
+        "M0_lie_repeated": 0.3203,
+        "M0_new": 0.9746,
+        "capacity_M0": {
+          "edge_acc": 0.3037,
+          "bits": 1516,
+          "bits_per_param": 0.008
+        }
+      },
+      "sec": 1206.4
+    },
+    {
+      "step": 3000,
+      "ce": 0.4118,
+      "eval": {
+        "M0_known_clean": 0.916,
+        "M0_known_lie": 0.6562,
+        "M0_lie_repeated": 0.1152,
+        "M0_new": 0.9961,
+        "capacity_M0": {
+          "edge_acc": 0.5979,
+          "bits": 5750,
+          "bits_per_param": 0.0302
+        }
+      },
+      "sec": 1803.4
+    },
+    {
+      "step": 4000,
+      "ce": 0.0466,
+      "eval": {
+        "M0_known_clean": 0.9863,
+        "M0_known_lie": 0.9297,
+        "M0_lie_repeated": 0.0215,
+        "M0_new": 0.998,
+        "capacity_M0": {
+          "edge_acc": 0.8423,
+          "bits": 10967,
+          "bits_per_param": 0.0576
+        }
+      },
+      "sec": 2370.4
+    },
+    {
+      "step": 5000,
+      "ce": 0.0156,
+      "eval": {
+        "M0_known_clean": 1.0,
+        "M0_known_lie": 1.0,
+        "M0_lie_repeated": 0.0,
+        "M0_new": 1.0,
+        "capacity_M0": {
+          "edge_acc": 0.9126,
+          "bits": 12888,
+          "bits_per_param": 0.0677
+        }
+      },
+      "sec": 2952.4
+    },
+    {
+      "step": 6000,
+      "ce": 0.0053,
+      "eval": {
+        "M0_known_clean": 1.0,
+        "M0_known_lie": 1.0,
+        "M0_lie_repeated": 0.0,
+        "M0_new": 1.0,
+        "capacity_M0": {
+          "edge_acc": 0.9243,
+          "bits": 13238,
+          "bits_per_param": 0.0696
+        }
+      },
+      "sec": 3660.9
+    }
+  ],
+  "final": {
+    "M0_known_clean": 1.0,
+    "M0_known_lie": 1.0,
+    "M0_lie_repeated": 0.0,
+    "M0_new": 0.999,
+    "capacity_M0": {
+      "edge_acc": 0.9243,
+      "bits": 13238,
+      "bits_per_param": 0.0696
+    }
+  },
+  "sec": 3674.6
+}

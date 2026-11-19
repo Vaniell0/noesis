@@ -1,0 +1,181 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "828843a72cc5",
+    "summary": {
+      "M0_known_clean": "0.987",
+      "M0_known_lie": "0.922",
+      "M0_lie_repeated": "0.025",
+      "M0_new": "0.946",
+      "capacity_M0": "{\"edge_acc\": 0.8713, \"bits\": 11728, \"bits_per_param\": 0.2095}"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "doubt",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "",
+    "cipher_eval": "",
+    "cipher_max_len": 320,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_price": 0.1,
+    "width": 48,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 128,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 1000,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sI_doubt_K256_w48_seed0.json"
+  },
+  "n_params": 55968,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 0.9047,
+      "eval": {
+        "M0_known_clean": 0.8379,
+        "M0_known_lie": 0.0742,
+        "M0_lie_repeated": 0.5898,
+        "M0_new": 0.9082,
+        "capacity_M0": {
+          "edge_acc": 0.1553,
+          "bits": 278,
+          "bits_per_param": 0.005
+        }
+      },
+      "sec": 400.8
+    },
+    {
+      "step": 2000,
+      "ce": 0.8702,
+      "eval": {
+        "M0_known_clean": 0.877,
+        "M0_known_lie": 0.2383,
+        "M0_lie_repeated": 0.4043,
+        "M0_new": 0.9375,
+        "capacity_M0": {
+          "edge_acc": 0.2698,
+          "bits": 1170,
+          "bits_per_param": 0.0209
+        }
+      },
+      "sec": 798.9
+    },
+    {
+      "step": 3000,
+      "ce": 0.6712,
+      "eval": {
+        "M0_known_clean": 0.875,
+        "M0_known_lie": 0.5117,
+        "M0_lie_repeated": 0.1836,
+        "M0_new": 0.9609,
+        "capacity_M0": {
+          "edge_acc": 0.4939,
+          "bits": 4014,
+          "bits_per_param": 0.0717
+        }
+      },
+      "sec": 1163.4
+    },
+    {
+      "step": 4000,
+      "ce": 0.2843,
+      "eval": {
+        "M0_known_clean": 0.9336,
+        "M0_known_lie": 0.7305,
+        "M0_lie_repeated": 0.0684,
+        "M0_new": 0.9551,
+        "capacity_M0": {
+          "edge_acc": 0.7004,
+          "bits": 7723,
+          "bits_per_param": 0.138
+        }
+      },
+      "sec": 1537.0
+    },
+    {
+      "step": 5000,
+      "ce": 0.1646,
+      "eval": {
+        "M0_known_clean": 0.9844,
+        "M0_known_lie": 0.9023,
+        "M0_lie_repeated": 0.0195,
+        "M0_new": 0.9473,
+        "capacity_M0": {
+          "edge_acc": 0.8381,
+          "bits": 10862,
+          "bits_per_param": 0.1941
+        }
+      },
+      "sec": 1926.4
+    },
+    {
+      "step": 6000,
+      "ce": 0.1356,
+      "eval": {
+        "M0_known_clean": 0.9863,
+        "M0_known_lie": 0.9375,
+        "M0_lie_repeated": 0.0156,
+        "M0_new": 0.9512,
+        "capacity_M0": {
+          "edge_acc": 0.8713,
+          "bits": 11728,
+          "bits_per_param": 0.2095
+        }
+      },
+      "sec": 2287.7
+    }
+  ],
+  "final": {
+    "M0_known_clean": 0.987,
+    "M0_known_lie": 0.922,
+    "M0_lie_repeated": 0.0255,
+    "M0_new": 0.946,
+    "capacity_M0": {
+      "edge_acc": 0.8713,
+      "bits": 11728,
+      "bits_per_param": 0.2095
+    }
+  },
+  "sec": 2294.3
+}

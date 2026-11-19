@@ -1,0 +1,317 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-18",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "31fc64d40149",
+    "summary": {
+      "M0": "char 0.605 exact 0.000"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "cipher",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "width": 96,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 16,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 2500,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/s1d_M0_seed0.json"
+  },
+  "n_params": 271104,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 1.4416,
+      "eval": {
+        "M0": {
+          "char_acc": 0.5188,
+          "exact": 0.0,
+          "exact_by_family": {
+            "adfgvx": 0.0,
+            "atbash": 0.0,
+            "bacon": 0.0,
+            "bifid6": 0.0,
+            "caesar": 0.0,
+            "columnar": 0.0,
+            "polybius6": 0.0,
+            "railfence": 0.0,
+            "script_braille": 0.0,
+            "script_cherokee": 0.0,
+            "script_cyrillic": 0.0,
+            "script_deseret": 0.0,
+            "script_glagolitic": 0.0,
+            "script_hebrew": 0.0,
+            "script_katakana": 0.0,
+            "script_linear_b": 0.0,
+            "script_ogham": 0.0,
+            "script_phaistos": 0.0,
+            "script_runic": 0.0,
+            "script_shavian": 0.0,
+            "script_tifinagh": 0.0,
+            "script_ugaritic": 0.0,
+            "script_yijing": 0.0,
+            "tap6": 0.0,
+            "vigenere": 0.0
+          }
+        }
+      },
+      "sec": 4740.8
+    },
+    {
+      "step": 2000,
+      "ce": 1.442,
+      "eval": {
+        "M0": {
+          "char_acc": 0.5665,
+          "exact": 0.0,
+          "exact_by_family": {
+            "adfgvx": 0.0,
+            "atbash": 0.0,
+            "bacon": 0.0,
+            "bifid6": 0.0,
+            "caesar": 0.0,
+            "columnar": 0.0,
+            "polybius6": 0.0,
+            "railfence": 0.0,
+            "script_braille": 0.0,
+            "script_cherokee": 0.0,
+            "script_cyrillic": 0.0,
+            "script_deseret": 0.0,
+            "script_glagolitic": 0.0,
+            "script_hebrew": 0.0,
+            "script_katakana": 0.0,
+            "script_linear_b": 0.0,
+            "script_ogham": 0.0,
+            "script_phaistos": 0.0,
+            "script_runic": 0.0,
+            "script_shavian": 0.0,
+            "script_tifinagh": 0.0,
+            "script_ugaritic": 0.0,
+            "script_yijing": 0.0,
+            "tap6": 0.0,
+            "vigenere": 0.0
+          }
+        }
+      },
+      "sec": 9468.9
+    },
+    {
+      "step": 3000,
+      "ce": 1.3279,
+      "eval": {
+        "M0": {
+          "char_acc": 0.5805,
+          "exact": 0.0,
+          "exact_by_family": {
+            "adfgvx": 0.0,
+            "atbash": 0.0,
+            "bacon": 0.0,
+            "bifid6": 0.0,
+            "caesar": 0.0,
+            "columnar": 0.0,
+            "polybius6": 0.0,
+            "railfence": 0.0,
+            "script_braille": 0.0,
+            "script_cherokee": 0.0,
+            "script_cyrillic": 0.0,
+            "script_deseret": 0.0,
+            "script_glagolitic": 0.0,
+            "script_hebrew": 0.0,
+            "script_katakana": 0.0,
+            "script_linear_b": 0.0,
+            "script_ogham": 0.0,
+            "script_phaistos": 0.0,
+            "script_runic": 0.0,
+            "script_shavian": 0.0,
+            "script_tifinagh": 0.0,
+            "script_ugaritic": 0.0,
+            "script_yijing": 0.0,
+            "tap6": 0.0,
+            "vigenere": 0.0
+          }
+        }
+      },
+      "sec": 14144.0
+    },
+    {
+      "step": 4000,
+      "ce": 1.4618,
+      "eval": {
+        "M0": {
+          "char_acc": 0.6011,
+          "exact": 0.0,
+          "exact_by_family": {
+            "adfgvx": 0.0,
+            "atbash": 0.0,
+            "bacon": 0.0,
+            "bifid6": 0.0,
+            "caesar": 0.0,
+            "columnar": 0.0,
+            "polybius6": 0.0,
+            "railfence": 0.0,
+            "script_braille": 0.0,
+            "script_cherokee": 0.0,
+            "script_cyrillic": 0.0,
+            "script_deseret": 0.0,
+            "script_glagolitic": 0.0,
+            "script_hebrew": 0.0,
+            "script_katakana": 0.0,
+            "script_linear_b": 0.0,
+            "script_ogham": 0.0,
+            "script_phaistos": 0.0,
+            "script_runic": 0.0,
+            "script_shavian": 0.0,
+            "script_tifinagh": 0.0,
+            "script_ugaritic": 0.0,
+            "script_yijing": 0.0,
+            "tap6": 0.0,
+            "vigenere": 0.0
+          }
+        }
+      },
+      "sec": 18407.4
+    },
+    {
+      "step": 5000,
+      "ce": 1.1865,
+      "eval": {
+        "M0": {
+          "char_acc": 0.6069,
+          "exact": 0.0,
+          "exact_by_family": {
+            "adfgvx": 0.0,
+            "atbash": 0.0,
+            "bacon": 0.0,
+            "bifid6": 0.0,
+            "caesar": 0.0,
+            "columnar": 0.0,
+            "polybius6": 0.0,
+            "railfence": 0.0,
+            "script_braille": 0.0,
+            "script_cherokee": 0.0,
+            "script_cyrillic": 0.0,
+            "script_deseret": 0.0,
+            "script_glagolitic": 0.0,
+            "script_hebrew": 0.0,
+            "script_katakana": 0.0,
+            "script_linear_b": 0.0,
+            "script_ogham": 0.0,
+            "script_phaistos": 0.0,
+            "script_runic": 0.0,
+            "script_shavian": 0.0,
+            "script_tifinagh": 0.0,
+            "script_ugaritic": 0.0,
+            "script_yijing": 0.0,
+            "tap6": 0.0,
+            "vigenere": 0.0
+          }
+        }
+      },
+      "sec": 22668.6
+    },
+    {
+      "step": 6000,
+      "ce": 1.2387,
+      "eval": {
+        "M0": {
+          "char_acc": 0.6132,
+          "exact": 0.0,
+          "exact_by_family": {
+            "adfgvx": 0.0,
+            "atbash": 0.0,
+            "bacon": 0.0,
+            "bifid6": 0.0,
+            "caesar": 0.0,
+            "columnar": 0.0,
+            "polybius6": 0.0,
+            "railfence": 0.0,
+            "script_braille": 0.0,
+            "script_cherokee": 0.0,
+            "script_cyrillic": 0.0,
+            "script_deseret": 0.0,
+            "script_glagolitic": 0.0,
+            "script_hebrew": 0.0,
+            "script_katakana": 0.0,
+            "script_linear_b": 0.0,
+            "script_ogham": 0.0,
+            "script_phaistos": 0.0,
+            "script_runic": 0.0,
+            "script_shavian": 0.0,
+            "script_tifinagh": 0.0,
+            "script_ugaritic": 0.0,
+            "script_yijing": 0.0,
+            "tap6": 0.0,
+            "vigenere": 0.0
+          }
+        }
+      },
+      "sec": 26895.5
+    }
+  ],
+  "final": {
+    "M0": {
+      "char_acc": 0.605,
+      "exact": 0.0,
+      "exact_by_family": {
+        "adfgvx": 0.0,
+        "atbash": 0.0,
+        "bacon": 0.0,
+        "bifid6": 0.0,
+        "caesar": 0.0,
+        "columnar": 0.0,
+        "polybius6": 0.0,
+        "railfence": 0.0,
+        "script_braille": 0.0,
+        "script_cherokee": 0.0,
+        "script_cyrillic": 0.0,
+        "script_deseret": 0.0,
+        "script_glagolitic": 0.0,
+        "script_hebrew": 0.0,
+        "script_katakana": 0.0,
+        "script_linear_b": 0.0,
+        "script_ogham": 0.0,
+        "script_phaistos": 0.0,
+        "script_runic": 0.0,
+        "script_shavian": 0.0,
+        "script_tifinagh": 0.0,
+        "script_ugaritic": 0.0,
+        "script_yijing": 0.0,
+        "tap6": 0.0,
+        "vigenere": 0.0
+      }
+    }
+  },
+  "sec": 26969.5
+}
