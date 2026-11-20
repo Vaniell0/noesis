@@ -1,0 +1,228 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "9c91faca7809",
+    "summary": {
+      "M0_bpc": "{\"A_plain\": 5.8742, \"A_cyr\": 8.5094, \"B_plain\": 5.8008, \"B_cyr\": 8.3266, \"C_plain\": 5.8344, \"C_cyr\": 8.4219}",
+      "M0_transfer_plain_to_cyr": "2.198",
+      "M0_transfer_cyr_to_plain": "0.353",
+      "M4_bpc": "{\"A_plain\": 2.3317, \"A_cyr\": 2.7458, \"B_plain\": 2.3474, \"B_cyr\": 2.6702, \"C_plain\": 2.3453, \"C_cyr\": 2.695}",
+      "M4_transfer_plain_to_cyr": "-3.735",
+      "M4_transfer_cyr_to_plain": "-0.085",
+      "cka_same_text": "[0.917, 0.794, 0.699]",
+      "cka_other_text": "[0.002, 0.002, 0.001]",
+      "emb_align": "0.192"
+    }
+  },
+  "args": {
+    "ticks": 4,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "translit",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "tl_mode": "joint",
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "experiments/A0_state_probe/results/closed_loop_toy/sN_joint_M4_seed0.pt",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_w": 1.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_ramp": 0.0,
+    "s3_price": 0.1,
+    "width": 48,
+    "heads": 3,
+    "layers": 2,
+    "steps": 1500,
+    "batch": 16,
+    "lr": 0.001,
+    "seed": 0,
+    "eval_every": 500,
+    "eval_per_k": 256,
+    "eval_final": 512,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sN_joint_M4_ceft_seed0.json"
+  },
+  "n_params": 55200,
+  "history": [
+    {
+      "step": 500,
+      "ce": 1.7257,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 5.7196,
+          "A_cyr": 7.8654,
+          "B_plain": 5.657,
+          "B_cyr": 7.669,
+          "C_plain": 5.6867,
+          "C_cyr": 7.7701
+        },
+        "M0_transfer_plain_to_cyr": 2.897,
+        "M0_transfer_cyr_to_plain": 0.294,
+        "M4_bpc": {
+          "A_plain": 2.343,
+          "A_cyr": 2.8068,
+          "B_plain": 2.367,
+          "B_cyr": 2.75,
+          "C_plain": 2.3788,
+          "C_cyr": 2.7695
+        },
+        "M4_transfer_plain_to_cyr": -1.042,
+        "M4_transfer_cyr_to_plain": 0.605,
+        "cka_same_text": [
+          0.915,
+          0.795,
+          0.689
+        ],
+        "cka_other_text": [
+          0.002,
+          0.002,
+          0.002
+        ],
+        "emb_align": 0.1538
+      },
+      "sec": 588.0
+    },
+    {
+      "step": 1000,
+      "ce": 1.7634,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 5.6756,
+          "A_cyr": 8.322,
+          "B_plain": 5.6213,
+          "B_cyr": 8.099,
+          "C_plain": 5.6578,
+          "C_cyr": 8.2244
+        },
+        "M0_transfer_plain_to_cyr": 5.483,
+        "M0_transfer_cyr_to_plain": 0.291,
+        "M4_bpc": {
+          "A_plain": 2.3157,
+          "A_cyr": 2.7427,
+          "B_plain": 2.3366,
+          "B_cyr": 2.6815,
+          "C_plain": 2.3467,
+          "C_cyr": 2.706
+        },
+        "M4_transfer_plain_to_cyr": -1.184,
+        "M4_transfer_cyr_to_plain": 0.412,
+        "cka_same_text": [
+          0.917,
+          0.789,
+          0.699
+        ],
+        "cka_other_text": [
+          0.002,
+          0.002,
+          0.001
+        ],
+        "emb_align": 0.1923
+      },
+      "sec": 1161.9
+    },
+    {
+      "step": 1500,
+      "ce": 1.5716,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 5.8498,
+          "A_cyr": 8.522,
+          "B_plain": 5.7874,
+          "B_cyr": 8.3011,
+          "C_plain": 5.8276,
+          "C_cyr": 8.4259
+        },
+        "M0_transfer_plain_to_cyr": 4.329,
+        "M0_transfer_cyr_to_plain": 0.322,
+        "M4_bpc": {
+          "A_plain": 2.3013,
+          "A_cyr": 2.7287,
+          "B_plain": 2.3288,
+          "B_cyr": 2.6649,
+          "C_plain": 2.337,
+          "C_cyr": 2.69
+        },
+        "M4_transfer_plain_to_cyr": -1.084,
+        "M4_transfer_cyr_to_plain": 0.327,
+        "cka_same_text": [
+          0.917,
+          0.794,
+          0.699
+        ],
+        "cka_other_text": [
+          0.002,
+          0.002,
+          0.001
+        ],
+        "emb_align": 0.1923
+      },
+      "sec": 1733.0
+    }
+  ],
+  "final": {
+    "M0_bpc": {
+      "A_plain": 5.8742,
+      "A_cyr": 8.5094,
+      "B_plain": 5.8008,
+      "B_cyr": 8.3266,
+      "C_plain": 5.8344,
+      "C_cyr": 8.4219
+    },
+    "M0_transfer_plain_to_cyr": 2.198,
+    "M0_transfer_cyr_to_plain": 0.353,
+    "M4_bpc": {
+      "A_plain": 2.3317,
+      "A_cyr": 2.7458,
+      "B_plain": 2.3474,
+      "B_cyr": 2.6702,
+      "C_plain": 2.3453,
+      "C_cyr": 2.695
+    },
+    "M4_transfer_plain_to_cyr": -3.735,
+    "M4_transfer_cyr_to_plain": -0.085,
+    "cka_same_text": [
+      0.917,
+      0.794,
+      0.699
+    ],
+    "cka_other_text": [
+      0.002,
+      0.002,
+      0.001
+    ],
+    "emb_align": 0.1923
+  },
+  "sec": 1783.8
+}

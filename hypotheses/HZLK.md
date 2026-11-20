@@ -110,7 +110,7 @@ claims:
   regime: G1d 0.4B pretrained
 - id: ZLK.5
   claim: the model can learn to choose its own number of ticks
-  status: 'CONFIRMED on the toy 11-20 (2 of 3 seeds, sL_ramp1): own stop without a head matches fixed M8 at 62-64% of the ticks'
+  status: 'CONFIRMED on the toy 11-20 (2 of 3 seeds, sL_ramp1): own stop without a head equals fixed M8 at 62-69% of the ticks; seed 6 lost 0.10 to training'
   regime: 'toy from scratch (chase), start from a trained C model; pretrained not run'
 - id: ZLK.6
   claim: with search the loop exceeds its teacher's one-pass reading
@@ -154,7 +154,7 @@ claims:
   regime: 'Qwen3.5 0.8B pretrained'
 - id: ZLK.16
   claim: a loop learned from a plain pretrain beats the same chain grafted on a finished model
-  status: 'proposed; toy (11-15): ticks from step 0 carry the computation (M = 0 reads 0.00), grafted ticks on G1d were a pass-through'
+  status: 'toy form REFUTED 11-20 (1o: ticks grafted onto a one-pass toy pass k6 in 2 of 3 seeds, as reliable as grown); pretrained form not run'
   regime: toy from scratch (chase); pretrained not run
 - id: ZLK.17
   claim: World trained by the chain against G1d compares two training methods from one base
@@ -175,8 +175,9 @@ claims:
 - id: ZLK.22
   claim: loop training on a mix of domains folds them into one system that transfers to a held-out domain,
     below a specialist but smoother
-  status: 'proposed (owner 11-19); toy: the step learned on context did not reach stored facts (cs)'
-  regime: ''
+  status: 'toy 11-20: no transfer in bpc (1n plain/Cyrillic: joint +0.46 bpc vs Cyrillic-only, REFUTED; 1j plain+cipher -0.014), but the loop raises deep-layer CKA between scripts 0.44 -> 0.71; cs: the context step did not reach stored facts'
+  regime: 'toy from scratch, 55K (1n) and 271K (1j), one seed each; pretrained not run'
+  regime: 'toy from scratch, 55K (1n) and 271K (1j), one seed each; pretrained not run'
 -->
 
 ## HZLK. Second pretraining: make what the weights hold readable, and read it through a self-regulated latent loop
@@ -204,7 +205,7 @@ not claimed.
 | ZLK.2 | untrained time (re-read, ticks, pauses) is not used | regular; recall control not run | G1i 2.9B pretrained, untrained ticks and re-read | 0 | <-H21 |
 | ZLK.3 | tuning narrows the output; the state survives it | partly measured | pretrained, LoRA readout tuning | 0 | - |
 | ZLK.4 | a channel of the model's own latent can be trained without erasing the answer | 0.4B: tick no longer erases; every arm a pass-through | G1d 0.4B pretrained | 0 | - |
-| ZLK.5 | the model can learn to choose its own number of ticks | CONFIRMED on the toy 11-20 (2 of 3 seeds, sL_ramp1): own stop without a head matches fixed M8 at 62-64% of the ticks | toy from scratch (chase), start from a trained C model; pretrained not run | 0 | <-H24 |
+| ZLK.5 | the model can learn to choose its own number of ticks | CONFIRMED on the toy 11-20 (2 of 3 seeds, sL_ramp1): own stop without a head equals fixed M8 at 62-69% of the ticks; seed 6 lost 0.10 to training | toy from scratch (chase), start from a trained C model; pretrained not run | 0 | <-H24 |
 | ZLK.6 | with search the loop exceeds its teacher's one-pass reading | not run; bounded by T1/T2 | - | 0 | ZLK.1 |
 | ZLK.7 | two views of one content land close without collapse | not run | - | 0 | - |
 | ZLK.8 | content first, format from the question; honest self-decisions | obedience measured, near 0 | G1i 2.9B pretrained, silent answers | 0 | - |
@@ -215,12 +216,12 @@ not claimed.
 | ZLK.13 | storage and reading trained together pack more at equal readability | proposed; proved part for the state | - | 0 | - |
 | ZLK.14 | relations derived from held facts are usable knowledge the loop can add | proposed | - | 0 | H12 |
 | ZLK.15 | knowledge enters through a fixed teacher on the student's own tokens without breaking the rest | partly measured (Qwen) | Qwen3.5 0.8B pretrained | 0 | H7 |
-| ZLK.16 | a loop learned from a plain pretrain beats the same chain grafted on a finished model | proposed; toy (11-15): ticks from step 0 carry the computation (M = 0 reads 0.00), grafted ticks on G1d were a pass-through | toy from scratch (chase); pretrained not run | 0 | H9, ZLK.12 |
+| ZLK.16 | a loop learned from a plain pretrain beats the same chain grafted on a finished model | toy form REFUTED 11-20 (1o: ticks grafted onto a one-pass toy pass k6 in 2 of 3 seeds, as reliable as grown); pretrained form not run | toy from scratch (chase); pretrained not run | 0 | H9, ZLK.12 |
 | ZLK.17 | World trained by the chain against G1d compares two training methods from one base | proposed | - | 0 | - |
 | ZLK.18 | trained ticks widen the attractor instead of collapsing it, and the output grows more expressive | one checkpoint | G1d 0.4B, one checkpoint | 0 | - |
 | ZLK.19 | separability is installed by tasks that need it, not by an answer loss alone | P1 negative; toy: a task one pass cannot solve made the ticks a register, a per-hop target made the step iterable | toy from scratch; P1 on G1d 0.4B | 0 | - |
 | ZLK.20 | the neck of one-pass reading is the late fall of rank, where key interference is highest | rank fall measured; interference not | G1d 0.4B and 2.9B pretrained | 1 | H12, ZLK.18 |
-| ZLK.22 | loop training on a mix of domains folds them into one system that transfers to a held-out domain, below a specialist but smoother | proposed (owner 11-19); toy: the step learned on context did not reach stored facts (cs) | - | 0 | - |
+| ZLK.22 | loop training on a mix of domains folds them into one system that transfers to a held-out domain, below a specialist but smoother | toy 11-20: no transfer in bpc (1n plain/Cyrillic: joint +0.46 bpc vs Cyrillic-only, REFUTED; 1j plain+cipher -0.014), but the loop raises deep-layer CKA between scripts 0.44 -> 0.71; cs: the context step did not reach stored facts | toy from scratch, 55K (1n) and 271K (1j), one seed each; pretrained not run | 0 | - |
 
 <!-- END ZLK TABLE -->
 

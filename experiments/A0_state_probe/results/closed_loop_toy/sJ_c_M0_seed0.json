@@ -1,0 +1,205 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "9c91faca7809",
+    "summary": {
+      "M0_cipher": "0.204",
+      "M0_cipher_by_family": "{\"atbash\": 0.416, \"caesar\": 0.182, \"script\": 0.192, \"vigenere\": 0.183}",
+      "M0_plain": "0.184"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "cipherlm",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "tl_mode": "joint",
+    "clm_plain": 0.0,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_w": 1.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_ramp": 0.0,
+    "s3_price": 0.1,
+    "width": 96,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 16,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 750,
+    "eval_per_k": 256,
+    "eval_final": 1500,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sJ_c_M0_seed0.json"
+  },
+  "n_params": 258624,
+  "history": [
+    {
+      "step": 750,
+      "ce": 3.1771,
+      "eval": {
+        "M0_cipher": 0.1787,
+        "M0_cipher_by_family": {
+          "atbash": 0.286,
+          "caesar": 0.171,
+          "script": 0.173,
+          "vigenere": 0.171
+        },
+        "M0_plain": 0.1825
+      },
+      "sec": 960.3
+    },
+    {
+      "step": 1500,
+      "ce": 2.9928,
+      "eval": {
+        "M0_cipher": 0.1803,
+        "M0_cipher_by_family": {
+          "atbash": 0.29,
+          "caesar": 0.178,
+          "script": 0.175,
+          "vigenere": 0.165
+        },
+        "M0_plain": 0.1667
+      },
+      "sec": 1889.1
+    },
+    {
+      "step": 2250,
+      "ce": 3.1068,
+      "eval": {
+        "M0_cipher": 0.1848,
+        "M0_cipher_by_family": {
+          "atbash": 0.328,
+          "caesar": 0.171,
+          "script": 0.178,
+          "vigenere": 0.169
+        },
+        "M0_plain": 0.1699
+      },
+      "sec": 2783.0
+    },
+    {
+      "step": 3000,
+      "ce": 3.0836,
+      "eval": {
+        "M0_cipher": 0.1869,
+        "M0_cipher_by_family": {
+          "atbash": 0.365,
+          "caesar": 0.168,
+          "script": 0.179,
+          "vigenere": 0.165
+        },
+        "M0_plain": 0.1862
+      },
+      "sec": 3609.8
+    },
+    {
+      "step": 3750,
+      "ce": 3.0244,
+      "eval": {
+        "M0_cipher": 0.1954,
+        "M0_cipher_by_family": {
+          "atbash": 0.373,
+          "caesar": 0.175,
+          "script": 0.187,
+          "vigenere": 0.177
+        },
+        "M0_plain": 0.1799
+      },
+      "sec": 4432.0
+    },
+    {
+      "step": 4500,
+      "ce": 2.9253,
+      "eval": {
+        "M0_cipher": 0.1992,
+        "M0_cipher_by_family": {
+          "atbash": 0.384,
+          "caesar": 0.178,
+          "script": 0.19,
+          "vigenere": 0.181
+        },
+        "M0_plain": 0.1875
+      },
+      "sec": 5269.8
+    },
+    {
+      "step": 5250,
+      "ce": 2.9128,
+      "eval": {
+        "M0_cipher": 0.1992,
+        "M0_cipher_by_family": {
+          "atbash": 0.376,
+          "caesar": 0.182,
+          "script": 0.191,
+          "vigenere": 0.175
+        },
+        "M0_plain": 0.1835
+      },
+      "sec": 6128.7
+    },
+    {
+      "step": 6000,
+      "ce": 2.957,
+      "eval": {
+        "M0_cipher": 0.2,
+        "M0_cipher_by_family": {
+          "atbash": 0.38,
+          "caesar": 0.182,
+          "script": 0.192,
+          "vigenere": 0.173
+        },
+        "M0_plain": 0.1843
+      },
+      "sec": 6936.7
+    }
+  ],
+  "final": {
+    "M0_cipher": 0.2039,
+    "M0_cipher_by_family": {
+      "atbash": 0.416,
+      "caesar": 0.182,
+      "script": 0.192,
+      "vigenere": 0.183
+    },
+    "M0_plain": 0.184
+  },
+  "sec": 6965.8
+}
