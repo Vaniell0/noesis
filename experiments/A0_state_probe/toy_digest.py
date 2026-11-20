@@ -191,8 +191,34 @@ def stage_1o(dirs):
           f"{'ZLK.16 toy form REFUTED (grafting as reliable)' if len(runs) >= 3 and ok >= 2 else 'supported' if len(runs) >= 3 else '-'}")
 
 
+def stage_1n3(dirs):
+    """Time against scale: deepest-layer CKA (plain vs Cyrillic, same text) and bpc by width and ticks."""
+    rows = {}
+    for k, v in load(dirs, "sN_joint_M*_seed*.json").items():
+        m = re.match(r"sN_joint_M(\d)(?:_w(\d+))?_seed(\d+)$", k)
+        if not m or "final" not in v:
+            continue
+        M, w, sd = int(m.group(1)), int(m.group(2) or 48), int(m.group(3))
+        f = v["final"]
+        rows.setdefault((w, M), []).append((sd, f["cka_same_text"][-1], f[f"M{M}_bpc"]["C_cyr"], f[f"M{M}_bpc"]["C_plain"]))
+    if not rows:
+        print("  no runs")
+        return
+    cka = {}
+    for (w, M), xs in sorted(rows.items()):
+        c = sum(x[1] for x in xs) / len(xs)
+        cka[(w, M)] = c
+        print(f"  w{w:<4d} M{M}  seeds {[x[0] for x in xs]}  deep CKA {c:.3f} ({' '.join(f'{x[1]:.2f}' for x in xs)})  "
+              f"bpc cyr {sum(x[2] for x in xs) / len(xs):.3f} plain {sum(x[3] for x in xs) / len(xs):.3f}")
+    ws = sorted({w for w, _ in cka})
+    for i, w in enumerate(ws):
+        loop = cka.get((w, 4), float("nan")) - cka.get((w, 0), float("nan"))
+        dbl = (cka.get((ws[i + 1], 0), float("nan")) - cka.get((w, 0), float("nan"))) if i + 1 < len(ws) else float("nan")
+        print(f"  w{w}: ticks M4 - M0 {loop:+.3f}; next width at M0 {dbl:+.3f}")
+
+
 STAGES = {"1g": stage_1g, "1k": stage_1k, "1l": stage_1l, "cipher": stage_cipher, "1h": stage_1h, "1i": stage_1i,
-          "1j": stage_1j, "1n": stage_1n, "1o": stage_1o}
+          "1j": stage_1j, "1n": stage_1n, "1o": stage_1o, "1n3": stage_1n3}
 
 
 def main() -> int:
