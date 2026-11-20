@@ -217,8 +217,33 @@ def stage_1n3(dirs):
         print(f"  w{w}: ticks M4 - M0 {loop:+.3f}; next width at M0 {dbl:+.3f}")
 
 
+def stage_1s(dirs):
+    """Tokenizer: deepest-layer end-of-prefix CKA (plain vs Cyrillic, same text) and bpc per character, by tokenization
+    and ticks; the refuter compares bpe_en M4 with char M4 seed by seed."""
+    rows = {}
+    for k, v in load(dirs, "sS_*_seed*.json").items():
+        m = re.match(r"sS_(char|bpe_en|bpe_both)_M(\d)_seed(\d+)$", k)
+        if not m or "final" not in v:
+            continue
+        tok, M, sd = m.group(1), int(m.group(2)), int(m.group(3))
+        f = v["final"]
+        rows[(tok, M, sd)] = (f["cka_end_same"][-1], f["cka_end_other"][-1], f[f"M{M}_bpc"]["C_cyr"], f[f"M{M}_bpc"]["C_plain"])
+    if not rows:
+        print("  no runs")
+        return
+    for (tok, M, sd), (c, o, bc, bp) in sorted(rows.items()):
+        print(f"  {tok:8s} M{M} s{sd}  deep end CKA {c:.3f} (other text {o:.3f})  bpc C cyr {bc:.3f} plain {bp:.3f}")
+    d = [rows[("bpe_en", 4, sd)][0] - rows[("char", 4, sd)][0] for sd in (0, 1)
+         if ("bpe_en", 4, sd) in rows and ("char", 4, sd) in rows]
+    both = (rows[("bpe_both", 4, 0)][0] - rows[("char", 4, 0)][0]) if ("bpe_both", 4, 0) in rows and ("char", 4, 0) in rows else None
+    print(f"  bpe_en - char at M4: {' '.join(f'{x:+.3f}' for x in d) or '-'}; bpe_both - char s0: "
+          f"{'-' if both is None else f'{both:+.3f}'} -> "
+          + ("-" if len(d) < 2 else "REFUTED (tokenizer alone does not weaken it)" if all(x >= -0.05 for x in d)
+             else "SUPPORTED" if all(x <= -0.15 for x in d) and both is not None and abs(both) <= 0.10 else "between"))
+
+
 STAGES = {"1g": stage_1g, "1k": stage_1k, "1l": stage_1l, "cipher": stage_cipher, "1h": stage_1h, "1i": stage_1i,
-          "1j": stage_1j, "1n": stage_1n, "1o": stage_1o, "1n3": stage_1n3}
+          "1j": stage_1j, "1n": stage_1n, "1o": stage_1o, "1n3": stage_1n3, "1s": stage_1s}
 
 
 def main() -> int:

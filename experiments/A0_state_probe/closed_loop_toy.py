@@ -36,9 +36,11 @@ apply to facts in the weights; read store_M8 k >= 2, never trained).
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import copy
 import math
+import re
 import sys
 import time
 from pathlib import Path
@@ -429,10 +431,56 @@ CYR = dict(zip("abcdefghijklmnopqrstuvwxyz", "абцдефгхийклмнопя
 CYR.update({k.upper(): v.upper() for k, v in CYR.items()})
 
 
-def load_translit(train_path: str, eval_path: str, mode: str) -> int:
+def learn_bpe(texts: list[str], merges: int) -> list[tuple[str, str]]:
+    """Byte-pair merges learned on `texts`, inside space-led word chunks as subword tokenizers do."""
+    words = collections.Counter(w for t in texts for w in re.findall(r" ?[^ ]+| +", t))
+    segs = {w: list(w) for w in words}
+    out = []
+    for _ in range(merges):
+        pairs = collections.Counter()
+        for w, c in words.items():
+            sg = segs[w]
+            for a, b in zip(sg, sg[1:]):
+                pairs[a, b] += c
+        if not pairs:
+            break
+        (a, b), _ = pairs.most_common(1)[0]
+        out.append((a, b))
+        for w, sg in segs.items():
+            i, new = 0, []
+            while i < len(sg):
+                if i + 1 < len(sg) and sg[i] == a and sg[i + 1] == b:
+                    new.append(a + b); i += 2
+                else:
+                    new.append(sg[i]); i += 1
+            segs[w] = new
+    return out
+
+
+def bpe_encode(t: str, merges: list[tuple[str, str]], cache: dict) -> list[str]:
+    toks = []
+    for w in re.findall(r" ?[^ ]+| +", t):
+        if w not in cache:
+            sg = list(w)
+            for a, b in merges:
+                i, new = 0, []
+                while i < len(sg):
+                    if i + 1 < len(sg) and sg[i] == a and sg[i + 1] == b:
+                        new.append(a + b); i += 2
+                    else:
+                        new.append(sg[i]); i += 1
+                sg = new
+            cache[w] = sg
+        toks += cache[w]
+    return toks
+
+
+def load_translit(train_path: str, eval_path: str, mode: str, tok: str = "char", merges: int = 128) -> int:
     """Stage 1n: the plaintexts of the c1d rows, each also in one fixed Cyrillic letter table (never shown). Contents
     split with no overlap: A (even train rows) seen only in plain, B (odd train rows) only in Cyrillic, C (eval)
-    never. mode 'plain' / 'cyr': every text in that script (the controls). Returns the vocabulary size."""
+    never. mode 'plain' / 'cyr': every text in that script (the controls). tok (stage 1s): 'char', or subword merges
+    learned on the train texts in plain English only ('bpe_en', as real tokenizers favour one script) or in both
+    scripts ('bpe_both'); the prefix/answer cut stays at the same characters. Returns the vocabulary size."""
     texts = {}
     for sp, p in (("train", train_path), ("eval", eval_path)):
         seen, R = set(), []
@@ -441,20 +489,31 @@ def load_translit(train_path: str, eval_path: str, mode: str) -> int:
                 seen.add(r["answer"]); R.append(r["answer"])
         texts[sp] = R
     chars = {c for R in texts.values() for t in R for c in t}
-    vocab = sorted(chars | {CYR.get(c, c) for c in chars} | {"<pad>", "<text>", "<end>"})
+    cy = lambda t: "".join(CYR.get(c, c) for c in t)
+    mg = []
+    if tok != "char":
+        src = texts["train"] + ([cy(t) for t in texts["train"]] if tok == "bpe_both" else [])
+        mg = learn_bpe(src, merges)
+    vocab = sorted(chars | {CYR.get(c, c) for c in chars} | {a + b for a, b in mg} | {"<pad>", "<text>", "<end>"})
     tid = {t: VOCAB + i for i, t in enumerate(vocab)}
-    enc = lambda t: ([tid[c] for c in t], [tid[CYR.get(c, c)] for c in t])
+    cache: dict = {}
+
+    def one(t):                                     # (prefix ids, answer ids, answer characters) at a fixed cut
+        P = min(len(t) // 2, 120)
+        cut = (lambda x: [tid[c] for c in x]) if not mg else (lambda x: [tid[p] for p in bpe_encode(x, mg, cache)])
+        return cut(t[:P]), cut(t[P:P + 100]), len(t[P:P + 100])
+    enc = lambda t: (one(t), one(cy(t)))
     TL.update(A=[enc(t) for t in texts["train"][0::2]], B=[enc(t) for t in texts["train"][1::2]],
               C=[enc(t) for t in texts["eval"]], pad=tid["<pad>"], text=tid["<text>"], end=tid["<end>"],
-              mode=mode, q=0.0, pairs=[(tid[c], tid[CYR[c]]) for c in sorted(CYR) if c in tid and CYR[c] in tid])
+              mode=mode, q=0.0, tok=tok, pairs=[(tid[c], tid[CYR[c]]) for c in sorted(CYR) if c in tid and CYR[c] in tid])
     return len(vocab)
 
 
 def make_translit(B: int, g: torch.Generator | None, part: str = "", idx: list | None = None, kind: str = "") -> dict:
     """Training (part ''): an A row in plain, or with probability TL['q'] a B row in Cyrillic (in plain under the
     plain control). Eval: rows `idx` of `part` in script `kind`. Prefix of at most 120 characters after <text>,
-    then up to 100 characters and <end> as the answer, as in 1j."""
-    seqs = []
+    then up to 100 characters and <end> as the answer, as in 1j. nchar = answer characters + <end> (bpc unit)."""
+    seqs, nchar = [], []
     for j in range(B if idx is None else len(idx)):
         if idx is None:
             useB = torch.rand(1, generator=g).item() < TL["q"]
@@ -464,8 +523,8 @@ def make_translit(B: int, g: torch.Generator | None, part: str = "", idx: list |
         else:
             pl, cy = TL[part][idx[j]]
             s = pl if kind == "plain" else cy
-        P = min(len(s) // 2, 120)
-        seqs.append(([TL["text"]] + s[:P], s[P:P + 100] + [TL["end"]]))
+        seqs.append(([TL["text"]] + s[0], s[1] + [TL["end"]]))
+        nchar.append(s[2] + 1)
     pad = TL["pad"]
     T, A = max(len(p_) for p_, _ in seqs), max(len(x) for _, x in seqs)
     toks = torch.full((len(seqs), T), pad, dtype=torch.long)
@@ -474,7 +533,7 @@ def make_translit(B: int, g: torch.Generator | None, part: str = "", idx: list |
     for b, (p_, x) in enumerate(seqs):
         toks[b, T - len(p_):] = torch.tensor(p_)
         ans[b, :len(x)] = torch.tensor(x); mask[b, :len(x)] = True
-    return {"tokens": toks, "ans": ans, "amask": mask}
+    return {"tokens": toks, "ans": ans, "amask": mask, "nchar": torch.tensor(nchar)}
 
 
 def _cka(X: torch.Tensor, Y: torch.Tensor) -> float:
@@ -498,7 +557,7 @@ def evaluate_translit(model, ticks: int, n: int) -> dict:
                     b = dev(make_translit(0, None, part, idx[i:i + 128], kind))
                     lg, _ = model.forward_seq(b["tokens"], M, b["ans"])
                     nll += F.cross_entropy(lg[b["amask"]], b["ans"][b["amask"]], reduction="sum").item()
-                    tot += int(b["amask"].sum())
+                    tot += int(b["nchar"].sum())
                 bpc[f"{part}_{kind}"] = round(nll / max(1, tot) / math.log(2), 4)
         out[f"M{M}_bpc"] = bpc
         d_pc = bpc["C_plain"] - bpc["A_plain"]
@@ -509,10 +568,13 @@ def evaluate_translit(model, ticks: int, n: int) -> dict:
     bp, bc = make_translit(0, None, "C", idx, "plain"), make_translit(0, None, "C", idx, "cyr")
     rot = idx[1:] + idx[:1]
     bo = make_translit(0, None, "C", rot, "cyr")
-    m = (bp["tokens"] != TL["pad"]) & (bo["tokens"] != TL["pad"])                 # positions real in both texts
     rp, rc, ro = (model.trace(dev(x)["tokens"]) for x in (bp, bc, bo))
-    out["cka_same_text"] = [round(_cka(a[m], c[m]), 3) for a, c in zip(rp, rc)]
-    out["cka_other_text"] = [round(_cka(a[m], o[m]), 3) for a, o in zip(rp, ro)]
+    if TL.get("tok", "char") == "char":                                         # positions align only per character
+        m = (bp["tokens"] != TL["pad"]) & (bo["tokens"] != TL["pad"])             # positions real in both texts
+        out["cka_same_text"] = [round(_cka(a[m], c[m]), 3) for a, c in zip(rp, rc)]
+        out["cka_other_text"] = [round(_cka(a[m], o[m]), 3) for a, o in zip(rp, ro)]
+    out["cka_end_same"] = [round(_cka(a[:, -1], c[:, -1]), 3) for a, c in zip(rp, rc)]    # last prefix position:
+    out["cka_end_other"] = [round(_cka(a[:, -1], o[:, -1]), 3) for a, o in zip(rp, ro)]   # any tokenization
     E = model.emb.weight
     lat = torch.tensor([a for a, _ in TL["pairs"]], device=E.device)
     cyr = torch.tensor([c for _, c in TL["pairs"]], device=E.device)
@@ -935,7 +997,7 @@ def train(args) -> dict:
     if args.task == "cipherlm":
         extra = load_cipherlm(args.cipher_train, args.cipher_eval, args.clm_plain)
     if args.task == "translit":
-        extra = load_translit(args.cipher_train, args.cipher_eval, args.tl_mode)
+        extra = load_translit(args.cipher_train, args.cipher_eval, args.tl_mode, args.tl_tok, args.tl_merges)
     model = ToyRWKV7(args.width, args.heads, args.layers, VOCAB + extra)
     if args.jepa_target == "both":                                              # its own head for the self target
         model.pred_self = nn.Linear(args.width, args.width, bias=False)
@@ -958,6 +1020,11 @@ def train(args) -> dict:
     ema = (copy.deepcopy(model).requires_grad_(False)
            if args.jepa and (args.task in ("deriv", "cipher") or args.jepa_target == "self") else None)
     n_params = sum(p.numel() for p in model.parameters())
+    if args.eval_only:                                                          # re-read a saved toy with new reads
+        assert args.task == "translit" and args.init, "--eval-only: translit, with --init"
+        args.save_model = False
+        return {"args": vars(args), "n_params": n_params, "history": [], "sec": 0.0,
+                "final": evaluate_translit(model, args.ticks, args.eval_final)}
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.01, betas=(0.9, 0.99))
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=args.lr, total_steps=args.steps, pct_start=0.05)
     ks = [int(x) for x in args.train_ks.split(',')] if args.train_ks else list(range(1, KMAX + 1))
@@ -1130,6 +1197,10 @@ def main() -> int:
     ap.add_argument("--cipher-max-len", type=int, default=320, help="cipher: prompt + answer tokens at most")
     ap.add_argument("--tl-mode", choices=["joint", "plain", "cyr"], default="joint",
                     help="translit: B contents in Cyrillic (joint), or every text in plain / in Cyrillic (the controls)")
+    ap.add_argument("--tl-tok", choices=["char", "bpe_en", "bpe_both"], default="char",
+                    help="translit: characters, or subword merges learned on plain English only / on both scripts")
+    ap.add_argument("--tl-merges", type=int, default=128, help="--tl-tok bpe_*: number of merges")
+    ap.add_argument("--eval-only", action="store_true", help="with --init: no training, the final evaluation only")
     ap.add_argument("--clm-plain", type=float, default=0.5, help="cipherlm: share of plain texts in training (0 = cipher only)")
     ap.add_argument("--cipher-control", action="store_true",
                     help="cipher: each answer paired with another row's prompt (train and eval): the language prior alone")

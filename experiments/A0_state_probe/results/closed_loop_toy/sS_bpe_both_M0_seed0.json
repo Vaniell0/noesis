@@ -1,0 +1,272 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "db7649eee309",
+    "summary": {
+      "M0_bpc": "{\"A_plain\": 2.3146, \"A_cyr\": 2.8304, \"B_plain\": 2.3875, \"B_cyr\": 2.7537, \"C_plain\": 2.3915, \"C_cyr\": 2.7698}",
+      "M0_transfer_plain_to_cyr": "-0.788",
+      "M0_transfer_cyr_to_plain": "0.248",
+      "cka_end_same": "[0.846, 0.624, 0.665]",
+      "cka_end_other": "[0.07, 0.065, 0.079]",
+      "emb_align": "0.000"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "translit",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "tl_mode": "joint",
+    "tl_tok": "bpe_both",
+    "tl_merges": 128,
+    "eval_only": false,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_w": 1.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_ramp": 0.0,
+    "s3_price": 0.1,
+    "width": 48,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 16,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 512,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sS_bpe_both_M0_seed0.json"
+  },
+  "n_params": 67488,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 2.9481,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.66,
+          "A_cyr": 13.3,
+          "B_plain": 2.6227,
+          "B_cyr": 13.048,
+          "C_plain": 2.6269,
+          "C_cyr": 13.0777
+        },
+        "M0_transfer_plain_to_cyr": 6.716,
+        "M0_transfer_cyr_to_plain": 0.141,
+        "cka_end_same": [
+          0.643,
+          0.448,
+          0.185
+        ],
+        "cka_end_other": [
+          0.076,
+          0.082,
+          0.049
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 676.4
+    },
+    {
+      "step": 2000,
+      "ce": 2.698,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.4816,
+          "A_cyr": 3.7263,
+          "B_plain": 2.5064,
+          "B_cyr": 3.6829,
+          "C_plain": 2.5052,
+          "C_cyr": 3.699
+        },
+        "M0_transfer_plain_to_cyr": -1.157,
+        "M0_transfer_cyr_to_plain": -0.075,
+        "cka_end_same": [
+          0.743,
+          0.367,
+          0.183
+        ],
+        "cka_end_other": [
+          0.057,
+          0.043,
+          0.031
+        ],
+        "emb_align": 0.1538
+      },
+      "sec": 1349.6
+    },
+    {
+      "step": 3000,
+      "ce": 2.5391,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.4026,
+          "A_cyr": 3.0814,
+          "B_plain": 2.4387,
+          "B_cyr": 3.0288,
+          "C_plain": 2.4439,
+          "C_cyr": 3.0406
+        },
+        "M0_transfer_plain_to_cyr": -0.988,
+        "M0_transfer_cyr_to_plain": 0.441,
+        "cka_end_same": [
+          0.827,
+          0.541,
+          0.464
+        ],
+        "cka_end_other": [
+          0.066,
+          0.055,
+          0.066
+        ],
+        "emb_align": 0.0769
+      },
+      "sec": 2019.7
+    },
+    {
+      "step": 4000,
+      "ce": 2.666,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.3285,
+          "A_cyr": 2.9235,
+          "B_plain": 2.3855,
+          "B_cyr": 2.8458,
+          "C_plain": 2.3887,
+          "C_cyr": 2.8751
+        },
+        "M0_transfer_plain_to_cyr": -0.804,
+        "M0_transfer_cyr_to_plain": 0.109,
+        "cka_end_same": [
+          0.837,
+          0.61,
+          0.647
+        ],
+        "cka_end_other": [
+          0.07,
+          0.063,
+          0.08
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 2698.8
+    },
+    {
+      "step": 5000,
+      "ce": 2.6223,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2893,
+          "A_cyr": 2.8399,
+          "B_plain": 2.3652,
+          "B_cyr": 2.7579,
+          "C_plain": 2.3701,
+          "C_cyr": 2.7796
+        },
+        "M0_transfer_plain_to_cyr": -0.746,
+        "M0_transfer_cyr_to_plain": 0.226,
+        "cka_end_same": [
+          0.847,
+          0.626,
+          0.653
+        ],
+        "cka_end_other": [
+          0.071,
+          0.065,
+          0.076
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 3368.8
+    },
+    {
+      "step": 6000,
+      "ce": 2.6831,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2784,
+          "A_cyr": 2.8212,
+          "B_plain": 2.3605,
+          "B_cyr": 2.7399,
+          "C_plain": 2.3599,
+          "C_cyr": 2.7587
+        },
+        "M0_transfer_plain_to_cyr": -0.767,
+        "M0_transfer_cyr_to_plain": -0.032,
+        "cka_end_same": [
+          0.846,
+          0.624,
+          0.665
+        ],
+        "cka_end_other": [
+          0.07,
+          0.065,
+          0.079
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 3964.5
+    }
+  ],
+  "final": {
+    "M0_bpc": {
+      "A_plain": 2.3146,
+      "A_cyr": 2.8304,
+      "B_plain": 2.3875,
+      "B_cyr": 2.7537,
+      "C_plain": 2.3915,
+      "C_cyr": 2.7698
+    },
+    "M0_transfer_plain_to_cyr": -0.788,
+    "M0_transfer_cyr_to_plain": 0.248,
+    "cka_end_same": [
+      0.846,
+      0.624,
+      0.665
+    ],
+    "cka_end_other": [
+      0.07,
+      0.065,
+      0.079
+    ],
+    "emb_align": 0.0
+  },
+  "sec": 3980.9
+}
