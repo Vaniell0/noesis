@@ -1,0 +1,30 @@
+{
+ "model": "/home/vaniello/.libs/models/rwkv7/rwkv7-g1d-0.4b-20260210-ctx8192.pth",
+ "weights": null,
+ "n_train": 662,
+ "n_test": 169,
+ "deep_layers": [
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23
+ ],
+ "features": "4096 of 65536 per layer",
+ "majority_floor": 0.0533,
+ "acc": {
+  "M0_train_plain_test_plain": 0.2544,
+  "M0_train_plain_test_cyr": 0.0533,
+  "M0_train_plain_test_logo": 0.0533,
+  "M0_train_cyr_test_cyr": 0.1065,
+  "M0_train_logo_test_logo": 0.0947,
+  "M4_train_plain_test_plain": 0.1479,
+  "M4_train_plain_test_cyr": 0.0414,
+  "M4_train_plain_test_logo": 0.0592,
+  "M4_train_cyr_test_cyr": 0.1065,
+  "M4_train_logo_test_logo": 0.0888
+ }
+}
