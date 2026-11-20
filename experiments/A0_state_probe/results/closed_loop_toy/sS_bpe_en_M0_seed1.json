@@ -1,0 +1,272 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "db7649eee309",
+    "summary": {
+      "M0_bpc": "{\"A_plain\": 2.2812, \"A_cyr\": 2.841, \"B_plain\": 2.3582, \"B_cyr\": 2.7724, \"C_plain\": 2.3728, \"C_cyr\": 2.7865}",
+      "M0_transfer_plain_to_cyr": "-0.595",
+      "M0_transfer_cyr_to_plain": "1.035",
+      "cka_end_same": "[0.703, 0.601, 0.505]",
+      "cka_end_other": "[0.054, 0.07, 0.06]",
+      "emb_align": "0.077"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "translit",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "tl_mode": "joint",
+    "tl_tok": "bpe_en",
+    "tl_merges": 128,
+    "eval_only": false,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_w": 1.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_ramp": 0.0,
+    "s3_price": 0.1,
+    "width": 48,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 16,
+    "lr": 0.003,
+    "seed": 1,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 512,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sS_bpe_en_M0_seed1.json"
+  },
+  "n_params": 67488,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 3.1232,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.5931,
+          "A_cyr": 20.2523,
+          "B_plain": 2.5872,
+          "B_cyr": 20.0688,
+          "C_plain": 2.5943,
+          "C_cyr": 20.151
+        },
+        "M0_transfer_plain_to_cyr": -84.417,
+        "M0_transfer_cyr_to_plain": 0.086,
+        "cka_end_same": [
+          0.619,
+          0.516,
+          0.291
+        ],
+        "cka_end_other": [
+          0.058,
+          0.067,
+          0.057
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 634.2
+    },
+    {
+      "step": 2000,
+      "ce": 2.9068,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.4296,
+          "A_cyr": 3.5392,
+          "B_plain": 2.4699,
+          "B_cyr": 3.4974,
+          "C_plain": 2.4852,
+          "C_cyr": 3.5104
+        },
+        "M0_transfer_plain_to_cyr": -0.518,
+        "M0_transfer_cyr_to_plain": 1.177,
+        "cka_end_same": [
+          0.682,
+          0.575,
+          0.236
+        ],
+        "cka_end_other": [
+          0.047,
+          0.058,
+          0.031
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 1275.9
+    },
+    {
+      "step": 3000,
+      "ce": 2.8067,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.3596,
+          "A_cyr": 3.1316,
+          "B_plain": 2.408,
+          "B_cyr": 3.1003,
+          "C_plain": 2.4279,
+          "C_cyr": 3.1261
+        },
+        "M0_transfer_plain_to_cyr": -0.081,
+        "M0_transfer_cyr_to_plain": 0.771,
+        "cka_end_same": [
+          0.686,
+          0.584,
+          0.428
+        ],
+        "cka_end_other": [
+          0.052,
+          0.059,
+          0.053
+        ],
+        "emb_align": 0.0385
+      },
+      "sec": 2046.2
+    },
+    {
+      "step": 4000,
+      "ce": 2.7142,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2928,
+          "A_cyr": 2.9287,
+          "B_plain": 2.3674,
+          "B_cyr": 2.8925,
+          "C_plain": 2.3823,
+          "C_cyr": 2.9116
+        },
+        "M0_transfer_plain_to_cyr": -0.191,
+        "M0_transfer_cyr_to_plain": 0.78,
+        "cka_end_same": [
+          0.7,
+          0.593,
+          0.479
+        ],
+        "cka_end_other": [
+          0.053,
+          0.067,
+          0.063
+        ],
+        "emb_align": 0.0769
+      },
+      "sec": 2916.0
+    },
+    {
+      "step": 5000,
+      "ce": 2.1482,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2696,
+          "A_cyr": 2.838,
+          "B_plain": 2.3432,
+          "B_cyr": 2.787,
+          "C_plain": 2.3617,
+          "C_cyr": 2.8035
+        },
+        "M0_transfer_plain_to_cyr": -0.375,
+        "M0_transfer_cyr_to_plain": 1.121,
+        "cka_end_same": [
+          0.703,
+          0.601,
+          0.501
+        ],
+        "cka_end_other": [
+          0.054,
+          0.07,
+          0.059
+        ],
+        "emb_align": 0.0385
+      },
+      "sec": 3867.4
+    },
+    {
+      "step": 6000,
+      "ce": 2.5261,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2586,
+          "A_cyr": 2.8147,
+          "B_plain": 2.3327,
+          "B_cyr": 2.7623,
+          "C_plain": 2.354,
+          "C_cyr": 2.78
+        },
+        "M0_transfer_plain_to_cyr": -0.364,
+        "M0_transfer_cyr_to_plain": 1.203,
+        "cka_end_same": [
+          0.703,
+          0.601,
+          0.505
+        ],
+        "cka_end_other": [
+          0.054,
+          0.07,
+          0.06
+        ],
+        "emb_align": 0.0769
+      },
+      "sec": 4864.5
+    }
+  ],
+  "final": {
+    "M0_bpc": {
+      "A_plain": 2.2812,
+      "A_cyr": 2.841,
+      "B_plain": 2.3582,
+      "B_cyr": 2.7724,
+      "C_plain": 2.3728,
+      "C_cyr": 2.7865
+    },
+    "M0_transfer_plain_to_cyr": -0.595,
+    "M0_transfer_cyr_to_plain": 1.035,
+    "cka_end_same": [
+      0.703,
+      0.601,
+      0.505
+    ],
+    "cka_end_other": [
+      0.054,
+      0.07,
+      0.06
+    ],
+    "emb_align": 0.0769
+  },
+  "sec": 4889.3
+}

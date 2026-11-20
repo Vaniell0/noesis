@@ -1,0 +1,272 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "db7649eee309",
+    "summary": {
+      "M0_bpc": "{\"A_plain\": 2.2851, \"A_cyr\": 2.8358, \"B_plain\": 2.3701, \"B_cyr\": 2.7717, \"C_plain\": 2.3949, \"C_cyr\": 2.7965}",
+      "M0_transfer_plain_to_cyr": "-0.358",
+      "M0_transfer_cyr_to_plain": "1.000",
+      "cka_end_same": "[0.702, 0.581, 0.531]",
+      "cka_end_other": "[0.059, 0.082, 0.073]",
+      "emb_align": "0.115"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "translit",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "tl_mode": "joint",
+    "tl_tok": "bpe_en",
+    "tl_merges": 128,
+    "eval_only": false,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_w": 1.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_ramp": 0.0,
+    "s3_price": 0.1,
+    "width": 48,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 16,
+    "lr": 0.003,
+    "seed": 0,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 512,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sS_bpe_en_M0_seed0.json"
+  },
+  "n_params": 67488,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 3.3718,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.6241,
+          "A_cyr": 18.6725,
+          "B_plain": 2.6066,
+          "B_cyr": 18.4966,
+          "C_plain": 2.6173,
+          "C_cyr": 18.5273
+        },
+        "M0_transfer_plain_to_cyr": 21.353,
+        "M0_transfer_cyr_to_plain": 0.349,
+        "cka_end_same": [
+          0.626,
+          0.486,
+          0.268
+        ],
+        "cka_end_other": [
+          0.061,
+          0.074,
+          0.059
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 674.8
+    },
+    {
+      "step": 2000,
+      "ce": 2.8521,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.4512,
+          "A_cyr": 3.49,
+          "B_plain": 2.4825,
+          "B_cyr": 3.4592,
+          "C_plain": 2.4995,
+          "C_cyr": 3.4712
+        },
+        "M0_transfer_plain_to_cyr": -0.389,
+        "M0_transfer_cyr_to_plain": 1.417,
+        "cka_end_same": [
+          0.674,
+          0.504,
+          0.321
+        ],
+        "cka_end_other": [
+          0.05,
+          0.058,
+          0.049
+        ],
+        "emb_align": 0.0385
+      },
+      "sec": 1340.1
+    },
+    {
+      "step": 3000,
+      "ce": 2.9435,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.3607,
+          "A_cyr": 3.1452,
+          "B_plain": 2.4121,
+          "B_cyr": 3.1088,
+          "C_plain": 2.4425,
+          "C_cyr": 3.1148
+        },
+        "M0_transfer_plain_to_cyr": -0.372,
+        "M0_transfer_cyr_to_plain": 5.067,
+        "cka_end_same": [
+          0.696,
+          0.55,
+          0.432
+        ],
+        "cka_end_other": [
+          0.057,
+          0.068,
+          0.06
+        ],
+        "emb_align": 0.1154
+      },
+      "sec": 2114.8
+    },
+    {
+      "step": 4000,
+      "ce": 2.7161,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2984,
+          "A_cyr": 2.9368,
+          "B_plain": 2.3671,
+          "B_cyr": 2.8906,
+          "C_plain": 2.398,
+          "C_cyr": 2.9206
+        },
+        "M0_transfer_plain_to_cyr": -0.163,
+        "M0_transfer_cyr_to_plain": 1.03,
+        "cka_end_same": [
+          0.702,
+          0.572,
+          0.512
+        ],
+        "cka_end_other": [
+          0.059,
+          0.078,
+          0.072
+        ],
+        "emb_align": 0.1154
+      },
+      "sec": 2984.1
+    },
+    {
+      "step": 5000,
+      "ce": 2.4889,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2613,
+          "A_cyr": 2.8325,
+          "B_plain": 2.343,
+          "B_cyr": 2.7825,
+          "C_plain": 2.3759,
+          "C_cyr": 2.8142
+        },
+        "M0_transfer_plain_to_cyr": -0.16,
+        "M0_transfer_cyr_to_plain": 1.038,
+        "cka_end_same": [
+          0.702,
+          0.575,
+          0.528
+        ],
+        "cka_end_other": [
+          0.059,
+          0.081,
+          0.072
+        ],
+        "emb_align": 0.1154
+      },
+      "sec": 3973.6
+    },
+    {
+      "step": 6000,
+      "ce": 2.2033,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2533,
+          "A_cyr": 2.8126,
+          "B_plain": 2.3367,
+          "B_cyr": 2.7642,
+          "C_plain": 2.3693,
+          "C_cyr": 2.7907
+        },
+        "M0_transfer_plain_to_cyr": -0.189,
+        "M0_transfer_cyr_to_plain": 1.23,
+        "cka_end_same": [
+          0.702,
+          0.581,
+          0.531
+        ],
+        "cka_end_other": [
+          0.059,
+          0.082,
+          0.073
+        ],
+        "emb_align": 0.1154
+      },
+      "sec": 4948.7
+    }
+  ],
+  "final": {
+    "M0_bpc": {
+      "A_plain": 2.2851,
+      "A_cyr": 2.8358,
+      "B_plain": 2.3701,
+      "B_cyr": 2.7717,
+      "C_plain": 2.3949,
+      "C_cyr": 2.7965
+    },
+    "M0_transfer_plain_to_cyr": -0.358,
+    "M0_transfer_cyr_to_plain": 1.0,
+    "cka_end_same": [
+      0.702,
+      0.581,
+      0.531
+    ],
+    "cka_end_other": [
+      0.059,
+      0.082,
+      0.073
+    ],
+    "emb_align": 0.1154
+  },
+  "sec": 4974.0
+}
