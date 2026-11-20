@@ -1,0 +1,344 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "db7649eee309",
+    "summary": {
+      "M0_bpc": "{\"A_plain\": 2.3639, \"A_cyr\": 2.8488, \"B_plain\": 2.3869, \"B_cyr\": 2.7848, \"C_plain\": 2.388, \"C_cyr\": 2.7921}",
+      "M0_transfer_plain_to_cyr": "-2.353",
+      "M0_transfer_cyr_to_plain": "0.151",
+      "cka_same_text": "[0.93, 0.655, 0.456]",
+      "cka_other_text": "[0.002, 0.003, 0.007]",
+      "cka_end_same": "[0.933, 0.677, 0.487]",
+      "cka_end_other": "[0.051, 0.065, 0.062]",
+      "emb_align": "0.154"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "translit",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "tl_mode": "joint",
+    "tl_tok": "char",
+    "tl_merges": 128,
+    "eval_only": false,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_w": 1.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_ramp": 0.0,
+    "s3_price": 0.1,
+    "width": 48,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 16,
+    "lr": 0.003,
+    "seed": 2,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 512,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sN_joint_M0_seed2.json"
+  },
+  "n_params": 55200,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 1.9228,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.6975,
+          "A_cyr": 18.7863,
+          "B_plain": 2.6803,
+          "B_cyr": 18.6116,
+          "C_plain": 2.6913,
+          "C_cyr": 18.6542
+        },
+        "M0_transfer_plain_to_cyr": 21.306,
+        "M0_transfer_cyr_to_plain": 0.258,
+        "cka_same_text": [
+          0.781,
+          0.566,
+          0.321
+        ],
+        "cka_other_text": [
+          0.002,
+          0.003,
+          0.006
+        ],
+        "cka_end_same": [
+          0.795,
+          0.587,
+          0.283
+        ],
+        "cka_end_other": [
+          0.055,
+          0.061,
+          0.038
+        ],
+        "emb_align": 0.0769
+      },
+      "sec": 1315.1
+    },
+    {
+      "step": 2000,
+      "ce": 1.6333,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.5521,
+          "A_cyr": 3.4884,
+          "B_plain": 2.5474,
+          "B_cyr": 3.4745,
+          "C_plain": 2.5475,
+          "C_cyr": 3.4602
+        },
+        "M0_transfer_plain_to_cyr": 6.13,
+        "M0_transfer_cyr_to_plain": -0.007,
+        "cka_same_text": [
+          0.87,
+          0.581,
+          0.324
+        ],
+        "cka_other_text": [
+          0.002,
+          0.002,
+          0.01
+        ],
+        "cka_end_same": [
+          0.873,
+          0.604,
+          0.39
+        ],
+        "cka_end_other": [
+          0.043,
+          0.053,
+          0.045
+        ],
+        "emb_align": 0.0769
+      },
+      "sec": 2398.6
+    },
+    {
+      "step": 3000,
+      "ce": 1.8235,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.4614,
+          "A_cyr": 3.1392,
+          "B_plain": 2.4672,
+          "B_cyr": 3.1207,
+          "C_plain": 2.4721,
+          "C_cyr": 3.0985
+        },
+        "M0_transfer_plain_to_cyr": -3.804,
+        "M0_transfer_cyr_to_plain": -0.221,
+        "cka_same_text": [
+          0.909,
+          0.638,
+          0.387
+        ],
+        "cka_other_text": [
+          0.002,
+          0.003,
+          0.009
+        ],
+        "cka_end_same": [
+          0.913,
+          0.656,
+          0.43
+        ],
+        "cka_end_other": [
+          0.049,
+          0.06,
+          0.059
+        ],
+        "emb_align": 0.1923
+      },
+      "sec": 3444.7
+    },
+    {
+      "step": 4000,
+      "ce": 1.8899,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.3966,
+          "A_cyr": 2.9498,
+          "B_plain": 2.4205,
+          "B_cyr": 2.9217,
+          "C_plain": 2.4127,
+          "C_cyr": 2.9019
+        },
+        "M0_transfer_plain_to_cyr": -2.975,
+        "M0_transfer_cyr_to_plain": 0.394,
+        "cka_same_text": [
+          0.924,
+          0.645,
+          0.425
+        ],
+        "cka_other_text": [
+          0.002,
+          0.003,
+          0.006
+        ],
+        "cka_end_same": [
+          0.927,
+          0.662,
+          0.453
+        ],
+        "cka_end_other": [
+          0.051,
+          0.063,
+          0.061
+        ],
+        "emb_align": 0.1538
+      },
+      "sec": 4491.1
+    },
+    {
+      "step": 5000,
+      "ce": 1.9732,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.3552,
+          "A_cyr": 2.8441,
+          "B_plain": 2.3774,
+          "B_cyr": 2.812,
+          "C_plain": 2.3853,
+          "C_cyr": 2.791
+        },
+        "M0_transfer_plain_to_cyr": -1.764,
+        "M0_transfer_cyr_to_plain": -0.376,
+        "cka_same_text": [
+          0.93,
+          0.654,
+          0.462
+        ],
+        "cka_other_text": [
+          0.002,
+          0.003,
+          0.007
+        ],
+        "cka_end_same": [
+          0.933,
+          0.675,
+          0.491
+        ],
+        "cka_end_other": [
+          0.051,
+          0.065,
+          0.062
+        ],
+        "emb_align": 0.1538
+      },
+      "sec": 5553.4
+    },
+    {
+      "step": 6000,
+      "ce": 1.721,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.3444,
+          "A_cyr": 2.8289,
+          "B_plain": 2.3678,
+          "B_cyr": 2.7918,
+          "C_plain": 2.3771,
+          "C_cyr": 2.7708
+        },
+        "M0_transfer_plain_to_cyr": -1.777,
+        "M0_transfer_cyr_to_plain": -0.443,
+        "cka_same_text": [
+          0.93,
+          0.655,
+          0.456
+        ],
+        "cka_other_text": [
+          0.002,
+          0.003,
+          0.007
+        ],
+        "cka_end_same": [
+          0.933,
+          0.677,
+          0.487
+        ],
+        "cka_end_other": [
+          0.051,
+          0.065,
+          0.062
+        ],
+        "emb_align": 0.1538
+      },
+      "sec": 6655.5
+    }
+  ],
+  "final": {
+    "M0_bpc": {
+      "A_plain": 2.3639,
+      "A_cyr": 2.8488,
+      "B_plain": 2.3869,
+      "B_cyr": 2.7848,
+      "C_plain": 2.388,
+      "C_cyr": 2.7921
+    },
+    "M0_transfer_plain_to_cyr": -2.353,
+    "M0_transfer_cyr_to_plain": 0.151,
+    "cka_same_text": [
+      0.93,
+      0.655,
+      0.456
+    ],
+    "cka_other_text": [
+      0.002,
+      0.003,
+      0.007
+    ],
+    "cka_end_same": [
+      0.933,
+      0.677,
+      0.487
+    ],
+    "cka_end_other": [
+      0.051,
+      0.065,
+      0.062
+    ],
+    "emb_align": 0.1538
+  },
+  "sec": 6683.7
+}
