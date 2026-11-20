@@ -118,7 +118,7 @@ claims:
   regime: ''
 - id: ZLK.7
   claim: two views of one content land close without collapse
-  status: 'precondition measured 11-20: untrained ticks raise cross-script state CKA without collapse (toy 0.44 -> 0.71; World, G1d, G1d+kl_T2_k4 0.4B +0.05-0.10; other text 0.15-0.22); the trained term not run'
+  status: 'precondition measured 11-20: trained ticks raise cross-script state CKA without collapse (toy loop, 3 seeds, 0.469 -> 0.625 at width 48, fading with width; 0.4B kl_T2_k4 +0.07 / +0.05; base-model M4 readings are untrained ticks, not evidence; other text 0.15-0.22); the trained term not run'
   regime: 'toy from scratch (two scripts); 0.4B pretrained, inference only'
 - id: ZLK.8
   claim: content first, format from the question; honest self-decisions
@@ -207,7 +207,7 @@ not claimed.
 | ZLK.4 | a channel of the model's own latent can be trained without erasing the answer | 0.4B: tick no longer erases; every arm a pass-through | G1d 0.4B pretrained | 0 | - |
 | ZLK.5 | the model can learn to choose its own number of ticks | CONFIRMED on the toy 11-20 (2 of 3 seeds, sL_ramp1): own stop without a head equals fixed M8 at 62-69% of the ticks; seed 6 lost 0.10 to training | toy from scratch (chase), start from a trained C model; pretrained not run | 0 | <-H24 |
 | ZLK.6 | with search the loop exceeds its teacher's one-pass reading | not run; bounded by T1/T2 | - | 0 | ZLK.1 |
-| ZLK.7 | two views of one content land close without collapse | precondition measured 11-20: untrained ticks raise cross-script state CKA without collapse (toy 0.44 -> 0.71; World, G1d, G1d+kl_T2_k4 0.4B +0.05-0.10; other text 0.15-0.22); the trained term not run | toy from scratch (two scripts); 0.4B pretrained, inference only | 0 | - |
+| ZLK.7 | two views of one content land close without collapse | precondition measured 11-20: trained ticks raise cross-script state CKA without collapse (toy loop, 3 seeds, 0.469 -> 0.625 at width 48, fading with width; 0.4B kl_T2_k4 +0.07 / +0.05; base-model M4 readings are untrained ticks, not evidence; other text 0.15-0.22); the trained term not run | toy from scratch (two scripts); 0.4B pretrained, inference only | 0 | - |
 | ZLK.8 | content first, format from the question; honest self-decisions | obedience measured, near 0 | G1i 2.9B pretrained, silent answers | 0 | - |
 | ZLK.9 | a persistent state absorbs the configuration once | H17, contested | none measured (the owner's sessions) | 0 | H17 |
 | ZLK.10 | an exact-recall branch queried at every tick keeps the past the settling state forgets | not started | - | 0 | <-H23 |
