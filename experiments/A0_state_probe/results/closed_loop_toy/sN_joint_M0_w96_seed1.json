@@ -1,0 +1,344 @@
+{
+  "_meta": {
+    "experiment": "closed_loop_toy",
+    "hypothesis": [
+      "H25",
+      "HZLK"
+    ],
+    "date": "2026-11-20",
+    "status": "done",
+    "model": null,
+    "script": "experiments/A0_state_probe/closed_loop_toy.py",
+    "script_sha256_12": "db7649eee309",
+    "summary": {
+      "M0_bpc": "{\"A_plain\": 2.0811, \"A_cyr\": 2.6711, \"B_plain\": 2.2011, \"B_cyr\": 2.5901, \"C_plain\": 2.2218, \"C_cyr\": 2.6081}",
+      "M0_transfer_plain_to_cyr": "-0.448",
+      "M0_transfer_cyr_to_plain": "1.150",
+      "cka_same_text": "[0.939, 0.599, 0.459]",
+      "cka_other_text": "[0.002, 0.004, 0.004]",
+      "cka_end_same": "[0.941, 0.629, 0.548]",
+      "cka_end_other": "[0.052, 0.093, 0.056]",
+      "emb_align": "0.038"
+    }
+  },
+  "args": {
+    "ticks": 0,
+    "jepa": 0.0,
+    "sigreg": 0.0,
+    "n": 10,
+    "task": "translit",
+    "deriv_file": "",
+    "ema": 0.99,
+    "jepa_target": "hops",
+    "cipher_train": "/home/vaniello/tmp/c1d/train.jsonl",
+    "cipher_eval": "/home/vaniello/tmp/c1d/eval.jsonl",
+    "cipher_max_len": 320,
+    "tl_mode": "joint",
+    "tl_tok": "char",
+    "tl_merges": 128,
+    "eval_only": false,
+    "clm_plain": 0.5,
+    "cipher_control": false,
+    "anon": false,
+    "deriv_answer": "truth",
+    "K": 256,
+    "fact_seed": 0,
+    "m": 4,
+    "curriculum": false,
+    "warm": 0,
+    "train_ks": "",
+    "distill": "",
+    "distill_temp": 2.0,
+    "distill_ce": 0.0,
+    "init": "",
+    "grpo": 0,
+    "grpo_sigma": 0.0,
+    "grpo_w": 1.0,
+    "grpo_kl": 0.0,
+    "s3_tau": 0.0,
+    "s3_explore": 0.0,
+    "s3_self": 0.0,
+    "s3_target": "last",
+    "s3_ramp": 0.0,
+    "s3_price": 0.1,
+    "width": 96,
+    "heads": 3,
+    "layers": 2,
+    "steps": 6000,
+    "batch": 16,
+    "lr": 0.003,
+    "seed": 1,
+    "eval_every": 1000,
+    "eval_per_k": 256,
+    "eval_final": 512,
+    "threads": 1,
+    "device": "cpu",
+    "save_model": true,
+    "out": "experiments/A0_state_probe/results/closed_loop_toy/sN_joint_M0_w96_seed1.json"
+  },
+  "n_params": 188736,
+  "history": [
+    {
+      "step": 1000,
+      "ce": 1.6701,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.5587,
+          "A_cyr": 18.8518,
+          "B_plain": 2.5415,
+          "B_cyr": 18.7577,
+          "C_plain": 2.5626,
+          "C_cyr": 18.8525
+        },
+        "M0_transfer_plain_to_cyr": 0.179,
+        "M0_transfer_cyr_to_plain": 0.223,
+        "cka_same_text": [
+          0.846,
+          0.555,
+          0.237
+        ],
+        "cka_other_text": [
+          0.002,
+          0.003,
+          0.002
+        ],
+        "cka_end_same": [
+          0.852,
+          0.558,
+          0.238
+        ],
+        "cka_end_other": [
+          0.056,
+          0.075,
+          0.033
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 7829.9
+    },
+    {
+      "step": 2000,
+      "ce": 1.6371,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.3481,
+          "A_cyr": 3.4922,
+          "B_plain": 2.3948,
+          "B_cyr": 3.4551,
+          "C_plain": 2.405,
+          "C_cyr": 3.4697
+        },
+        "M0_transfer_plain_to_cyr": -0.395,
+        "M0_transfer_cyr_to_plain": 0.699,
+        "cka_same_text": [
+          0.882,
+          0.286,
+          0.262
+        ],
+        "cka_other_text": [
+          0.002,
+          0.002,
+          0.002
+        ],
+        "cka_end_same": [
+          0.883,
+          0.335,
+          0.335
+        ],
+        "cka_end_other": [
+          0.043,
+          0.045,
+          0.026
+        ],
+        "emb_align": 0.0
+      },
+      "sec": 9247.7
+    },
+    {
+      "step": 3000,
+      "ce": 1.685,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.2296,
+          "A_cyr": 3.037,
+          "B_plain": 2.2878,
+          "B_cyr": 2.9864,
+          "C_plain": 2.3073,
+          "C_cyr": 3.0074
+        },
+        "M0_transfer_plain_to_cyr": -0.381,
+        "M0_transfer_cyr_to_plain": 0.929,
+        "cka_same_text": [
+          0.93,
+          0.545,
+          0.376
+        ],
+        "cka_other_text": [
+          0.002,
+          0.003,
+          0.003
+        ],
+        "cka_end_same": [
+          0.934,
+          0.57,
+          0.458
+        ],
+        "cka_end_other": [
+          0.05,
+          0.079,
+          0.048
+        ],
+        "emb_align": 0.0385
+      },
+      "sec": 10589.1
+    },
+    {
+      "step": 4000,
+      "ce": 1.7861,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.1241,
+          "A_cyr": 2.7954,
+          "B_plain": 2.2293,
+          "B_cyr": 2.7469,
+          "C_plain": 2.2644,
+          "C_cyr": 2.75
+        },
+        "M0_transfer_plain_to_cyr": -0.324,
+        "M0_transfer_cyr_to_plain": 11.323,
+        "cka_same_text": [
+          0.939,
+          0.571,
+          0.406
+        ],
+        "cka_other_text": [
+          0.002,
+          0.004,
+          0.004
+        ],
+        "cka_end_same": [
+          0.942,
+          0.609,
+          0.488
+        ],
+        "cka_end_other": [
+          0.051,
+          0.09,
+          0.058
+        ],
+        "emb_align": 0.0385
+      },
+      "sec": 11912.6
+    },
+    {
+      "step": 5000,
+      "ce": 1.5652,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.0711,
+          "A_cyr": 2.671,
+          "B_plain": 2.1889,
+          "B_cyr": 2.6032,
+          "C_plain": 2.2236,
+          "C_cyr": 2.6217
+        },
+        "M0_transfer_plain_to_cyr": -0.323,
+        "M0_transfer_cyr_to_plain": 1.876,
+        "cka_same_text": [
+          0.938,
+          0.597,
+          0.448
+        ],
+        "cka_other_text": [
+          0.002,
+          0.004,
+          0.004
+        ],
+        "cka_end_same": [
+          0.94,
+          0.624,
+          0.535
+        ],
+        "cka_end_other": [
+          0.052,
+          0.093,
+          0.055
+        ],
+        "emb_align": 0.0385
+      },
+      "sec": 13259.0
+    },
+    {
+      "step": 6000,
+      "ce": 1.4543,
+      "eval": {
+        "M0_bpc": {
+          "A_plain": 2.0576,
+          "A_cyr": 2.6472,
+          "B_plain": 2.1796,
+          "B_cyr": 2.5804,
+          "C_plain": 2.2171,
+          "C_cyr": 2.5936
+        },
+        "M0_transfer_plain_to_cyr": -0.336,
+        "M0_transfer_cyr_to_plain": 2.841,
+        "cka_same_text": [
+          0.939,
+          0.599,
+          0.459
+        ],
+        "cka_other_text": [
+          0.002,
+          0.004,
+          0.004
+        ],
+        "cka_end_same": [
+          0.941,
+          0.629,
+          0.548
+        ],
+        "cka_end_other": [
+          0.052,
+          0.093,
+          0.056
+        ],
+        "emb_align": 0.0385
+      },
+      "sec": 14728.4
+    }
+  ],
+  "final": {
+    "M0_bpc": {
+      "A_plain": 2.0811,
+      "A_cyr": 2.6711,
+      "B_plain": 2.2011,
+      "B_cyr": 2.5901,
+      "C_plain": 2.2218,
+      "C_cyr": 2.6081
+    },
+    "M0_transfer_plain_to_cyr": -0.448,
+    "M0_transfer_cyr_to_plain": 1.15,
+    "cka_same_text": [
+      0.939,
+      0.599,
+      0.459
+    ],
+    "cka_other_text": [
+      0.002,
+      0.004,
+      0.004
+    ],
+    "cka_end_same": [
+      0.941,
+      0.629,
+      0.548
+    ],
+    "cka_end_other": [
+      0.052,
+      0.093,
+      0.056
+    ],
+    "emb_align": 0.0385
+  },
+  "sec": 14774.6
+}
