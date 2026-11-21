@@ -1,0 +1,272 @@
+{
+ "s1_C_M8_seed4": {
+  "acc_by_k": {
+   "1": 0.99,
+   "2": 0.957,
+   "3": 0.94,
+   "4": 0.945,
+   "5": 0.909,
+   "6": 0.902,
+   "7": 0.869,
+   "8": 0.893
+  },
+  "per_tick": [
+   {
+    "tick": 1,
+    "node": 0.979,
+    "answer": 0.167,
+    "answer_if_past_k": null,
+    "node_if_past_k": null
+   },
+   {
+    "tick": 2,
+    "node": 0.85,
+    "answer": 0.238,
+    "answer_if_past_k": 0.984,
+    "node_if_past_k": 0.09
+   },
+   {
+    "tick": 3,
+    "node": 0.711,
+    "answer": 0.356,
+    "answer_if_past_k": 0.956,
+    "node_if_past_k": 0.106
+   },
+   {
+    "tick": 4,
+    "node": 0.586,
+    "answer": 0.483,
+    "answer_if_past_k": 0.958,
+    "node_if_past_k": 0.085
+   },
+   {
+    "tick": 5,
+    "node": 0.456,
+    "answer": 0.588,
+    "answer_if_past_k": 0.952,
+    "node_if_past_k": 0.07
+   },
+   {
+    "tick": 6,
+    "node": 0.351,
+    "answer": 0.709,
+    "answer_if_past_k": 0.942,
+    "node_if_past_k": 0.084
+   },
+   {
+    "tick": 7,
+    "node": 0.225,
+    "answer": 0.818,
+    "answer_if_past_k": 0.938,
+    "node_if_past_k": 0.104
+   },
+   {
+    "tick": 8,
+    "node": 0.12,
+    "answer": 0.919,
+    "answer_if_past_k": 0.928,
+    "node_if_past_k": 0.081
+   }
+  ],
+  "move_before_k": [
+   0.862,
+   0.942,
+   0.9043,
+   0.9007,
+   0.9089,
+   0.9193,
+   0.9365
+  ],
+  "move_after_k": [
+   0.1967,
+   0.5089,
+   0.4541,
+   0.3753,
+   0.2989,
+   0.2631,
+   0.2404
+  ],
+  "centroid_acc_last": 0.917,
+  "spread_within_over_between": 0.546
+ },
+ "s1_C_M8_seed5": {
+  "acc_by_k": {
+   "1": 0.984,
+   "2": 0.973,
+   "3": 0.954,
+   "4": 0.937,
+   "5": 0.915,
+   "6": 0.925,
+   "7": 0.897,
+   "8": 0.907
+  },
+  "per_tick": [
+   {
+    "tick": 1,
+    "node": 0.985,
+    "answer": 0.16,
+    "answer_if_past_k": null,
+    "node_if_past_k": null
+   },
+   {
+    "tick": 2,
+    "node": 0.854,
+    "answer": 0.248,
+    "answer_if_past_k": 0.98,
+    "node_if_past_k": 0.361
+   },
+   {
+    "tick": 3,
+    "node": 0.721,
+    "answer": 0.363,
+    "answer_if_past_k": 0.983,
+    "node_if_past_k": 0.217
+   },
+   {
+    "tick": 4,
+    "node": 0.65,
+    "answer": 0.448,
+    "answer_if_past_k": 0.919,
+    "node_if_past_k": 0.23
+   },
+   {
+    "tick": 5,
+    "node": 0.47,
+    "answer": 0.572,
+    "answer_if_past_k": 0.936,
+    "node_if_past_k": 0.094
+   },
+   {
+    "tick": 6,
+    "node": 0.362,
+    "answer": 0.714,
+    "answer_if_past_k": 0.948,
+    "node_if_past_k": 0.07
+   },
+   {
+    "tick": 7,
+    "node": 0.237,
+    "answer": 0.83,
+    "answer_if_past_k": 0.944,
+    "node_if_past_k": 0.073
+   },
+   {
+    "tick": 8,
+    "node": 0.129,
+    "answer": 0.936,
+    "answer_if_past_k": 0.942,
+    "node_if_past_k": 0.077
+   }
+  ],
+  "move_before_k": [
+   0.9247,
+   0.9837,
+   1.0267,
+   1.0267,
+   1.0586,
+   1.0868,
+   1.1906
+  ],
+  "move_after_k": [
+   0.2612,
+   0.4623,
+   0.4422,
+   0.2967,
+   0.2777,
+   0.2316,
+   0.2087
+  ],
+  "centroid_acc_last": 0.936,
+  "spread_within_over_between": 0.538
+ },
+ "s1_C_M8_seed6": {
+  "acc_by_k": {
+   "1": 0.99,
+   "2": 0.945,
+   "3": 0.922,
+   "4": 0.901,
+   "5": 0.868,
+   "6": 0.84,
+   "7": 0.82,
+   "8": 0.798
+  },
+  "per_tick": [
+   {
+    "tick": 1,
+    "node": 0.97,
+    "answer": 0.13,
+    "answer_if_past_k": null,
+    "node_if_past_k": null
+   },
+   {
+    "tick": 2,
+    "node": 0.709,
+    "answer": 0.237,
+    "answer_if_past_k": 0.988,
+    "node_if_past_k": 0.119
+   },
+   {
+    "tick": 3,
+    "node": 0.562,
+    "answer": 0.362,
+    "answer_if_past_k": 0.969,
+    "node_if_past_k": 0.075
+   },
+   {
+    "tick": 4,
+    "node": 0.441,
+    "answer": 0.475,
+    "answer_if_past_k": 0.961,
+    "node_if_past_k": 0.063
+   },
+   {
+    "tick": 5,
+    "node": 0.326,
+    "answer": 0.576,
+    "answer_if_past_k": 0.946,
+    "node_if_past_k": 0.064
+   },
+   {
+    "tick": 6,
+    "node": 0.236,
+    "answer": 0.582,
+    "answer_if_past_k": 0.93,
+    "node_if_past_k": 0.068
+   },
+   {
+    "tick": 7,
+    "node": 0.233,
+    "answer": 0.792,
+    "answer_if_past_k": 0.908,
+    "node_if_past_k": 0.084
+   },
+   {
+    "tick": 8,
+    "node": 0.138,
+    "answer": 0.882,
+    "answer_if_past_k": 0.895,
+    "node_if_past_k": 0.069
+   }
+  ],
+  "move_before_k": [
+   0.9619,
+   0.9895,
+   0.9602,
+   0.9196,
+   1.1305,
+   1.2245,
+   1.1675
+  ],
+  "move_after_k": [
+   0.1891,
+   0.1762,
+   0.1705,
+   0.1646,
+   0.1497,
+   0.3118,
+   0.1357
+  ],
+  "centroid_acc_last": 0.882,
+  "spread_within_over_between": 0.587
+ }
+}
