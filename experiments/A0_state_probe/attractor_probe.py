@@ -10,6 +10,8 @@ On fresh chase examples (k = 1..8, the model's own M ticks), for every tick t:
   answer_t the same probe family reads the answer f^k(s) from h_t; after tick k, answer_t > node_t means the
            program stopped at the answer instead of stepping on;
   move_t   |h_t - h_{t-1}| / |h_{t-1}|, split into ticks before and after k: falling after k is an attractor;
+  stop     (--stop-tau) the own stop tick against the tick after which the motion falls most, by k, and the
+           answer read from the latent at the stop;
   centroid the answer read from the last latent by its nearest answer centroid (centroids from the fit half): one
            point per answer shared across tables, against a separate point per table.
 Reads only models trained with ticks (rule: no ticks on a model not trained for them).
@@ -38,7 +40,7 @@ def ridge_acc(Xf, yf, Xs, ys, lam=1e-2):
 
 
 @torch.no_grad()
-def probe(model, M, n, seed):
+def probe(model, M, n, seed, stop_tau=0.0):
     g = torch.Generator().manual_seed(seed)
     b = make_batch(n, 10, list(range(1, KMAX + 1)), g)
     logits, lat, _ = model(b["tokens"], M)
@@ -80,6 +82,20 @@ def probe(model, M, n, seed):
     cen_acc = ((torch.cdist(last[~half], cent).argmin(1) == ans[~half]).float().mean().item())
     within = torch.stack([(last[ans == a] - last[ans == a].mean(0)).norm(dim=-1).mean() for a in ans.unique()]).mean()
     between = torch.pdist(torch.stack([last[ans == a].mean(0) for a in ans.unique()])).mean()
+    if stop_tau:                                                                # own stop: first confident tick
+        P = torch.stack([model.head(H[:, t]).softmax(-1).amax(-1) for t in range(M)], 1)   # (n, M)
+        conf = P >= stop_tau
+        tau = torch.where(conf.any(1), conf.float().argmax(1), torch.full((n,), M - 1))      # 0-based tick index
+        drop = torch.cat([torch.zeros(n, 1), mv[:, :-1] - mv[:, 1:]], 1)        # fall of motion after tick t+1
+        dtk = drop.argmax(1)                                                    # 0-based tick after which motion falls most
+        Xs = H[torch.arange(n), tau]
+        out["stop"] = {"ticks_used_by_k": {int(kk): round((tau[k == kk] + 1).float().mean().item(), 2)
+                                           for kk in range(1, KMAX + 1)},
+                       "drop_tick_eq_stop": round((dtk == tau).float().mean().item(), 3),
+                       "drop_tick_within1": round(((dtk - tau).abs() <= 1).float().mean().item(), 3),
+                       "drop_tick_by_k": {int(kk): round((dtk[k == kk] + 1).float().mean().item(), 2)
+                                          for kk in range(1, KMAX + 1)},
+                       "answer_read_at_stop": round(ridge_acc(Xs[half], ans[half], Xs[~half], ans[~half]), 3)}
     out.update({"per_tick": rows, "move_before_k": [round(x, 4) for x in pre],
                 "move_after_k": [round(x, 4) for x in post], "centroid_acc_last": round(cen_acc, 3),
                 "spread_within_over_between": round((within / between).item(), 3)})
@@ -93,6 +109,7 @@ def main() -> int:
     ap.add_argument("--n", type=int, default=4096)
     ap.add_argument("--seed", type=int, default=12345)
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--stop-tau", type=float, default=0.0, help="also read the own stop (first tick with max p >= tau)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
@@ -101,10 +118,12 @@ def main() -> int:
         model = ToyRWKV7()
         model.load_state_dict(torch.load(mp, map_location="cpu"))
         model.eval()
-        r = probe(model, a.ticks, a.n, a.seed)
+        r = probe(model, a.ticks, a.n, a.seed, a.stop_tau)
         res[Path(mp).stem] = r
         print(Path(mp).stem, json.dumps({x: r[x] for x in ("acc_by_k", "centroid_acc_last",
                                                          "spread_within_over_between")}), flush=True)
+        if "stop" in r:
+            print("   stop", json.dumps(r["stop"]), flush=True)
         for row in r["per_tick"]:
             print("  ", row, flush=True)
         print("   move before k", r["move_before_k"], "\n   move after k ", r["move_after_k"], flush=True)
