@@ -249,7 +249,8 @@ thesis, §5 says so.
    reorganising what it already holds. (2026-10-06, 10-22; ZLK.5, ZLK.18)
 5. **The attractor is the enemy.** However large, it is bounded; the chain should widen both its capacity and
    the way it forms, moving the distribution of the latent space, not the distribution of the output.
-   (2026-10-19, 10-22; ZLK.18)
+   (2026-10-19, 10-22; ZLK.18; refined in 14 on 2026-11-21: the enemy is the global or premature attractor, while
+   a per-answer attractor reached after the steps is where the program halts)
 6. **Pretraining asks the state to be sufficient; the loop needs it separable.** Design the task, not the
    objective: a task where keeping items apart is the only way to answer makes the answer reward the
    separability reward. (2026-09-22; ZLK.19)
@@ -282,11 +283,16 @@ thesis, §5 says so.
     context is the main pain. (2026-10-28; ZLK.10)
 12. **Tools adapt to the information, not the reverse.** Vocabulary tokens appear only where the model itself
     starts to speak; the loop runs on its own latent. (2026-10-21; ZLK.4)
-14. **Freedom: no global attractor.** Freedom is freedom from the interface: the model explores its own latent
-    space and what it can do there, and uses what it finds to make the work simpler. In the loop the end of a
-    trajectory is set by the model's own choices along it, not by its start alone: the states reachable from
-    one post-question state within `M` ticks have volume, and the model picks where in it to go. One point for
-    all prompts (G1k, G1l) and a per-prompt point at tick 1 (`kl_T2_k4`) both shrink that volume to zero.
+14. **Freedom is in the choice of path; the end of the path is the answer's point, not a global attractor.**
+    Freedom is freedom from the interface: the model explores its own latent space and what it can do there,
+    and uses what it finds to make the work simpler. In the loop the end of a trajectory is set by the model's
+    own choices along it, not by its start alone: the states reachable from one post-question state within `M`
+    ticks have volume, and the model picks where in it to go. Refined 2026-11-21 by the toy's attractors
+    (`attractor_probe.py`): a trained loop steps k times and then settles into a region of the answer, shared
+    across contexts, and its own stop is that settling. So convergence is the program halting, not a loss of
+    freedom; what kills freedom is one point for all prompts (no computation) or a per-prompt point at tick 1
+    (`kl_T2_k4`: nothing left to choose). The volume belongs to the transient before the halt; at the halt the
+    map should contract, or the answer would not be stable.
     The ticks are the scratchpad: re-reading rewrites the model's own record more densely (proved for the
     state, T6), which frees room to turn. RL that binds heterogeneous information more tightly raises the
     bits each part of the model carries, the loop decodes them, and later stages shorten the loop and order
@@ -582,13 +588,18 @@ narrows it.
 all), settle later than tick 1 on deep items, and the output grows more expressive at equal content. *Estimator:*
 channel spread over ticks and cross-prompt cosine on `S`; settle tick; dMI of the output (distinct words per
 answer, temperature split of sharpening vs new support, a shuffled-key control); disclaimers and loops in chat;
-the volume of thesis 14: effective rank of the Jacobian of the state after `M` ticks with respect to the model's own
-latent choices (noise in the k~16 subspace), counted only where those rollouts keep accuracy >= `M = 0` - 0.1.
+the volume of thesis 14: effective rank of the Jacobian of the state with respect to the model's own latent
+choices (noise in the k~16 subspace), taken on the transient before the halt (at the halt it should contract),
+counted only where those rollouts keep accuracy >= `M = 0` - 0.1; the program form of the end (toy, 2026-11-21,
+`attractor_probe.py`): past the last step the latent holds the answer (0.89-0.99) and not the next node (chance),
+its per-tick move drops 2-6x, the end falls into a per-answer region shared across tables (nearest answer centroid
+0.88-0.94), and the own stop coincides with that settling within one tick on 0.69 / 0.75 of examples.
 *Refuter:* collapse to one point for all prompts (cross-prompt cosine on `S` >= 0.95 for two consecutive gated
 checkpoints), or expressiveness rising only with loops or disclaimers. *Rests on:* `kl_T2_k4` (0.4B): effective
 rank over ticks 3.2 -> 7.9, a point per prompt; chat distinct words 48.5 vs base 42.3 (`M = 0`) / 44.8 (base
 `M = 4`), n = 6 questions, no disclaimer; but its latent sits at a per-prompt fixed point from tick 1. G1k and G1l
-collapse to one point for all prompts by tick 6-8; G1i spreads (0.88); at 2.9B a shared component holds PC1 at
+collapse to one point for all prompts by tick 6-8 (read on ticks they were never trained for, so no weight here;
+dropped from the paper 2026-11-21); G1i spreads (0.88); at 2.9B a shared component holds PC1 at
 0.999 already at tick 0 in all three, so the per-file breakdown has to confirm "one point". The behavioural side,
 measured by the community on G1l 7B preview (No-22, 568-question agent exam, 22 720 passes, shared by BlinkDL
 2026-10-24): the dominant failure is inertia, 53% of questions fall into repeat, rejection, forced close; 56% of
