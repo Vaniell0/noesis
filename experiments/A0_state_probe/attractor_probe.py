@@ -102,6 +102,39 @@ def probe(model, M, n, seed, stop_tau=0.0):
     return out
 
 
+@torch.no_grad()
+def online_stop(model, M, n, seed, cs, from2=False):
+    """A working stop on the latent's motion: after tick t compute one tick ahead; stop when that move is below
+    c x the move into tick t (the move into tick 1 is from the prompt's last latent), read the head at tick t.
+    Cost = ticks to the stop + 1 look-ahead; one extra tick past M lets the last tick settle too."""
+    g = torch.Generator().manual_seed(seed)
+    b = make_batch(n, 10, list(range(1, KMAX + 1)), g)
+    st = model.init_state(n)
+    e = model.emb(b["tokens"])
+    for t in range(e.shape[1]):
+        h, st = model.step(e[:, t], st)
+    hs = [h]
+    for _ in range(M + 1):
+        h, st = model.step(h, st)
+        hs.append(h)
+    H = torch.stack(hs, 1)                                                      # (n, M + 2): prompt end, ticks 1..M+1
+    mv = (H[:, 1:] - H[:, :-1]).norm(dim=-1) / H[:, :-1].norm(dim=-1)           # mv[:, j]: move into tick j + 1
+    k, ans = b["k"], b["answer"]
+    fixed = (model.head(H[:, M]).argmax(-1) == ans).float()
+    res = {"fixed_M": round(fixed.mean().item(), 3)}
+    for c in cs:
+        stop = mv[:, 1:M + 1] < c * mv[:, 0:M]                                  # column j: stop at tick j + 1
+        if from2:                                                               # the prompt -> tick 1 move is no reference
+            stop[:, 0] = False
+        t = torch.where(stop.any(1), stop.float().argmax(1) + 1, torch.full((n,), M))   # 1-based tick read
+        ok = (model.head(H[torch.arange(n), t]).argmax(-1) == ans).float()
+        cost = torch.minimum(t + 1, torch.full_like(t, M + 1)).float()
+        res[f"c{c}"] = {"acc": round(ok.mean().item(), 3), "ticks_with_lookahead": round(cost.mean().item(), 2),
+                        "acc_by_k": [round(ok[k == kk].mean().item(), 2) for kk in range(1, KMAX + 1)],
+                        "ticks_by_k": [round(cost[k == kk].mean().item(), 1) for kk in range(1, KMAX + 1)]}
+    return res
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--models", nargs="+", required=True)
@@ -109,6 +142,8 @@ def main() -> int:
     ap.add_argument("--n", type=int, default=4096)
     ap.add_argument("--seed", type=int, default=12345)
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--online-stop", default="", help="comma list of c: the motion stop, see online_stop")
+    ap.add_argument("--from2", action="store_true", help="motion stop: never stop at tick 1")
     ap.add_argument("--stop-tau", type=float, default=0.0, help="also read the own stop (first tick with max p >= tau)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
@@ -118,6 +153,11 @@ def main() -> int:
         model = ToyRWKV7()
         model.load_state_dict(torch.load(mp, map_location="cpu"))
         model.eval()
+        if a.online_stop:
+            r = online_stop(model, a.ticks, a.n, a.seed, [float(x) for x in a.online_stop.split(",")], a.from2)
+            res[Path(mp).stem] = r
+            print(Path(mp).stem, json.dumps(r), flush=True)
+            continue
         r = probe(model, a.ticks, a.n, a.seed, a.stop_tau)
         res[Path(mp).stem] = r
         print(Path(mp).stem, json.dumps({x: r[x] for x in ("acc_by_k", "centroid_acc_last",
