@@ -701,11 +701,125 @@ class RosaRef(nn.Module):
         return self.out((soft + (hard - soft).detach()).reshape(B, self.R))
 
 
+def _rosa_pick(lens, vb):
+    """lens: (..., J) match lengths over key ends j; vb: (..., J + 1) value bits. The value bit after the latest end
+    of the longest match; 0 when nothing matches (as BlinkDL's QKV-ROSA maps no-match to bit 0)."""
+    x = lens.amax(-1, keepdim=True)
+    j = torch.arange(1, lens.shape[-1] + 1, device=lens.device)
+    r = ((lens == x) * j).argmax(-1, keepdim=True)                              # latest j at the max
+    return torch.gather(vb, -1, r + 1).squeeze(-1) * (x.squeeze(-1) > 0)
+
+
+class RosaQKVStep(torch.autograd.Function):
+    """One position of 1-bit QKV-ROSA (RWKV-v8 251024_rosaQKV_run.py): per channel, bits q, k, v = (pre-activation >
+    0); the longest suffix of the query bits q_0..q_i that occurs in the key bits k_0..k_{i-1}, ending at its latest
+    end r; output (2 v_{r+1} - 1) e. Match lengths by L[i, j] = [q_i = k_j] (1 + L[i-1, j-1]). Gradient as BlinkDL's
+    1-bit layer: flip each bit, take the change of the output, divide by 2 max(|pre-activation|, tau); the effect of a
+    flip on every diagonal run is computed in closed form from the stored rows of L."""
+
+    @staticmethod
+    def forward(ctx, qh, kh, vh, e, Lprev, tau):
+        # qh, kh, vh: (B, i+1, R) pre-activations of positions 0..i; Lprev: (B, R, i, i) rows 0..i-1 of L
+        B, n, R = qh.shape
+        i = n - 1
+        qb, kb, vb = ((t > 0).float().transpose(1, 2) for t in (qh, kh, vh))    # (B, R, n)
+        if i == 0:
+            Lrow = qh.new_zeros(B, R, 0)
+            bit = qh.new_zeros(B, R)
+        else:
+            eq = (qb[..., i:i + 1] == kb[..., :i]).float()                      # (B, R, i)
+            diag = F.pad(Lprev[..., i - 1, :i - 1], (1, 0)) if i > 1 else torch.zeros_like(eq)
+            Lrow = eq * (1 + diag)
+            bit = _rosa_pick(Lrow, vb)
+        ctx.save_for_backward(qh, kh, vh, e, Lprev, Lrow, bit)
+        ctx.tau = tau
+        ctx.mark_non_differentiable(Lrow)
+        return (2 * bit - 1) * e, Lrow
+
+    @staticmethod
+    def backward(ctx, gy, _gL):
+        qh, kh, vh, e, Lprev, Lrow, bit = ctx.saved_tensors
+        B, n, R = qh.shape
+        i = n - 1
+        gq, gk, gv = torch.zeros_like(qh), torch.zeros_like(kh), torch.zeros_like(vh)
+        ge = (gy * (2 * bit - 1)).sum(0)
+        if i == 0:
+            return gq, gk, gv, ge, None, None
+        dev = qh.device
+        qb, vb = (qh > 0).float().transpose(1, 2), (vh > 0).float().transpose(1, 2)
+        kb = (kh > 0).float().transpose(1, 2)
+        out = (2 * bit - 1) * e
+        # v: only the bit after the chosen end matters
+        x = Lrow.amax(-1, keepdim=True)
+        jj = torch.arange(1, i + 1, device=dev)
+        r = ((Lrow == x) * jj).argmax(-1)                                       # (B, R)
+        hit = (x.squeeze(-1) > 0).float()
+        gvv = gy * e * hit / torch.clamp((torch.gather(vh.transpose(1, 2), -1, (r + 1).unsqueeze(-1)).squeeze(-1)).abs(), min=ctx.tau)
+        gv.transpose(1, 2).scatter_add_(-1, (r + 1).unsqueeze(-1), gvv.unsqueeze(-1))
+        # runs on every diagonal ending at (i, j) after flipping the pair at offset d: NL[b, c, j, d]
+        Lall = torch.cat([Lprev, F.pad(Lrow, (0, 0)).unsqueeze(2)], 2) if i > 0 else Lrow.unsqueeze(2)   # (B,R,i+1,i)
+        l = Lrow.unsqueeze(-1)                                                  # (B, R, i, 1)
+        d = torch.arange(i + 1, device=dev).view(1, 1, 1, -1)
+        j = torch.arange(i, device=dev).view(1, 1, -1, 1)
+        li = l.long()
+        pr, pc = i - li - 1, j - li - 1                                         # the run before the mismatch
+        ok = (pr >= 0) & (pc >= 0)
+        prev = torch.gather(Lall.flatten(2), -1, (pr.clamp(min=0) * i + pc.clamp(min=0)).flatten(2)).view_as(l) * ok
+        NL = torch.where(d < l, d.float(), torch.where((d == l) & (d <= j), l + 1 + prev, l)).float()  # (B,R,i,i+1)
+        # q flips at position p: offset d = i - p for every diagonal
+        lens_q = NL.flip(-1).permute(0, 1, 3, 2)                                # (B, R, p = 0..i, j)
+        out_q = (2 * _rosa_pick(lens_q, vb.unsqueeze(2).expand(-1, -1, n, -1)) - 1) * e.view(1, -1, 1)
+        sq = 2 * qb - 1                                                         # +1 if the bit is 1
+        gq_ = gy.unsqueeze(-1) * sq * (out.unsqueeze(-1) - out_q) / (2 * torch.clamp(qh.transpose(1, 2).abs(), min=ctx.tau))
+        gq.copy_(gq_.transpose(1, 2))
+        # k flips at position p < i: diagonal j >= p at offset j - p
+        p = torch.arange(i, device=dev).view(1, 1, -1, 1)
+        jv = torch.arange(i, device=dev).view(1, 1, 1, -1)
+        dd = (jv - p).clamp(min=0)                                              # (1,1,p,j)
+        NLt = NL.unsqueeze(2).expand(-1, -1, i, -1, -1)                         # (B,R,p,j,d)
+        took = torch.gather(NLt, -1, dd.unsqueeze(-1).expand(B, R, -1, -1, 1)).squeeze(-1)
+        lens_k = torch.where((jv >= p) & (dd <= i), took, Lrow.unsqueeze(2))    # (B, R, p, j)
+        out_k = (2 * _rosa_pick(lens_k, vb.unsqueeze(2).expand(-1, -1, i, -1)) - 1) * e.view(1, -1, 1)
+        sk = 2 * kb[..., :i] - 1
+        gk_ = gy.unsqueeze(-1) * sk * (out.unsqueeze(-1) - out_k) / (2 * torch.clamp(kh[:, :i].transpose(1, 2).abs(), min=ctx.tau))
+        gk[:, :i] = gk_.transpose(1, 2)
+        return gq, gk, gv, ge, None, None
+
+
+class RosaQKV(nn.Module):
+    """1-bit QKV-ROSA beside the time mix, at every position, ticks included (a tick extends every channel's bit
+    stream). R channels; q, k, v from the layer input and the previous input; output projection zero at start."""
+
+    def __init__(self, C: int, R: int | None = None, tau: float = 1e-3):
+        super().__init__()
+        R = R or C
+        self.q, self.k, self.v = (nn.Linear(2 * C, R) for _ in range(3))
+        self.e = nn.Parameter(torch.ones(R))
+        self.out = nn.Linear(R, C, bias=False)
+        nn.init.zeros_(self.out.weight)
+        self.tau = tau
+
+    def step(self, z, mem):
+        """z: (B, 2C); mem: dict of lists q, k, v pre-activations and the L matrix so far."""
+        mem["q"].append(self.q(z)); mem["k"].append(self.k(z)); mem["v"].append(self.v(z))
+        qh, kh, vh = (torch.stack(mem[c], 1) for c in "qkv")
+        i = qh.shape[1] - 1
+        L = mem["L"]
+        y, Lrow = RosaQKVStep.apply(qh, kh, vh, self.e, L, self.tau)
+        Ln = qh.new_zeros(L.shape[0], L.shape[1], i + 1, i + 1) if i >= 0 else L
+        if i > 0:
+            Ln[..., :i, :i] = L
+            Ln[..., i, :i] = Lrow
+        mem["L"] = Ln
+        return self.out(y)
+
+
 class ToyRWKV7(nn.Module):
     def __init__(self, C: int = 48, H: int = 3, L: int = 2, vocab: int = VOCAB, rosa: str = ""):
         super().__init__()
         self.rosa_mode = rosa                                                   # "", "every" tick, "once" (tick 1)
-        self.rosa = nn.ModuleList(RosaRef(C) for _ in range(L)) if rosa else None
+        self.rosa = (nn.ModuleList(RosaQKV(C) for _ in range(L)) if rosa == "qkv1"
+                     else nn.ModuleList(RosaRef(C) for _ in range(L)) if rosa else None)
         self.C, self.H, self.L = C, H, L
         self.emb = nn.Embedding(vocab, C)
         nn.init.uniform_(self.emb.weight, -1e-4 * 100, 1e-4 * 100)
@@ -723,7 +837,8 @@ class ToyRWKV7(nn.Module):
         z = torch.zeros(B, self.C, device=d)
         return {"S": [torch.zeros(B, self.H, self.C // self.H, self.C // self.H, device=d) for _ in range(self.L)],
                 "att": [z] * self.L, "ffn": [z] * self.L, "rk": [[] for _ in range(self.L)],
-                "rv": [[] for _ in range(self.L)], "tick": 0}
+                "rv": [[] for _ in range(self.L)], "tick": 0,
+                "rosa": [{"q": [], "k": [], "v": [], "L": torch.zeros(B, self.C, 0, 0, device=d)} for _ in range(self.L)]}
 
     def step(self, x_in, st):
         """x_in: (B, C) input vector before ln0. Returns ln_out(h) and the new state."""
@@ -733,7 +848,9 @@ class ToyRWKV7(nn.Module):
         for i in range(self.L):
             xa = self.ln1[i](x)
             dx, S[i], v_first = self.att[i](xa, att[i], S[i], v_first)
-            if self.rosa is not None:
+            if self.rosa is not None and self.rosa_mode == "qkv1":                 # every position, ticks included
+                dx = dx + self.rosa[i].step(torch.cat([xa, att[i]], -1), st["rosa"][i])
+            elif self.rosa is not None:
                 z = torch.cat([xa, att[i]], -1)
                 if not st.get("tick"):                                          # prompt: write key and value
                     st["rk"][i].append(self.rosa[i].k(z)); st["rv"][i].append(self.rosa[i].v(xa))
@@ -1277,8 +1394,9 @@ def main() -> int:
                     help="--s3-self without --grpo: tick t's imitation weight (t / ticks)^ramp (0 = flat)")
     ap.add_argument("--s3-price", type=float, default=0.1, help="--s3-tau: price of all ticks used, < 1 (lexicographic)")
     ap.add_argument("--width", type=int, default=48)
-    ap.add_argument("--rosa", choices=["", "every", "once"], default="",
-                    help="reference ROSA branch read-only at ticks: every tick, or tick 1 only")
+    ap.add_argument("--rosa", choices=["", "every", "once", "qkv1"], default="",
+                    help="reference ROSA branch read-only at ticks (every tick / tick 1 only), or qkv1: 1-bit QKV-ROSA "
+                         "as RWKV-v8, at every position with ticks extending its bit streams")
     ap.add_argument("--heads", type=int, default=3)
     ap.add_argument("--layers", type=int, default=2)
     ap.add_argument("--steps", type=int, default=4000)
