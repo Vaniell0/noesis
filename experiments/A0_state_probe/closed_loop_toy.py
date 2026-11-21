@@ -670,9 +670,42 @@ class ChannelMix(nn.Module):
         return self.W_v(torch.relu(self.W_k(x + (prev - x) * self.mu)) ** 2)
 
 
-class ToyRWKV7(nn.Module):
-    def __init__(self, C: int = 48, H: int = 3, L: int = 2, vocab: int = VOCAB):
+class RosaRef(nn.Module):
+    """A reference ROSA branch, read-only at ticks (plan note ROSA x ticks). Prompt positions write a key from the
+    layer input and the previous input, and a value; a tick's query, binarised per head (sign of `bits` dims), is
+    matched exactly against the earlier keys, and the value of the position AFTER the most recent match is returned
+    (what followed that key). Suffix length 1: a read-only tick's query never continues a stored suffix. Forward
+    is the hard match (no match: zero); the gradient flows through a soft match (softmax over the agreement of
+    tanh(q) and tanh(k), a slight recency bias). The output projection starts at zero."""
+
+    def __init__(self, C: int, R: int = 16, bits: int = 4):
         super().__init__()
+        self.R, self.bits, self.H = R, bits, R // bits
+        self.q, self.k = nn.Linear(2 * C, R, bias=False), nn.Linear(2 * C, R, bias=False)
+        self.v, self.out = nn.Linear(C, R, bias=False), nn.Linear(R, C, bias=False)
+        nn.init.zeros_(self.out.weight)
+        self.beta = nn.Parameter(torch.tensor(2.0))
+
+    def read(self, z, K, V):
+        """z: (B, 2C) the tick's query input; K: (B, T, R) keys, V: (B, T, R) values of the prompt positions."""
+        B, T = K.shape[:2]
+        Kp, Vn = K[:, :-1].view(B, T - 1, self.H, self.bits), V[:, 1:].view(B, T - 1, self.H, self.bits)
+        q = self.q(z).view(B, 1, self.H, self.bits)
+        eq = (torch.sign(q) == torch.sign(Kp)).all(-1)                          # (B, T-1, H)
+        pos = torch.arange(1, T, device=K.device).view(1, -1, 1)
+        idx = (eq * pos).argmax(1)                                              # most recent match, (B, H)
+        hard = torch.gather(Vn, 1, idx.view(B, 1, self.H, 1).expand(B, 1, self.H, self.bits)).squeeze(1)
+        hard = hard * eq.any(1).unsqueeze(-1)
+        sc = self.beta * (torch.tanh(q) * torch.tanh(Kp)).sum(-1) + 0.01 * pos
+        soft = (sc.softmax(1).unsqueeze(-1) * Vn).sum(1)
+        return self.out((soft + (hard - soft).detach()).reshape(B, self.R))
+
+
+class ToyRWKV7(nn.Module):
+    def __init__(self, C: int = 48, H: int = 3, L: int = 2, vocab: int = VOCAB, rosa: str = ""):
+        super().__init__()
+        self.rosa_mode = rosa                                                   # "", "every" tick, "once" (tick 1)
+        self.rosa = nn.ModuleList(RosaRef(C) for _ in range(L)) if rosa else None
         self.C, self.H, self.L = C, H, L
         self.emb = nn.Embedding(vocab, C)
         nn.init.uniform_(self.emb.weight, -1e-4 * 100, 1e-4 * 100)
@@ -689,7 +722,8 @@ class ToyRWKV7(nn.Module):
         d = self.emb.weight.device
         z = torch.zeros(B, self.C, device=d)
         return {"S": [torch.zeros(B, self.H, self.C // self.H, self.C // self.H, device=d) for _ in range(self.L)],
-                "att": [z] * self.L, "ffn": [z] * self.L}
+                "att": [z] * self.L, "ffn": [z] * self.L, "rk": [[] for _ in range(self.L)],
+                "rv": [[] for _ in range(self.L)], "tick": 0}
 
     def step(self, x_in, st):
         """x_in: (B, C) input vector before ln0. Returns ln_out(h) and the new state."""
@@ -699,12 +733,18 @@ class ToyRWKV7(nn.Module):
         for i in range(self.L):
             xa = self.ln1[i](x)
             dx, S[i], v_first = self.att[i](xa, att[i], S[i], v_first)
+            if self.rosa is not None:
+                z = torch.cat([xa, att[i]], -1)
+                if not st.get("tick"):                                          # prompt: write key and value
+                    st["rk"][i].append(self.rosa[i].k(z)); st["rv"][i].append(self.rosa[i].v(xa))
+                elif self.rosa_mode == "every" or st["tick"] == 1:              # tick: read only
+                    dx = dx + self.rosa[i].read(z, torch.stack(st["rk"][i], 1), torch.stack(st["rv"][i], 1))
             att[i] = xa
             x = x + dx
             xf = self.ln2[i](x)
             x = x + self.ffn[i](xf, ffn[i])
             ffn[i] = xf
-        return self.ln_out(x), {"S": S, "att": att, "ffn": ffn}
+        return self.ln_out(x), {**st, "S": S, "att": att, "ffn": ffn}
 
     def encode(self, tokens):
         """ln_out after reading `tokens` from a fresh state: the latent of a term (deriv per-tick target)."""
@@ -739,7 +779,8 @@ class ToyRWKV7(nn.Module):
         for t in range(T):
             h, st = self.step(e[:, t], st)
         lat = []
-        for _ in range(ticks):
+        for i in range(ticks):
+            st["tick"] = i + 1
             z = h + noise * torch.randn_like(h) if noise else h
             if perm is not None:
                 z = z[perm]
@@ -998,7 +1039,7 @@ def train(args) -> dict:
         extra = load_cipherlm(args.cipher_train, args.cipher_eval, args.clm_plain)
     if args.task == "translit":
         extra = load_translit(args.cipher_train, args.cipher_eval, args.tl_mode, args.tl_tok, args.tl_merges)
-    model = ToyRWKV7(args.width, args.heads, args.layers, VOCAB + extra)
+    model = ToyRWKV7(args.width, args.heads, args.layers, VOCAB + extra, args.rosa)
     if args.jepa_target == "both":                                              # its own head for the self target
         model.pred_self = nn.Linear(args.width, args.width, bias=False)
     global DEV
@@ -1236,6 +1277,8 @@ def main() -> int:
                     help="--s3-self without --grpo: tick t's imitation weight (t / ticks)^ramp (0 = flat)")
     ap.add_argument("--s3-price", type=float, default=0.1, help="--s3-tau: price of all ticks used, < 1 (lexicographic)")
     ap.add_argument("--width", type=int, default=48)
+    ap.add_argument("--rosa", choices=["", "every", "once"], default="",
+                    help="reference ROSA branch read-only at ticks: every tick, or tick 1 only")
     ap.add_argument("--heads", type=int, default=3)
     ap.add_argument("--layers", type=int, default=2)
     ap.add_argument("--steps", type=int, default=4000)
