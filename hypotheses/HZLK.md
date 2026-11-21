@@ -138,8 +138,8 @@ claims:
   regime: Qwen3.5 0.8B pretrained
 - id: ZLK.12
   claim: a trained reader raises usable capacity toward what is held
-  status: 'external support; T15: ticks +2% on base and S1 alike, training adds nothing'
-  regime: G1d 0.4B pretrained (state readout)
+  status: 'supported in part 11-20: after 4 trained ticks (kl_T2_k4) a linear reader gets the next word at 0.177 where the head gets 0.101 (head ahead without ticks, 0.373 vs 0.254): what the state holds exceeds what the head reads; T15 earlier: ticks +2% readable, training adds nothing'
+  regime: G1d 0.4B pretrained (state readout; head vs reader, same target)
 - id: ZLK.13
   claim: storage and reading trained together pack more at equal readability
   status: proposed; proved part for the state
@@ -162,8 +162,8 @@ claims:
   regime: ''
 - id: ZLK.18
   claim: trained ticks widen the attractor instead of collapsing it, and the output grows more expressive
-  status: one checkpoint
-  regime: G1d 0.4B, one checkpoint
+  status: 'one checkpoint supports it (kl_T2_k4); counter-case 11-21: 1t (100 full-weight steps on 160 Caesar rows, KL + GRPO, no pretraining CE beside it) broke the chat through its ticks (loops, refusals): the widening holds only with the pretraining term kept'
+  regime: G1d 0.4B pretrained; long-distance regime
 - id: ZLK.19
   claim: separability is installed by tasks that need it, not by an answer loss alone
   status: 'P1 negative; toy: a task one pass cannot solve made the ticks a register, a per-hop target made the step iterable'
@@ -212,13 +212,13 @@ not claimed.
 | ZLK.9 | a persistent state absorbs the configuration once | H17, contested | none measured (the owner's sessions) | 0 | H17 |
 | ZLK.10 | an exact-recall branch queried at every tick keeps the past the settling state forgets | not started | - | 0 | <-H23 |
 | ZLK.11 | a pretrained model holds facts it does not read in one pass | measured on Qwen3.5 0.8B; not on RWKV | Qwen3.5 0.8B pretrained | 0 | - |
-| ZLK.12 | a trained reader raises usable capacity toward what is held | external support; T15: ticks +2% on base and S1 alike, training adds nothing | G1d 0.4B pretrained (state readout) | 0 | ZLK.11 |
+| ZLK.12 | a trained reader raises usable capacity toward what is held | supported in part 11-20: after 4 trained ticks (kl_T2_k4) a linear reader gets the next word at 0.177 where the head gets 0.101 (head ahead without ticks, 0.373 vs 0.254): what the state holds exceeds what the head reads; T15 earlier: ticks +2% readable, training adds nothing | G1d 0.4B pretrained (state readout; head vs reader, same target) | 0 | ZLK.11 |
 | ZLK.13 | storage and reading trained together pack more at equal readability | proposed; proved part for the state | - | 0 | - |
 | ZLK.14 | relations derived from held facts are usable knowledge the loop can add | proposed | - | 0 | H12 |
 | ZLK.15 | knowledge enters through a fixed teacher on the student's own tokens without breaking the rest | partly measured (Qwen) | Qwen3.5 0.8B pretrained | 0 | H7 |
 | ZLK.16 | a loop learned from a plain pretrain beats the same chain grafted on a finished model | toy form REFUTED 11-20 (1o: ticks grafted onto a one-pass toy pass k6 in 2 of 3 seeds, as reliable as grown); pretrained form not run | toy from scratch (chase); pretrained not run | 0 | H9, ZLK.12 |
 | ZLK.17 | World trained by the chain against G1d compares two training methods from one base | proposed | - | 0 | - |
-| ZLK.18 | trained ticks widen the attractor instead of collapsing it, and the output grows more expressive | one checkpoint | G1d 0.4B, one checkpoint | 0 | - |
+| ZLK.18 | trained ticks widen the attractor instead of collapsing it, and the output grows more expressive | one checkpoint supports it (kl_T2_k4); counter-case 11-21: 1t (100 full-weight steps on 160 Caesar rows, KL + GRPO, no pretraining CE beside it) broke the chat through its ticks (loops, refusals): the widening holds only with the pretraining term kept | G1d 0.4B pretrained; long-distance regime | 0 | - |
 | ZLK.19 | separability is installed by tasks that need it, not by an answer loss alone | P1 negative; toy: a task one pass cannot solve made the ticks a register, a per-hop target made the step iterable | toy from scratch; P1 on G1d 0.4B | 0 | - |
 | ZLK.20 | the neck of one-pass reading is the late fall of rank, where key interference is highest | rank fall measured; interference not | G1d 0.4B and 2.9B pretrained | 1 | H12, ZLK.18 |
 | ZLK.22 | loop training on a mix of domains folds them into one system that transfers to a held-out domain, below a specialist but smoother | toy 11-20: no transfer in bpc (1n plain/Cyrillic: joint +0.46 bpc vs Cyrillic-only, REFUTED; 1j plain+cipher -0.014), but the loop raises deep-layer CKA between scripts 0.44 -> 0.71; cs: the context step did not reach stored facts | toy from scratch, 55K (1n) and 271K (1j), one seed each; pretrained not run | 0 | - |
