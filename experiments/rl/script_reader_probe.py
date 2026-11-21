@@ -6,8 +6,9 @@
 A linear (kernel ridge) reader maps the deep-layer WKV state after a text prefix to the next English word (one of
 the 256 most frequent words of the c1d train texts). It is trained on prefixes read in plain English and tested on
 held-out prefixes read in plain, in the fixed Cyrillic table and in the logographic script of
-script_alignment_probe.py; a reader trained and tested within each script is the ceiling. Model frozen, inference
-only (plan noesis-closed-loop-toy, section 1q).
+script_alignment_probe.py; a reader trained and tested within each script is the ceiling. Beside it, on the plain
+prefixes, the model's own head restricted to the same 256 words (the first token of " word"): a reader above the head
+means the output loses what the state holds. Model frozen, inference only (plan noesis-closed-loop-toy, section 1q).
 """
 from __future__ import annotations
 
@@ -59,6 +60,7 @@ def main() -> int:
     ap.add_argument("--ticks", type=int, default=4)
     ap.add_argument("--features", type=int, default=4096, help="state coordinates sampled per layer")
     ap.add_argument("--threads", type=int, default=6)
+    ap.add_argument("--scripts", default="plain,cyr,logo", help="scripts to read (plain always first)")
     ap.add_argument("--out", type=Path, required=True)
     a = ap.parse_args()
     torch.set_num_threads(a.threads)
@@ -76,6 +78,20 @@ def main() -> int:
     D = loaded.wkv_stack(loaded.new_state(batch=1)).reshape(L, -1).shape[1]
     idx = torch.randperm(D, generator=torch.Generator().manual_seed(0))[:a.features]
     render = {"plain": lambda t: t, "cyr": to_cyr, "logo": lambda t: to_logo(t, table)}
+    scripts = [x for x in a.scripts.split(",") if x in render]
+    first = torch.tensor([loaded.tokenizer.encode(" " + w)[0] for w in table])   # head's word = its first token
+    E = loaded.embedding_weight
+
+    @torch.no_grad()
+    def head_pred(prefix: str) -> tuple[int, int]:
+        """argmax over the 256 words of the head's next-token logits, at M = 0 and after the ticks."""
+        ids = loaded.tokenizer.encode(prefix)
+        lg, st, h = loaded.forward_stateful_embeds(E[torch.tensor([ids])], loaded.new_state(batch=1), return_hidden=True)
+        p0 = int(lg[0, -1, first].argmax())
+        h = h[:, -1:]
+        for _ in range(a.ticks):
+            lg, st, h = loaded.forward_stateful_embeds(h, st, return_hidden=True)
+        return p0, int(lg[0, -1, first].argmax())
     t0 = time.time()
 
     def feats(prefixes, script):
@@ -83,14 +99,19 @@ def main() -> int:
         return {M: torch.stack([r[k][deep].reshape(-1) for r in rows]) for k, M in ((0, 0), (1, a.ticks))}
 
     ytr = torch.tensor([y for _, y in tr_items]); yte = torch.tensor([y for _, y in te_items])
-    F = {("train", s): feats([p for p, _ in tr_items], s) for s in ("plain", "cyr", "logo")}
+    F = {("train", s): feats([p for p, _ in tr_items], s) for s in scripts}
     print(f"[reader] train states {time.time() - t0:.0f}s", flush=True)
-    F.update({("test", s): feats([p for p, _ in te_items], s) for s in ("plain", "cyr", "logo")})
+    F.update({("test", s): feats([p for p, _ in te_items], s) for s in scripts})
     print(f"[reader] test states {time.time() - t0:.0f}s", flush=True)
     floor = float((yte == torch.bincount(ytr).argmax()).float().mean())
     out = {"model": a.model, "weights": str(a.weights) if a.weights else None, "n_train": len(tr_items),
            "n_test": len(te_items), "deep_layers": deep, "features": f"{len(idx)} of {D} per layer",
            "majority_floor": round(floor, 4), "acc": {}}
+    hp = torch.tensor([head_pred(p) for p, _ in te_items])
+    for j, M in enumerate((0, a.ticks)):
+        acc = round(float((hp[:, j] == yte).float().mean()), 4)
+        out["acc"][f"M{M}_head_plain"] = acc
+        print(f"[reader] M{M} the model's own head on plain: {acc:.3f} (floor {floor:.3f})", flush=True)
     n_val = len(tr_items) // 5
     for M in (0, a.ticks):
         best = None
@@ -99,8 +120,8 @@ def main() -> int:
             acc = float((ridge_fit_predict(Xa[n_val:], ytr[n_val:], Xa[:n_val], len(vocab), lam) == ytr[:n_val]).float().mean())
             best = max(best or (acc, lam), (acc, lam))
         lam = best[1]
-        for tr_s in ("plain", "cyr", "logo"):
-            for te_s in ("plain", "cyr", "logo"):
+        for tr_s in scripts:
+            for te_s in scripts:
                 if tr_s != "plain" and tr_s != te_s:
                     continue
                 pred = ridge_fit_predict(F[("train", tr_s)][M], ytr, F[("test", te_s)][M], len(vocab), lam)

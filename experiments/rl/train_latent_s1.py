@@ -32,6 +32,7 @@ pre-written collapse criterion fires (plan B.3a); this file does not have it yet
 from __future__ import annotations
 
 import argparse
+import collections
 import json
 import random
 import shutil
@@ -63,6 +64,20 @@ def load_items(files, right_from, exclude_from) -> list:
     if exclude_from:
         keep -= set(json.load(open(exclude_from))["right_ids"])
     return [rows[i] for i in sorted(keep) if i in rows]
+
+
+def pick_items(items: list, args) -> list:
+    """Shuffle (seeded by --data-seed) before --limit, so a subset is not the file's first family (the 1t pilot's
+    160 rows were all Caesar because the file is ordered); print what the subset holds. --no-shuffle-items keeps the
+    file order (only to repeat a run made before 2026-11-21)."""
+    if args.shuffle_items:
+        items = list(items)
+        random.Random(args.data_seed).shuffle(items)
+    if args.limit:
+        items = items[:args.limit]
+    kinds = collections.Counter(str(r.get("answer_format") or r.get("category") or "?").split("/")[0] for r in items)
+    progress(f"[s1] items: {len(items)}, by kind {dict(kinds.most_common(8))}")
+    return items
 
 
 def answer_ids(tok, r) -> list:
@@ -121,6 +136,66 @@ def seq_logits(loaded, tok, r, ticks: int, prompt: str | None = None, ctx_ids: l
         lg = lg[:, -1:]
     rest, _ = loaded.forward_stateful_embeds(E[torch.tensor([a[:-1]])], st) if len(a) > 1 else (lg[:, :0], st)
     return torch.cat([lg, rest], dim=1)[0].float(), torch.tensor(a, device=lg.device)
+
+
+def tick_logits_all(loaded, tok, r, ticks: int, every: int = 1) -> list:
+    """Answer logits after each tick 1..ticks in one chain: the prompt read once, the ticks run once, the answer
+    branched from the state after every tick (stage 1t's per-tick imitation; the state forward is not in place)."""
+    E = loaded.embedding_weight
+    head, close = loaded.tick_frame(r["prompt"]) if hasattr(loaded, "tick_frame") else (None, "")
+    close += r.get("prefill", "")
+    a = answer_ids(tok, r)
+    p = tok.encode(head or loaded.silent_prompt(r["prompt"]))
+    lg, st, h = loaded.forward_stateful_embeds(E[torch.tensor([p])], loaded.new_state(batch=1), return_hidden=True)
+    h, out = h[:, -1:], []
+    for m in range(1, ticks + 1):
+        lg, st, h = loaded.forward_stateful_embeds(h, st, return_hidden=True)
+        if m % every:
+            continue
+        l0, s2 = lg[:, -1:], st
+        if close:
+            l0, s2 = loaded.forward_stateful_embeds(E[torch.tensor([tok.encode(close)])], st)
+            l0 = l0[:, -1:]
+        rest, _ = loaded.forward_stateful_embeds(E[torch.tensor([a[:-1]])], s2) if len(a) > 1 else (l0[:, :0], s2)
+        out.append(torch.cat([l0, rest], dim=1)[0].float())
+    return out
+
+
+def grpo_term(loaded, tok, r, ticks: int, G: int, sigma: float) -> tuple:
+    """GRPO on the tick latents (stage 1t, with the KL at once): each of G rollouts feeds every tick a Gaussian sample
+    around the model's own latent (std sigma x its rms), then reads the gold answer teacher-forced; reward =
+    share of the letters after '=' predicted right. Returns (policy loss, mean reward). The prompt is read without a graph (memory: the RL acts on
+    the tick computation); the log-probability of the sampled latents is differentiated through the ticks."""
+    E = loaded.embedding_weight
+    head, close = loaded.tick_frame(r["prompt"]) if hasattr(loaded, "tick_frame") else (None, "")
+    close += r.get("prefill", "")
+    p = tok.encode(head or loaded.silent_prompt(r["prompt"]))
+    a = answer_ids(tok, r)
+    letter_pos = [i for i in range(1, len(a)) if tok.decode(a[:i]).rstrip().endswith("=")] or list(range(len(a)))
+    with torch.no_grad():
+        _, st0, h0 = loaded.forward_stateful_embeds(E[torch.tensor([p])], loaded.new_state(batch=1), return_hidden=True)
+    h0 = h0[:, -1:]
+    logps, rewards = [], []
+    for _ in range(G):
+        st, h, lp = st0, h0, 0.0
+        for _ in range(ticks):
+            sc = sigma * h.detach().pow(2).mean().sqrt()
+            z = (h + sc * torch.randn_like(h)).detach()
+            lp = lp - ((z - h) ** 2).sum() / (2 * sc ** 2)
+            lg, st, h = loaded.forward_stateful_embeds(z, st, return_hidden=True)
+        with torch.no_grad():                               # teacher-forced read of the gold answer after the
+            s2, l2 = st, lg[:, -1:]                         # sampled ticks: one call instead of a token-by-token
+            if close:                                       # decode; reward = letters after '=' read right
+                l2, s2 = loaded.forward_stateful_embeds(E[torch.tensor([tok.encode(close)])], s2)
+                l2 = l2[:, -1:]
+            rest, _ = loaded.forward_stateful_embeds(E[torch.tensor([a[:-1]])], s2)
+            pred = torch.cat([l2, rest], dim=1)[0].argmax(-1).tolist()
+        hit = [pred[i] == a[i] for i in letter_pos]
+        rewards.append(sum(hit) / max(1, len(hit)))
+        logps.append(lp)
+    rw = torch.tensor(rewards)
+    adv = (rw - rw.mean()) / (rw.std() + 1e-4)
+    return -(adv.to(h0.device) * torch.stack(logps)).mean() / max(1, ticks), float(rw.mean())
 
 
 @torch.no_grad()
@@ -187,9 +262,7 @@ def first_right_k(loaded, tok, r, ids: list, cot: list, every: int):
 def build_cache(args) -> int:
     loaded = load(args)
     tok = loaded.tokenizer
-    items = load_items(args.items, args.right_from, args.exclude_right_from)
-    if args.limit:
-        items = items[:args.limit]
+    items = pick_items(load_items(args.items, args.right_from, args.exclude_right_from), args)
     if args.teacher_hint:
         from training.scripts.gen_ciphers import with_hint
         for r in items:
@@ -283,6 +356,18 @@ def teacher_logits(loaded, ctx: list, a: list) -> torch.Tensor:
     return lg[0, len(ctx) - 1:].float()
 
 
+def decoded_view(r: dict) -> str:
+    """An inverse-key ladder row (table plain -> cipher) rewritten with the table cipher -> plain, the format the
+    model already reads (stage 1t: the privileged view of a frozen teacher that is the model itself)."""
+    p = r["prompt"]
+    p = p.replace("Rule: each plain letter before '=' in the table is written as the cipher symbol after it;",
+                  "Rule: each cipher symbol stands for the plain letter after '=' in the table;")
+    head, rest = p.split("Table: ", 1)
+    table, tail = rest.split("\n", 1)
+    swapped = " ".join(f"{c}={a}" for a, c in (x.split("=", 1) for x in table.split()))
+    return f"{head}Table: {swapped}\n{tail}"
+
+
 def reverse_kl(student, teacher) -> torch.Tensor:
     """KL(student || teacher) per answer token over the whole vocabulary, mean over tokens (on-policy distillation:
     the student is pulled toward what the teacher would say at the tokens the student itself wrote)."""
@@ -330,6 +415,17 @@ def main() -> int:
                          "loss is KL(student || teacher) at those tokens; the teacher is the same model reading its "
                          "own cut CoT (--target cache from --teacher-cot), the hinted prompt (--teacher-hint) or the "
                          "plain prompt. Learns only on its own tokens (owner 2026-11-04: knowledge without breaking the rest)")
+    ap.add_argument("--teacher-view", choices=["", "decoded"], default="",
+                    help="decoded: the teacher reads an inverse-key ladder row with the table cipher -> plain (stage 1t)")
+    ap.add_argument("--self-on-gold", action="store_true",
+                    help="--target self: the teacher's distribution at the gold answer's positions, not its own run")
+    ap.add_argument("--tick-ramp", type=float, default=0.0,
+                    help="--loss kl: imitate after every tick 1..M, tick m weighted (m / M)^ramp (0 = only after M)")
+    ap.add_argument("--ramp-every", type=int, default=1, help="--tick-ramp: read the answer after every k-th tick")
+    ap.add_argument("--grpo", type=int, default=0, help="stage 1t: GRPO group size on the tick latents, at once with the "
+                                                        "KL (0 = off); reward = share of answer letters right")
+    ap.add_argument("--grpo-sigma", type=float, default=0.3, help="--grpo: noise std relative to the latent's rms")
+    ap.add_argument("--grpo-w", type=float, default=1.0, help="--grpo: RL step at most this times the KL step's norm")
     ap.add_argument("--frozen-teacher", action="store_true",
                     help="with --on-policy: the teacher is a frozen bf16 copy of the starting model, not the model being "
                          "trained (2026-11-05: a self-teacher drifted with the student - 'Answer: <answer in capital "
@@ -356,7 +452,10 @@ def main() -> int:
     ap.add_argument("--threads", type=int, default=2)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--weights", type=Path)
-    ap.add_argument("--limit", type=int, default=0, help="first n items only (smoke tests)")
+    ap.add_argument("--limit", type=int, default=0, help="n items only, taken after the shuffle")
+    ap.add_argument("--shuffle-items", action=argparse.BooleanOptionalAction, default=True,
+                    help="shuffle the items before --limit (default on; --no-shuffle-items keeps the file order)")
+    ap.add_argument("--data-seed", type=int, default=0, help="seed of the item shuffle")
     ap.add_argument("--eval-max", type=int, default=0, help="teacher-forced eval on at most this many train items (0: all)")
     ap.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     ap.add_argument("--dtype", choices=tuple(DTYPES), default="fp32", help="bf16 on the GPU, fp32 on the CPU")
@@ -370,13 +469,14 @@ def main() -> int:
     if args.weights:
         load_weights_into(loaded, args.weights)
     tok, model = loaded.tokenizer, loaded.model
-    items = load_items(args.items, args.right_from, args.exclude_right_from)
-    if args.limit:
-        items = items[:args.limit]
+    items = pick_items(load_items(args.items, args.right_from, args.exclude_right_from), args)
     if args.teacher_hint:
         from training.scripts.gen_ciphers import with_hint
         for r in items:
             r["_teacher_prompt"] = with_hint(r, args.teacher_hint)
+    if args.teacher_view == "decoded":
+        for r in items:
+            r["_teacher_prompt"] = decoded_view(r)
     if args.target == "cache":                                  # a CoT cache keeps only the items its teacher got right
         cached = set(torch.load(args.cache)["answers"])
         items = [r for r in items if r["id"] in cached]
@@ -401,7 +501,13 @@ def main() -> int:
         target = {}
     elif args.target == "self":
         with torch.no_grad():
-            attach_own_answers(loaded, tok, items)
+            if args.self_on_gold:                               # the teacher's distribution at the gold answer's
+                end = tok.encode("\n\n")                       # positions (its own run may be wrong)
+                for r in items:
+                    gold = r.get("trace") or r["answer"]
+                    r["_ans"] = tok.encode(gold[len(r.get("prefill", "")):]) + end
+            else:
+                attach_own_answers(loaded, tok, items)
             target = {r["id"]: seq_logits(loaded, tok, r, 0, r.get("_teacher_prompt"))[0].half() for r in items}
     else:
         c = torch.load(args.cache)
@@ -442,6 +548,7 @@ def main() -> int:
     opt = MuonHybrid(model.named_parameters(), lr=args.muon_lr, momentum_warmup_steps=0)
     aux = torch.optim.AdamW(opt.other_params, lr=args.aux_lr)
     rng, order, pos, run, t0 = random.Random(args.seed), list(range(len(train))), 0, [], time.time()
+    rl_log = []
     for step in range(1, args.steps + 1):
         scale = min(1.0, step / max(1, args.warmup))
         opt.lr = args.muon_lr * scale
@@ -457,14 +564,41 @@ def main() -> int:
                 lg, _ = seq_logits(loaded, tok, r, args.ticks, ans=a)
                 loss = reverse_kl(lg, teacher_logits(teacher, r["_teacher_ids"], a))
             else:
-                lg, a = seq_logits(loaded, tok, r, args.ticks)
-                loss = F.cross_entropy(lg, a) if args.loss == "ce" else kl_loss(lg, target[r["id"]], args.temp)
+                if args.tick_ramp and args.loss == "kl":         # the answer read after every tick imitates the
+                    ms = range(args.ramp_every, args.ticks + 1, args.ramp_every)                  # teacher, later
+                    w = [(m / args.ticks) ** args.tick_ramp for m in ms]                               # ticks more
+                    loss = sum(wm * kl_loss(lm, target[r["id"]], args.temp) for lm, wm in
+                               zip(tick_logits_all(loaded, tok, r, args.ticks, args.ramp_every), w)) / sum(w)
+                else:
+                    lg, a = seq_logits(loaded, tok, r, args.ticks)
+                    loss = F.cross_entropy(lg, a) if args.loss == "ce" else kl_loss(lg, target[r["id"]], args.temp)
             (loss / args.accum).backward()
             run.append(float(loss.detach()))
+        if args.grpo:                                          # RL at once with the KL (owner 11-20): its gradient is
+            params = [q for q in model.parameters() if q.requires_grad]   # added, scaled to at most grpo_w times
+            g_kl = [q.grad.detach().to(torch.bfloat16) if q.grad is not None else None for q in params]  # KL step's norm
+            for q in params:
+                q.grad = None
+            rws = []
+            for _ in range(args.accum):
+                r = train[order[rng.randrange(len(order))]]
+                pg, rw = grpo_term(loaded, tok, r, args.ticks, args.grpo, args.grpo_sigma)
+                (pg / args.accum).backward()
+                rws.append(rw)
+            n_kl = torch.sqrt(sum((g.float() ** 2).sum() for g in g_kl if g is not None))
+            n_pg = torch.sqrt(sum((q.grad.float() ** 2).sum() for q in params if q.grad is not None))
+            c = float(min(1.0, n_kl / (n_pg + 1e-12)) * args.grpo_w)
+            for q, g in zip(params, g_kl):
+                if q.grad is None:
+                    q.grad = None if g is None else g.to(q.dtype)
+                elif g is not None:
+                    q.grad.mul_(c).add_(g.to(q.dtype))
+            rl_log.append((sum(rws) / len(rws), c))
         torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], 1.0)
         opt.step(); aux.step()
         if step <= 5 or step % 10 == 0:
-            progress(f"[s1] step {step} loss {sum(run[-40:]) / len(run[-40:]):.4f} {time.time() - t0:.0f}s")
+            rl = f" reward {sum(x for x, _ in rl_log[-10:]) / len(rl_log[-10:]):.3f} scale {rl_log[-1][1]:.2f}" if rl_log else ""
+            progress(f"[s1] step {step} loss {sum(run[-40:]) / len(run[-40:]):.4f}{rl} {time.time() - t0:.0f}s")
         write_heartbeat(status, progress=(step, args.steps), job="train_latent_s1", loss=run[-1])
         if step % args.eval_every == 0 or step == args.steps:
             history.append({"step": step, "loss": sum(run[-40:]) / len(run[-40:]),
