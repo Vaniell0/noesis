@@ -142,6 +142,42 @@ def link_kind(token: str) -> str | None:
     return "repo" if _REPO_LINK_RE.match(token) else None
 
 
+def hidden_records() -> dict[str, dict]:
+    """The records whose file is not published: `published: false` in the record, no `.md` beside it. The claim
+    stays in the status table with its status; its text is kept in the history of the repository."""
+    global _HIDDEN
+    if _HIDDEN is not None:
+        return _HIDDEN
+    out = {}
+    for f in sorted(_RECORDS_DIR.glob("*.yml")):
+        if f.name.startswith("HZLK") or (_HYPOTHESES_DIR / (f.stem + ".md")).is_file():
+            continue
+        try:
+            data = yaml.safe_load(f.read_text())
+        except yaml.YAMLError:
+            continue
+        for r in (data if isinstance(data, list) else [data]):
+            if isinstance(r, dict) and r.get("published") is False:
+                out[r.get("id", f.stem)] = r
+    _HIDDEN = out
+    return out
+
+
+_HIDDEN: dict | None = None   # read once a run; the tree does not change under a script
+
+
+def orphan_records() -> list[str]:
+    """Records beside no file that do not say `published: false`: a file was lost or a word is missing."""
+    have = {r.get("id") for r in hidden_records().values()}
+    return [f.name for f in sorted(_RECORDS_DIR.glob("*.yml"))
+            if not f.name.startswith("HZLK") and not (_HYPOTHESES_DIR / (f.stem + ".md")).is_file()
+            and f.stem not in have]
+
+
+def _names_hidden_file(token: str) -> bool:
+    return any(p.split("/")[-1] in {f"{h}.md" for h in hidden_records()} for p in expand_link(token))
+
+
 def links_in(text: str) -> list[tuple[str, str]]:
     """Every link in a text, in order: (token, kind). The first word of a command counts (`x.py --flag`)."""
     out = []
@@ -150,6 +186,8 @@ def links_in(text: str) -> list[tuple[str, str]]:
         if link_kind(tok) is None and " " in tok:
             tok = tok.split()[0]
         kind = link_kind(tok)
+        if kind == "repo" and _names_hidden_file(tok):
+            kind = "missing"
         if kind:
             out.append((tok, kind))
     # a link followed in the same line by "(missing ...)" with its date is a dead one on record: not dead, not alive
@@ -185,7 +223,10 @@ def _walk_links(node, out: set) -> None:
                     x = x.strip().strip("`") if isinstance(x, str) else ""
                     if x:
                         # a link beside a `missing` date is a dead one on record: not alive, not to be counted dead
-                        out.add((x, "missing" if node.get("missing") else link_kind(x) or "repo"))
+                        k = link_kind(x) or "repo"
+                    if k == "repo" and _names_hidden_file(x):
+                        k = "missing"
+                    out.add((x, "missing" if node.get("missing") else k))
             else:
                 _walk_links(v, out)
     elif isinstance(node, list):
@@ -326,6 +367,13 @@ if __name__ == "__main__":
         all_text += f.read_text() + "\n"
     known_ids = set(_HEADER_ID_RE.findall(all_text)) | set(_ANY_ID_RE.findall(all_text))
     known_ids |= {r["id"] for f in files for r in load_records(f)[0]}
+    known_ids |= set(hidden_records())
+    for r in hidden_records().values():                       # an id its text names is still a known id
+        all_text += yaml.safe_dump(r) + "\n"
+    known_ids |= set(_ANY_ID_RE.findall(all_text))
+    for name in orphan_records():
+        print(f"[bayes_lite] WARNING: {name} is the record of a file that is not in the tree and does not say "
+              "`published: false`")
 
     any_records = False
     untracked, n_records, n_problems = [], 0, 0
@@ -372,6 +420,6 @@ if __name__ == "__main__":
 
     if any_records:
         print(f"[bayes_lite] {n_records} record(s), {n_problems} lint line(s), "
-              f"{len(untracked)} file(s) without a record")
+              f"{len(untracked)} file(s) without a record, {len(hidden_records())} not published")
     if not any_records:
         print(f"[bayes_lite] no structured records found in {', '.join(str(f) for f in files)}")

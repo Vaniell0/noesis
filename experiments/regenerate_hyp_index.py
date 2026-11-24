@@ -36,7 +36,8 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from experiments.bayes_lite import (
-    _NO_REFUTER_NEEDED, expand_link, hypothesis_links, links_in, load_records, missing_paths, posterior)
+    _NO_REFUTER_NEEDED, expand_link, hidden_records, hypothesis_links, links_in, load_records, missing_paths,
+    orphan_records, posterior)
 
 _HYP_DIR = _REPO_ROOT / "hypotheses"
 _README = _HYP_DIR / "README.md"
@@ -72,6 +73,12 @@ def build_rows() -> list[tuple]:
             post = posterior(prior, record.get("evidence"))
             post_str = "-" if post is None else f"{post:.3f}"
             rows.append((hid, status, prior if prior is not None else "-", post_str, path.name))
+    for hid, record in sorted(hidden_records().items(), key=lambda x: _sort_key(x[0])):
+        prior = record.get("prior")
+        post = posterior(prior, record.get("evidence"))
+        rows.append((hid, record.get("status", "-"), prior if prior is not None else "-",
+                     "-" if post is None else f"{post:.3f}",
+                     f"not published; record in hypotheses/records/{hid}.yml"))
     rows.sort(key=lambda r: _sort_key(r[0]))
     return rows
 
@@ -116,7 +123,7 @@ def claims_report() -> tuple[list[str], list[str]]:
         return [], ["no ZLK claims records parsed from HZLK.md (YAML error above, or the claims list is gone)"]
     secs = claim_sections(_HZLK.read_text())
     known = {r["id"] for r in recs} | {p.stem for p in _HYP_DIR.glob("H*.md")} | {
-        r.get("id") for p in _HYP_DIR.glob("H*.md") for r in load_records(p)[0]}
+        r.get("id") for p in _HYP_DIR.glob("H*.md") for r in load_records(p)[0]} | set(hidden_records())
     elsewhere = {}
     for p in sorted(_HYP_DIR.glob("H*.md")):
         if p != _HZLK:
@@ -249,6 +256,11 @@ def status_problems() -> list[str]:
             s = str(r.get("status") or "").upper()
             if s and s != "WAGER" and s not in allowed:
                 out.append(f"{r.get('id', p.stem)}: status '{r.get('status')}' is not one of {', '.join(sorted(allowed))}")
+    for hid, r in hidden_records().items():
+        s = str(r.get("status") or "").upper()
+        if s and s != "WAGER" and s not in allowed:
+            out.append(f"{hid}: status '{r.get('status')}' is not one of {', '.join(sorted(allowed))}")
+    out += [f"{name}: a record beside no file, and it does not say `published: false`" for name in orphan_records()]
     return out
 
 
@@ -281,7 +293,8 @@ if __name__ == "__main__":
 
     table = ["| H | Status | Prior | Posterior | File |", "|---|--------|-------|-----------|------|"]
     for hid, status, prior, post, fname in rows:
-        table.append(f"| {hid} | {status} | {prior} | {post} | `{fname}` |")
+        cell = fname if fname.startswith("not published") else f"`{fname}`"
+        table.append(f"| {hid} | {status} | {prior} | {post} | {cell} |")
 
     text = _README.read_text()
     if _AUTO_MARKER not in text:

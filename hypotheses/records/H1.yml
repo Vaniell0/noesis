@@ -30,3 +30,6 @@ evidence:
   strength: strong
   note: Form only; no status moved. The record of this file moved to records/H1.yml. Links in the prose written
     from the repository root.
+published: false
+unpublished: '2026-11-25, on the owner''s word: the file is taken out of the tree and kept in the history of the
+  repository'

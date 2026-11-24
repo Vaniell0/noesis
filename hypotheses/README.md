@@ -226,7 +226,7 @@ cell (`experiments/A0_state_probe/micro_wkv.py`) stores the transpose
 | tick, latent channel | one pass fed with the model's own last-layer vector; the vector itself | §2 above |
 | КПД (efficiency) | usable information gained per tick per unit of state motion, `R_density` | `HZLK.md` §2 |
 | bad (erased) sectors | facts in the class "stored, not read": held, missed by the one-pass read | §2 above; `H7.md`, `H19.md` |
-| interference | crosstalk between stored items through overlapping keys | `H12.md` §1 |
+| interference | crosstalk between stored items through overlapping keys | `hypotheses/records/H12.yml` (the file of H12 is not published) |
 | the neck of the heads | a layer's capacity: about 7 linearly readable bound values on G1d 0.4B (L11-13), falling from L16 to the head | `H25.md` §5 |
 | attractor, collapse | the fixed point a settling loop reaches; one point for all prompts is the collapse | `H25.md` §4 |
 | refusal to converge, open channel | ticks that keep changing the controls, so the loop does not settle at tick 1 | §3 (regular); `H10.md` §2 |
@@ -349,7 +349,8 @@ erratic solver reported before 2026-11-12.
 the size of the state.**
 `RETIRED` on the owner's word of 2026-11-24, a decision: the bound was not one
 of room, the model stopped telling apart what was written. The question of how
-much a head holds is carried by H25 and ZLK.12. See `H12.md`.
+much a head holds is carried by H25 and ZLK.12. The file is not published; its record is
+`hypotheses/records/H12.yml`.
 
 ### Time buys computation
 
@@ -510,7 +511,7 @@ A closed one names whether it was closed by a run or by a decision.
   reasoning), H2 (withdrawn), H4a (parity with a same-size Transformer).
 - *Memory and handoff:* H3, H5, H11.
 - *Runtime as a peer:* H6, H14, H15, H16 (retracted).
-- *Multimodal:* H13a, H13b, `note-multimodal-architecture.md`.
+- *Multimodal:* H13a, H13b (the note on a multimodal architecture is not published).
 - *Retired mechanisms:* H23 (superseded by the exact-recall branch), H24
   (its baseline table is kept).
 
@@ -520,8 +521,8 @@ A closed one names whether it was closed by a run or by a decision.
 |---|--------|-------|-----------|------|
 | HZLK | PROPOSED | - | - | `HZLK.md` |
 | H0 | CONTESTED | 0.6 | 0.333 | `H0.md` |
-| H1 | RETRACTED | - | - | `H1.md` |
-| H2 | WITHDRAWN | - | - | `H2.md` |
+| H1 | RETRACTED | - | - | not published; record in hypotheses/records/H1.yml |
+| H2 | WITHDRAWN | - | - | not published; record in hypotheses/records/H2.yml |
 | H3 | PROPOSED | - | - | `H3.md` |
 | H4a | PROPOSED | - | - | `H4a.md` |
 | H4b | WAGER | - | - | `H4b.md` |
@@ -532,19 +533,19 @@ A closed one names whether it was closed by a run or by a decision.
 | H9 | PARTIAL | 0.65 | 0.650 | `H9.md` |
 | H10 | PARTIAL | 0.5 | 0.500 | `H10.md` |
 | H11 | PROPOSED | - | - | `H11.md` |
-| H12 | RETIRED | 0.25 | 0.250 | `H12.md` |
+| H12 | RETIRED | 0.25 | 0.250 | not published; record in hypotheses/records/H12.yml |
 | H13a | WAGER | - | - | `H13a.md` |
 | H13b | PROPOSED | - | - | `H13b.md` |
-| H14 | PROPOSED | - | - | `H14.md` |
+| H14 | PROPOSED | - | - | not published; record in hypotheses/records/H14.yml |
 | H15 | PROPOSED | - | - | `H15.md` |
-| H16 | RETRACTED | 0.2 | 0.200 | `H16.md` |
-| H17 | RETIRED | 0.3 | 0.248 | `H17.md` |
+| H16 | RETRACTED | 0.2 | 0.200 | not published; record in hypotheses/records/H16.yml |
+| H17 | RETIRED | 0.3 | 0.248 | not published; record in hypotheses/records/H17.yml |
 | H18 | PROPOSED | 0.4 | 0.400 | `H18.md` |
 | H19 | PROPOSED | - | - | `H19.md` |
 | H20 | CONTESTED | 0.4 | 0.146 | `H20.md` |
 | H21 | PARTIAL | 0.75 | 0.628 | `H21.md` |
 | H22 | CONTESTED | 0.4 | 0.024 | `H22.md` |
-| H23 | SUPERSEDED | - | - | `H23.md` |
-| H24 | RETIRED | - | - | `H24.md` |
+| H23 | SUPERSEDED | - | - | not published; record in hypotheses/records/H23.yml |
+| H24 | RETIRED | - | - | not published; record in hypotheses/records/H24.yml |
 | H25 | PARTIAL | - | - | `H25.md` |
 | H26 | PARTIAL | 0.4 | 0.040 | `H26.md` |

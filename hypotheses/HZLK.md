@@ -33,13 +33,13 @@ reading of each. §7-§11 are tests, code, paid constraints, literature, and wha
 | ZLK.11 | a pretrained model holds facts it does not read in one pass | PARTIAL | Qwen3.5 0.8B pretrained | 2 | - | - |
 | ZLK.20 | the neck of one-pass reading is the late fall of rank, where key interference is highest | PARTIAL | G1d 0.4B and 2.9B pretrained | 2 | **ZLK.18** | H12, ZLK.18 |
 | **B. What a reader can bring out** | | | | | | |
-| ZLK.12 | a trained reader raises usable capacity toward what is held | PARTIAL | G1d 0.4B pretrained (state readout; head vs reader, same target) | 1 | **ZLK.11** | ZLK.11, <-H12, <-H19, <-H22 |
+| ZLK.12 | a trained reader raises usable capacity toward what is held | PARTIAL | G1d 0.4B pretrained (state readout; head vs reader, same target) | 1 | **ZLK.11** | ZLK.11, <-H19, <-H22 |
 | ZLK.13 | storage and reading trained together pack more at equal readability | PROPOSED | - | 0 | **ZLK.12** | - |
 | ZLK.14 | relations derived from held facts are usable knowledge the loop can add | PROPOSED | - | 0 | - | H12 |
 | **C. The channel** | | | | | | |
 | ZLK.4 | a channel of the model's own latent can be trained without erasing the answer | PARTIAL | G1d 0.4B pretrained | 1 | - | - |
 | ZLK.18 | trained ticks widen the attractor instead of collapsing it, and the output grows more expressive | PARTIAL | G1d 0.4B pretrained; long-distance regime | 2 | **ZLK.4** | - |
-| ZLK.10 | an exact-recall branch queried at every tick keeps the past the settling state forgets | PROPOSED | - | 0 | - | <-H23 |
+| ZLK.10 | an exact-recall branch queried at every tick keeps the past the settling state forgets | PROPOSED | - | 0 | - | - |
 | ZLK.21 | mixture of experts in time without a partition of the weights: each tick reads a view of the same weights, taken from its own latent | PROPOSED | - | 0 | **ZLK.9**, **ZLK.20** | ZLK.12, ZLK.14, ZLK.20, ZLK.9 |
 | **D. Training** | | | | | | |
 | ZLK.15 | knowledge enters through a fixed teacher on the student's own tokens without breaking the rest | PARTIAL | Qwen3.5 0.8B pretrained | 1 | - | H7 |
