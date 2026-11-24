@@ -1,11 +1,13 @@
 # Hypotheses
 
 What noesis claims, in a form a measurement can refute, and what the
-measurements said. One file per claim (`H<N>.md`, `HZLK.md`). In each file
-the frontmatter (`status`, `prior` / `posterior`, `contradicts_if`,
-`evidence`) is the record; the status table at the bottom of this page is
-generated from it. The pre-split prose version lives at git tag
-`hypotheses-v1-prose-era`.
+measurements said. One file per claim (`H<N>.md`, `HZLK.md`). The
+record of a claim (`status`, `prior` / `posterior`, `contradicts_if`,
+`evidence`) is data and lives beside the files, in
+`hypotheses/records/<ID>.yml`; a file not yet moved carries it in a
+comment at its top. The `.md` holds prose. The status table at the
+bottom of this page is generated from the records. The pre-split prose
+version lives at git tag `hypotheses-v1-prose-era`.
 
 The repository holds two things under one name, and they are judged
 differently:
@@ -59,6 +61,87 @@ A refutation.
 
 Benchmarks are references, not verdicts. Runtime properties (memory, CPU,
 quality over days of operation) belong to the runtime wagers of section 7.
+
+## Form of a file and its record
+
+The rules of a file in this directory. The scripts named at the end
+check them; a green run is what "kept" means here.
+
+1. **The record is data.** It lives in `hypotheses/records/<ID>.yml`:
+   `status`, `prior`, `depends_on`, `supports`, `contradicts_if`,
+   `evidence` (dated entries with `call`, `strength`, `file`, `note`).
+   A file not yet moved carries the same block in a comment at its top;
+   the scripts read either. The `.md` holds prose and opens with one
+   line naming its record.
+2. **The prose of a claim has one order:** the statement; the objects;
+   the estimator; the refuter; what the status rests on (dated, one
+   link per line); then the sections it needs. No line over 1000
+   characters. Tables only for enumerable facts.
+3. **A link to data is one path in backticks, resolved from the
+   repository root:** a file, the folder that holds the run, or a glob
+   over a family of runs (`*`, `{a,b}`). A path outside the repository
+   starts with a tilde or a slash and is checked on this machine. The
+   data is not copied into this directory: a stamped result carries its
+   own provenance (`_meta`: date, hypothesis, model, script, summary).
+4. **A dead link is not deleted.** It is replaced by the place where
+   the data now lies, or marked missing with the date: in a record a
+   `missing:` date beside the link, in prose the path without backticks
+   and the date in words. The old reading stays, dated.
+5. **A claim of the research tree** names an estimator and a refuter
+   in its prose and carries a `contradicts_if` in its record. A retired
+   claim (`RETRACTED`, `WITHDRAWN`, `SUPERSEDED`, `RETIRED`) or a wager
+   of the runtime (`WAGER`, section 7) carries a one-line record and
+   needs no refuter.
+6. **A correction is an entry of the record** (`call: correction`),
+   dated, that restates the reading of an entry above it. It moves no
+   odds. A claim restated in form only gets one; its status does not
+   move on it.
+
+7. **A status is one word of one list:** `PROPOSED` (written, not run),
+`BLOCKED` (estimator and refuter written, waiting on a condition outside
+the claim), `REGULAR` (every run so far agrees), `PARTIAL` (measured in part),
+`CONTESTED` (the evidence runs against it), `SUPPORTED`, `REFUTED`;
+the closed ones `RETRACTED`, `WITHDRAWN`, `SUPERSEDED`, `RETIRED`,
+`WAGER`. A free phrase is a finding, not a status: it goes in
+`finding`, so the set can be counted. A claim measured in any part
+names its `regime`. Every status has a way out that a check can see:
+a run moves `PROPOSED`, `PARTIAL`, `SUPPORTED`, `CONTESTED`, a fact
+outside the claim moves `BLOCKED`, the closed ones are final. A decision
+about work is not a status: it is the field `priority` (level, date,
+reason), so a claim left aside stays counted by what was measured.
+The scripts name the words they know, and a word they do not name is a
+problem, never silence: what is not checked must not read as agreed.
+8. **The claims of a programme are a graph, not a list of numbers.** The
+groups are the sections of its file; `after` in the record names the
+claims whose result a claim builds on (its edges). A number is a key:
+it is never reused and never renumbered, whatever the order of the
+file. The table "at a glance" is generated with the count, the groups
+and the edges.
+
+The calls that carry odds are `supports` and `contradicts`, weak and
+strong; `methodology`, `neutral` and `correction` carry none. An unrun
+claim carries none: a `PROPOSED` claim has no odds until its estimator
+and refuter are run.
+
+
+**What the scripts check.**
+
+- `python experiments/regenerate_hyp_index.py --check` resolves every
+  link under `hypotheses/`, prints how many are alive, and names every
+  dead one with the place the data lies when the tree holds it under
+  one other path. It also names the lines over 1000 characters. Exit 1
+  on any.
+- `python experiments/bayes_lite.py` prints each record with its
+  posterior and its lint: a reference to an unknown id, a claim without
+  a refuter or an estimator, an evidence entry the scorer does not
+  know, a status that disagrees with its posterior, a record kept in
+  two places.
+- `python experiments/backlog.py` prints how many stamped results a
+  link names and lists the rest by hypothesis and by the folder that
+  holds the run.
+- `python experiments/regenerate_hyp_index.py` rewrites the status
+  table below and the claims table of `HZLK.md` from the records. Run
+  it after an edit to a file under `hypotheses/`.
 
 ## 1. The question
 
@@ -264,15 +347,9 @@ erratic solver reported before 2026-11-12.
 
 **H12. Working memory is bounded by interference between keys, not by
 the size of the state.**
-A head's state is a matrix written in context by a delta rule; it recalls
-without crosstalk only as many bindings as the weights give it separable
-keys. See `H12.md`.
-*Rests on:* on G1d 0.4B recall falls with distance (0.25 -> 0.02 over gap
-60 -> 229) and drops between 8 and 16 items at fixed gap, both near the
-floor of the task (exact match 0); the state of L11-13 keeps about 5.5 of 8
-stored values linearly readable while the model recalls about 3, so part of
-the limit sits in the readout (corrected probe, 2026-11-12). The direct
-estimator (overlap of the keys of stored items) is not run.
+`RETIRED` on the owner's word of 2026-11-24, a decision: the bound was not one
+of room, the model stopped telling apart what was written. The question of how
+much a head holds is carried by H25 and ZLK.12. See `H12.md`.
 
 ### Time buys computation
 
@@ -308,8 +385,11 @@ fine-tuning collapse is explained by step size.
 re-injecting it.**
 *Refuter:* answers that need the history are worse from the state than from
 the full history, also after loop training.
-*Rests on:* the first mechanism tried was rejected; the claim has not been
-tested in terms of ticks.
+*Rests on:* `RETIRED` on the owner's word of 2026-11-24, a decision: not a
+claim about the model but a property of a community runtime, whose state takes
+the current prompt only and keeps no history. Never tested; its estimator was
+written before ticks and M. The question of history in the state is carried by
+H10, H18 and H20.
 
 **H18. States can be forked and merged.**
 *Rests on:* a fork is exact; a merge kept both contexts on 1 of 3 pairs.
@@ -320,6 +400,14 @@ How the model handles information: whether it can tell what an answer is
 taken from (context or weights), keep two readings open, refuse a broken
 question, and mark a claim without a source. Each is a readout of the state,
 used as an instrument and as the measurable side of honest not-knowing.
+None of the four was measured in a way that separates the state from the
+surface: every set so far had a lexical route, and a head on pooled state
+statistics may read too little. Proposed 2026-11-24, not run (it waits for
+the model to stand in RSC): the same tokens on another state, the state
+prefilled from one item's context or left empty and the question fed byte
+for byte alike, read on the checkpoint trained with ticks at `M = 0` and
+`M = 4`, head and a fresh reader side by side. Each file carries its own
+design under that date.
 
 **H19. The source of an answer, context or weights, is recoverable.**
 *Estimator:* the same item with its source passage, without it, and with an
@@ -359,13 +447,22 @@ the state keeps about 5.5 of 8 values readable, so storage does not explain it.
 surface-matched items. A bag-of-words control is beaten by a small margin
 with no significance test (0.618 against 0.571). Structural invalidity is
 read; plain falsehood is a knowledge question. Feeding the prompt again does
-not help (F1 0.811 -> 0.769 over five passes).
+not help (F1 0.811 -> 0.769 over five passes). On a third set (2026-10-20)
+whose classes share their words the state head reaches 0.992 and a lexical
+MLP head on the same unigrams 0.992: there the state adds nothing over a
+word conjunction. `PARTIAL` since the run of 2026-07-30 on 280 items
+(F1 0.614, false positives on valid items 37%), applied to the record on
+2026-11-24: the state carries structural invalidity; a head on it is not
+shown to serve as a gate. The F1 on the structural set alone was never
+computed.
 
 **H22. Unattributed collective claims are a separate readable failure.**
 *Rests on:* refuted on its second item set: a bag-of-words classifier beats
 the state head (0.975 against 0.947). Distinct from H21 on the overlap
-(`ρ = −0.054`). The item set has to differ in content, not in wording,
-before the claim can be tested.
+(`ρ = −0.054`). A third set (2026-10-20) whose classes share their words is
+solved by the state head (1.000) and nearly by a lexical MLP head (0.946):
+the task reduces to a string match. A third design is needed, one that a
+lexical head cannot solve.
 
 ## 5. One finding, seen from several files
 
@@ -401,8 +498,10 @@ than by stored knowledge. Each part of that is a claim above, not a slogan:
 ## 7. Runtime wagers and retired items
 
 Outside the research tree. A wager here is a design decision of the runtime
-or a premise stated before the programme had estimators; "no structured
-record" in the table means it was never tested in this directory's form.
+or a premise stated before the programme had estimators. Each carries a
+record of a few lines beside its file (since 2026-11-24): status, the
+estimator and the refuter of its own words, and what the status rests on.
+A closed one names whether it was closed by a run or by a decision.
 
 - *Operating policy:* H1 (constant-cost background operation, moved to
   `docs/policies.md`).
@@ -423,27 +522,27 @@ record" in the table means it was never tested in this directory's form.
 | H0 | CONTESTED | 0.6 | 0.333 | `H0.md` |
 | H1 | RETRACTED | - | - | `H1.md` |
 | H2 | WITHDRAWN | - | - | `H2.md` |
-| H3 | no structured record | - | - | `H3.md` |
-| H4a | no structured record | - | - | `H4a.md` |
-| H4b | no structured record | - | - | `H4b.md` |
-| H5 | no structured record | - | - | `H5.md` |
-| H6 | no structured record | - | - | `H6.md` |
+| H3 | PROPOSED | - | - | `H3.md` |
+| H4a | PROPOSED | - | - | `H4a.md` |
+| H4b | WAGER | - | - | `H4b.md` |
+| H5 | PROPOSED | - | - | `H5.md` |
+| H6 | PROPOSED | - | - | `H6.md` |
 | H7 | PROPOSED | - | - | `H7.md` |
 | H8 | SUPPORTED | 0.6 | 0.707 | `H8.md` |
-| H9 | SUPPORTED | 0.65 | 0.650 | `H9.md` |
+| H9 | PARTIAL | 0.65 | 0.650 | `H9.md` |
 | H10 | PARTIAL | 0.5 | 0.500 | `H10.md` |
-| H11 | no structured record | - | - | `H11.md` |
-| H12 | DEPRIORITIZED | 0.25 | 0.250 | `H12.md` |
-| H13a | no structured record | - | - | `H13a.md` |
-| H13b | no structured record | - | - | `H13b.md` |
-| H14 | no structured record | - | - | `H14.md` |
-| H15 | no structured record | - | - | `H15.md` |
+| H11 | PROPOSED | - | - | `H11.md` |
+| H12 | RETIRED | 0.25 | 0.250 | `H12.md` |
+| H13a | WAGER | - | - | `H13a.md` |
+| H13b | PROPOSED | - | - | `H13b.md` |
+| H14 | PROPOSED | - | - | `H14.md` |
+| H15 | PROPOSED | - | - | `H15.md` |
 | H16 | RETRACTED | 0.2 | 0.200 | `H16.md` |
-| H17 | CONTESTED | 0.3 | 0.099 | `H17.md` |
-| H18 | PARTIAL | 0.4 | 0.400 | `H18.md` |
+| H17 | RETIRED | 0.3 | 0.248 | `H17.md` |
+| H18 | PROPOSED | 0.4 | 0.400 | `H18.md` |
 | H19 | PROPOSED | - | - | `H19.md` |
 | H20 | CONTESTED | 0.4 | 0.146 | `H20.md` |
-| H21 | SUPPORTED | 0.75 | 0.628 | `H21.md` |
+| H21 | PARTIAL | 0.75 | 0.628 | `H21.md` |
 | H22 | CONTESTED | 0.4 | 0.024 | `H22.md` |
 | H23 | SUPERSEDED | - | - | `H23.md` |
 | H24 | RETIRED | - | - | `H24.md` |

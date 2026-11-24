@@ -1,0 +1,392 @@
+# Record of the runs of HZLK.md section 6b: setup, verdict, reading and the place of the data.
+# The table there shows run, model, verdict and place; this file holds the rest.
+- run: P1 staged recall (10-02)
+  model: G1d 0.4B
+  setup: key-value pairs over a gap, CE, Muon 1e-4, 100 steps
+  verdict: binding skill trainable; the gain is sharpening, not capacity
+  reading: 'recall 0.72 -> 0.96; ablation-read -40-60%; separable 7/32 -> 3/32: sharpening'
+  place:
+  - experiments/rl/results/staged_recall_p1_step100_final.json
+- run: S1 pilot (10-27)
+  model: G1d 0.4B
+  setup: 45 items it solves, CE / KL T=1 / KL T=2, `M` = 1, 200 steps
+  verdict: tick no longer erases; pass-through
+  reading: 'tick no longer erases (held 0.11 -> 0.56-0.89); CE `M = 1` 75 and `M = 0` 73 with the same 30 new: pass-through;
+    KL T=2 tick path fluent'
+  place:
+  - experiments/rl/results/s1_pilot_g1d04b/
+- run: S1 `M = 4` (10-28)
+  model: G1d 0.4B
+  setup: KL T=2, `M = 4`, step 100 (`kl_T2_k4`)
+  verdict: pass-through (44 vs 46 of 304); latent fixed from tick 1
+  reading: 44 at `M = 4` vs 46 at `M = 0` of 304; latent fixed from tick 1; flat over `M` = 1..8; lens held
+  place: []
+- run: hint distillation (10-28)
+  model: '`kl_T2_k4`'
+  setup: base 0.4B reading hint 3 as teacher, 211 hint-only items
+  verdict: pass-through (75 vs 81 of 289); the teacher's tags and loops copied
+  reading: 'rescored: base 46 -> 75 (`M = 4`) / 81 (`M = 0`) of 289; teacher answers carried "<answer>" tags (77
+    of 211), loops 16 -> 81'
+  place:
+  - experiments/rl/results/s1_pilot_g1d04b/hint3_*
+- run: latent noise (10-28)
+  model: 0.4B
+  setup: k = 16, sigma 0.5-2
+  verdict: ticks damp noise after S1; the window is unreadable here
+  reading: after S1 the ticks damp noise (flips 0.45 -> 0); window unreadable on H22
+  place:
+  - experiments/rl/results/s1_pilot_g1d04b/
+- run: Qwen hint-3 (10-29)
+  model: Qwen3.5 0.8B
+  setup: hint-3 teacher, KL T=2, ticks vs `M = 0` control
+  verdict: ticks below the control (119 / 105 vs 195 of 289); the tied head spells the answer in ticks
+  reading: 'control 195, ticks `M = 4` 119 / `M = 0` 105 of 289; tied head spells the answer in ticks; think frame:
+    197 / 204 / 195'
+  place:
+  - experiments/rl/results/qwen35_08b/
+- run: Qwen ciphers (10-29/30)
+  model: Qwen3.5 0.8B
+  setup: cipher rungs, own CoT, decode SFT on gold
+  verdict: 0 on every rung; decode SFT learned the payload prior (0 of 60)
+  reading: 0 of 585, 0 of 240, CoT 0 of 24; decode SFT 0 of 60 (payload prior)
+  place:
+  - experiments/rl/results/qwen35_08b/
+- run: Qwen self-KL (11-04)
+  model: Qwen3.5 0.8B
+  setup: KL T=2 to own `M = 0`, think frame
+  verdict: chat kept; stored-not-read not repaired
+  reading: chat = base; stored-not-read not repaired (3 new, 8 lost)
+  place:
+  - experiments/rl/results/qwen35_08b/
+- run: Qwen on-policy (11-05)
+  model: Qwen3.5 0.8B
+  setup: self-teacher, then frozen teacher, anchors
+  verdict: 'frozen teacher: trained 6 -> 16 of 28, held-out 11 -> 13 of 21; the self-teacher collapsed'
+  reading: 'self-teacher collapsed; frozen: trained 6 -> 16 of 28, held-out 11 -> 13 of 21, form kept'
+  place:
+  - experiments/rl/results/qwen35_08b/s1_onpolF_*
+- run: compression (11-05)
+  model: Qwen3.5 0.8B
+  setup: UncheatableEval 2026-07, ticks every 64 tokens
+  verdict: ticks cost about 0.08 bpb in raw text; frozen arm +0.003 at M = 0
+  reading: ticks in raw text cost ~0.08 bpb on every checkpoint; frozen arm +0.003 at `M = 0`
+  place:
+  - experiments/rl/results/qwen35_08b/compress_*
+- run: RWKV chain (11-07)
+  model: G1d 0.4B
+  setup: level-3 context rows, S0 and geometry
+  verdict: 0 of 160 eval, 2 of 400 train; stopped before the G1L teacher
+  reading: 0 of 160 eval, 2 of 400 train; plain context 158 of 600; stopped after 0.4B geometry, before the G1L
+    teacher
+  place:
+  - experiments/rl/results/rwkv_2026_11_07/
+- run: cipher ladder (11-13)
+  model: G1d 0.4B
+  setup: key given; Caesar / katakana / cyrillic x words / random x 6-24 letters x 0-75% of the plaintext shown;
+    greedy `M = 0`
+  verdict: 0 of 576; the answer copies the ciphertext or echoes the shown prefix
+  reading: '0 of 576; no hidden letter right in any cell: the answer copies the ciphertext or echoes the shown prefix'
+  place:
+  - experiments/rl/results/ladder_g1d04b_M0/
+- run: cipher lookup (11-13)
+  model: G1d 0.4B
+  setup: same rows (none shown), gold teacher-forced; key as plain->cipher (as generated) vs cipher->plain; answer
+    as plaintext vs "symbol=letter" pairs
+  verdict: cipher->plain 0.57-0.81; plain->cipher 0.002-0.004
+  reading: 'pairs, first occurrence of a symbol, p(letter) > 0.5: cipher->plain 0.57 Caesar, 0.76-0.81 scripts;
+    plain->cipher 0.002-0.004 (repeats 0.3-0.57 are copies of its own earlier pairs). First pair of the answer ~0
+    in both: lookup starts after 1-3 worked pairs. Plaintext format 0.01-0.27 per token'
+  place:
+  - experiments/rl/results/cipher_lookup_g1d04b/
+- run: ticks vs inverse lookup (11-13)
+  model: G1d 0.4B, `kl_T2_k4`
+  setup: 'same probe through one embeds route for every `M`; `M = 0` vs `M = 4`; key before or after the message.
+    Refuter written before the run: ticks open the inverse lookup unless `M = 4` stays <= 0.01 on both models in
+    all views'
+  verdict: 'refuted: a tick does not transpose an association (inverse <= 0.009 at M = 4)'
+  reading: 'refuted: plain->cipher stays 0.000-0.009 at `M = 4` on both; cipher->plain control 0.45-0.82, `M = 4`
+    within +-0.05 except Caesar +0.05-0.08; message first does not help. A tick re-reads the state with the same
+    reader and does not transpose an association. Key repeated after the message (read-twice): inverse still <=
+    0.009, forward +0.03-0.15'
+  place:
+  - experiments/rl/results/cipher_lookup_g1d04b_{base,klT2k4}_M{0,4}/
+  - experiments/rl/results/cipher_lookup_g1d04b_base_twice_M{0,4}/
+- run: cipher ladder v2 (11-13)
+  model: G1d 0.4B
+  setup: cipher->plain key, answer as "symbol=letter" pairs, 4 / 2 / 1 / 0 pairs of the answer written for the model;
+    greedy `M = 0`
+  verdict: 1 of 576; the answer walks the key table in order
+  reading: '1 of 576. Pair form kept; letter right for its own symbol 0.67-0.96, next message symbol right 0.02-0.04:
+    the answer walks the key table in order. The missing step is the position in the message (symbols repeat)'
+  place:
+  - experiments/rl/results/ladder_trace_g1d04b_M0/
+- run: cipher ladder v3 (11-13)
+  model: G1d 0.4B
+  setup: v2 with positions on the message and the answer ("1:ハ" / "1:ハ=T")
+  verdict: 28 of 576; the first zone with a solve rate between 0 and 1
+  reading: '28 of 576; 6 letters with pairs shown 1-6 of 16 per cell, 6-13 of 16 if the answer had stopped at the
+    last position (most misses run past the end). Per pair at 6 letters: position 0.97-1.0, symbol 0.8-0.98, letter
+    0.5-0.89; 24 letters: symbol 0.34-0.76. No pair shown: the answer never starts the pairs (0 everywhere). First
+    zone with solve rate between 0 and 1'
+  place:
+  - experiments/rl/results/ladder_indexed_g1d04b_M0/
+- run: training with ticks vs inverse lookup (11-13; order 0 trained, read pending)
+  model: G1d 0.4B
+  setup: 'v3 rows with the key plain->cipher ("A=ク", `--ladder-table plain_cipher`), whole answers (no pairs shown),
+    seed 11, 1607 rows (every 20th held: 1526 / 81); CE on the gold pairs, full weights, Muon 1e-4, 300 steps x
+    4 rows, CPU WKV chunked (logits within 0.01 of the per-token reference, so the base is read again on the same
+    code); arm A trained at `M = 0`, arm B at `M = 4`, same rows and steps, three data orders (seeds 0-2) per arm;
+    the rule reads the mean over orders and needs the same sign in all three. Read: `cipher_lookup --cl-formats
+    row` on the 96 rung-0 rows of a separate set (seed 7), first_p50, each arm at its own `M` and at the other;
+    base at both. Refuter written before the run, for the claim "training with ticks opens the inverse lookup beyond
+    the same training without them": confirmed if B at `M = 4` minus A at `M = 0` >= +0.10 overall and in 2 of 3
+    ciphers; refuted if <= +0.03 overall; between: a second seed; both arms <= 0.05: the budget decides nothing.
+    My prediction: A opens it (the reverse pair can be written while "A=ク" is read), B about equal'
+  verdict: inverse lookup learned without ticks from ~400-600 rows; order 0 trained, read pending
+  reading: 'Order 0, in-training eval on the 81 held rows (exact answer): A at `M = 0` 0 / 0 / 0.63 / 0.98 / 1.0
+    at steps 0 / 50 / 100 / 150 / 200; B 0 / 0 / 0.65 / 0.94 / 0.98, the same at `M = 0` and `M = 4` at every step.
+    B stopped at step 215 (the machine froze 11-14); both arms keep a checkpoint at step 200 on the same order,
+    so the read compares them there. The inverse lookup is learned without ticks from ~400-600 rows and holds on
+    new keys; B trained through ticks and reads equally without them. Blind spot of the rule, found after training
+    and before the read: the read set has the training cells (6 and 12 letters, rung 0), A sits at the ceiling,
+    so "B - A >= +0.10" cannot happen; the read can refute only "ticks help where one pass already suffices"'
+  place:
+  - ~/tmp/inv/{A_M0,B_M4}_s0*
+  note: logs and checkpoints; the read (results/train_inv_g1d04b_*_read_M*/) was not on this machine on 2026-11-23
+- run: closed-loop toy from scratch, stage 1 (11-15)
+  model: RWKV-7, 2 layers, width 48, 49.8K params, trained from scratch
+  setup: pointer chasing in context over a 10-node cycle, k = 1..8 hops, query last; curriculum k_max 1 -> 8 over
+    4500 of 6000 steps; CE on the answer only; A at `M = 0`, B-E at `M = 8` from step 0 (C per-tick JEPA target,
+    D SIGReg 0.05, E both); seeds 0-2
+  verdict: 'ticks buy depth: CONFIRMED (+0.74 / +0.74 / +0.78 at k = 3); SIGReg fails'
+  reading: 'first run on record where ticks are not a pass-through: B 0.97 / 0.93 / 0.87 at k = 1 / 2 / 3 against
+    A 0.78 / 0.16 / 0.13; B read at `M = 0` gives 0.00 at k = 1 (the computation lives in the ticks). k >= 4 at
+    chance in both (B stalls at 3 hops though 8 ticks x 2 layers would allow more). Refuter 1 ("ticks buy depth",
+    max(B..E) - A at k* + 2 = 3 >= +0.20, same sign in 3 seeds): +0.74 / +0.74 / +0.78, CONFIRMED. B is stable and
+    stalls at 3 hops in all seeds (k = 3 0.85-0.93, k = 4 0.13-0.21). The per-tick terms break the wall but bimodally:
+    C seeds 1-2 reach 0.92 / 0.88 at k = 4 and 0.83 / 0.72 at k = 8 / 7, C seed 0 only 0.35 at k = 3; D and E 1
+    of 3 seeds past the wall (D s0 0.55 at k = 7, E s0 0.50 at k = 8), the other seeds never pass k = 1 (D s2 at
+    chance even at k = 1). C seeds 3-6 (run by the spatium session): k = 6 0.70 / 0.92 / 0.91 / 0.83, so 6 of 7
+    C seeds pass k = 6 >= 0.5 (seed 0 the only failure: its JEPA loss never falls, 0.46 -> 0.52, while seed 1''s
+    falls 0.50 -> 0.12). Refuter 2 (C - B >= +0.10 at k > k* in all seeds, shuffle costs C >= 2x B): mean over k
+    = 2..8 -0.10 / +0.51 / +0.38 against B; shuffle cost (tick input = another example''s latent, own state kept)
+    over k = 2..8 is B 0.26 / 0.25 / 0.27, C 0.20 / 0.80 / 0.66 (seeds 4-6 0.83 / 0.82 / 0.80): 2x holds in every
+    C seed but 0. Not confirmed by the letter (seed 0), not refuted. Reading: at k = 2..3, where both solve, the
+    shuffle costs B 0.78-0.82 and C 0.81-0.87, so the per-example tick latent carries the computation in both arms
+    (a register); the per-tick target does not create the register, it makes the step iterable past 3 hops. The
+    2x clause is confounded by B''s wall. Bits per parameter (quant_sweep.py, per-row absmax rounding, `quant_s1.json`):
+    at k = 1..3 B and C tolerate the same rounding (5 bits lossless, 4 bits -0.03 to -0.20, 3 bits about half lost);
+    at k = 8 C loses more at 4 bits (0.82 -> 0.64, 0.89 -> 0.30), the rounding error accumulates over the ticks;
+    the strict per-k minimum is B 5, C 5-8. The iterated step costs no more weight precision per step than the unrolled
+    one, long chains need about one bit more. State probe (toy_state_probe.py, `state_probe_s1.json`; linear decode
+    of every pair x -> next(x) from the WKV state after the pairs, held out): untrained 0.53, A 0.73 / 0.85 / 0.86,
+    B 0.91 / 0.93 / 0.93, C 0.73 (failed seed 0) / 0.81 / 0.90 and seeds 4-6 0.96 / 0.96 / 0.95. Gate written before
+    the run (tick arms >= +0.10 over M = 0 means the loop changed writing): B +0.11, C on its passing seeds +0.10,
+    seeds 4-6 +0.13. The loop changed what is written, not only how it is read. Effective rank of the WKV heads
+    (16 x 16, 10 pairs): untrained ~7-8, A 6-8 in layer 0, C seeds 4-6 3.5-4.6 in layer 0 with the best decode:
+    the pairs are held more decodably in fewer dominant directions (ZLK.13 in miniature). After 8 ticks the rank
+    stays 3.5-6.8, no collapse toward 1 as in the G1d attractor. Refuter 3 (SIGReg keeps the channel free without
+    losing > 0.05): D loses > 0.05 at k <= 3 in 2 of 3 seeds, so at weight 0.05 it cannot pass; geometry not measured'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1_*
+- run: 'closed-loop toy, stage 1b: affine cipher seen through runs (11-16)'
+  model: same toy, C recipe (M = 8, per-tick target), A (M = 0), and a chase + affine mix
+  setup: 4 runs x -> a x + b mod 16 in context, query not among them; seeds 0-1 of 3
+  verdict: a rule from runs not learned; the shift is won only past its closed form (k >= 6)
+  reading: 'not learned: k = 1 0.27-0.29 (C) and 0.35-0.48 (A), above chance 0.06 but far from the rule (parity
+    of the runs explains part). A design flaw: odd a mod 16 has order <= 4, so E^4 is the identity in 64 of 128
+    ciphers and E^8 in 96; A''s 1.00 at k = 8 and 0.75 at k = 4 are that shortcut, not depth. In the mix the affine
+    half stays at chance and drags the chase half (seed 0 walls at 3 hops). Refuter "the loop applies a rule inferred
+    from runs" not met (k = 3 at M = 8 0.25-0.28 < 0.5): inferring a and b from runs is out of reach at 50K params
+    and 6000 steps; the iterated depth was not tested because of the shortcut (seed 2 the same: k = 1 0.25-0.33).
+    Shift rung (11-16, E(x) = x + b mod 13, b != 0, no power shortcut): the rule is inferred from the runs perfectly,
+    C at M = 8 1.00 at every k = 1..8 in all three seeds (M = 0 read of it 0.00-0.40); A at M = 0 1.00 up to k =
+    5, then 0.97 / 0.52 / 0.97 at k = 6 and 0.52 / 0.12 / 0.72 at k = 8. Refuter as written not met on its M = 0
+    side (A 1.00 at k = 3): a shift has a closed form, x + k b, which one pass computes without iterating; the ticks
+    win only where the closed form''s arithmetic fails (k >= 6). Depth tasks for the loop need no closed form (tables,
+    derivations)'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1b_*
+- run: 'closed-loop toy, stage 1f: time against parameters (11-17)'
+  model: one-pass A (M = 0) with 4 / 8 layers vs C (2 layers, 8 ticks, 49.8K)
+  setup: chase, curriculum, 6000 steps; seeds 0-2
+  verdict: 'time for depth: 2 layers with 8 ticks beat a 4-layer pass at half its parameters'
+  reading: 'A with 4 layers (94.7K params, 1.9x), seed 0: 1.00 / 0.99 / 0.98 / 0.75 / 0.36 at k = 1..5, 0.22-0.26
+    at k = 6-8: depth per pass grows about one hop per layer (2 layers: 1 hop). Seeds 1 / 2: k = 3 0.83 / 0.14,
+    k >= 5 0.12-0.18. Three seeds of the 4-layer pass: 2-4 hops, chance at k = 6-8 (0.12-0.26). C with half the
+    parameters holds 0.72-0.92 at k = 6-8 on its passing seeds (6 of 7), +0.5-0.7 over the 4-layer pass. 8 layers
+    (184K, 3.7x): k = 6-8 0.16-0.28 on all 3 seeds: more layers do not buy the depth time gives'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1f_*
+- run: 'closed-loop toy, phase A: stabilising the recipe (11-17)'
+  model: chase C recipe (8 ticks, per-tick node target, curriculum), one knob at a time, 5 seeds
+  setup: 'lr 1e-3 (base 3e-3) on the laptop; batch 256 (base 128) on the Aspire; gate: k = 6 >= 0.5 in 5 of 5 seeds'
+  verdict: no knob gives 5 of 5; the stall rule REFUTED; the base recipe passes 14 of 15
+  reading: 'k = 6 >= 0.5 by knob: base (lr 3e-3, batch 128) 6 of 7; lr 1e-3 1 of 5 (no seed collapses, k = 1 >=
+    0.81, but 6000 steps undertrain: 0.59 / 0.47 / 0.47 / 0.40 / 0.33); batch 256 3 of 4 (seed 0, the base''s failure,
+    now 0.95 at k = 6 and 0.96 at k = 8; seed 2 fails instead). No knob gives 5 of 5: the failure is a bad basin
+    that moves between seeds. It is visible early: the per-tick loss at step 1500 is 0.43-0.52 in every failing
+    or weak run (base s0, b256 s2, lr1e-3 s4) and 0.20-0.38 in every passing one, and the failing ones never fall
+    after. A stall rule (per-tick loss > 0.40 at step 1500 -> restart with the next seed, report seeds tried) would
+    have kept only passing runs here; it was a retrospective fit on 8 runs. Prospective test A3 (base recipe, seeds
+    10-14 so far): all 5 pass k = 6 (0.81-0.99), but seeds 10 and 12 had loss 0.43 / 0.49 at step 1500 and recovered:
+    the rule is wrong on 2 of 5, its refuter (>= 7 of 8 right) cannot be met: REFUTED. The base recipe itself now
+    passes 11 of 12 seeds. A3 seeds 15-17 pass too (k = 6 0.84-0.90): base 14 of 15. A2, lr 1e-3 x 12000 steps:
+    4 of 5 (seed 4 fails, 0.13): the slow rate was undertraining, not a fix for the bad basin'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/sA_*
+- run: 'closed-loop toy, stage 1e: spatium rewrite derivations (11-17)'
+  model: same toy, vocab +30 symbols; CE vs CE + owner's ZLK term (tick t -> EMA latent of hop t's term)
+  setup: '33,985 items (29,987 train), 8 premises #1..#8 in context, ~140 tokens, depth 1..8, true/false 50/50 with
+    near-miss falses; 6000 steps x 64, curriculum; seed 0'
+  verdict: truth 0.90-0.98 at every depth; the ZLK term refuted on both answers over 3 seeds
+  reading: 'On val_laws (held-out laws), M = 8: true items 0.90-0.98, false items 0.84-0.96 at every depth 1-8,
+    both branches (exact BFS 0.99-1.00 at 55-4,347 terms expanded per item; the model spends 8 ticks). Mechanism
+    (deriv_breakdown.py): falses are partly a shortcut, M = 0 already 0.72-0.82 on them and shuffled ticks keep
+    0.79-0.97; trues need the ticks, M = 0 0.61-0.74 (CE) / 0.26-0.42 (ZLK) and shuffled ticks 0.45-0.73. ZLK refuter
+    (ZLK - CE at depth 4-8 on val_laws >= +0.10): +0.004, refuted on seed 0, but at a 0.91 ceiling, so it decides
+    little; ZLK moves more of the work into the ticks (its M = 0 trues 0.26-0.42 vs CE 0.61-0.74). Seed 1 replicates
+    (depth 4-8 balanced at M = 8: CE 0.913, ZLK 0.938; seed 0: 0.914, 0.918): Seed 2: CE 0.951, ZLK 0.933. ZLK -
+    CE on the truth answer +0.004 / +0.025 / -0.018 over 3 seeds: refuted by the letter, at a ceiling. last_rule
+    variant (answer = local id of the last hop''s rule, true items only, chance 0.125), CE seed 0 final: val_laws
+    M = 8 0.20-0.41 (depth 4-8 mean 0.27), M = 0 0.14-0.27, shuffled 0.17-0.29; val (seen laws) 0.19-0.40. The CE
+    model names the last rule at about twice chance, far below its 0.91 truth accuracy: the truth answer rests mostly
+    on a consistency check, not on a derivation it can report. ZLK last_rule seed 0: val_laws M = 8 0.37-0.50 (depth
+    4-8 mean 0.448 vs CE 0.270), M = 0 0.07-0.17, shuffled 0.23-0.36; val 0.41-0.57. ZLK refuter (ZLK - CE at depth
+    4-8 on val_laws >= +0.10) on the shortcut-proof answer: +0.18, CONFIRMED on seed 0; but CE seed 1 reaches 0.48
+    at depth 4-8 (seed 0 was a weak CE seed), and ZLK seed 1 ends at 0.439: ZLK - CE = +0.18 / -0.04 on seeds 0
+    / 1, not confirmed by the letter. Seed 2: CE 0.434, ZLK 0.295. Over 3 seeds ZLK - CE = +0.18 / -0.04 / -0.14,
+    means 0.394 vs 0.395: the ZLK term (hop-term latent target) is REFUTED on the last_rule answer as on the truth
+    answer; the seed-0 gain was seed noise (CE spread 0.27-0.48). Both arms name the last rule on held-out laws
+    at about 3x chance (0.39 vs 0.125), so part of a derivation is there, with large seed variance. Label-free goal
+    target (every tick toward the EMA latent of the goal term): seeds 0 / 1 0.46 / 0.362, mean 0.411 vs CE 0.395
+    (+0.016, paired +0.19 / -0.12): refuted (<= +0.03). self (tick t toward the EMA copy''s tick t+1): 0.28 / 0.242,
+    mean 0.261, below CE by 0.13: refuted, and it hurts (a target that rewards reaching the later state sooner pulls
+    toward a fixed point). both (goal + self): 0.285 / 0.246, mean 0.266: refuted, self drags it down. Anonymised
+    CE seed 0: 0.287 (plain CE seed 0: 0.27); seeds 1-2 running. The owner''s term (tick t predicts the latent of
+    hop t''s term) is what lets the model name the rule it applied; on the truth answer it was hidden by the surface
+    cue. cs seed 1 repeats seed 0 (chase 0.84-0.98 to k = 8, storage one-hop 0.24).'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1e_*
+  - ~/tmp/toy/breakdown_s0.txt
+- run: 'closed-loop toy, stage 1c: facts in the weights (11-16)'
+  model: same toy, vocab +64 id tokens, 55,968 params
+  setup: K fixed random 16-cycles named by two id tokens, no context; one-hop over all edges (capacity by Fano)
+    and k-hop on held-out vs trained starts; 20000 steps x 256; seed 0
+  verdict: one pass stores up to 1.46 bit/param; facts in the weights are not composed on unseen starts
+  reading: 'One-pass capacity (A1, one-hop only): K 512 all edges (0.57 bit/param), K 1024 all edges, 64 kbit =
+    1.14 bit/param, K 2048 0.81 of edges = 1.46 bit/param (highest), K 4096 0.37 = 0.66 (under-trained at ~80 exposures
+    per edge). Composition: A with the curriculum (M = 0) answers k = 2 on TRAINED starts 0.97 but on held-out starts
+    0.06 (chance): it memorises composites, the two-hop curse reproduced. C (8 ticks + per-hop target) at K 1024
+    stores less (one-hop 0.60, 0.41 bit/param: the curriculum dilutes one-hop exposure) and also composes only trained
+    starts (k = 2 0.99 seen, 0.06 held out). With facts in the state the loop composes (stage 1); with facts in
+    the weights it did not, at this K and schedule. Refuter not applicable (one-hop < 0.9). C at K 2048 (105 min)
+    stores almost nothing: one-hop 0.16 at M = 8, 0.04 bit/param, k = 2 on trained starts 0.72: with the curriculum
+    and the per-hop target from step 0, storage starves as K grows. A at K 512 with the curriculum stores EVERY
+    edge (0.9994) and still composes only trained starts (k = 2: 1.00 seen, 0.06 held out): for one pass the two-hop
+    curse is not a storage shortfall. C at K 512 (8 ticks + per-hop target) also stores every edge (one-hop 0.999
+    at M = 8) and composes trained starts (k = 2 1.00, k = 3 0.99) but not held-out ones (k = 2 0.07): refuter (ticks
+    - M = 0 at k = 2 held out, one-hop >= 0.9) = +0.01, REFUTED on seed 0. A with a one-hop warm phase (Aw K 512):
+    every edge, seen k = 2 1.00, held out 0.07. Reading: at K 512 the 8192 trained composites are memorisable, so
+    the loop memorises them instead of iterating; in chase nothing repeats, so iteration is the only route. C with
+    the one-hop warm phase (Cw K 512, 28000 steps) the same: every edge, seen k = 2 1.00, k = 3 0.90, held out 0.07.
+    Storing first does not change it. cs (C, K 512, 20000 x 256, half chase half one-hop store, 276 min): chase
+    perfect to k = 8 (0.98-1.00, M = 0 0.00 at k >= 2), but the stored facts barely land: one-hop 0.32 at M = 8
+    (0.06 bit/param) against 1.00 for A1 at K 1024 with ~300 exposures per edge here; k-hop over stored facts chance.
+    Transfer untestable on seed 0 (one-hop < 0.9): the in-context task and storage in the weights compete in a 50K
+    net. Control cs A (M = 0, 196 min): chase 0.90 / 0.84 at k = 1 / 2 then chance; one-hop storage 0.41 (0.10 bit/param):
+    storage is starved by sharing the net with the context task with or without ticks, so the competition is between
+    the tasks, not caused by the loop.'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1c_*
+- run: closed-loop toy, 1e variants (11-17/18)
+  model: last_rule on derivations, depth 4-8 on val_laws at M = 8
+  setup: anonymised symbols CE; label-free tick targets goal (EMA latent of the goal term), self (EMA copy's next
+    tick), both; seeds 0-2 / 0-1
+  verdict: 'no gain on clean derivations: anonymised CE, goal, self and both refuted'
+  reading: 'anon CE 0.287 / 0.237 / 0.287 (mean 0.270 vs 0.395 named); goal 0.460 / 0.362 (0.411), self 0.280 /
+    0.242 (0.261), both 0.285 / 0.246 (0.266) against CE 0.395: no gain on clean derivations (the regime where CE
+    already carries the signal; their own regime is untested)'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1e_lr_*
+- run: closed-loop toy, 1d ciphers from scratch (11-17/20)
+  model: width 96, 271K params; character-level decryption, key or table shown, 25 ciphers, HH-RLHF texts
+  setup: 'M0, CE M4, + goal, + self (seed 0, 6000 steps); control: each answer paired with another row''s prompt'
+  verdict: '0.605-0.608 in every arm, exact 0: the English prior'
+  reading: 'char acc 0.605-0.608 in every arm, exact 0; control 0.590 vs 0.601 at step 4000: about one point read
+    from the ciphertext, the rest is the English prior'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1d_*
+- run: closed-loop toy, 1g distillation (11-19)
+  model: 'teacher: base-recipe C at M = 8 (seeds 14 / 10 / 15)'
+  setup: 'student on the teacher''s final distribution only (KL T = 2): born-again 2 layers M = 8; one-pass mimic
+    2 and 8 layers'
+  verdict: 'born-again student carries the iteration: CONFIRMED; a one-pass mimic cannot (<= 0.24)'
+  reading: 'born-again k = 6 0.74 / 0.90 / 0.18: CONFIRMED (5-6 hops past B''s 3); mimic L8 k = 6-8 <= 0.24 every
+    seed (L2 1-2 hops, L8 2-4): the depth is not reachable by one pass even from the loop''s soft answers'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/sG_*
+- run: closed-loop toy, 1h width and 1i doubt (11-19/20)
+  model: 'chase C recipe at widths 12 / 24 / 30 / 36 / 42 / 96; doubt: K stored tables, 8 pairs in context, the
+    queried pair sometimes a lie'
+  setup: 2 seeds per width; doubt K 64 / 256 at widths 24 / 48 / 96, M = 0, seed 0
+  verdict: eight steps fit from 30K (w36 2 of 2) and not at 22K (w30 0 of 2); w48 6 of 7; a lie is overruled (1.00)
+  reading: 'k = 6 >= 0.5: w12 0/2 (5.1K), w24 0/2 (15K), w48 6/7 (50K), w96 2/2 (178K). Doubt K 64: lie overruled
+    1.00, lie repeated 0.00, new tables from context 0.89-1.00, stored edges 0.95-0.99 Width sweep at 30, 36 and
+    42 (sH_C_w*, 2 seeds each; read into this record from the paper draft on 2026-11-24): accuracy at M = 8, k =
+    6: 0.12 / 0.13 at width 30 (22K), 0.67 / 0.61 at 36 (30K), 0.88 / 0.79 at 42 (39K).'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/sH_*
+  - experiments/A0_state_probe/results/closed_loop_toy/sI_*
+- run: closed-loop toy, 1k GRPO on the latent (11-19/20)
+  model: from arm B (3-hop wall)
+  setup: exact-answer reward, Gaussian policy on each tick latent (sigma 0.1 / 0.3), G 8, KL 0.02 to the start,
+    3000 steps, 3 seeds (Aspire)
+  verdict: 'REFUTED: an outcome reward with latent exploration does not break the wall'
+  reading: 'k = 4-8 0.12-0.20 in all 6 runs: REFUTED, an outcome reward with latent exploration does not break the
+    wall; sigma 0 and the CE control stopped unread'
+  place:
+  - ~/tmp/toyk/results/sK_*
+  note: run on the Aspire (noesis-head); a copy lies here
+- run: closed-loop toy, 1l own stop without a head (11-19/20)
+  model: from C (fixed M8 0.92-0.94)
+  setup: the answer head read after every tick, stop at the first max p >= 0.9; every tick's answer imitates a frozen
+    snapshot's M8 answer, weight (t/8)^1, no label, no reward; 3000 steps
+  verdict: 'ZLK.5 on the toy CONFIRMED: own stop equals fixed M8 at 62-64% of the ticks'
+  reading: 'seeds 4 / 5: own 0.905 / 0.912 = fixed M8, start 0.923 / 0.936, random stop at the same ticks 0.60 /
+    0.58, tick share 0.64 / 0.62, ticks 1.2-1.6 at one hop to 8.0 at eight: ZLK.5 toy CONFIRMED. A self-target that
+    moves with the model drifts (fixed 0.93 -> 0.74); GRPO beside it degraded too'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/sL_*
+- run: closed-loop toy, 1o ticks grafted on a one-pass toy (11-20)
+  model: the toy, started from a trained one-pass run
+  verdict: 'grafted ticks pass k6 in 2 of 3 seeds, as reliable as grown: the toy form of ZLK.16 REFUTED'
+  reading: '1o: ticks grafted onto a one-pass toy pass k6 in 2 of 3 seeds, as reliable as grown (ZLK.16).'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/sO_graft_*
+  note: No row in the run table of 2026-11-21; this one carries what the claims of section 4 say.
+- run: closed-loop toy, 1n two domains, plain and Cyrillic (11-20)
+  model: the toy, 55K parameters
+  verdict: 'no transfer in bpc (joint +0.46 against Cyrillic-only: REFUTED); deep-layer CKA between scripts 0.44
+    -> 0.71'
+  reading: '1n plain/Cyrillic: joint +0.46 bpc vs Cyrillic-only, REFUTED; the loop raises deep-layer CKA between
+    scripts 0.44 -> 0.71 (ZLK.22); cross-script state CKA 0.469 -> 0.625 at width 48, fading with width, 3 seeds
+    (ZLK.7).'
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/sN_joint_*
+  note: No row in the run table of 2026-11-21; this one carries what the claims of section 4 say.
+- run: closed-loop toy, 1j plain and cipher domains (11-20)
+  model: the toy, 271K parameters
+  verdict: joint -0.014 bpc
+  reading: 1j plain+cipher -0.014 bpc (ZLK.22).
+  place:
+  - experiments/A0_state_probe/results/closed_loop_toy/sJ_*
+  note: No row in the run table of 2026-11-21; this one carries what the claims of section 4 say.
+- run: 1t ticks without the pretraining term (11-21)
+  model: G1d 0.4B
+  verdict: '100 full-weight steps on 160 Caesar rows, KL + GRPO, no pretraining CE beside it: the chat broke through
+    its ticks (loops, refusals)'
+  reading: 'Counter-case to ZLK.18: the widening holds only with the pretraining term kept.'
+  place:
+  - experiments/rl/results/chat_1t_M8_grpo/
+  note: No row in the run table of 2026-11-21; this one carries what the claims of section 4 say.

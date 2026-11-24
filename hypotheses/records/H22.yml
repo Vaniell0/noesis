@@ -1,0 +1,92 @@
+# Record of H22.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H22
+status: CONTESTED
+prior: 0.4
+posterior: null
+depends_on:
+- H21
+supports: []
+contradicts_if:
+- correlation with H21's head decision reaches rho >= 0.6 on shared-labelled overlap items -- this is the section's
+  own declared 'important lock'; MEASURED 2026-08-20 at rho=-0.054 (see 2026-08-23 correction in evidence below)
+  -- NOT triggered, this condition does not currently refute H22
+- a bag-of-words/keyword classifier trained on the same labels matches or beats the WKV-state MLP head's F1 -- would
+  mean the head isn't reading state geometry at all, just recovering surface lexical markers the labels were defined
+  by
+evidence:
+- date: 2026-08-20
+  file: hypotheses/H22.md
+  call: contradicts
+  strength: strong
+  note: 'The v2 dataset (243 items) was mined via regex on exactly the surface phrases the classifier is then asked
+    to detect: attributable = ''according to X (2020)'', ''X et al.''; unattributed = ''it is generally accepted'',
+    ''most people believe''. Labels are DEFINED by lexical markers, so any classifier -- bag-of-words or WKV-state
+    MLP -- is expected to score well; F1=0.947 doesn''t distinguish ''state encodes attribution as a semantic property''
+    from ''state is a lossy proxy for which words were present, recovered via any channel''. Not a hidden bug, a
+    design property of how the dataset was built -- flagged by the user as a live methodological question, unresolved.'
+- date: 2026-08-20
+  file: hypotheses/H22.md
+  call: methodology
+  strength: strong
+  note: This section's own falsification criteria call distinctness from H21 'the important lock -- if H22 collapses
+    into H19/H21 under measurement, the three-signal decomposition collapses to a two-signal one' (rho < 0.4 required,
+    rho >= 0.6 = refuted). Prose below says this measurement is 'pending shared-labelled overlap items' -- never
+    done. H22's standing as a distinct, non-redundant hypothesis is unverified by its own declared standard.
+- date: 2026-08-23
+  file: hypotheses/H22.md
+  call: correction
+  strength: strong
+  note: 'The entry above and this file''s own prose (Distinctness H21 vs H22 section) contradicted each other from
+    the same 2026-08-20 commit that created this file -- ''never done'' here, an actual completed measurement below.
+    The lock DID run: items_overlap.jsonl (32 items, G1h 2.9B), rho(p_valid, p_attributable) = -0.054, verified
+    against experiments/attribution_probe/distinctness/summary.json (rho: -0.0541...). Target rho < 0.4 is met --
+    this specific contradicts_if condition (rho >= 0.6) is NOT triggered, this axis does not currently refute H22.
+    The OTHER contradicts_if condition (bag-of-words/keyword confound from the regex-mined v2 dataset, entry above
+    dated 2026-08-20 ''contradicts/strong'') is unaffected by this correction and remains live -- CONTESTED status
+    stands on that basis, not on distinctness.'
+- date: 2026-08-20
+  file: docs/community-map.md
+  call: contradicts
+  strength: strong
+  note: '''community-map.md:338 issue'', same as H21 (shares the identical WKV-state feature + MLP head architecture):
+    raw WKV state has near-random unsupervised semantic separability (v_measure=0.11) per an independent community
+    source; only supervised projectors on HIDDEN STATE (not WKV state) were shown to unlock strong signal (0.82-0.95).
+    Whether a supervised head on WKV state itself (H22''s actual setup) genuinely reads state geometry, versus riding
+    surface/lexical residue, is untested by that source and unresolved here.'
+- date: 2026-08-20
+  file: hypotheses/H22.md
+  call: neutral
+  strength: weak
+  note: 'User''s memory (2026-08-20) confirmed: the initial 19-item seed set gave a suspiciously perfect LOO F1=1.000/acc=1.000,
+    already self-flagged in this section as ''seed too small and too clean for a real number''. v2 (243 items mined
+    from C4) gave a more honest F1=0.947. This specific data-quality issue is real and already acknowledged in prose
+    -- distinct from the two structural confounds above.'
+- date: 2026-10-20
+  file: experiments/attribution_probe/bow_control_2026-10-20.txt
+  call: contradicts
+  strength: strong
+  note: 'contradicts_if #2 RUN for the first time and it FIRES. Leave-one-out bag-of-words logistic regression (experiments/attribution_probe/bow_control.py)
+    on the same 240 v2 items: F1 0.975 / acc 0.975 against the recorded WKV-state MLP head F1 0.947 / acc 0.946.
+    Surface words alone do better than the state head, so on v2 the head shows nothing beyond the lexical markers
+    the labels were mined by. This refutes the v2 TEST as evidence for the claim; it does not test the claim on
+    items where attribution is not carried by fixed phrases. Owner 2026-10-20: the data is to be redesigned so that
+    the two classes do not differ in wording (check C-H22-bow in hypotheses/checks-h20-h26.yaml).'
+- date: '2026-11-24'
+  file: hypotheses/H22.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H22.yml. Links in the prose written
+    from the repository root.
+- date: '2026-10-20'
+  file: experiments/attribution_probe/mp_h22_g1d04b.json
+  call: neutral
+  strength: weak
+  note: 'An empty test of H22, kept for one fact about reading the state. The set was built so that the two classes
+    share their words: they share unigrams but not bigrams, a lexical head on bigrams of the same items reached
+    0.946, so the lexical route stayed and the test says nothing of provenance. Inside it, as a fact about what
+    a reader gets from a pooled state: a two-layer MLP on the per-head mean and standard deviation of the WKV state
+    read word order exactly, accuracy 1.000 on 240 items, 120 pairs, leave-pair-out (the base G1d 0.4B, not a loop-trained
+    checkpoint). It does not separate the state from a lexical reader, and ZLK.12 counts separable facts per head
+    or sets a reader against the head of the model on the same items: neither is measured here. Compatible with
+    ZLK.12, not a test of it. Entered 2026-11-24 and made neutral on the owner''s word the same day; hypotheses/checks-h20-h26.yaml,
+    C-H21-H22-redesign.'

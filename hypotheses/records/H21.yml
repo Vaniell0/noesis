@@ -1,0 +1,102 @@
+# Record of H21.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H21
+status: PARTIAL
+prior: 0.75
+posterior: null
+depends_on:
+- H8
+supports: []
+contradicts_if:
+- F1 < 0.7 on structural premise invalidity (category/impossible/counterfactual, not the truth-value axis) with
+  saturated training -- already close on some cells (0.614 v2 aggregate, but structural recall stays >=4/5 there)
+  so this is a real, live line, not comfortably far away
+evidence:
+- date: 2026-08-20
+  file: hypotheses/H21.md
+  call: methodology
+  strength: weak
+  note: 'Git-history and community-map cross-check (2026-08-20): dates in this section''s prose match actual commits
+    (07-30 pilot, 08-07/08 N-sweep and v3_29b, 08-11 Scarletwolf). No hidden metric substitution found, unlike H8/H9/H20
+    -- this section already self-flags its own open discrepancy (0.889 N-sweep held-out vs 1.000 v3_29b train/test,
+    same split shape but not confirmed identical) rather than hiding it. Best-documented section reviewed so far.'
+- date: 2026-08-20
+  file: hypotheses/H21.md
+  call: neutral
+  strength: strong
+  note: 'User agrees with current status as-is. Next real gate: re-test after RL, once the qualitatively different
+    think/M-loop-trained model (ZLK) exists -- current data is all pre-RL (base/LoRA-era checkpoints), and premise-validity
+    readout behavior on a model actually trained around the M mechanism is an open question, not assumed to transfer.'
+- date: 2026-08-20
+  file: docs/community-map.md
+  call: contradicts
+  strength: strong
+  note: '''community-map.md:338 issue'' -- independent community finding (cgisky1980/rwkv7-state-embedding, verified
+    2026-08-11): raw WKV state (any aggregation -- Q-Readout, row_sum, diag) has clustering v_measure=0.11, near-random,
+    unsupervised; semantic separability only appears with a supervised projector on HIDDEN STATE (last TMix layer
+    output), not on WKV state itself -- that combination (supervised projector + WKV state) was never tested by
+    that community source. H21''s feature is explicitly ''per-layer per-head mean+std of WKV state'' -- the signal
+    community-map''s own text calls out as semantically near-empty raw, not the hidden-state signal it recommends.
+    Open question, not resolved: does a supervised MLP head (which H21 already uses, unlike the unsupervised methods
+    in that community table) unlock real signal on WKV state the way it does on hidden state, or is the reported
+    F1 riding on some other correlate (e.g. surface/lexical residue transiently present in the state) rather than
+    genuine state geometry? User raised this independently as a bag-of-words confound concern before this community
+    finding was found; the two concerns compound.'
+- date: 2026-08-20
+  file: external:github.com/BlinkDL/RWKV-LM/issues/338
+  call: supports
+  strength: weak
+  note: 'GitHub issue #338 (icophy, BlinkDL/RWKV-LM), cross-referenced against this repo''s own LoRA rank analysis
+    (H16): LoRA rank=32 covers ~1.25% of weight dimensionality but captures 94% of delta energy -- enough to shift
+    the attractor (style/register) but not enough to write discrete facts. Icophy independently verified the same
+    boundary on RWKV-x070-World-2.9B (LoRA ~100% fact recall vs State Tuning ~30% on identity-QA fact injection).
+    This reframes (does not resolve) the bag-of-words confound entry above: H21''s own F1 split (category/impossible
+    clean, factual weak at 0.60) matches this independently-derived structural/distributional-vs-discrete-fact mechanism,
+    which is a more specific prediction than a surface-keyword classifier would make -- an argument against pure
+    lexical confound for the structural subtypes specifically, not a full resolution (doesn''t touch whether the
+    *classifier itself* is reading state vs. surface residue).'
+- date: 2026-08-20
+  file: hypotheses/H21.md
+  call: methodology
+  strength: weak
+  note: 'N-sweep reconciliation, unresolved: main N-sweep (LOO-refit per N) degrades 0.811->0.769 (N=1->N=5, G1d).
+    User hypothesized this could be an artifact of the head being trained on N=1 features. But Variant A (same-repo,
+    same section) already tests almost exactly that: an N=1-trained head applied WITHOUT retraining to N=2/3/5 features
+    decays only 0.011 -- much less than the main sweep''s 0.042 drop. That''s backwards from what a simple train/test-mismatch
+    story predicts (a freshly LOO-refit head should do at least as well as a frozen one, not worse). Neither ''head
+    mismatch'' nor the original ''state degrades under re-cycling'' story cleanly accounts for both results at once.
+    Left open rather than picking one -- re-verification deferred to post-RL, when the qualitatively different ZLK
+    model exists; per user, project focus is shifting from auditing base-model-era results toward ZLK development
+    itself, without dropping this thread entirely.'
+- date: 2026-10-20
+  file: experiments/attribution_probe/bow_control_2026-10-20.txt
+  call: supports
+  strength: weak
+  note: 'Lexical control (the one that refutes H22''s v2 test) run on H21''s items: the WKV-state head beats leave-one-out
+    bag-of-words on both sets - pilot 40 items acc 0.800 vs 0.675 (5 items), v2 280 items acc 0.618 vs 0.571 (about
+    13 items). Survives, margin modest, no significance test. The N-sweep below (F1 falls as N rises) has the same
+    shape as HZLK ZLK.2: the plain model does not use extra time. Owner 2026-10-20: H21 data to be redesigned with
+    H22''s so that classes differ in content, not wording.'
+- date: '2026-11-24'
+  file: hypotheses/H21.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H21.yml. Links in the prose written
+    from the repository root.
+- date: '2026-07-30'
+  file: experiments/premise_validator/items_v2.jsonl
+  call: methodology
+  strength: strong
+  note: 'v2, 280 items of TruthfulQA under matched templates: leave-one-out F1 0.614, false positives on valid items
+    37%. The status stood on the pilot of 40 items, on G1h 2.9B and on the external validation, and this later,
+    harder run was in the file but had not reached it. The date is the day of the first commit of the files (it
+    bounds the run from above; the run was on or before it). The status is PARTIAL from this run, applied to the
+    record on 2026-11-24 (owner''s word): the state carries structural invalidity (recall 4/5 or better on every
+    structural type), and the head on it is not shown to serve as a gate (the clause of 3% was never run). No clause
+    of the refuter fired by its own measurement, so the call carries no odds and the status is not CONTESTED.'
+- date: '2026-11-24'
+  file: hypotheses/H21.md
+  call: methodology
+  strength: strong
+  note: 'A fact about the record, not about the claim: the F1 on the structural set is not computable from it. The
+    file holds the recall per type and the F1 over all items; the refuter names its set from this date, and a future
+    run logs TP, FP, TN and FN per arm beside the F1. The file was split into its two claims the same day.'

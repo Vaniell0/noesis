@@ -1,0 +1,69 @@
+# Record of H17.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H17
+status: RETIRED
+prior: 0.3
+posterior: null
+depends_on: []
+supports: []
+contradicts_if:
+- quality(K=4) < quality(full) even at high runtime age -- substrate does not effectively absorb history for reasoning
+  purposes (already in prose below)
+- the multi-turn law finding (0/2 recall across all models, tuned or not -- see docs/community-map.md divergence
+  table and hypotheses/H10.md) holds even on the post-distillation/post-RL model at real cross-injection test --
+  would mean absorption doesn't reach the multi-turn regime this hypothesis needs, not just that K=4-out-of-the-box
+  was untrained
+evidence:
+- date: 2026-08-20
+  file: docs/community-map.md
+  call: contradicts
+  strength: weak
+  note: 'community-map''s divergence table already flags pressure against the optimistic reading of this hypothesis,
+    not reflected in this section''s own text: the multi-turn law (0/2 success across every model measured, tuned
+    or not -- same finding already logged in hypotheses/H10.md) shows state does not reliably enable multi-turn
+    recall without dedicated training. ''K=4 tail works out of the box'' is not supported; the wager may still hold
+    ''with correct training'' -- which is exactly what the current overnight2/M-loop distillation work is attempting,
+    not yet verified either way.'
+- date: 2026-08-20
+  file: hypotheses/H17.md
+  call: methodology
+  strength: strong
+  note: 'The owner''s position on H17 itself (2026-08-20; a judgment, made methodology on 2026-11-24 so that it
+    carries no odds): (2026-08-20, after untangling a same-session mixup where everything said under the label ''17''
+    was actually about H18): K=4 tail_turns is old and, in the user''s judgment, breaks the model''s logical sequence
+    outright -- not a threshold-tuning question, a rejection of the mechanism as currently framed. Cited an agent-environment
+    paper from the community where context is read once per turn, as a contrast point (not yet pinned down which
+    paper). The whole K=4/runtime-age/absorption-threshold measurement setup below predates the current N (state-refinement
+    passes) and M (WKV-loop internal steps) axis vocabulary, and doesn''t account for state differing per task --
+    needs reframing in those terms before it''s testable again, not just re-run as written.'
+- date: '2026-11-24'
+  file: docs/community-map.md
+  call: methodology
+  strength: strong
+  note: 'What the status rests on: two readings and no run of this claim. The contradicts of 2026-08-20 (strong)
+    is the owner''s judgment that K = 4 breaks the logical sequence; the second (weak) is the multi-turn law of
+    docs/community-map.md line 232 (production, 2026-08-12, 0 of 2 for every model), an observation of other systems.
+    Estimator and refuter were never run. No odds; the status is not moved.'
+- date: '2026-11-24'
+  file: hypotheses/H17.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H17.yml. Links in the prose written
+    from the repository root.
+- date: '2026-11-24'
+  file: hypotheses/H17.md
+  call: methodology
+  strength: strong
+  note: 'RETIRED from CONTESTED on the owner''s word of 2026-11-24: a decision, not a run. It is not a claim about
+    the model but a property of a runtime of the community: the state takes in the current prompt only and keeps
+    no history. His observation, which no file of the tree measures: with such a runtime the model loops and repeats
+    itself by the second message in about 9 of 10 cases, whatever the weights. What the tree holds beside it: the
+    multi-turn law (0 of 2 for every model, docs/community-map.md), and under H10 the collapse on the third re-feed
+    of the same prompt (N = 3). The estimator and refuter were never run; the question of history in the state is
+    carried by H10, H18 and H20.'
+- date: '2026-11-24'
+  file: hypotheses/H17.md
+  call: methodology
+  strength: weak
+  note: 'The owner''s word of 2026-11-24, in the record''s words: the observation of looping belongs to a runtime
+    of the community built on one inference library and is not a fact about the runtime of this project, which is
+    its own and is being written in spatium. It is not to be tested here.'

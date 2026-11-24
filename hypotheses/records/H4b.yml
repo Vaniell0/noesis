@@ -1,0 +1,18 @@
+# Record of H4b.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H4b
+status: WAGER
+prior: null
+posterior: null
+depends_on: []
+supports: []
+contradicts_if:
+- a pattern across them disfavours RWKV without a plausible confound
+evidence:
+- date: '2026-11-24'
+  file: hypotheses/H4b.md
+  call: methodology
+  strength: strong
+  note: 'A one-line record, written 2026-11-24 from the file itself. WAGER: a wager by its own words, never tested.
+    A pattern, not one run, reopens the choice of backbone; nothing here moves a status. Outside the research tree
+    (README section 7): written before the programme had estimators, in the vocabulary of the runtime of that time.
+    The estimator and the refuter are the file''s own prediction and falsification.'

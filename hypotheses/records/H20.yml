@@ -1,0 +1,55 @@
+# Record of H20.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H20
+status: CONTESTED
+prior: 0.4
+posterior: null
+depends_on:
+- H8
+supports: []
+contradicts_if:
+- collapse_first (the originally pre-registered Modal-collapse rate, p>0.9 on the first decode token) exceeds 0.70
+  across categories -- already the case for bounded_ambiguity (0.697, right at the line) in the existing G1d 100-item
+  data
+evidence:
+- date: 2026-08-20
+  file: experiments/aporia_probe/report.md
+  call: contradicts
+  strength: strong
+  note: 'experiments/aporia_probe/run.py computes two distinct collapse metrics: collapse_first (p>0.9 fraction
+    on the first decode token -- this is the actual pre-registered ''Modal-collapse rate'' with locked thresholds
+    <0.30=holds / >0.70=refuted) and collapse_cont (branch-share deviation from 50/50 across sampled continuations
+    -- a different, later-introduced metric). Prose below cites only collapse_cont (0.54-0.665, reads as middle-of-range/inconclusive)
+    and never mentions collapse_first at all, even though it''s computed and sitting in report.md: aggregate mean=0.672,
+    cf=0.688, ba=0.697, ui=0.624 -- all far from the <0.30 ''holds'' band and bounded_ambiguity sits right at the
+    0.70 refutation line. Same failure shape as H8/H9 (pre-registered metric silently dropped for a better-looking
+    substitute), found independently here. Per user (2026-08-20): record it regardless of not being certain what
+    these parameters conceptually measure, since the data is real.'
+- date: 2026-10-20
+  file: experiments/aporia_probe/report.md
+  call: methodology
+  strength: weak
+  note: 'Re-read against current knowledge. The neck measurement was read as 1-2 linearly separable facts per head,
+    facts sharing directions, which predicted that two incompatible hypotheses cannot be held side by side in the
+    state - consistent with collapse_first 0.672. Corrected 2026-11-12: that count came from an erratic solver;
+    G1d 0.4B''s L11-13 state keeps about 5.5 of 8 stored values linearly readable, so storage alone no longer predicts
+    the collapse; it would sit in the readout or the dynamics. Proposed reframe from Hesse, ..., Tsao 2026 (bioRxiv
+    10.64898/2026.10.15.759299, preprint): in macaque face patches the same neurons alternate about 15 times a second
+    between the seen and the suppressed stimulus. Aporia may be held by ALTERNATION across steps, which a first-token
+    multimodality metric cannot see. Test: hypotheses/checks-h20-h26.yaml C-H20-alternation.'
+- date: 2026-10-20
+  file: experiments/aporia_probe/alternation_g1d04b_reask.json
+  call: contradicts
+  strength: weak
+  note: 'The alternation reframe (Tsao 2026) tested and not supported on G1d-0.4B: after each of 16 greedy steps
+    the prompt is re-asked and log p(X) - log p(Y) read; decisive sign flips 0.20 per item on the model''s own continuation
+    vs 0.17 with another item''s continuation fed in (paired 9 more, 7 fewer, 100 items), and |d| grows along the
+    own path (10.6 -> 11.4 nats): the model entrenches rather than alternates. Caveat: d sums over multi-token alternatives,
+    so the lexical prior dominates its size; decode steps only, no latent ticks. READOUT CONFOUND found by the owner
+    the same day: the readout re-fed the whole question into the cloned state (a re-read, N=2) before scoring, which
+    can suppress flips; rerun with a history-free bridge readout pending (alternation_g1d04b_bridge.json).'
+- date: '2026-11-24'
+  file: hypotheses/H20.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H20.yml. Links in the prose written
+    from the repository root.

@@ -1,0 +1,319 @@
+# Record of HZLK.md: the programme's status, refuters, evidence and sub-claims. The table in HZLK.md is generated from `claims`.
+# ZLK sub-claims: the source of the table in 'Sub-claims at a glance' (python experiments/regenerate_hyp_index.py).
+# regime = the data and the model's state the status was measured in (pretrained vs from scratch).
+# Sub-claims: `status` is one of PROPOSED, BLOCKED, REGULAR, PARTIAL, CONTESTED, SUPPORTED, REFUTED; the finding is the old free-word status; `after` names the sub-claims whose result it builds on (the edges of the graph).
+id: HZLK
+status: PROPOSED
+prior: null
+posterior: null
+depends_on:
+- H0
+- H7
+- H8
+- H9
+- H10
+- H12
+- H17
+- H18
+- H19
+- H25
+supports: []
+contradicts_if:
+- A loop trained over M>=2 ticks on a verified same-model teacher set does not beat both M=1 and M=0 on held-out
+  items of at least two task families (paired by item, effect >= 5 points and McNemar p < 0.05 on the pooled items)
+- 'At equal accuracy the trained loop still generates more than 80% of the teacher''s mean CoT tokens on the same
+  items (G1i, untrained teacher: 470 on 32 patterns, 546 on 16 arithmetic items)'
+- 'The loop never exceeds the teacher: after the stop and search stages (S3) it is below the teacher''s accuracy
+  on every family at any token budget, i.e. distillation was all there was'
+- The learned continue/stop action equals the best FIXED M, or collapses to the maximum M, on a mixed-family set;
+  or a random stop with the same mean M does as well
+- M>1 only works when a per-phase correctness reward is added (then self-regulation is not what produced it)
+- A readout-level tuning (LoRA) that leaves routing unchanged nevertheless moves the state-noise basin by more than
+  the seed-to-seed spread of the base model, i.e. output narrowness and the state are not separable
+- Gains persist when the teacher's content is shuffled between examples, or when the fed expectation is swapped
+  between examples (the loop is then fitting format, not extracting)
+evidence:
+- date: 2026-11-12
+  file: hypotheses/HZLK.md
+  call: methodology
+  strength: strong
+  note: 'Rebuilt under the frame of hypotheses/README.md: the owner''s interpretation of the record is stated first
+    (section 1), then every sub-claim as objects, statement, estimator, refuter and what it rests on (section 4),
+    with the extraction claims added (ZLK.11-ZLK.14: stored-not-read, a reader that raises usable capacity, denser
+    packing under a trained reader, derived relations) and the training claims (ZLK.15-ZLK.19). S2 is redefined
+    as knowledge widening through a fixed teacher; the latent-noise policy moves to S3. The pilot narrative is compressed
+    into a run table (section 6b) with its files. Nothing was re-measured for the rebuild.'
+- date: 2026-11-12
+  file: experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md
+  call: supports
+  strength: weak
+  note: 'Correction of how the World-vs-G1 difference was quoted in conversation on 2026-11-12: at 0.4B World''s
+    next-token KL under state noise is 2-3x below G1d''s (sigma 0.1: 0.108 / 0.033 vs 0.258 / 0.249, a05_ext/verdict.md),
+    but at 2.9B World3 is 40x below G1h (0.0055 vs 0.23) while holding the prompt''s identity in the state more
+    tightly (cross-prompt KL 9.64 vs 7.92). A plain pretrain routes little through its state at scale. The measurement
+    is dependence of the output on the state, not computation; it supports starting the loop from World (ZLK.16)
+    as a base whose read path has not settled.'
+- date: 2026-11-12
+  file: external:docs/community-map.md, Scarletwolf readout corrector 2026-08-12
+  call: supports
+  strength: weak
+  note: 'A post-hoc reranker on the WKV-state readout, no retraining, raises a tool-calling bench by +7 at 1.5B,
+    +6 at 2.9B, +2 at 7.2B; 1.5B tuned plus the corrector equals 2.9B tuned (64 vs 63 of 82). A better reader of
+    the same state buys most at the smallest size: the shape ZLK.12 predicts. External, one bench, not our estimator.'
+- date: 2026-10-06
+  file: experiments/rl/results/cot_vs_routes_g1i_pattern.json
+  call: supports
+  strength: weak
+  note: 'G1i-2.9B untrained, 32 pattern items: 17/32 teacher CoTs run to the 768-token cap; 47% of all CoT tokens
+    are generated after the first checkpoint at which the answer was already correct; an offline rule ''answer silently
+    if 4 of 5 silent routes agree, else CoT'' scores 0.719 at 256 tokens against CoT 0.688 at 470. A room estimate
+    (the rule was chosen on the same items, 0.719 vs 0.688 is one item), not a mechanism.'
+- date: 2026-10-06
+  file: experiments/rl/results/cot_vs_routes_g1i_arith.json
+  call: methodology
+  strength: weak
+  note: 'Same probe, 16 arithmetic items: silent routes 0.00-0.06, CoT 0.312 at 546 tokens, the agreement rule saves
+    nothing (0.25 at 339). The saving is a property of the task family; a rule we write does not transfer, which
+    is why stop/continue has to be the model''s own action.'
+- date: 2026-10-06
+  file: experiments/rl/results/cot_vs_routes_g1i_pattern.json
+  call: supports
+  strength: weak
+  note: 'The plain model does not use extra time: re-reading the question scores 0.469 against 0.531 for answering
+    at once (32 patterns), 0.062 against 0.062 on arithmetic; 2 and 8 latent ticks of its own expectation 0.344.
+    The earlier N=2 gain (H10, step8 LoRA checkpoint, 33.3 vs 27.1) is most likely the known recall effect of repeating
+    context (arXiv 2407.05483), which this does not contradict. Pause-token work (arXiv 2310.02226) reports that
+    extra inference compute helps only after training for it.'
+- date: 2026-08-07
+  file: experiments/A0.8_refine/results/step8_epoch0/h10_sweep_step8_epoch0/n2_k512_cot.json
+  call: methodology
+  strength: weak
+  note: 'H10 sweep on the step8 LoRA checkpoint, read in full 2026-10-07 (the K=512 cells were ''N/A, too large''
+    in the summary): N=2 with 512 CoT tokens scores 15/48 = 31.2%, the best CoT cell and one task below N=2 silent
+    (16/48 = 33.3%): 512 generated tokens buy what a second silent pass gave for free. N=2 CoT rises with K (10.4,
+    22.9, 31.2); N=3 does not recover with tokens (4.2, 6.3, 6.3). state_readout cells of that sweep are invalid
+    (evaluator bug, fixed 2026-08-12).'
+- date: 2026-10-07
+  file: experiments/rl/results/state_step_influence_g1d04b.json
+  call: supports
+  strength: weak
+  note: 'How much one step moves the WKV state, G1d-0.4B untrained, 6 pattern prompts, all from one post-question
+    state (|dS|/|S| per step, mean over layers): question tokens 0.24, the question fed again (N=2) 0.20, teacher
+    CoT tokens 0.21, latent ticks of the model''s own expected embedding 0.21, ticks of a constant vector 0.04 (consecutive
+    displacements aligned, cosine +0.95: a fixed point). Content-carrying steps all alternate direction (cosine
+    -0.23). A latent tick moves the state as much as a real token; a constant does not. Magnitude is not usefulness:
+    the useful component (projection on the answer gradient) is not measured yet.'
+- date: 2026-09-22
+  file: experiments/rl/results/state_traj_g1d04b_expected_on.md
+  call: supports
+  strength: weak
+  note: 'Earlier trajectory probe, same direction: the content-dependent `expected` feed behaves like real self-generated
+    tokens (|dS|/|S| 0.19-0.33, cosine -0.05 to -0.29 at L12/16/20) while an untrained constant marker moves less
+    (0.09-0.23) and aligns (cosine 0.43-0.59, to 0.88 by tick 8 at L16): the fixed point comes from feeding a constant,
+    not from being latent. 4 prompts, n small; the 0.4B is a weak testbed for how task-dependent the write is.'
+- date: 2026-10-02
+  file: experiments/A0_state_probe/results/halting_chain.json
+  call: supports
+  strength: weak
+  note: 'Toy: stopping read from the state is learnable (supervised 0.953 exact stop; a state swap moves the stop
+    to the donor''s sum in 94.8%). From outcome reward with a time price only: lr 3e-3 collapses into stop-early-and-guess,
+    lr 5e-4 reaches counter level (0.764 vs 0.758); labels first then reward keeps the labelled policy. One seed
+    each.'
+- date: 2026-10-01
+  file: experiments/rl/results/state_readout_lens_g1i.json
+  call: methodology
+  strength: strong
+  note: 'The neck: per head 12-29 directions occupied (G1d L12), the answer depends on about half, a linear probe
+    was read as separating 1-2 facts (N=1 1/1, N=2 2/2, N=4 1/4, N=8 0/8), but that probe''s solver (lstsq gelsy)
+    was erratic on this design; with ridge (lambda by CV) the L11-13 state reads 3.6 / 5.5 / 6.7 / 6.0 bound values
+    (sum of held-out R2) at N = 4 / 8 / 16 / 32, against about 3 recalled at 8 (2026-11-12). Readout lens checked
+    against causal deletion (Spearman 0.92-0.98).'
+- date: 2026-10-07
+  file: experiments/A0_eval/results/rwkv7_29b_g1h_np2048.json
+  call: methodology
+  strength: weak
+  note: 'Suggestive, not controlled: G1h-2.9B base through Ollama scores 7.1% (3/42) at the harness default of 64
+    generated tokens and 39.6% (19/48) at 2048 (it reasons before it answers); the L_state + eps-mask LoRA (step9
+    e0) scores 43.75% at 512 on the native harness. Backend, prompt path and budget all differ, so a gain in accuracy
+    per generated token is suggested, not shown. No base run at 512 on the same harness exists. Our eval set, an
+    upper bound.'
+- date: 2026-09-22
+  file: experiments/rl/results/l_state_ablation_g1d04b.json
+  call: methodology
+  strength: weak
+  note: 'Likelihood gets worse while task performance rises: held-out CE after 30 steps on G1d-0.4B rose +0.109
+    with CE only, +0.226 with motion only, +0.402 with L_state. Narrowness of tuning shows at the output.'
+- date: 2026-10-02
+  file: experiments/rl/results/staged_recall_p1_step100_final.json
+  call: supports
+  strength: weak
+  note: 'Precondition: binding skill is trainable. G1d-0.4B, Muon 1e-4, 100 steps: recall 0.72 -> 0.9625, in-window
+    ceiling 0.9875, blank 0.025 (no gap effect: the skill learned is binding keys, not holding them across a gap).'
+- date: 2026-10-07
+  file: experiments/rl/results/geomgrid/lr1e-4_s0.json
+  call: methodology
+  strength: weak
+  note: 'Optimizer for the training stages, G1d-0.4B full fine-tune, 30 steps, 3 shuffled data orders (experiments/rl/geomgrid_summary.py):
+    best held-out dCE is equal for Muon (3e-5, -0.172) and AdamW (1e-5, -0.168); the zero crossing is at median
+    step ~1.4e-4 for Muon against ~7.5e-5 for AdamW (window about 1.9x wider); Muon at 1e-4 is flat (+0.08). So
+    fine-tuning lr 3e-5 to 1e-4 for Muon, not 0.02.'
+- date: '2026-11-24'
+  file: hypotheses/HZLK.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/HZLK.yml and the readings of the run
+    table to records/HZLK.runs.yml; every link was rewritten from the old results/ root to the place the data lies;
+    a long status of a claim is kept whole as its finding beside a short status; four runs named in section 4 without
+    a row (1o, 1n, 1j, 1t) were given one from the text of their claims.
+- date: '2026-11-24'
+  file: hypotheses/HZLK.md
+  call: correction
+  strength: strong
+  note: The record completed from the paper draft (noesis-paper/depth-from-time.md, read whole on 2026-11-24); no
+    status moved. Widths 30, 36 and 42 added to run 1h, which had no size between 24 and 48. The open claim of the
+    paper, different steps draw different heads, mirrored as ZLK.24 with its refuter and the operator form of a
+    second one; not run.
+- date: '2026-11-24'
+  file: hypotheses/records/HZLK.yml
+  call: correction
+  strength: strong
+  note: 'Sub-claim statuses reduced to the vocabulary of the top-level claims (PROPOSED, REGULAR, PARTIAL, CONTESTED,
+    SUPPORTED, REFUTED); 23 free-word statuses had made the set unreadable as a count. The old status of each is
+    its finding, unchanged. `after` added to ten claims: the claims whose result it builds on, read from the prose.
+    No status moved in substance.'
+claims:
+- id: ZLK.1
+  claim: CoT spends many tokens after the answer is already there
+  status: PARTIAL
+  finding: measured on one model, 48 items
+  regime: G1i 2.9B pretrained, 32 pattern items
+- id: ZLK.2
+  claim: untrained time (re-read, ticks, pauses) is not used
+  status: REGULAR
+  finding: regular; recall control not run
+  regime: G1i 2.9B pretrained, untrained ticks and re-read
+- id: ZLK.3
+  claim: tuning narrows the output; the state survives it
+  status: PARTIAL
+  finding: partly measured
+  regime: pretrained, LoRA readout tuning
+- id: ZLK.4
+  claim: a channel of the model's own latent can be trained without erasing the answer
+  status: PARTIAL
+  finding: '0.4B: tick no longer erases; every arm a pass-through'
+  regime: G1d 0.4B pretrained
+- id: ZLK.5
+  claim: the model can learn to choose its own number of ticks
+  status: PARTIAL
+  finding: 'CONFIRMED on the toy 11-20 (2 of 3 seeds, sL_ramp1): own stop without a head equals fixed M8 at 62-69%
+    of the ticks; seed 6 lost 0.10 to training'
+  regime: toy from scratch (chase), start from a trained C model; pretrained not run
+- id: ZLK.6
+  claim: with search the loop exceeds its teacher's one-pass reading
+  status: PROPOSED
+  after:
+  - ZLK.1
+  finding: not run; bounded by T1/T2
+  regime: ''
+- id: ZLK.7
+  claim: two views of one content land close without collapse
+  status: PARTIAL
+  finding: 'precondition measured 11-20: trained ticks raise cross-script state CKA without collapse (toy loop,
+    3 seeds, 0.469 -> 0.625 at width 48, fading with width; 0.4B kl_T2_k4 +0.07 / +0.05; base-model M4 readings
+    are untrained ticks, not evidence; other text 0.15-0.22); the trained term not run'
+  regime: toy from scratch (two scripts); 0.4B pretrained, inference only
+- id: ZLK.8
+  claim: content first, format from the question; honest self-decisions
+  status: PARTIAL
+  finding: obedience measured, near 0
+  regime: G1i 2.9B pretrained, silent answers
+- id: ZLK.9
+  claim: a persistent state absorbs the configuration once
+  status: CONTESTED
+  finding: H17, contested
+  regime: none measured (the owner's sessions)
+- id: ZLK.10
+  claim: an exact-recall branch queried at every tick keeps the past the settling state forgets
+  status: PROPOSED
+  regime: ''
+- id: ZLK.11
+  claim: a pretrained model holds facts it does not read in one pass
+  status: PARTIAL
+  finding: measured on Qwen3.5 0.8B; not on RWKV
+  regime: Qwen3.5 0.8B pretrained
+- id: ZLK.12
+  claim: a trained reader raises usable capacity toward what is held
+  status: PARTIAL
+  after:
+  - ZLK.11
+  finding: 'supported in part 11-20: after 4 trained ticks (kl_T2_k4) a linear reader gets the next word at 0.177
+    where the head gets 0.101 (head ahead without ticks, 0.373 vs 0.254): what the state holds exceeds what the
+    head reads; T15 earlier: ticks +2% readable, training adds nothing; the 1.000 of the minimal pairs of 2026-10-20
+    is kept under H22 (records/H22.yml), compatible with this claim, not a test of it'
+  regime: G1d 0.4B pretrained (state readout; head vs reader, same target)
+- id: ZLK.13
+  claim: storage and reading trained together pack more at equal readability
+  status: PROPOSED
+  after:
+  - ZLK.12
+  finding: proposed; proved part for the state
+  regime: ''
+- id: ZLK.14
+  claim: relations derived from held facts are usable knowledge the loop can add
+  status: PROPOSED
+  regime: ''
+- id: ZLK.15
+  claim: knowledge enters through a fixed teacher on the student's own tokens without breaking the rest
+  status: PARTIAL
+  finding: partly measured (Qwen)
+  regime: Qwen3.5 0.8B pretrained
+- id: ZLK.16
+  claim: a loop learned from a plain pretrain beats the same chain grafted on a finished model
+  status: PARTIAL
+  after:
+  - ZLK.12
+  finding: 'toy form REFUTED 11-20 (1o: ticks grafted onto a one-pass toy pass k6 in 2 of 3 seeds, as reliable as
+    grown); pretrained form not run'
+  regime: toy from scratch (chase); pretrained not run
+- id: ZLK.17
+  claim: World trained by the chain against G1d compares two training methods from one base
+  status: PROPOSED
+  regime: ''
+- id: ZLK.18
+  claim: trained ticks widen the attractor instead of collapsing it, and the output grows more expressive
+  status: PARTIAL
+  after:
+  - ZLK.4
+  finding: 'one checkpoint supports it (kl_T2_k4); counter-case 11-21: 1t (100 full-weight steps on 160 Caesar rows,
+    KL + GRPO, no pretraining CE beside it) broke the chat through its ticks (loops, refusals): the widening holds
+    only with the pretraining term kept'
+  regime: G1d 0.4B pretrained; long-distance regime
+- id: ZLK.19
+  claim: separability is installed by tasks that need it, not by an answer loss alone
+  status: PARTIAL
+  finding: 'P1 negative; toy: a task one pass cannot solve made the ticks a register, a per-hop target made the
+    step iterable'
+  regime: toy from scratch; P1 on G1d 0.4B
+- id: ZLK.20
+  claim: the neck of one-pass reading is the late fall of rank, where key interference is highest
+  status: PARTIAL
+  after:
+  - ZLK.18
+  finding: rank fall measured; interference not
+  regime: G1d 0.4B and 2.9B pretrained
+- id: ZLK.22
+  claim: loop training on a mix of domains folds them into one system that transfers to a held-out domain, below
+    a specialist but smoother
+  status: CONTESTED
+  finding: 'toy 11-20: no transfer in bpc (1n plain/Cyrillic: joint +0.46 bpc vs Cyrillic-only, REFUTED; 1j plain+cipher
+    -0.014), but the loop raises deep-layer CKA between scripts 0.44 -> 0.71; cs: the context step did not reach
+    stored facts'
+  regime: toy from scratch, 55K (1n) and 271K (1j), one seed each; pretrained not run
+- id: ZLK.24
+  claim: on a task whose rule changes from step to step, the heads that carry a tick differ from tick to tick
+  status: BLOCKED
+  regime: ''
+  finding: 'waits for the model to stand in RSC: estimator and both refuters are written'
+unused:
+  '21': absent from the record; why it was skipped is written nowhere in the tree
+  '23': proposed and withdrawn 2026-11-24 (a loop learned beside the store); the mechanism it misread moved to 25

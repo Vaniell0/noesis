@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Read every hypothesis's structured record (YAML embedded in an HTML
-comment above its `## H<N>.` prose section) and:
+"""Read every hypothesis's structured record, score and lint it, and read the links of the hypotheses.
 
   1. compute a rough log-odds posterior from its `evidence` list, purely
      as a forcing function — the point is that filling in `prior`,
@@ -11,12 +10,16 @@ comment above its `## H<N>.` prose section) and:
   2. lint the records: dangling H-id references in `depends_on` /
      `supports` / `contradicts_if`; a hypothesis with no `contradicts_if`
      at all (a hypothesis with no stated refutation condition is badly
-     formed regardless of what the posterior says); `status` whose
-     polarity disagrees with the computed posterior.
+     formed regardless of what the posterior says), unless its status is
+     retired or a wager; a claim whose prose names no estimator or no
+     refuter; an evidence entry the scorer does not know; `status` whose
+     polarity disagrees with the computed posterior; a record kept in two
+     places.
 
     python experiments/bayes_lite.py [FILE ...]     # defaults to hypotheses/*.md
 
-A record block looks like:
+A record is data. It lives in `hypotheses/records/<ID>.yml`; a hypothesis not yet moved carries the
+same block in a comment at the top of its `.md`, and `load_records` reads either:
 
     <!--
     (free-text preamble, ignored)
@@ -29,10 +32,17 @@ A record block looks like:
 Parsing finds `id:` inside each `<!-- -->` block and YAML-parses from
 there to the end of the comment — the preamble before it can be
 arbitrary prose.
+
+The links are read here because the checker (`regenerate_hyp_index.py --check`) and `backlog.py`
+must see the same ones. A link is a path in backticks, resolved from the repository root; the form
+is in `hypotheses/README.md`, "Form of a file and its record".
 """
 from __future__ import annotations
 
+import fnmatch
+import glob
 import math
+import os
 import re
 import sys
 from pathlib import Path
@@ -41,13 +51,15 @@ import yaml
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _HYPOTHESES_DIR = _REPO_ROOT / "hypotheses"
+_RECORDS_DIR = _HYPOTHESES_DIR / "records"
 
 _COMMENT_RE = re.compile(r"<!--(.*?)-->", re.DOTALL)
 _ID_START_RE = re.compile(r"^id:\s*\S+", re.MULTILINE)
 _HEADER_ID_RE = re.compile(r"^##\s+(H\d+[a-z]?)\.", re.MULTILINE)
 _ANY_ID_RE = re.compile(r"\bH\d{1,2}[a-z]?\b")
 
-# call -> likelihood ratio, by strength. Deliberately coarse.
+# call -> likelihood ratio, by strength. Deliberately coarse. A correction restates the reading of an entry
+# above it; the odds stay that entry's.
 _LR = {
     ("supports", "strong"): 3.0,
     ("supports", "weak"): 1.3,
@@ -57,7 +69,13 @@ _LR = {
     ("methodology", "weak"): 1.0,
     ("contradicts", "weak"): 1 / 1.3,
     ("contradicts", "strong"): 1 / 3.0,
+    ("correction", "strong"): 1.0,
+    ("correction", "weak"): 1.0,
 }
+
+# A status that asserts nothing needs no refuter: the claim is closed, or it was never a hypothesis but a
+# wager of the runtime (`hypotheses/README.md`, section 7).
+_NO_REFUTER_NEEDED = ("RETRACTED", "WITHDRAWN", "SUPERSEDED", "RETIRED", "WAGER")
 
 
 def parse_records(text: str) -> list[dict]:
@@ -76,6 +94,155 @@ def parse_records(text: str) -> list[dict]:
         if isinstance(data, dict) and "id" in data:
             records.append(data)
     return records
+
+
+def record_file(md_path: Path) -> Path | None:
+    """`records/<ID>.yml` beside the hypothesis files, when the record of that file was moved there."""
+    f = _RECORDS_DIR / (Path(md_path).stem + ".yml")
+    return f if f.is_file() else None
+
+
+def load_records(md_path: Path) -> tuple[list[dict], Path]:
+    """The records of one hypothesis file and the file they were read from."""
+    md_path = Path(md_path)
+    f = record_file(md_path)
+    if f is None:
+        return parse_records(md_path.read_text()), md_path
+    try:
+        data = yaml.safe_load(f.read_text())
+    except yaml.YAMLError as e:
+        print(f"[bayes_lite] WARNING: failed to parse {f.relative_to(_REPO_ROOT)}: {e}", file=sys.stderr)
+        return [], f
+    return [r for r in (data if isinstance(data, list) else [data]) if isinstance(r, dict) and "id" in r], f
+
+
+# A link is a path in backticks. "repo": resolved from the repository root. "outside": an absolute or a
+# home-relative path, checked on this machine. "web": names no file here, not checked. Anything else in
+# backticks is not a link (a formula, a command, an id).
+_LINK_RE = re.compile(r"`([^`\n]+)`")
+_REPO_LINK_RE = re.compile(r"^[A-Za-z0-9_.][A-Za-z0-9_.*?{},-]*(?:/[A-Za-z0-9_.*?{},-]+)+/?$")
+_WEB_RE = re.compile(r"^(?:https?://|external:|[\w-]+(?:\.[\w-]+)+/)", re.I)
+# Record fields that are a link whatever their shape.
+_LINK_FIELDS = ("file", "files")
+
+
+def _exists(path: Path) -> bool:
+    try:
+        return path.exists()
+    except OSError:                      # a string the system cannot even look up (too long to be a path)
+        return False
+
+
+def link_kind(token: str) -> str | None:
+    """What a backticked token is: "web", "outside", "repo", or None when it is not a path."""
+    if token.startswith(("~/", "/")):
+        return "outside"
+    if _WEB_RE.match(token) and not _exists(_REPO_ROOT / token):     # a folder whose name carries a dot
+        return "web"                                                  # is a path, not an address
+    return "repo" if _REPO_LINK_RE.match(token) else None
+
+
+def links_in(text: str) -> list[tuple[str, str]]:
+    """Every link in a text, in order: (token, kind). The first word of a command counts (`x.py --flag`)."""
+    out = []
+    for m in _LINK_RE.finditer(text):
+        tok = m.group(1).strip()
+        if link_kind(tok) is None and " " in tok:
+            tok = tok.split()[0]
+        kind = link_kind(tok)
+        if kind:
+            out.append((tok, kind))
+    return out
+
+
+def expand_link(token: str) -> list[str]:
+    """The paths a link stands for: a `{a,b}` group is a set of alternatives."""
+    out = [token]
+    for g in re.findall(r"\{([^{}]*)\}", token):
+        out = [o.replace("{" + g + "}", a, 1) for o in out for a in g.split(",")]
+    return out
+
+
+def missing_paths(token: str, kind: str) -> list[str]:
+    """The paths a link stands for that do not exist; empty when the link is alive. A `*` must match."""
+    if kind in ("web", "missing"):
+        return []
+    return [p for p in expand_link(token)
+            if not glob.glob(os.path.expanduser(p) if kind == "outside" else str(_REPO_ROOT / p),
+                             recursive=True)]
+
+
+def _walk_links(node, out: set) -> None:
+    """Links of a parsed record: `file` fields whatever their shape, any other string that is a path."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in _LINK_FIELDS and not isinstance(v, dict):
+                for x in (v if isinstance(v, list) else [v]):
+                    x = x.strip().strip("`") if isinstance(x, str) else ""
+                    if x:
+                        # a link beside a `missing` date is a dead one on record: not alive, not to be counted dead
+                        out.add((x, "missing" if node.get("missing") else link_kind(x) or "repo"))
+            else:
+                _walk_links(v, out)
+    elif isinstance(node, list):
+        for v in node:
+            _walk_links(v, out)
+    elif isinstance(node, str):
+        out.update(links_in(node))
+        if link_kind(node.strip()):
+            out.add((node.strip(), link_kind(node.strip())))
+
+
+def hypothesis_links() -> dict[str, set[tuple[str, str]]]:
+    """The links of every file under hypotheses/, by path from the repository root: in its text (prose,
+    notes) and in its record."""
+    out = {}
+    for p in sorted(_HYPOTHESES_DIR.glob("*.md")) + sorted(_RECORDS_DIR.glob("*.yml")):
+        found = set(links_in(p.read_text()))
+        if p.suffix == ".yml":
+            try:
+                data = yaml.safe_load(p.read_text())
+            except yaml.YAMLError as e:
+                print(f"[bayes_lite] WARNING: failed to parse {p.relative_to(_REPO_ROOT)}: {e}", file=sys.stderr)
+                data = []
+            nodes = data if isinstance(data, list) else [data]
+        else:
+            nodes = load_records(p)[0]
+        for n in nodes:
+            _walk_links(n, found)
+        out[os.path.relpath(p, _REPO_ROOT)] = found
+    return out
+
+
+def cited_paths() -> set[str]:
+    """Every path the hypotheses name, the alternatives of a `{a,b}` link included."""
+    return {p for found in hypothesis_links().values() for tok, _ in found for p in expand_link(tok)}
+
+
+def run_folders(rel: str) -> list[str]:
+    """The paths that cite a result: its own, the folder that holds its run and every folder below it;
+    never the root of a results tree."""
+    parts = rel.split("/")
+    cut = parts.index("results") + 1 if "results" in parts else min(2, len(parts) - 1)
+    return [rel] + ["/".join(parts[:i]) for i in range(cut + 1, len(parts))]
+
+
+def is_cited(rel: str, cited: set[str]) -> bool:
+    """A result is cited when a link names its path, a folder that holds it, or a glob that matches it."""
+    return (any(f in cited for f in run_folders(rel))
+            or any(fnmatch.fnmatchcase(rel, g) for g in cited if "*" in g))
+
+
+def record_problems(md_path: Path, records: list[dict], source: Path) -> list[str]:
+    """What is wrong with where a record lives: an id that is not the name of its file, a `.yml` beside a
+    comment block that still holds a record (the file wins; the block is then a stale copy)."""
+    md_path = Path(md_path)
+    out = [f"record id {r['id']} in {source.name}, beside {md_path.name}"
+           for r in records if r.get("id") != md_path.stem]
+    if source != md_path and parse_records(md_path.read_text()):
+        out.append(f"record in two places: {source.name} and the comment block of {md_path.name}; "
+                   "the file wins, delete the block")
+    return out
 
 
 def unrecognised_evidence(evidence: list[dict]) -> list[tuple]:
@@ -106,9 +273,10 @@ def posterior(prior: float, evidence: list[dict]) -> float | None:
     return 1 / (1 + math.exp(-logit))
 
 
-def lint(record: dict, known_ids: set[str]) -> list[str]:
+def lint(record: dict, known_ids: set[str], prose: str = "") -> list[str]:
     problems = []
     hid = record.get("id", "?")
+    status = (record.get("status") or "").upper()
 
     for field in ("depends_on", "supports"):
         for ref in record.get(field) or []:
@@ -116,7 +284,7 @@ def lint(record: dict, known_ids: set[str]) -> list[str]:
                 problems.append(f"{field} references unknown id {ref!r}")
 
     contradicts_if = record.get("contradicts_if") or []
-    if not contradicts_if:
+    if not contradicts_if and status not in _NO_REFUTER_NEEDED:
         problems.append("no contradicts_if — hypothesis has no stated refutation condition")
 
     ev = record.get("evidence") or []
@@ -127,7 +295,12 @@ def lint(record: dict, known_ids: set[str]) -> list[str]:
             f"the posterior")
     # File existence / citation coverage is backlog.py's job, not duplicated here.
 
-    status = (record.get("status") or "").upper()
+    if prose and status not in _NO_REFUTER_NEEDED:
+        lacking = [w for w in ("estimator", "refuter") if w not in prose.lower()]
+        if lacking:
+            problems.append("the prose names no " + " and no ".join(lacking)
+                            + " — a claim is written as a statement, its estimator and its refuter")
+
     post = posterior(record.get("prior"), ev)
     if post is not None and status in ("SUPPORTED", "REFUTED"):
         implied_support = post >= 0.5
@@ -148,30 +321,34 @@ if __name__ == "__main__":
     for f in files:
         all_text += f.read_text() + "\n"
     known_ids = set(_HEADER_ID_RE.findall(all_text)) | set(_ANY_ID_RE.findall(all_text))
+    known_ids |= {r["id"] for f in files for r in load_records(f)[0]}
 
     any_records = False
-    untracked = []
+    untracked, n_records, n_problems = [], 0, 0
     for f in files:
         text = f.read_text()
-        records = parse_records(text)
+        records, source = load_records(f)
         if not records:
             untracked.append(f.name)
             continue
         for record in records:
             any_records = True
+            n_records += 1
             hid = record["id"]
             prior = record.get("prior")
             post = posterior(prior, record.get("evidence"))
             status = record.get("status", "?")
-            n_ev = len(record.get("evidence") or [])
-            n_contra = sum(1 for e in (record.get("evidence") or []) if e.get("call") == "contradicts")
+            ev = record.get("evidence") or []
+            n_contra = sum(1 for e in ev if e.get("call") == "contradicts")
+            n_corr = sum(1 for e in ev if e.get("call") == "correction")
 
-            print(f"=== {hid} ({f.name}) ===")
+            print(f"=== {hid} ({source.name}) ===")
             print(f"  status={status}  prior={prior}  posterior={'n/a' if post is None else round(post, 3)}  "
-                  f"evidence={n_ev} ({n_contra} contradicts)")
-            problems = lint(record, known_ids)
+                  f"evidence={len(ev)} ({n_contra} contradicts, {n_corr} corrections)")
+            problems = lint(record, known_ids, _COMMENT_RE.sub("", text)) + record_problems(f, records, source)
             for p in problems:
                 print(f"  LINT: {p}")
+            n_problems += len(problems)
             print()
 
     import re as _re
@@ -189,5 +366,8 @@ if __name__ == "__main__":
               "posterior above and to any sweep that reads this output.")
         print()
 
+    if any_records:
+        print(f"[bayes_lite] {n_records} record(s), {n_problems} lint line(s), "
+              f"{len(untracked)} file(s) without a record")
     if not any_records:
         print(f"[bayes_lite] no structured records found in {', '.join(str(f) for f in files)}")

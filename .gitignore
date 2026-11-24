@@ -15,8 +15,9 @@
 # Docs
 !docs/**/*.md
 
-# Hypotheses (split out of the old top-level HYPOTHESES.md)
+# Hypotheses (split out of the old top-level HYPOTHESES.md); the record of a claim is records/<ID>.yml
 !hypotheses/**/*.md
+!hypotheses/records/*.yml
 
 # Nix modules (independent, importable)
 !nix/**/*.nix

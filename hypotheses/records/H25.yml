@@ -1,0 +1,202 @@
+# Record of H25.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H25
+status: PARTIAL
+prior: null
+posterior: null
+depends_on:
+- H8
+supports: []
+contradicts_if:
+- Post-RL MLP probe on mathematical prompts shows no increase in nonlinear state content vs pre-RL (no new dimensions
+  activated for coefficient structure) -- pattern-matching, not state-substrate computation
+- Accuracy on linear equations with out-of-distribution coefficients does not exceed random baseline -- weight memorisation,
+  not generalised computation
+- Zeroing L16 WKV state at answer token does not degrade accuracy -- state is not causally read
+evidence:
+- date: 2026-08-23
+  file: experiments/A0_state_probe/micro_wkv.py
+  call: supports
+  strength: weak
+  note: 'Toy-scale, staged-supervision multiplication task (operand a at step 0, b only at final step, frozen final
+    readout closing the readout-bilinearity shortcut), default (Adam) optimizer. With every alternative path closed,
+    forcing a_gate=0 (erase-rewrite off) collapses R² from 0.9998/0.8361 (id/OOD) to -0.0810 -- the delta-rule mechanism
+    is necessary for THIS solution. Weak version (WKV as programmable register) cleanly demonstrated. Strength downgraded
+    strong->weak 2026-09-03: this necessity result is Adam-solution-specific, not an architecture-level fact --
+    see the same-day Muon entry below, which found a different, equally-valid solution to the identical task that
+    does NOT depend on a_gate. The real G1i checkpoint was pretrained with Muon, not Adam -- this toy result''s
+    relevance to the real model''s actual mechanism is unclear until re-checked against that.'
+- date: 2026-08-23
+  file: experiments/A0_state_probe/results/muon_vs_adam_multiseed.json
+  call: methodology
+  strength: weak
+  note: 'Same FrozenFinalReadoutController multiplication task, retrained with Muon (hidden net.*.weight only) instead
+    of Adam, 5 seeds. Both optimizers solve the task equally well (id_r2 near-identical), but the a_gate=0 ablation
+    diverges sharply: Adam -1.376+-1.326 (heavily dependent on the erase-rewrite channel, every seed), Muon -0.029+-0.032
+    (barely dependent on it at all, every seed). Same task, same architecture, same accuracy, reliably DIFFERENT
+    mechanism depending on which optimizer found the solution -- directly limits the entry above''s ''necessary''
+    claim to Adam-found solutions specifically, not a task/architecture-level necessity. Real G1i was pretrained
+    on Muon (per user, 2026-09-03) -- if pretrain-optimizer determines which mechanism a solution relies on the
+    way this toy result suggests, the real model plausibly resembles the Muon solution (distributed reliance across
+    channels) rather than the Adam one (concentrated on one channel), which was not accounted for when this section''s
+    evidence entries were first drafted.'
+- date: 2026-08-24
+  file: experiments/rl/results/wkv_linear_probe_v3_step500.json
+  call: supports
+  strength: weak
+  note: 'Real checkpoint (g1i_zlk_phase1_v3_step500), not toy. Held-out linear probe on WKV state at L12/16/20 for
+    4-bit XOR: full-integer target undecodable (R²=-0.02), but 3 of 4 individual bits carry real held-out signal
+    (bit1 0.31, bit2 0.11, bit3 0.27). Toy-scale clean register behaviour does not transfer cleanly to the real
+    ThinkChain-trained checkpoint -- partial, not null, not clean.'
+- date: 2026-08-25
+  file: experiments/rl/results/counterfactual_decay_v3_step500.json
+  call: neutral
+  strength: weak
+  note: 'fleeb83''s own proposed discriminator (alter layer-12 decay at the final think-tick, check whether downstream
+    layers 13-31 follow the naive-predicted shift or a trained interpreter robustly ignores it), run on the real
+    checkpoint. corr(actual_shift, naive_predicted_shift)=0.8806, mean |residual|/mean |shift| ~=14%. Downgraded
+    supports->neutral 2026-09-03: originally read as graded partial physics-delegation, but this doesn''t cleanly
+    discriminate given the entry above -- if the real (Muon-pretrained) model spreads computation across many redundant
+    channels rather than concentrating it in decay specifically, perturbing ONE channel (layer-12 decay) would produce
+    exactly this kind of partial, graded, neither-clean-delegation-nor-clean-robustness response for an ordinary
+    redundancy reason, unrelated to fleeb83''s level-1-vs-level-2 distinction. fleeb83 himself does not treat his
+    own result as proof (see 2026-08-21 entry below) -- this entry should not be read as stronger than he reads
+    it. Does not resolve the weak/strong question; a channel-ablation sweep across MULTIPLE decay channels at once
+    (not just L12) would better distinguish ''partial delegation in one channel'' from ''redundant distributed reliance''
+    -- not yet run.'
+- date: 2026-08-21
+  file: hypotheses/H25.md
+  call: methodology
+  strength: weak
+  note: 'fleeb83''s own pushback (email correspondence): his 48/48 symbolic result demonstrates WKV as a programmable
+    working register (weak version) but NOT that the model deliberately exploits the physics of the recurrence itself
+    as a coprocessor (strong version) -- proposed the counterfactual-altered-recurrence test as the actual discriminator
+    between the two readings, which is what the 2026-08-25 entry above ran for real. Recorded here as the source
+    of the weak/strong distinction this whole record is organised around, not as evidence for or against either
+    reading.'
+- date: 2026-09-04
+  file: experiments/A0_state_probe/results/parity_pause_token_g1i_toy.json
+  call: supports
+  strength: weak
+  note: 'WKV-native replica of arXiv 2505.21024''s pause-token expressivity result (parity task, toy scale, ParityController
+    in micro_wkv.py). Held-out accuracy: n_extra=0 -> 0.882, n_extra=1 -> 0.980, n_extra=2 -> 1.000, n_extra=4 ->
+    0.941, n_extra=8 -> 0.980 -- real jump from adding silent loop steps, not noise-sized. First version of this
+    test was flawed (bits revealed one per step gave the recurrence free depth regardless of n_extra) and was corrected
+    same day before trusting the result. Weak strength because the effect, while real and directionally consistent
+    with the formal separation result, is much smaller than that paper''s clean impossible-vs-possible separation
+    -- WKV''s n_extra=0 baseline (0.88) is nowhere near chance, unlike the 2-layer Transformer''s total failure
+    without pause tokens, so this doesn''t establish a comparably sharp expressivity boundary for this architecture
+    yet.'
+- date: 2026-09-02
+  file:
+  - experiments/A0_state_probe/results/muon_vs_adam_toy.json
+  - experiments/A0_state_probe/results/muon_vs_adam_lr_sweep.json
+  call: methodology
+  strength: weak
+  note: 'Precursor runs to the 2026-08-23 muon_vs_adam_multiseed.json entry above: the single-seed cheap test (muon_vs_adam_toy.json)
+    and the muon_lr tuning sweep (id_r2 falling monotonically as muon_lr increases from the default 0.02, per docs/rl-track.md)
+    that motivated locking --muon-lr 0.005 before the real 5-seed check. No independent claim beyond what the multiseed
+    entry already reports -- recorded here only to close the citation gap, same status as those numbers already
+    had in prose.'
+- date: 2026-08-22
+  file:
+  - experiments/_common/results/state_trajectory_base_v2.json
+  - experiments/_common/results/state_trajectory_step200.json
+  - experiments/rl/results/state_trajectory_backtrack_v3_step500_m1.json
+  call: methodology
+  strength: weak
+  note: 'retention_range=0.5452-1.0000 is IDENTICAL across all three files -- base (untrained) G1i, the self-feed-trained
+    step200 checkpoint, and the ThinkChain-trained v3/step500 checkpoint. Traced to state_trajectory_probe.py:213-225:
+    retention=exp(-exp(w)) is computed from the per-channel decay-gate WEIGHT, and the comment there says the clamp
+    ''bounds retention from BELOW, not above'' -- so 0.5452 is plausibly the clamp floor and 1.0000 its natural
+    ceiling as w->-inf, not a value that tracks training. If so this specific summary stat can''t distinguish these
+    three very differently-trained checkpoints and isn''t evidence for or against H25 either way -- a methodology
+    gap, not a finding, until the underlying per-channel distribution (not just the range) is actually compared
+    across checkpoints. The backtrack-specific number on the third file (chain=1/4 prompts backtracked, loop=0/4,
+    Huginn min-streak=3 rule, n=4) belongs to the M=2 rewind mechanism (Phase 1.5 design, see docs/rl-track.md)
+    rather than to H25''s own claim -- noted for completeness, not treated as H25 evidence.'
+- date: 2026-10-02
+  file:
+  - experiments/A0_state_probe/results/halting_chain.json
+  - experiments/A0_state_probe/results/halting_rl_lr5e-4.json
+  - experiments/A0_state_probe/results/halting_rl_curriculum.json
+  call: supports
+  strength: weak
+  note: 'fleeb83''s state-dependent stopping, the property the Fourth finding names as not yet built, built on the
+    same micro_wkv_step physics (halting_chain.py): one operand per round, never shown again, stop at the first
+    round the running sum reaches a threshold. Trained with oracle stop labels: exact stop 0.953 (within one round
+    0.998) vs 0.466 for the same net with its state reset every round and 0.334 for the best counter-only policy;
+    zeroing the state before round 2 drops it to 0.20; swapping states between examples moves the stop to the DONOR''s
+    sum in 94.8% of the 2376 cases where the two oracles disagree (own prefix 2.1%) — the decision is read from
+    state content. Limits: the sum''s value at the stop is weaker (R2 0.75 in-distribution, -13.7 on a 0.5-1.5 operand
+    range), one seed. From outcome reward alone (halting_rl.py, noisy-evidence variant, time price 0.01/round):
+    lr 5e-4 stays stable but only reaches the counter-only level (0.764 vs 0.758, SPRT 0.782, donor-following 38%
+    vs 25%); lr 3e-3 collapses into stopping early; oracle labels first and reward after keeps the labelled policy
+    (0.779 -> 0.773). Toy, register-level (the weak version), says nothing about the real model.'
+- date: 2026-10-01
+  file:
+  - experiments/rl/results/state_readout_lens_g1d04b.json
+  - experiments/rl/results/state_readout_lens_g1i.json
+  - experiments/rl/results/state_capacity_g1d04b_n400.json
+  - experiments/rl/results/state_capacity_g1i_n400.json
+  call: neutral
+  strength: weak
+  note: 'Corrects the ''capacity is not the bottleneck'' line in the Motivation as it was first written: it counted
+    storage (~250 matrices), not what is separable. Readout lens (gradient of future log-prob w.r.t. the WKV state
+    projected on SVD directions, validated against causal ablation, Spearman 0.92-0.98): per head 12-29 directions
+    occupied, the output depends on ~half; a held-out linear probe separates 1-2 key->value facts (n=400, design
+    effective rank checked), and raising stored pairs from 2 to 8 raises occupancy without raising separable facts
+    -- the state is used but mixed. [2026-11-12: those counts came from an erratic lstsq solver; with ridge the
+    L11-13 state reads about 5.5 of 8 values, see section 5.] Does not touch the rank-1-write mechanism itself;
+    it limits how many independent rows can be kept apart, which is the interference the Claim''s last clause already
+    names. The first staged-recall training run (P1, experiments/rl/train_staged_recall.py) is the first attempt
+    to make separability trainable on the real model; at step 25 its gain is indistinguishable from a format effect
+    (untrained in-window arm rose equally), so nothing is claimed yet.'
+- date: 2026-10-20
+  file: hypotheses/H25.md
+  call: correction
+  strength: strong
+  note: 'Two corrections to the prose, made 2026-10-20. (1) ''ROSA''s role'' said ROSA does exact rank-1 outer-product
+    writes; it does not. ROSA is a suffix automaton: Q/K/V are quantized to n-bit codes and the output is a payload
+    taken at the latest endpoint of the longest suffix match (RWKV-v8/251024_rosaQKV_run.py). It stores exact symbol
+    sequences, not matrices. (2) Track A was gated on word-search GRPO (Phase 3), which HZLK retired; it is re-gated
+    on C1 (answer through ticks of the model''s own expectation).'
+- date: 2026-11-11
+  file:
+  - experiments/A0_state_probe/micro_wkv.py
+  - experiments/rl/results/counterfactual_decay_v3_step500_L16.json
+  - experiments/rl/results/counterfactual_decay_v3_step500_L20.json
+  call: correction
+  strength: strong
+  note: 'Three corrections, the first two from the algebra of the toy cell and checked by micro_wkv.py --verify
+    [4] and [5]. (1) The toy controller never sees the state. With the final read and decay frozen and the erase
+    gate forced to 0 its output is f(a)+g(b) for any weights, so R2 against a*b is -E[y^2]/Var(ab) <= 0: the 2026-08-23
+    ''erase is necessary'' result holds by construction for every solution. The column ablation_a_gate_0_r2 is that
+    R2 itself, not a drop. Read so, Muon solutions also lose the product entirely without the erase path (0.9997
+    -> about 0); the optimizers differ in the size of the additive output that remains (Adam 0.21-7.46 of the target
+    variance over 10 seeds, Muon lr 0.005 at most 0.08, Muon lr 0.02 0.02-1.94), not in which channel carries the
+    product. (2) A silent step multiplies the state by a constant matrix, so silent steps leave ParityController''s
+    function class unchanged; over seeds 0-7 held-out correct of 51 is 45,50,51,51,43,50,51,44 at n_extra=0 and
+    51,51,51,50,50,48,50,46 at n_extra=2, so the 2026-09-04 jump 0.882 -> 1.000 is seed 0 and an optimisation effect.
+    (3) The decay sweep at L16 and L20 was run on 2026-10-21 and not recorded here: corr 0.617 and 0.259, with the
+    xor_bit1 probe at held-out R2 0.015 and 0.068 on those layers, so the sweep does not discriminate.'
+- date: 2026-11-19
+  file:
+  - experiments/A0_state_probe/results/closed_loop_toy/s1_C_M8_seed4.json
+  - experiments/A0_state_probe/results/closed_loop_toy/s1_C_M8_seed5.json
+  - experiments/A0_state_probe/results/closed_loop_toy/state_probe_s1.json
+  call: supports
+  strength: strong
+  note: 'Weak version (state as a programmable working register), toy from scratch: a 2-layer RWKV-7 loop (49.8K
+    params, 8 ticks) chasing A->B->C. At M=0 hops 2-8 read 0.00-0.07 (hop 1 0.67-0.98: one pass suffices only there);
+    with 8 ticks 0.82-0.99 on seeds 4-6. Permuting the order of the ticks at inference drops hops 2-8 to 0.05-0.12
+    (seeds 4-6), and in arm B (end loss only, no per-hop target) by 0.78-0.87 at hops 2-3: each tick hands the next
+    a computed intermediate, the causal test of contradicts_if 3 in the loop form. Arm C''s per-hop target puts
+    hop k at tick k by construction, so a staircase there is not evidence; B shows the register without it, but
+    walls at 3 hops. Says nothing on the strong version (the recurrence''s own physics as coprocessor) and nothing
+    yet on a pretrained model.'
+- date: '2026-11-24'
+  file: hypotheses/H25.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H25.yml. Links in the prose written
+    from the repository root.

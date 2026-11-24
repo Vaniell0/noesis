@@ -1,6 +1,14 @@
 ## H4b. State-evolution architectures are viable for reasoning
 ### *(wager, not directly falsifiable at this project's scale)*
 
+Record: `hypotheses/records/H4b.yml`.
+
+**Estimator.** None single: the accumulated H4a-style comparisons over generations, training runs and eval sets.
+
+**Refuter.** A pattern across them disfavours RWKV without a plausible confound.
+
+**What the status rests on (2026-11-24).** `WAGER`: a wager by its own words, never tested. A pattern, not one run, reopens the choice of backbone; nothing here moves a status. Outside the research tree (README section 7): written before the programme had estimators, in the vocabulary of the runtime of that time.
+
 **Claim.** Recurrent state-evolution architectures (RWKV-family,
 Mamba-family) are not fundamentally weaker than attention
 architectures for reasoning on the noesis target task distribution.

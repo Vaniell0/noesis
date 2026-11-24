@@ -1,0 +1,18 @@
+# Record of H13a.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H13a
+status: WAGER
+prior: null
+posterior: null
+depends_on: []
+supports: []
+contradicts_if:
+- the metrics fall by an order of magnitude against text, or the head does not beat the random initialisation
+evidence:
+- date: '2026-11-24'
+  file: hypotheses/H13a.md
+  call: methodology
+  strength: strong
+  note: 'A one-line record, written 2026-11-24 from the file itself. WAGER: a speculative wager by its own words,
+    never run; it waits on H8. Outside the research tree (README section 7): written before the programme had estimators,
+    in the vocabulary of the runtime of that time. The estimator and the refuter are the file''s own prediction
+    and falsification.'

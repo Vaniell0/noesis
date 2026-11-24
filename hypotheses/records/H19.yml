@@ -1,0 +1,28 @@
+# Record of H19.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H19
+status: PROPOSED
+prior: null
+posterior: null
+depends_on: []
+supports:
+- H7
+contradicts_if:
+- On items whose source is labelled by the three conditions (with the passage, without it, with an unrelated passage),
+  a small head on the state after reading the prompt, before any answer token, predicts the source (context or weights)
+  no better than a bag-of-words classifier on the same prompts (leave-one-out, paired)
+evidence:
+- date: 2026-11-11
+  file: hypotheses/H19.md
+  call: methodology
+  strength: strong
+  note: 'Restated from the runtime-era contamination detector (after the planned fine-tune A1, retrieval off / on
+    / shuffled on the A0.2 rubric set should show whether domain knowledge leaked into the weights; A1 was never
+    made, the probe never scaffolded) into two parts: a behavioural estimator of where an answer comes from, which
+    needs no fine-tune, and a claim that the source is readable from the state before the answer. The lexical control
+    is required from the start, after H22''s v2 test was beaten by bag of words.'
+- date: '2026-11-24'
+  file: hypotheses/H19.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H19.yml. Links in the prose written
+    from the repository root.

@@ -1,0 +1,107 @@
+# Record of H12.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H12
+status: RETIRED
+priority:
+  level: low
+  date: '2026-08-20'
+  reason: 'the owner''s decision of 2026-08-20 about the work: the multi-slot remedy is heavy engineering without
+    a clear payoff, the numbers are accepted as real, the question is not urgent. A decision, not a measurement:
+    it does not move the status.'
+  restated:
+    date: '2026-11-24'
+    note: 'The owner''s recollection, in the record''s words: widening the state did not pay, because the limit
+      turned out to be in reading and writing the latent, so the need for it fell away. It agrees with the file:
+      the bound is in the readout, not the storage (section 3), and more slots add matrix size, which is not the
+      limit (section 5). Still a decision; the status stays by the runs.'
+prior: 0.25
+posterior: null
+depends_on: []
+supports:
+- H17
+contradicts_if:
+- ROSA fails to mature at reasoning scale and M (WKV-loop) alone proves insufficient for task parallelism/memory
+  — that would be the condition for revisiting the multi-slot architectural bet (H12b) instead of leaving it deprioritized
+evidence:
+- date: 2026-08-20
+  file:
+  - experiments/A0_H12a_working_memory/
+  - experiments/A0_H12b_multislot/
+  call: methodology
+  strength: weak
+  note: 'Git-history cross-check (2026-08-20): every dated result already in this section''s prose (v1 07-23, v2
+    design 07-30, v2 confound-fix + width-bottleneck result 08-11, H12b behavioral baseline 08-07) matches the actual
+    commit dates. No metric-substitution drift found here, unlike H8/H9. The 2026-08-18 ''migrate into framework''
+    commit is a pure save_result wiring refactor (A0_H12a/A0_H12b run_probe.py), not a new experimental run — confirms
+    backlog.py finding zero new H12 data was correct, not a gap.'
+- date: 2026-08-20
+  file: docs/community-map.md
+  call: methodology
+  strength: weak
+  note: community-map.md section 3.4 flags arXiv 2504.05097 (kernel-based virtual state upscaling, same problem
+    space as H12b) as 'read carefully before H12b LoRA lands' — never done, since H12b LoRA never landed. Per user
+    (2026-08-20), H12b is now deprioritized rather than pending, so this reading isn't currently blocking anything;
+    re-surface it only if H12b gets picked back up.
+- date: 2026-08-20
+  file: hypotheses/H12.md
+  call: neutral
+  strength: strong
+  note: 'User''s actual current position (2026-08-20), replacing the prose''s ''Phase 2 architectural probe'' framing:
+    studied how WKV memory works and how to expand it, and concluded the current architecture doesn''t give a clear
+    path forward on H12b specifically. Decision: WKV is judged sufficient with M; expanding to multi-slot state
+    would be heavy engineering with no guaranteed payoff. Betting instead on ROSA (external, solves the memory/capacity
+    problem) plus M (WKV-loop, expected to resolve task parallelism) rather than building H12b. Follow-up thread
+    for ''remember more if needed'' moves to H17 (persistent state absorption) via full cross-injection testing
+    on G1i and, after RL, the ZLK model. The raw H12a/H12b capacity numbers themselves are accepted as objective/real,
+    not disputed — but user notes G1d (where most of the width-sweep data was collected) is ''very behind'' G1h
+    and further still behind G1i on A0.5 metrics as an agent, so those numbers say less about the project''s actual
+    target models than about G1d specifically. Net: not urgent, more tedious than useful to pursue further right
+    now.'
+- date: 2026-11-11
+  file: hypotheses/H12.md
+  call: methodology
+  strength: strong
+  note: Restated. One RWKV-7 step is a generalised delta-rule gradient step on a linear key->value map, so a head's
+    state is a matrix trained in context. For such a memory the size n x n is a ceiling; recall is set by the overlap
+    of the keys the weights produce for distinct items (crosstalk) and by decay (horizon). The measured numbers
+    (recall 0.25 -> 0.02 between gap 60 and 229 at N=16; a drop between N=8 and 16 at fixed gap, n=10, exact match
+    0 everywhere; 1-2 separable facts per head of 64 dims). The earlier summary 'recall 0.40 -> 0.02 between gap
+    14 and 229' joined a cell of the width sweep with one of the distance sweep; corrected fit the interference
+    reading; the direct estimator, overlap of the erase keys of stored items, is not run. The question moves from
+    width vs decay to interference vs decay, and the multi-slot remedy is recorded as retired.
+- date: 2026-11-12
+  file:
+  - experiments/rl/results/state_capacity_g1d04b_base_M0.cv_ridge.json
+  - experiments/rl/results/state_capacity_profile_g1d04b_M0.json
+  call: methodology
+  strength: weak
+  note: 'Refuted in its readout branch on 8-16 stored pairs, G1d 0.4B (owner''s reading 2026-11-12). With the probe''s
+    solver corrected (the 1-2 per head came from an erratic lstsq driver), the L11-13 state keeps 5.5 -> 6.7 bound
+    values linearly readable from 8 to 16 pairs while the model''s recall falls between 8 and 16: the refuter''s
+    first branch, so on that interval the limit is the readout, not the storage. Storage itself is bounded near
+    7 (6.0 at 32). One model, one prompt format, a linear external probe; the key-overlap estimator is still not
+    run. Made methodology on 2026-11-24: a reading of one run on one model, not a scored refutation.'
+- date: '2026-11-24'
+  file: hypotheses/H12.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H12.yml. Links in the prose written
+    from the repository root.
+- date: '2026-11-24'
+  file: hypotheses/H12.md
+  call: methodology
+  strength: strong
+  note: 'Status set by the record, on the owner''s word of 2026-11-24 (a status moves by a fact, in both directions;
+    a decision about work is a field of its own). The record holds the entry of 2026-11-12: refuted in the readout
+    branch on 8-16 stored pairs, G1d 0.4B, one model and one prompt format; the bound of storage stands; decay is
+    measured; the direct estimator is not run. That is CONTESTED, not REFUTED. Until this date the status read DEPRIORITIZED,
+    which was the decision now kept under priority.'
+- date: '2026-11-24'
+  file: hypotheses/H25.md
+  call: methodology
+  strength: strong
+  note: 'RETIRED from CONTESTED on the owner''s word of 2026-11-24: a decision, not a new run. In the record''s
+    words: the bound was not one of room. The problem showed elsewhere: the model stopped telling apart what was
+    written, it did not fail to fit. The loop checkpoint kl_T2_k4 (G1d 0.4B, KL, T = 2, M = 4) carries the effective
+    rank of the latent from 3.2 to 7.9 with ticks, as H25 records; with one tick the same checkpoint erases (10
+    to 0 right of 72 by M = 8), so the gain belongs to the ticks, not to width. The question of how much a head
+    holds is carried by H25 and HZLK ZLK.12; the whole file is closed.'

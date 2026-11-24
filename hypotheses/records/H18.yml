@@ -1,0 +1,67 @@
+# Record of H18.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H18
+status: PROPOSED
+prior: 0.4
+posterior: null
+depends_on:
+- H17
+supports: []
+contradicts_if:
+- branch coherence (sub-claim 2) fails across all merge candidates including a trained Linear merge -- would refute
+  branch/merge as a mechanism, forcing text-level section chaining instead (already the documented fallback below)
+evidence:
+- date: 2026-08-20
+  file: experiments/H18_merge/
+  call: methodology
+  strength: weak
+  note: 'Git-history check (2026-08-20): the only commit touching experiments/H18_merge/ is dated 2026-08-14, one
+    day after the prose below dates sub-claims 1 and 2 as ''2026-08-13''. Minor, not the kind of drift found in
+    H8/H9 -- likely same work landed a day later than it was run/verified, not a fabricated date, but noting it
+    since the standing rule this week is to check rather than assume.'
+- date: 2026-08-20
+  file: hypotheses/H18.md
+  call: neutral
+  strength: strong
+  note: 'User''s plan (2026-08-20): this is where the ''remember more if needed'' follow-up thread from H12 (deprioritized
+    multi-slot architecture) actually goes -- misattributed to H17 earlier in the same conversation before the mixup
+    was caught. Concretely: systematically test how WKV state develops under different injected content during ''thinking''/M-loop
+    phases across situations, observe how the model reacts, and use that to identify precise points in the decode
+    trajectory worth saving/branching -- not the abstract 4-sub-claim fork/merge/coherence/structure test this section
+    currently runs. Test targets: G1i now, and the post-RL ZLK model once it exists (full cross-injection). This
+    reframes ''save-point policy'' as an empirical question answered by observing real state trajectories, not decided
+    a priori.'
+- date: '2026-08-13'
+  file: experiments/H18_merge/results/h18_merge_g1d_04b.json
+  call: methodology
+  strength: strong
+  note: 'The test is a substring of one expected word (expected.lower() in text.lower() in experiments/H18_merge/test_arithmetic_merge.py).
+    In science_recipe the expected word for A is ion, which lies inside the expected word for B, solution; both
+    are in the decode of context B alone, with no merge. So "ALL three α preserve BOTH contexts" repeats what one
+    trunk already says and shows nothing absorbed from the branch. In code_history and math_narrative no α keeps
+    B. The Identical: True of 2026-08-12 was not saved, and experiments/H18_merge/test_arithmetic_merge.py holds
+    no determinism test: it uses the clone to decode, it does not compare a clone with its parent. The refuter asks
+    for ≥ 100 runs; one unsaved run is named. It asks: the trunk answers a follow-up wrongly, the merged trunk answers
+    it right. The run asks whether one word appears. A next run keeps the three outcomes per pair (trunk, branch,
+    merged) and scores the follow-up, not a substring. Read against the files and moved here from the prose on 2026-11-24.'
+- date: '2026-08-13'
+  file: experiments/H18_merge/results/h18_merge_g1d_04b.json
+  call: correction
+  strength: strong
+  note: Two cells of the prose differ from the file (read 2026-11-24). In experiments/H18_merge/results/h18_merge_g1d_04b.json,
+    math_narrative at α=0.7 keeps context A (A=True, B=False), where the paragraph says neither is retained; code_history
+    at α=0.7 loses context A (A=False), where the paragraph says all α retain it. Read against the files and moved
+    here from the prose on 2026-11-24.
+- date: '2026-11-24'
+  file: hypotheses/H18.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H18.yml. Links in the prose written
+    from the repository root.
+- date: '2026-11-24'
+  file: experiments/H18_merge/results/h18_merge_g1d_04b.json
+  call: methodology
+  strength: strong
+  note: 'PROPOSED from PARTIAL on the owner''s word of 2026-11-24, on the reading of the run of 2026-08-13 in the
+    two entries before: by the registered refuters nothing is measured. Sub-claim 1 names one run whose output is
+    on no disk, against 100 asked; sub-claim 2 was not run in the form of its refuter and its one pass is empty
+    by construction; sub-claims 3 and 4 were never run.'

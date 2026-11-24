@@ -1,0 +1,58 @@
+# Record of H24.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H24
+status: RETIRED
+prior: null
+posterior: null
+depends_on:
+- H10
+supports: []
+contradicts_if: []
+evidence:
+- date: 2026-08-14
+  file: hypotheses/H24.md
+  call: methodology
+  strength: weak
+  note: Pre-RL decoding-efficiency table (Motivation below) kept as a baseline record. DE = accuracy / words rewards
+    terse answers (Gemma4 7.26 from short direct answers, not from state work), so it is not a measure of latent
+    work.
+- date: 2026-10-20
+  file: hypotheses/HZLK.md
+  call: neutral
+  strength: strong
+  note: 'Retired: every mechanism the claim names is gone. The entropy-plateau / confidence exit fired after one
+    repeat on ~80% of steps; word-search GRPO on a deterministic loop moved the advantage by 6e-8 (inert); the beta*M
+    price needs a sampled stop decision that did not exist. Superseded by HZLK ZLK.1 (waste) and ZLK.5 (self-chosen
+    time), measured as tokens at equal accuracy against the model''s own CoT. For C3, SAO (arXiv 2607.07508: one
+    rollout per prompt plus a value model) is a candidate that gives decision tokens credit without group variance.'
+- date: '2026-10-20'
+  file: hypotheses/HZLK.md
+  call: methodology
+  strength: strong
+  note: 'What the retirement rests on: two measurements stated in the lessons of HZLK.md (the confidence exit after
+    one repeat on about 80 % of steps; GRPO advantage moved by 6e-8 on a deterministic loop) and a decision, the
+    move to ZLK.1 and ZLK.5. The run files of the two measurements are not linked: an open end. What the retirement
+    rests on: two measurements and a decision (read 2026-11-24). The measurements are in the lessons of hypotheses/HZLK.md:
+    the exit by readout confidence fired after one repeat on about 80 % of steps, and word-search GRPO on a deterministic
+    loop moved the advantage by 6e-8. Neither is linked there to its run file, and this record does not link it
+    either: an open end. The decision is the move of the question to ZLK.1 and ZLK.5. Two lines of the Motivation
+    do not agree with its own table: Gemma4''s DE is 7.21 by the table''s rule (37.5 / 5.2), not 7.26; and step9b-e1
+    at 39.6 % is not the best accuracy of the table, the G1i chat wrap has 41.7 %. Read against the files and moved
+    here from the prose on 2026-11-24.'
+- date: '2026-08-14'
+  file: hypotheses/H24.md
+  call: correction
+  strength: strong
+  note: 'Two lines of the Motivation against its own table. What the retirement rests on: two measurements and a
+    decision (read 2026-11-24). The measurements are in the lessons of hypotheses/HZLK.md: the exit by readout confidence
+    fired after one repeat on about 80 % of steps, and word-search GRPO on a deterministic loop moved the advantage
+    by 6e-8. Neither is linked there to its run file, and this record does not link it either: an open end. The
+    decision is the move of the question to ZLK.1 and ZLK.5. Two lines of the Motivation do not agree with its own
+    table: Gemma4''s DE is 7.21 by the table''s rule (37.5 / 5.2), not 7.26; and step9b-e1 at 39.6 % is not the
+    best accuracy of the table, the G1i chat wrap has 41.7 %. Read against the files and moved here from the prose
+    on 2026-11-24.'
+- date: '2026-11-24'
+  file: hypotheses/H24.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H24.yml. Links in the prose written
+    from the repository root.

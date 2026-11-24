@@ -1,0 +1,18 @@
+# Record of H3.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H3
+status: PROPOSED
+prior: null
+posterior: null
+depends_on: []
+supports: []
+contradicts_if:
+- the trained policy does not beat vanilla retrieval by a clear margin
+evidence:
+- date: '2026-11-24'
+  file: hypotheses/H3.md
+  call: methodology
+  strength: strong
+  note: 'A one-line record, written 2026-11-24 from the file itself. PROPOSED: never run. The +28 % F1 is Memory-R1''s,
+    on LLaMA-3.1-8B against Mem0: external, not a target measured here. Outside the research tree (README section
+    7): written before the programme had estimators, in the vocabulary of the runtime of that time. The estimator
+    and the refuter are the file''s own prediction and falsification.'

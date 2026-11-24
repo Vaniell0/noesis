@@ -1,0 +1,17 @@
+# Record of H14.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H14
+status: PROPOSED
+prior: null
+posterior: null
+depends_on: []
+supports: []
+contradicts_if:
+- no gain of 10 points with retrieval, or a gain without it
+evidence:
+- date: '2026-11-24'
+  file: hypotheses/H14.md
+  call: methodology
+  strength: strong
+  note: 'A one-line record, written 2026-11-24 from the file itself. PROPOSED: never run; it sits behind A1. Outside
+    the research tree (README section 7): written before the programme had estimators, in the vocabulary of the
+    runtime of that time. The estimator and the refuter are the file''s own prediction and falsification.'

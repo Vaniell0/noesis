@@ -1,0 +1,100 @@
+# Record of H9.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H9
+status: PARTIAL
+prior: 0.65
+posterior: null
+depends_on: []
+supports:
+- H4b
+contradicts_if:
+- G1h and World3 are statistically indistinguishable across all three original state metrics (delta-norm, curvature,
+  stable rank) on matched reasoning prompts and seeds
+evidence:
+- date: 2026-08-18
+  file:
+  - experiments/_common/results/g1d_battery_gpu_smoke/rlens.json
+  - experiments/_common/results/g1i_battery_gpu/rlens.json
+  - experiments/_common/results/step9b_e1_battery_gpu/rlens.json
+  call: methodology
+  strength: weak
+  note: Single-checkpoint sigma1 characterization (G1d/G1i/step9b-e1), no World3 baseline in this battery — doesn't
+    directly test H9's actual claim (needs a G1-trained vs. World3-base matched pair). Raw material for a future
+    proper comparison, not evidence either way on its own.
+- date: 2026-08-20
+  file: HYPOTHESES.md
+  call: methodology
+  strength: strong
+  note: 'Same gap as H8 (shared probe): the pre-registered delta-norm/curvature/stable-rank + Bonferroni test below
+    is never reported as actually run. Both ''SUPPORTED'' verdicts (0.4B, 2.9B) rest on sigma-slope/argmax_flip
+    instead, and the 2.9B paragraph says so plainly (''SUPPORTED at 2.9B by sigma-slope criterion''). Kept as SUPPORTED
+    because the sigma-slope evidence itself is real (21-99x cross-prompt ratio, 40x KL gap at sigma=0.1) — recorded
+    here so the substitution stays visible.'
+  missing: '2026-11-24'
+- date: 2026-08-23
+  file:
+  - experiments/_common/results/zlk_phase1_v3_step500/rlens.json
+  - experiments/rl/runs/g1i_think_distill_zlk_phase1/probes_step200/rlens.json
+  call: methodology
+  strength: weak
+  note: 'Two more single-checkpoint sigma1 characterizations (g1i-zlk_phase1 at step200 and step500, mid-layer sigma1
+    22.921/20.855, both peaking at L31 ~47-49) — same gap as the 2026-08-18 entry above: no World3-base counterpart
+    run in the same battery, so this still doesn''t test H9''s actual matched-pair claim. Raw material only.'
+  missing: '2026-11-24'
+- date: '2026-08-04'
+  file: experiments/A0_state_probe/results/a05_ext/verdict.md
+  call: correction
+  strength: strong
+  note: 'The 0.4B run against the prose. The slopes are 1.81 and 1.56 for World3 and 1.80 and 2.10 for G1d: not
+    "consistently higher in G1d cells" (medium equal within 0.01 and lower). The KL at σ = 0.1 is higher for G1d
+    in both prompts (0.258 against 0.108; 0.249 against 0.033). The "cross-prompt ratio 21–99×" is the range of
+    the file''s cross/base ratio over all four cells, and that ratio is higher for World3 in both prompts (45.09
+    against 33.99; 98.75 against 21.71): by the file''s own reading of it, against the direction of the claim. It
+    is the same noise KL in the denominator, so it is not a second measurement. Read against the files and moved
+    here from the prose on 2026-11-24.'
+- date: '2026-08-05'
+  file: experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md
+  call: correction
+  strength: strong
+  note: The 2.9B run against the prose. The slopes 1.67 and 1.58 against 1.19 and 1.13 agree with the file. The
+    KL at σ = 0.1 is 46× and 22× by cell (0.230 against 0.005; 0.175 against 0.008); "≈ 40×, 0.23 against 0.0055"
+    sets one cell against a number that is in neither. The cross_KL 9.64 against 7.92 and the flips 100 % against
+    83 % are the medium cells only; in the narrative cells the cross_KL runs the other way (5.07 World3 against
+    6.30 G1h). Read against the files and moved here from the prose on 2026-11-24.
+- date: '2026-08-05'
+  file:
+  - experiments/A0_state_probe/results/a05_ext/verdict.md
+  - experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md
+  call: methodology
+  strength: strong
+  note: What the SUPPORTED of both scales rested on. It asks for delta-norm, curvature and stable rank on matched
+    reasoning prompts, Welch's test with a correction for three metrics. No file under experiments/A0_state_probe/
+    holds them. The refuter (indistinguishable on all three) was never run either. The record said so on 2026-08-20;
+    the paragraphs above are left as written. The KL of the next token after Gaussian noise is put on the state,
+    at an absolute σ, with its log-log slope; two prompts (medium, narrative), 3 seeds and 4 checkpoints, 12 points
+    to a cell; no test, two prompts. That is the sensitivity of the output to noise on the state, which moves with
+    the norm of the state as well as with its use. the α of the A1 loss and "the H7 falsifier" are not measurements
+    of H9. Read against the files and moved here from the prose on 2026-11-24.
+- date: '2026-11-24'
+  file: experiments/rl/runs/g1i_think_distill_zlk_phase1/probes_step200/
+  call: methodology
+  strength: weak
+  note: The directory is empty on this date and the rlens.json of step 200 is on no disk here (VM deleted); the
+    entry of 2026-08-23 stands on step 500 alone. HYPOTHESES.md of the entry of 2026-08-20 is the file split into
+    hypotheses/ on 2026-08-20; it pointed at the prose of H9 and H8, now hypotheses/H9.md and hypotheses/H8.md.
+- date: '2026-11-24'
+  file: hypotheses/H9.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H9.yml. 2 link(s) of the record marked
+    missing with the date. Links in the prose written from the repository root.
+- date: '2026-08-04'
+  file:
+  - experiments/A0_state_probe/results/a05_ext/verdict.md
+  - experiments/A0_state_probe/results/a05_2.9b_h9_verdict.md
+  call: methodology
+  strength: strong
+  note: 'PARTIAL from SUPPORTED on the owner''s word of 2026-11-24, dated by the runs of 2026-08-04 and 2026-08-05,
+    applied to the record on 2026-11-24. What the runs hold: the output of the G1 model is more sensitive to noise
+    put on its state, cleanly at 2.9B by the slope on both prompts, at 0.4B by the noise KL on both prompts with
+    slopes that do not separate the models. What they do not hold: the registered estimator (delta-norm, curvature,
+    stable rank) and its refuter were never run. No odds: a status applied on a word, not a new measurement.'

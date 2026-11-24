@@ -1,0 +1,59 @@
+# Record of H7.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H7
+status: PROPOSED
+prior: null
+posterior: null
+depends_on:
+- H19
+supports: []
+contradicts_if:
+- 'After a training stage whose data carries no new facts (a skill stage: self-distillation, a hint read by the
+  same model, reward), on a fixed item set answerable from the weights alone, the transitions read -> lost outnumber
+  stored-not-read -> read (fact classes at M=0 before and after, paired by item, McNemar p < 0.05)'
+evidence:
+- date: 2026-11-11
+  file: hypotheses/H7.md
+  call: methodology
+  strength: strong
+  note: 'Restated from the runtime-era allocation claim (''reasoning in weights, fresh knowledge through retrieval
+    beats baking domain knowledge into weights'', prediction on the A0.2 rubric set with retrieval on and off, never
+    run, A1 fine-tune never made) into a claim about what training does to knowledge: a skill stage moves facts
+    between the classes read / stored-not-read / lost, and new facts come only from context. The old prediction
+    is kept in the body as history.'
+- date: 2026-11-11
+  file: external:UncheatableEval 2026-07, raw files of the Jellyfish042 Space
+  call: supports
+  strength: weak
+  note: 'G1h -> G1L at matched size, compression rate on fresh text (lower is better), 15 sets: the mean improves
+    at every size (-0.079, -0.082, -0.115, -0.091 at 1.5B, 2.9B, 7.2B, 13.3B) while bbc_news worsens (+0.105, +0.061,
+    +0.045, +0.018) and wikipedia_nonenglish worsens (+0.101, +0.072, +0.011, +0.012); wikipedia_english worsens
+    at 1.5B and 2.9B (+0.033, +0.006). A skill-weighted training round improves code and arxiv and costs news and
+    encyclopedic text, and the cost shrinks with size: the trade the restated claim says must be measured, and the
+    size dependence interference predicts (H12). Not a fact-class measurement; compression is a proxy.'
+- date: 2026-10-29
+  file: experiments/rl/results/qwen35_08b/
+  call: supports
+  strength: weak
+  note: 'Qwen3.5-0.8B, privileged-hint self-distillation at M=0 (the control arm of HZLK section 6, point 10), 289
+    eval items split by where the answer lives: base 104 (context 87, question 17, two-hop 0) -> 195 (84, 35, 76);
+    base-right kept 86 of 104. Items answerable from the weights doubled and two-hop combining appeared while context
+    reading stayed flat, and 18 of 104 previously right items were lost. A per-path count, not yet the fact-class
+    transition table the refuter asks for.'
+- date: '2026-10-29'
+  file:
+  - experiments/rl/results/qwen35_08b/s0_plain_hint0/m0_pass.json
+  - experiments/rl/results/qwen35_08b/gate_hint3_m0_M0/m0_pass.json
+  call: correction
+  strength: strong
+  note: 'The per-path counts against the two files. The first bullet against its files (2026-11-24). Base arm experiments/rl/results/qwen35_08b/s0_plain_hint0/m0_pass.json,
+    trained arm experiments/rl/results/qwen35_08b/gate_hint3_m0_M0/m0_pass.json. The base 104 (87, 17, 0) and the
+    86 kept agree with the files, and 289 is the number of items with a saved answer of 304. The trained arm is
+    203 (84, 76, 43) in its file and 203 again when its saved answers are scored by the one rule (training/scripts/gen_ciphers.py,
+    check_answer): the 35 of the question set and the total of 195 above are not reproduced, the file says 43 and
+    203. The paragraph is left as written. Read against the files and moved here from the prose on 2026-11-24.'
+- date: '2026-11-24'
+  file: hypotheses/H7.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H7.yml. Links in the prose written
+    from the repository root.

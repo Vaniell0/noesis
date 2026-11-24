@@ -1,0 +1,19 @@
+# Record of H4a.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H4a
+status: PROPOSED
+prior: null
+posterior: null
+depends_on: []
+supports: []
+contradicts_if:
+- it trails the strongest reference by more than 1.4x on the primary metric after A1
+evidence:
+- date: '2026-11-24'
+  file: hypotheses/H4a.md
+  call: methodology
+  strength: strong
+  note: 'A one-line record, written 2026-11-24 from the file itself. PROPOSED: never run at 2.9B. `experiments/A0_baseline/README.md`
+    holds the throughput of two RWKV models and says the older Qwen and Gemma figures are not comparable to it;
+    the 0.4B pilot numbers the file names are not in that directory. Outside the research tree (README section 7):
+    written before the programme had estimators, in the vocabulary of the runtime of that time. The estimator and
+    the refuter are the file''s own prediction and falsification.'

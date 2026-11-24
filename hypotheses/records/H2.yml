@@ -1,0 +1,34 @@
+# Record of H2.md: status, prior, refuters, evidence. The status table in hypotheses/README.md is generated from it.
+id: H2
+status: WITHDRAWN
+prior: null
+posterior: null
+depends_on: []
+supports: []
+contradicts_if:
+- the planned formal head-to-head (Qwen-2.5-3B-Instruct/Phi-4-mini + retrieval vs noesis + retrieval) is later run
+  and shows knowledge-first at parity or better -- would reopen the withdrawn claim rather than confirm withdrawal
+  was safe
+evidence:
+- date: 2026-08-14
+  file: hypotheses/H2.md
+  call: methodology
+  strength: weak
+  note: 'A1 made the direction obvious without the formal test: step9b-e1 (2.9B, reasoning LoRA) beats Gemma4 e4b
+    (larger, mixed-corpus) on symbolic (87.5% vs 37.5%) and matches overall (39.6% vs 37.5%). Withdrawn rather than
+    confirmed -- the planned formal test was never run, interest faded once the direction was informally clear.
+    Remaining sub-claims carried forward by H12a/H17/H24, not closed here.'
+- date: '2026-08-14'
+  file: docs/community-map.md
+  call: methodology
+  strength: strong
+  note: 'What the withdrawal rests on: a decision, not a run. The registered head-to-head (same size, retrieval
+    in both arms) was never run. The figures quoted (symbolic 87.5 % against 37.5 %, overall 39.6 % against 37.5
+    %) set a noesis checkpoint against Gemma4 e4b, a larger model, with the Gemma side from an external report;
+    not the estimator of the claim.'
+- date: '2026-11-24'
+  file: hypotheses/H2.md
+  call: correction
+  strength: strong
+  note: Form only; no status moved. The record of this file moved to records/H2.yml. Links in the prose written
+    from the repository root.
