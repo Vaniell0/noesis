@@ -264,9 +264,33 @@ def status_problems() -> list[str]:
     return out
 
 
+def front_readme_problems() -> list[str]:
+    """The status counts in the top-level README against the records. The front page states them in words; a
+    number typed there from memory would argue with the generated table."""
+    closed = {"RETRACTED", "WITHDRAWN", "SUPERSEDED", "RETIRED"}
+    have = collections.Counter()
+    for hid, status, _, _, _ in build_rows():
+        if not _ID_ORDER_RE.match(str(hid)):                     # the programme file is not a numbered claim
+            continue
+        s = str(status).upper()
+        have["closed" if s in closed else s] += 1
+    text = _REPO_ROOT.joinpath("README.md").read_text()
+    out = []
+    for name in ("SUPPORTED", "PARTIAL", "CONTESTED", "PROPOSED", "WAGER", "closed"):
+        m = re.search(rf"^\| {name} \| (\d+) \|", text, re.M)
+        if not m:
+            out.append(f"README.md: no status row for {name}")
+        elif int(m.group(1)) != have[name]:
+            out.append(f"README.md: {name} is {m.group(1)} in the prose, {have[name]} in the records")
+    m = re.search(r"Of (\d+) claims", text)
+    if m and int(m.group(1)) != sum(have.values()):
+        out.append(f"README.md: 'Of {m.group(1)} claims' against {sum(have.values())} in the records")
+    return out
+
+
 if __name__ == "__main__":
     claim_rows, claim_problems = claims_report()
-    stat_problems = status_problems()
+    stat_problems = status_problems() + front_readme_problems()
     (alive, dead, external, marked), dead_lines = check_links()
     long_lines = check_lines()
     for p in claim_problems:
