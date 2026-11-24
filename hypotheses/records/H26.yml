@@ -288,6 +288,7 @@ evidence:
     own factorisation. This is the argument that the correct fix is product-aware rather than shape-aware, and it
     is the part of the 2026-09-14 work most defensible to an outside reader -- it depends on no toy substrate, no
     seed count, and no verdict function.'
+  missing: 2026-11-25 (folded out of the repository)
 - date: 2026-09-10
   file: docs/phase15-gap-matrix.md
   call: neutral

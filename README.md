@@ -1,164 +1,57 @@
 # noesis
 
-[![Support on Boosty](https://img.shields.io/badge/Boosty-support-orange)](https://boosty.to/vaniello/single-payment/donation/827359/target?share=target_link)
+Research notes on RWKV-7. One question runs through them: can a model compute
+in its recurrent state, between two tokens, and what does training have to do
+to make that possible?
 
-*Cognitive runtime for the machine.*
+There is no product here, no runtime, nothing to install. A reader looking for
+a tool will not find one.
 
-The machine already sees everything on it — every keystroke, focus
-change, filesystem event, process transition flows through the kernel
-whether or not anyone reads it. noesis is the layer that starts to
-*mean* those events: absorbing the input stream into structured form,
-holding it in a state that survives across sessions, and letting the
-machine act on its own understanding. Not surveillance — the OS
-already knows. Understanding is the difference.
+## Where things are
 
-The runtime is the point. Collectors, structured event store, zones,
-composer, tool dispatcher, extension surface, encrypted persistence,
-all running under a dedicated Linux user (`noesis` uid, own home under
-`/var/lib/noesis`). It runs continuously whether or not anyone is
-talking to it. Interfaces on top (an Ollama-compatible CLI over an
-HTTP shim, extensions in browser / IDE / game world) are how the owner
-engages with it, not the substance.
+- `hypotheses/README.md`: the frame, how a claim is written and checked, and
+  the status table of every claim.
+- `hypotheses/HZLK.md`: the programme. A second pretraining that makes what
+  the weights already hold readable, and a loop that reads it through a
+  self-fed latent, one tick at a time.
+- `hypotheses/records/`: the record of each claim, its evidence with dates and
+  the files it rests on.
+- `experiments/`: the probes and the results they wrote.
+- `docs/`: the notes the hypotheses cite.
+- `training/`: three modules that the probes import.
 
-An RWKV-7 model sits at the centre as the active integrator of this
-runtime — the piece that continuously processes incoming events, forms
-"what is happening now" from them, and writes that into memory per the
-DSL described in `docs/dsl.md`. Reasoning lives in the model's WKV
-state, not in generated tokens; the state is where accumulated context
-and inference actually happen. Tokens are a rare emit — an
-externalisation of what the state already knows.
+## What is established
 
-## Why a specialised model is needed
+As of 2026-11-25, of 29 claims:
 
-For the coordinator to keep the runtime coherent — to hold structure
-across long-running continuous input, connect events over hours or days,
-route the substrate's own tool surface without hallucinating — it has to
-reason in its own hidden state, not in generated tokens. Standard LLMs,
-of any architecture, degrade under continuous ambient input; Transformers
-under long uninterrupted contexts especially so.
+| status | count | meaning |
+|---|---|---|
+| SUPPORTED | 1 | measured, the refuter did not fire |
+| PARTIAL | 5 | holds in part of the regime measured |
+| CONTESTED | 3 | runs point both ways |
+| PROPOSED | 11 | written with an estimator and a refuter, not run |
+| closed | 9 | retracted, withdrawn, superseded, retired, or a wager |
 
-noesis bets that an RWKV-7 backbone fine-tuned to keep logical
-connections alive in its state (H4b's training arm) is the architecture
-that can hold this together where others cannot. Constant-cost per-token
-inference is the price side of that bet — it makes the runtime
-economically viable to run continuously on the laptop i5-1235U without
-cloud dependency for the everyday loop.
+Nothing here is a result to build on. Each file names what would refute it.
 
-This is unproven. `hypotheses/README.md` holds the research programme
-behind it, each claim with its estimator and the outcome that refutes it:
-how the state computes (H8, H25), what bounds its working memory (H12),
-whether time spent in the state buys accuracy (H10, HZLK), how training
-moves knowledge and what the optimizer selects (H7, H26), and where an
-answer comes from (H19-H22). The runtime's own wagers are listed there
-apart. A cleanly falsified hypothesis is a useful signal.
+## Reading a claim
 
-## What the runtime does, independent of interaction
+Every open claim carries an estimator (the number that would show it) and a
+refuter (the outcome that would kill it), written before the run. A status
+moves on a run, or on a dated decision, and the record says which.
 
-- **Absorbs the machine's stream into structured zones.** input-events,
-  system-observations, personal-vault (read-only bind mount),
-  session-scratch (RAM). Collectors write structured rows; no
-  natural-language translation on the write path. See `memory/README.md`.
-- **Retains under per-zone policy.** Sizes, importance tiers, encryption.
-  See `docs/policies.md`.
-- **Composes context on demand.** The composer is the sole component that
-  renders structured rows into DSL for the model, and only for the rows
-  retrieval selected for a specific turn.
-- **Routes tool calls.** The dispatcher exposes the runtime's own
-  capabilities (memory ops, retrieval, extension-registered tools) to
-  the model.
-- **Escalates by the owner's explicit call.** When the owner escalates
-  to an external frontier model, the composer emits noesis's state as a
-  DSL handoff — not a chat log. The DSL layer is API-agnostic; the
-  composer translates to whichever target transport the owner has
-  configured. noesis never escalates on its own.
-- **Hosts user-authored extensions** as a first-class capability. Same
-  substrate, new environments. See `docs/extensions.md` (Phase-2 docs).
+Some links name files that are not published. They are marked missing with
+the date; the claim then rests on what was read from them at that time.
 
-The functions that `local-search` (personal-corpus retrieval) and
-`key-daemon` (system-context surface) used to provide are becoming zones
-inside this runtime rather than standalone processes. Those daemons are
-no longer maintained; their code remains source material for the ports.
+## Checks
 
-## Architecture at a glance
-
-- **Backbone.** RWKV-7-G1, 2.9B. May scale to 13.3B if hardware and
-  cloud budget permit.
-- **Supervisor.** Rust supervisor (`noesis-runtime`) with rwkv-cpp
-  in-process inference (`noesis-assistant`). Ollama-compatible HTTP shim on
-  `:11435` (`/api/generate` NDJSON, `/api/tags`, `/api/version`) so
-  standard clients talk to noesis without a bespoke harness. Ollama
-  removed 2026-07-25 — it does not expose WKV state APIs (`rwkv_get_state_len`,
-  `rwkv_eval(..., state_out)`, `rwkv_clone_state`) needed by H17/H18/lens persistence.
-- **Peer Linux user.** Own uid, own `/var/lib/noesis` home, encrypted
-  LUKS+BTRFS store, cannot see the primary user's home. systemd
-  hardening locked in `docs/policies.md`.
-- **Structured-native pipeline.** collectors → ingest queue → SQLite →
-  composer → model. Composer is the only translator to model-facing
-  text.
-
-## Status
-
-Phase-B skeleton validated 2026-07-22
-(`docs/verdicts/2026-07-22-phase-b-skeleton.md`).
-
-Running:
-- Collectors (6: file-events, terminal, clipboard, process, browser-tabs, active-window).
-- noesis-store: SQLite insert/get/prune/vacuum for all zones.
-- noesis-runtime: orchestrator, zone-permissions, retention scheduler.
-- noesis-composer: preamble rendering + keyword retrieval over SQLite (5 tests pass).
-- noesis-shim: 8 HTTP endpoints live.
-- A1 fine-tune: Step 9b complete (2026-08-08). Best checkpoint: step9 epoch0,
-  43.75% (21/48) — first to exceed all baselines (Gemma3-4B 41.7%, G1h-base 39.6%, Qwen 37.5%).
-  See `docs/verdicts/` for per-step results.
-
-Not running yet (stubs):
-- Calibration CLI (thermal/RAPL reader is a stub; udev rule exists).
-- Lens scratch (design in `docs/memory-lenses.md`, H11 falsifier).
-- Utility model lazy-load.
-- Tool-call dispatcher (design in `docs/dsl.md`).
-- Extension surface (Phase-2 docs, `docs/extensions.md`).
-- Lens persistence (pending state save/load API in `noesis-rwkv-sys`).
-- ~~Multi-slot LoRA H12b architectural treatment~~ — dropped 2026-08-20,
-  not Phase 2 work (see hypotheses/H12.md): WKV judged sufficient with M,
-  follow-up moved to H17. Line kept struck-through rather than deleted;
-  found stale 2026-09-10 via a book-flagged discrepancy against H12.md.
-
-## Hard constraints
-
-- **Open sources only** for weights. Personal corpus is a runtime
-  retrieval channel, never a fine-tune signal. Narrow carve-out:
-  persona/style SFT (§H15).
-- **Cheap by construction.** Laptop i5-1235U for inference (CPU-only).
-  Cloud burst for training is an explicit decision, not a default.
-- **Single local reasoning model.** Utility NNs (embedders, routers,
-  small policies) are welcome. Additional local *reasoning* models are
-  not. Heuristic (`docs/principles.md` P3): *if it emits tokens that
-  participate in a chain of thought, it is a reasoning model.*
-- **Not a Transformer.** Any switch requires empirical re-open, not
-  architectural drift.
-- **Not a SaaS.** noesis is a personal daily bot for the owner's own
-  machine. Extensions are for the owner to author, giving the runtime
-  presence in new environments.
-
-## Who this is for
-
-- **The owner's own machine.** Design target.
-- **Community push-back on the wagers.** `hypotheses/README.md` is the point of
-  contact. A clean falsification is more valuable than a green build.
-- **Not:** a replacement for frontier reasoning models, a general
-  deployable assistant, a product.
-
-## Repository layout
+Two scripts keep the tree honest:
 
 ```
-noesis/
-├── README.md          — this file
-├── ROADMAP.md         — phased plan across cognitive + memory + integration
-├── hypotheses/README.md      — the claims: objects, estimators, refuters, status table
-├── CONTRIBUTING.md    — how to engage (hypotheses > runtime PRs)
-├── docs/              — policies, principles, DSL, extensions, verdicts
-├── training/          — A1 pipeline (blocked on GPU)
-├── memory/            — external memory system spec + schema
-├── runtime/           — Rust supervisor, collectors, HTTP shim
-└── experiments/       — throwaway probes and A0.* feasibility checks
+python experiments/regenerate_hyp_index.py --check   # every link alive, every status a known word
+python experiments/bayes_lite.py                     # every record beside its file, linted
 ```
+
+## Licence
+
+Apache 2.0, see `LICENSE`.

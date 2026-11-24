@@ -6,23 +6,16 @@
 # Top-level project files
 !.gitignore
 !README.md
-!ROADMAP.md
-!CONTRIBUTING.md
 !LICENSE
-!flake.nix
-!flake.lock
 
-# Docs
+# Docs: only the notes that hypotheses/ cites
 !docs/**/*.md
 
-# Hypotheses (split out of the old top-level HYPOTHESES.md); the record of a claim is records/<ID>.yml
+# Hypotheses; the record of a claim is records/<ID>.yml
 !hypotheses/**/*.md
 !hypotheses/records/*.yml
 
-# Nix modules (independent, importable)
-!nix/**/*.nix
-
-# Experiments
+# Experiments: probes, their code and the results a hypothesis cites
 !experiments/**/*.py
 !experiments/**/*.md
 !experiments/**/*.sh
@@ -34,55 +27,14 @@
 !experiments/**/*.txt
 !experiments/**/*.ipynb
 
-# Training track
-!training/**/*.py
-!training/**/*.md
-!training/**/*.sh
-!training/**/*.toml
-!training/**/*.yml
-!training/**/*.yaml
-!training/**/requirements*.txt
-
-# Runtime track
-!runtime/**/*.py
-!runtime/**/*.md
-!runtime/**/*.sh
-!runtime/**/*.toml
-!runtime/**/*.rs
-!runtime/**/*.h
-!runtime/**/Cargo.lock
-!runtime/**/*.nix
-!runtime/**/*.rules
-!runtime/**/assets/**
-
-# Runtime build artefacts (regex above would let these leak)
-runtime/**/target/
-
-# Memory track
-!memory/**/*.py
-!memory/**/*.md
-!memory/**/*.sh
-!memory/**/*.sql
+# The three modules of the old training pipeline that the probes import
+!training/*.py
+!training/README.md
 
 # Heavy artifacts — re-block after path whitelist
 experiments/**/data/
 experiments/**/runs/
 experiments/**/wandb/
-training/**/data/
-training/**/checkpoints/
-training/**/runs/
-training/**/wandb/
-training/corpus/
-!training/corpus/*.py
-training/sanitised/
-training/tokenised/
-training/rwkv-peft/
-# Variant C hybrid open corpora — big raw JSON + normalised JSONL both
-# gitignored; only PROVENANCE.md + scripts stay tracked.
-training/corpus_open/*.json
-training/corpus_open/*.jsonl
-runtime/**/state/
-memory/**/store/
 models/
 *.gguf
 *.pth
@@ -102,19 +54,16 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
-training/corpus_open/relax_v1.jsonl
 
-# Frozen pre-2.6 copy of the external write-up, kept local.
-docs/muon-rwkv7-finetuning.prepared-*.md
-
-# Resume checkpoints of finished probe runs and two 17 MB trajectory dumps: regenerable, not for the remote.
+# Resume checkpoints of finished probe runs and trajectory dumps: regenerable, not for the remote.
 experiments/rl/results/*.partial.json
 experiments/rl/results/state_traj_g1d04b_expected_*.json
 experiments/rl/results/cot_vs_routes_*.partial.jsonl
 
-# Dataset catalog records (docs/datasets.md: "tracked in git"); they were missing from the
-# allowlist, so a disk loss zeroed all of them with no copy (rebuilt 2026-10-22 by backfill).
-!training/catalog/*.json
+# Local only: the vendored peft checkout, a frozen copy of an external write-up, the queue's state
+training/rwkv-peft/
+experiments/queue/state/
+docs/muon-rwkv7-finetuning.prepared-*.md
 
 # Local environments and caches that the allowlist above would otherwise pick up.
 **/.venv*/

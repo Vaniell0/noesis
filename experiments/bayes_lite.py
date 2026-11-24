@@ -152,6 +152,10 @@ def links_in(text: str) -> list[tuple[str, str]]:
         kind = link_kind(tok)
         if kind:
             out.append((tok, kind))
+    # a link followed in the same line by "(missing ...)" with its date is a dead one on record: not dead, not alive
+    marked = {m.group(1).strip() for m in re.finditer(r"`([^`\n]+)`\s*\((?:missing|removed)[^)\n]*\)", text)}
+    if marked:
+        out = [(tok, "missing" if tok.strip() in marked else kind) for tok, kind in out]
     return out
 
 
