@@ -129,11 +129,13 @@ def claims_report() -> tuple[list[str], list[str]]:
     rows.append("| " + f"{len(recs)} claims: " + ", ".join(f"{n} {s.lower()}" for s, n in sorted(counts.items(), key=lambda x: -x[1]))
                 + " | | | | | | |")
     nums = sorted(int(x["id"].split(".")[1]) for x in recs)
-    gaps = [n for n in range(1, max(nums) + 1) if n not in nums]
+    why = next((x.get("unused") or {} for x in load_records(_HZLK)[0] if x.get("id") == "HZLK"), {})
+    # a withdrawn claim keeps its number: the count runs to the highest number ever held
+    top = max(nums + [int(n) for n in why if n.isdigit()])
+    gaps = [n for n in range(1, top + 1) if n not in nums]
     if gaps:
-        why = next((x.get("unused") or {} for x in load_records(_HZLK)[0] if x.get("id") == "HZLK"), {})
         parts = [f"{n}: {why[str(n)]}" if why.get(str(n)) else str(n) for n in gaps]
-        rows.append(f"| numbering, up to {max(nums)}: {len(gaps)} not used ({'; '.join(parts)}); a number is "
+        rows.append(f"| numbering, up to {top}: {len(gaps)} not used ({'; '.join(parts)}); a number is "
                     "never reused | | | | | | |")
     last = None
     for r in sorted(recs, key=lambda x: list(secs).index(x["id"]) if x["id"] in secs else len(secs)):

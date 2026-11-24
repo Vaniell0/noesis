@@ -24,8 +24,8 @@ reading of each. §7-§11 are tests, code, paid constraints, literature, and wha
 
 | id | statement (short) | status | regime | data links | builds on | linked |
 |---|---|---|---|---|---|---|
-| 22 claims: 13 partial, 5 proposed, 2 contested, 1 regular, 1 blocked | | | | | | |
-| numbering, up to 24: 2 not used (21: absent from the record; why it was skipped is written nowhere in the tree; 23: proposed and withdrawn 2026-11-24 (a loop learned beside the store); the mechanism it misread moved to 25); a number is never reused | | | | | | |
+| 22 claims: 13 partial, 6 proposed, 2 contested, 1 regular | | | | | | |
+| numbering, up to 24: 2 not used (23: proposed and withdrawn 2026-11-24 (a loop learned beside the store); the mechanism it misread moved to ZLK.21 on 2026-11-25; 24: proposed 2026-11-24 as a mirror of the paper's open claim, different steps draw different heads; withdrawn 2026-11-25 on the owner's word, before any run: not worth one); a number is never reused | | | | | | |
 | **A. What one pass leaves behind** | | | | | | |
 | ZLK.1 | CoT spends many tokens after the answer is already there | PARTIAL | G1i 2.9B pretrained, 32 pattern items | 2 | - | - |
 | ZLK.2 | untrained time (re-read, ticks, pauses) is not used | REGULAR | G1i 2.9B pretrained, untrained ticks and re-read | 2 | - | - |
@@ -40,7 +40,7 @@ reading of each. §7-§11 are tests, code, paid constraints, literature, and wha
 | ZLK.4 | a channel of the model's own latent can be trained without erasing the answer | PARTIAL | G1d 0.4B pretrained | 1 | - | - |
 | ZLK.18 | trained ticks widen the attractor instead of collapsing it, and the output grows more expressive | PARTIAL | G1d 0.4B pretrained; long-distance regime | 2 | **ZLK.4** | - |
 | ZLK.10 | an exact-recall branch queried at every tick keeps the past the settling state forgets | PROPOSED | - | 0 | - | <-H23 |
-| ZLK.24 | on a task whose rule changes from step to step, the heads that carry a tick differ from tick to tick | BLOCKED | - | 6 | - | - |
+| ZLK.21 | mixture of experts in time without a partition of the weights: each tick reads a view of the same weights, taken from its own latent | PROPOSED | - | 0 | **ZLK.9**, **ZLK.20** | ZLK.12, ZLK.14, ZLK.20, ZLK.9 |
 | **D. Training** | | | | | | |
 | ZLK.15 | knowledge enters through a fixed teacher on the student's own tokens without breaking the rest | PARTIAL | Qwen3.5 0.8B pretrained | 1 | - | H7 |
 | ZLK.19 | separability is installed by tasks that need it, not by an answer loss alone | PARTIAL | toy from scratch; P1 on G1d 0.4B | 2 | - | - |
@@ -447,29 +447,19 @@ ROSA exists here (`rosa_soft` not installed). States install dispositions, not p
 on every model measured externally. With ROSA a tick can re-read exact history: the write-side counterpart of
 reading (T6), which the retired axis N approximated by re-feeding the prompt.
 
-**ZLK.24 Different steps draw different heads.** On a task whose rule changes from step to step (rewrite
-derivations) the heads that carry a tick differ from tick to tick: the loop separates the transitions instead
-of repeating one. On chase one rule repeats, and the same layer-1 heads carry every tick. *Estimator:* per-tick
-head ablation (one head's read-out zeroed at one tick, its state write kept) over a window of ticks, giving each
-tick a profile of drops, and the cosine between two ticks' profiles. Its operator mirror needs no ablation: the
-controls of each head (`d`, `k̂`, `a`) logged per tick, the operator `A_t = diag(d_t) − k̂_t (a_t ⊙ k̂_t)ᵀ`
-split over examples and ticks as `A_{e,t} = μ + α_e + τ_t + ε_{e,t}`, so that `{τ_t}` is the rotation a tick
-has in common across prompts and `α_e` the item; read as two numbers, the rank of the span of `{τ_t}` and the
-cosine between the erase directions of adjacent ticks. The probe logs `|dS|/|S|` per tick as well, the toy's
-counterpart of 0.21 against 0.20-0.24 on G1d. *Refuters, written before any run:* the paper's, the cosine
-between tick profiles on derivations is at least the one on chase minus 0.10; the mirror's, on derivations the
-rank of `{τ_t}` is not above half of chase's, or the cosine of adjacent erase directions stays above 0.5; or the
-figure of the loop trained with ticks does not differ from the one of the `M = 0` model read with ticks; or
-another example's latent fed in does not take the operator out of the span of `{τ_t}`. *Rests on:* nothing run.
-On chase, zeroing one layer-1 head at ticks 2-6 costs up to 0.25 and layer 0 costs nothing, with the same heads
-at every tick (cosine 0.47 / 0.78); on the derivation models no single head at a single tick matters (every
-drop within ±0.02, standard error 0.014). *Predictions:* chase, a low rank and erase directions that repeat;
-derivations, a higher rank or less repetition. *Data:* `experiments/A0_state_probe/results/closed_loop_toy/tick_ablation.json`,
-`experiments/A0_state_probe/results/closed_loop_toy/attractor_*`, `experiments/A0_state_probe/results/closed_loop_toy/s1_C_M8_*`,
-`experiments/A0_state_probe/results/closed_loop_toy/s1e_*`, `experiments/A0_state_probe/results/closed_loop_toy/s1abl_A_M0_*`.
-Mirrored on 2026-11-24 from the open claims of the paper draft
-(`~/Desktop/projects/noesis-paper/depth-from-time.md`, section 10), with the operator form of the refuter;
-not run.
+**ZLK.21 Mixture of experts in time, without a partition of the weights.** On each tick the projections do
+not read `W_0` but a view of it taken from the latent of that tick: `W_eff(z_t) = W_0 + Σ_i g_i(z_t) B_i A_i`,
+the state common to all ticks. No weights are split into experts; what differs from tick to tick is the part of
+the same weights a tick looks through, and `g` is trained the way the control over the latent is trained.
+*Estimator:* depth on derivations at equal parameter count against a width-matched plain loop; the per-tick move
+of the latent; reading at `M = 16` after training at `M = 4`; the same figures on chase, where one rule repeats;
+on the toy, whether the width-depth law moves at `w24`. Every characteristic is noted twice, in the arm and in
+its control, and given as a delta with its error; a characteristic noted in one arm only does not count.
+*Refuters:* depth not above the width-matched plain loop
+at equal `P`; the latent's motion falling after `k` ticks; reading at `M = 16` after training at `M = 4` failing;
+a gain of the same size on chase. *Rests on:* nothing run. *Links:* ZLK.9, the latent has to keep moving for
+the views to differ; ZLK.20, where in depth the views would sit; ZLK.12 to ZLK.14, the storage and the reading
+that they would let coexist.
 
 #### D. Training
 

@@ -181,6 +181,14 @@ evidence:
     SUPPORTED, REFUTED); 23 free-word statuses had made the set unreadable as a count. The old status of each is
     its finding, unchanged. `after` added to ten claims: the claims whose result it builds on, read from the prose.
     No status moved in substance.'
+- date: '2026-11-25'
+  file: hypotheses/HZLK.md
+  call: methodology
+  strength: weak
+  note: 'ZLK.21 written on the owner''s word: a mixture of experts in time without a partition of the weights, a
+    view of the same weights on each tick, bound to the latent of that tick, trained the way the control over the
+    latent is trained. It takes the number 21, which no claim ever held. ZLK.24 withdrawn on the same word, before
+    any run. Nothing measured.'
 claims:
 - id: ZLK.1
   claim: CoT spends many tokens after the answer is already there
@@ -301,6 +309,15 @@ claims:
   - ZLK.18
   finding: rank fall measured; interference not
   regime: G1d 0.4B and 2.9B pretrained
+- id: ZLK.21
+  claim: 'mixture of experts in time without a partition of the weights: each tick reads a view of the same weights,
+    taken from its own latent'
+  status: PROPOSED
+  after:
+  - ZLK.9
+  - ZLK.20
+  finding: not run
+  regime: ''
 - id: ZLK.22
   claim: loop training on a mix of domains folds them into one system that transfers to a held-out domain, below
     a specialist but smoother
@@ -309,11 +326,8 @@ claims:
     -0.014), but the loop raises deep-layer CKA between scripts 0.44 -> 0.71; cs: the context step did not reach
     stored facts'
   regime: toy from scratch, 55K (1n) and 271K (1j), one seed each; pretrained not run
-- id: ZLK.24
-  claim: on a task whose rule changes from step to step, the heads that carry a tick differ from tick to tick
-  status: BLOCKED
-  regime: ''
-  finding: 'waits for the model to stand in RSC: estimator and both refuters are written'
 unused:
-  '21': absent from the record; why it was skipped is written nowhere in the tree
-  '23': proposed and withdrawn 2026-11-24 (a loop learned beside the store); the mechanism it misread moved to 25
+  '23': proposed and withdrawn 2026-11-24 (a loop learned beside the store); the mechanism it misread moved to ZLK.21
+    on 2026-11-25
+  '24': 'proposed 2026-11-24 as a mirror of the paper''s open claim, different steps draw different heads; withdrawn
+    2026-11-25 on the owner''s word, before any run: not worth one'

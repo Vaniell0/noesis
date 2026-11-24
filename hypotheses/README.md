@@ -232,7 +232,7 @@ cell (`experiments/A0_state_probe/micro_wkv.py`) stores the transpose
 | refusal to converge, open channel | ticks that keep changing the controls, so the loop does not settle at tick 1 | §3 (regular); `H10.md` §2 |
 | pass-through | a trained loop whose checkpoint at `M = 0` solves the same items | §3 (regular) |
 | self-regulation | the model chooses its own number of ticks | `HZLK.md` §6, S3 |
-| MoE in time | each tick applies its own operator, computed from the fed latent, from the same weights | `docs/state-and-reasoning.md` §3 |
+| MoE in time | each tick reads its own view of the same weights, taken from the fed latent | `HZLK.md` ZLK.21 |
 | repair, not refilling | a stage that unlocks held facts and adds none | `H7.md` |
 | constitution | a trained initial state: form and dispositions, no facts | `H7.md` §3 |
 | ROSA | the QKV suffix-automaton branch that keeps the exact past beside the settling state | `HZLK.md` §6, S5; `H25.md` §7 |
