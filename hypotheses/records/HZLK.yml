@@ -193,7 +193,8 @@ claims:
 - id: ZLK.1
   claim: CoT spends many tokens after the answer is already there
   status: PARTIAL
-  finding: measured on one model, 48 items
+  finding: measured on one model, 47% of CoT tokens after the answer on 32 pattern items; the 16 arithmetic items
+    save nothing
   regime: G1i 2.9B pretrained, 32 pattern items
 - id: ZLK.2
   claim: untrained time (re-read, ticks, pauses) is not used
@@ -238,7 +239,7 @@ claims:
 - id: ZLK.9
   claim: a persistent state absorbs the configuration once
   status: CONTESTED
-  finding: H17, contested
+  finding: H17, contested; H17 retired by decision 2026-11-24, so its refuter has no test behind it now
   regime: none measured (the owner's sessions)
 - id: ZLK.10
   claim: an exact-recall branch queried at every tick keeps the past the settling state forgets

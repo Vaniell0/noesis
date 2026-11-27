@@ -488,7 +488,8 @@ a city") are the first items built so that separability is load-bearing; the 0.4
 **ZLK.16 Early loop.** The same chain run from a plain pretrain (World 0.4B) yields a wider channel and a larger
 tick gain than when grafted on a finished model (G1d 0.4B), at equal data and steps. *Estimator:* arms B and D of
 §6: `G_M` and tick-only items at `M = 4` vs `M = 0` on deep held-out items; channel spread; ZLK.12 separable facts.
-*Refuter:* D >= B on tick gain and on effective rank. *Rests on:* nothing measured with ticks. World routes far less
+*Refuter:* D >= B on tick gain and on effective rank. *Rests on:* the toy form only: ticks grafted onto a trained one-pass toy reach k6 in 2 of 3 seeds, grown ones in
+6 of 7 at the same size, so the early loop's advantage did not show (1o); arms B and D not run. World routes far less
 through its state than G1 at 2.9B (KL under state noise 0.0055 vs 0.23) and 2-3x less at 0.4B, while holding the
 prompt's identity more tightly (`hypotheses/H9.md`); G1k / G1l collapse to one attractor, a settled read path. *Data:* `experiments/A0_state_probe/results/closed_loop_toy/sO_graft_*`.
 
@@ -554,8 +555,8 @@ shared tick weights make one general step shorter than one path per domain; the 
 - **Mixture of experts in time, and the weights.** Thesis 13 reads a tick as mixture of experts in time, the same
   weights at every tick. The owner's reading of 2026-11-23: for the interference of the weights it did not
   confirm; the indicators came from the balance of the WKV state, and the loop touched more areas without
-  closing the gaps. For computation it did: time buys depth (W4). ZLK.23 gives the loop weights of its own;
-  whether they must change over the ticks is left to its estimator.
+  closing the gaps. For computation it did: time buys depth (W4). ZLK.21 gives each tick its own view of the same
+  weights, chosen by the tick's latent; whether the view must change over the ticks is left to its estimator.
 - **S2 teaches knowledge.** The earlier text said S2 and later optimise a policy only. The owner's word of
   2026-11-12 puts knowledge widening into S2; the reading that keeps both true is ZLK.15: knowledge enters by
   on-policy distillation from a teacher that has it, and from S3 on the stages are policy.
@@ -591,7 +592,8 @@ Arms for the comparison of ZLK.12-ZLK.17:
 Order is strict; a stage opens when the previous gate is measured. Every gate is one `experiments/run.py --backend
 peft [--weights CKPT] --tests m0_pass,chat,latent_geometry,latent_noise` run plus the stage's own number;
 `state_capacity_probe --ticks` and `state_readout_lens` read the neck as a pair. M>1 is opened by the decision
-rule of the tick-yield spec (`~/.claude/plans/noesis-tick-yield-probe-2026-10-26.md`), not by accuracy alone.
+rule of the tick-yield spec (`~/.claude/plans/noesis-tick-yield-probe-2026-10-26.md` (missing since 2026-10)),
+not by accuracy alone.
 
 #### 6b. Record of the runs
 
@@ -756,7 +758,7 @@ weight-shared recurrence as depth in vision (Liao & Poggio 2016, arXiv 1604.0364
 REINFORCE (Williams 1992), the natural policy gradient (Kakade 2001), the Occam bound (Blumer et al. 1987) and
 compression progress (Schmidhuber 2009, from memory), for §1c. The knowledge capacity of a language model,
 2 bits per parameter whatever the routing, a mixture of 32 experts included (Allen-Zhu and Li, ICLR 2025,
-arXiv 2404.05405), and 2 bits per synapse of a perceptron (Cover 1965; Gardner 1987), for ZLK.23. Not found
+arXiv 2404.05405), and 2 bits per synapse of a perceptron (Cover 1965; Gardner 1987), for the storage limit (ZLK.13). Not found
 elsewhere: a latent loop on a fixed-size
 recurrent state whose continue/stop decision is the model's own action, trained against a verifier and a price on
 time, measured by the readable share of what the model holds. (A search, not a survey.)
